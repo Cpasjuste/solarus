@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,9 @@
 #ifndef SOLARUS_SCOPED_LUA_REF_H
 #define SOLARUS_SCOPED_LUA_REF_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 #include <string>
+#include "solarus/lua/ExportableToLua.h"
 
 struct lua_State;
 
@@ -52,15 +53,17 @@ class ScopedLuaRef {
     int get() const;
     void clear();
 
-    void push() const;
+    void push(lua_State* dst) const;
     void call(const std::string& function_name) const;
     void clear_and_call(const std::string& function_name);
 
-  private:
 
+    bool equals(lua_State* l, int index) const;
+    bool operator==(const ScopedLuaRef& other) const;
+    bool operator==(ExportableToLua& other) const;
+  private:
     lua_State* l;  /**< The Lua state. nullptr means no ref. */
     int ref;       /**< Lua ref to a value. */
-
 };
 
 }

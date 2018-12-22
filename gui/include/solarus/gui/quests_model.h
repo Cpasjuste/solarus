@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus Quest Editor is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
 #define SOLARUS_GUI_QUESTS_MODEL_H
 
 #include "solarus/gui/gui_common.h"
-#include "solarus/QuestProperties.h"
-#include <QAbstractListModel>
+#include "solarus/core/QuestProperties.h"
+#include <QAbstractTableModel>
 #include <QIcon>
 #include <QMetaType>
 
@@ -28,35 +28,34 @@ namespace SolarusGui {
 /**
  * @brief List of quests added to Solarus.
  */
-class SOLARUS_GUI_API QuestsModel : public QAbstractListModel {
+class SOLARUS_GUI_API QuestsModel : public QAbstractTableModel {
+  Q_OBJECT
 
 public:
 
-    /**
-     * @brief Ways to sort the quests in the list. More convenient than columns.
-     */
-    enum QuestSort {
-      SortByName = 0,
-      SortByAuthor = 1,
-      SortByDate = 2
-    };
+  constexpr static int QUEST_COLUMN = 0;
+  constexpr static int FORMAT_COLUMN = 1;
 
-    /**
-     * @brief Info of a quest from the list.
-     */
-    struct QuestInfo {
-      QString path;               /**< Path to the quest directory. */
-      QString directory_name;     /**< Name of the quest directory. */
-      QIcon icon;                 /**< Icon of the quest. */
-      QPixmap logo;               /**< Logo of the quest (recommended: 200x140). */
-      Solarus::QuestProperties
-          properties;             /**< All properties from quest.dat. */
-    };
+  /**
+   * @brief Info of a quest from the list.
+   */
+  struct QuestInfo {
+    QString path;               /**< Path to the quest directory. */
+    QString directory_name;     /**< Name of the quest directory. */
+    QIcon icon;                 /**< Icon of the quest. */
+    QPixmap logo;               /**< Logo of the quest (recommended: 200x140). */
+    Solarus::QuestProperties
+        properties;             /**< All properties from quest.dat. */
+  };
 
-  QuestsModel(QObject* parent = nullptr);
+  explicit QuestsModel(QObject* parent = nullptr);
 
-  // QAbstractListModel API
+  // QAbstractTableModel API
   int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+  int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+  QVariant headerData(int section,
+                      Qt::Orientation orientation,
+                      int role = Qt::DisplayRole) const override;
   QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
   // QuestsModel API
@@ -75,12 +74,8 @@ public:
 
   const QIcon& get_quest_default_icon() const;
 
-  void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
-  void sort(QuestSort sort, Qt::SortOrder order = Qt::AscendingOrder);
-
 private:
 
-  void doSort(QuestSort sort, Qt::SortOrder order = Qt::AscendingOrder);
   void load_icon(int quest_index) const;
 
   mutable std::vector<QuestInfo>
@@ -89,7 +84,7 @@ private:
 
 }
 
-// Allow to use QuesInfo in QVariant
+// Allow to use QuestInfo in QVariant
 Q_DECLARE_METATYPE(SolarusGui::QuestsModel::QuestInfo)
 
 #endif

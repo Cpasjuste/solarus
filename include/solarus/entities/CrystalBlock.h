@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #ifndef SOLARUS_CRYSTAL_BLOCK_H
 #define SOLARUS_CRYSTAL_BLOCK_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 #include "solarus/entities/Entity.h"
 #include <string>
 
@@ -46,13 +46,12 @@ class CrystalBlock: public Entity {
     CrystalBlock(Game& game, const std::string& name,
         int layer, const Point& xy, const Size& size, Subtype subtype);
 
-    virtual EntityType get_type() const override;
+    EntityType get_type() const override;
 
-    virtual bool is_obstacle_for(Entity& other) override;
-    virtual void notify_collision(Entity& entity_overlapping, CollisionMode collision_mode) override;
+    bool is_obstacle_for(Entity& other) override;
+    void notify_collision(Entity& entity_overlapping, CollisionMode collision_mode) override;
 
-    virtual void update() override;
-    virtual void draw_on_map() override;
+    void update() override;
 
     bool is_raised() const;
 

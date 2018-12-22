@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus Quest Editor is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/gui/quests_model.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/CurrentQuest.h"
-#include "solarus/QuestProperties.h"
+#include "solarus/core/CurrentQuest.h"
+#include "solarus/core/QuestFiles.h"
+#include "solarus/core/QuestProperties.h"
 #include <QApplication>
 #include <algorithm>
 
@@ -28,7 +28,7 @@ namespace SolarusGui {
  * @param parent Parent object or nullptr.
  */
 QuestsModel::QuestsModel(QObject* parent) :
-  QAbstractListModel(parent),
+  QAbstractTableModel(parent),
   quests() {
 
 }
@@ -45,6 +45,43 @@ int QuestsModel::rowCount(const QModelIndex& parent) const {
 }
 
 /**
+ * @brief Returns the number of columns.
+ * @param parent Parent index.
+ * @return The number of columns.
+ */
+int QuestsModel::columnCount(const QModelIndex& parent) const {
+
+  Q_UNUSED(parent);
+  return 2;
+}
+
+/**
+ * @brief Returns the header data of a column.
+ * @param section Index of the section.
+ * @param orientation Vertical or horizontal.
+ * @param role Kind of data to get.
+ * @return The header data.
+ */
+QVariant QuestsModel::headerData(
+    int section,
+    Qt::Orientation orientation,
+    int role) const {
+
+  if (role == Qt::DisplayRole) {
+    switch (section) {
+
+    case QUEST_COLUMN:
+      return tr("Quest");
+
+    case FORMAT_COLUMN:
+      return tr("Format");
+    }
+  }
+
+  return QAbstractTableModel::headerData(section, orientation, role);
+}
+
+/**
  * @brief Returns the data of an item for the given role.
  * @param index Index of the item to get.
  * @param role Kind of data to get.
@@ -56,15 +93,34 @@ QVariant QuestsModel::data(const QModelIndex& index, int role) const {
     return QVariant();
   }
 
+  const QuestInfo& quest_info = quests.at(index.row());
+
   switch (role) {
 
   case Qt::ItemDataRole::DisplayRole:
-    load_icon(index.row());
-    return QVariant::fromValue(quests.at(index.row()));
+    switch (index.column()) {
+
+    case QUEST_COLUMN:
+      load_icon(index.row());
+      return QVariant::fromValue(quest_info);
+
+    case FORMAT_COLUMN:
+      return QString::fromStdString(quest_info.properties.get_solarus_version());
+
+    default:
+      return QVariant();
+    }
 
   case Qt::ItemDataRole::ToolTipRole:
+    switch (index.column()) {
+
+    case QUEST_COLUMN:
     return QString::fromStdString(
-            quests.at(index.row()).properties.get_title());
+            quest_info.properties.get_title());
+
+    default:
+      return QVariant();
+    }
 
   default:
     return QVariant();
@@ -225,7 +281,8 @@ const QPixmap& QuestsModel::get_quest_logo(int quest_index) const {
     if (Solarus::QuestFiles::open_quest(program_name.toStdString(),
                                         quest.path.toStdString())) {
       std::string file_name = "logos/logo.png";
-      if (Solarus::QuestFiles::data_file_exists(file_name)) {
+      if (Solarus::QuestFiles::data_file_exists(file_name) &&
+          !Solarus::QuestFiles::data_file_is_dir(file_name)) {
         std::string buffer = Solarus::QuestFiles::data_file_read(file_name);
         QPixmap pixmap;
         if (pixmap.loadFromData((const uchar*) buffer.data(), (uint) buffer.size())) {
@@ -288,8 +345,8 @@ void QuestsModel::load_icon(int quest_index) const {
     "logos/icon_1024.png",
   };
   for (const QString& file_name : file_names) {
-    if (Solarus::QuestFiles::data_file_exists(file_name.toStdString())) {
-      std::string buffer = Solarus::QuestFiles::data_file_read(file_name.toStdString());
+    if (Solarus::QuestFiles::data_file_exists(file_name.toLocal8Bit().toStdString())) {
+      std::string buffer = Solarus::QuestFiles::data_file_read(file_name.toLocal8Bit().toStdString());
       QPixmap pixmap;
       if (!pixmap.loadFromData((const uchar*) buffer.data(), (uint) buffer.size())) {
         continue;
@@ -302,51 +359,6 @@ void QuestsModel::load_icon(int quest_index) const {
   if (icon.isNull()) {
     icon = get_quest_default_icon();
   }
-}
-
-/**
- * @brief Sort the quests and notify the view (more convenient than sort(int, order).
- * @param sortType Way to sort the quests in the list by
- * @param order Order to the quests in the list by
- */
-void QuestsModel::sort(QuestSort sortType, Qt::SortOrder order) {
-
-  sort((int)sortType, order);
-}
-
-/**
- * @brief Sort the quests and notify the view
- * @param column int value of a QuestSort value, column to sort the quests by
- * @param order Order to the quests in the list by
- */
-void QuestsModel::sort(int column, Qt::SortOrder order) {
-
-  doSort((QuestSort)column, order);
-}
-
-/**
- * @brief Do the actual sort, without notifying the view
- * @param sortType Way to sort the quests in the list by
- * @param order Order to sort the quests in the list by
- */
-void QuestsModel::doSort(QuestSort sortType, Qt::SortOrder order) {
-
-  std::sort(quests.begin(), quests.end(),
-    [sortType, order](const QuestInfo &a, const QuestInfo &b) {
-      auto ascending = order == Qt::AscendingOrder;
-      switch (sortType) {
-      case SortByAuthor:
-        return ascending ? a.properties.get_author() < a.properties.get_author()
-                         : a.properties.get_author() > a.properties.get_author();
-      case SortByDate:
-        return ascending ? a.properties.get_release_date() < b.properties.get_release_date()
-                         : a.properties.get_release_date() > b.properties.get_release_date();
-      case SortByName:
-      default:
-        return ascending ? a.properties.get_title() < b.properties.get_title()
-                         : a.properties.get_title() > b.properties.get_title();
-      }
-    });
 }
 
 } // namespace SolarusGui

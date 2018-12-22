@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 #ifndef SOLARUS_HERO_FORCED_WALKING_STATE_H
 #define SOLARUS_HERO_FORCED_WALKING_STATE_H
 
+#include "solarus/core/Common.h"
 #include "solarus/hero/HeroState.h"
 #include <memory>
 #include <string>
@@ -55,7 +56,7 @@ class Hero::ForcedWalkingState: public HeroState {
     virtual bool can_avoid_stream(const Stream& stream) const override;
     virtual bool can_avoid_sensor() const override;
     virtual bool can_avoid_switch() const override;
-    virtual bool can_be_hurt(Entity* attacker) const override;
+    virtual bool get_can_be_hurt(Entity* attacker) override;
 
   private:
 

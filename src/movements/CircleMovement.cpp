@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,31 +14,31 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/core/Debug.h"
+#include "solarus/core/Geometry.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/System.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/Entity.h"
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/lowlevel/Geometry.h"
-#include "solarus/lowlevel/System.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/movements/CircleMovement.h"
-#include "solarus/Map.h"
 #include <sstream>
 
 namespace Solarus {
 
 /**
  * \brief Creates a circle movement.
- * \param ignore_obstacles true to ignore obstacles
  */
-CircleMovement::CircleMovement(bool ignore_obstacles):
+CircleMovement::CircleMovement():
 
-  Movement(ignore_obstacles),
+  Movement(),
   center_entity(nullptr),
-  current_angle(0),
-  initial_angle(0),
+  current_angle(0.0),
+  initial_angle(0.0),
   angle_increment(1),
-  next_angle_change_date(System::now()),
-  angle_change_delay(5),
+  next_angle_change_date(static_cast<double>(System::now())),
+  angle_change_delay(5.0),
+  angular_speed(1000.0 / Geometry::degrees_to_radians(angle_change_delay)),
   current_radius(0),
   wanted_radius(0),
   previous_radius(0),
@@ -48,10 +48,24 @@ CircleMovement::CircleMovement(bool ignore_obstacles):
   duration(0),
   end_movement_date(0),
   max_rotations(0),
-  nb_rotations(0),
+  num_increments(0),
+  num_rotations(0),
   loop_delay(0),
   restart_date(System::now()) {
 
+}
+
+/**
+ * \brief Returns the center of the circles.
+ * \return The center point.
+ */
+Point CircleMovement::get_center() const {
+
+  Point center = this->center_point;
+  if (center_entity != nullptr) {
+    center += center_entity->get_xy();
+  }
+  return center;
 }
 
 /**
@@ -59,7 +73,7 @@ CircleMovement::CircleMovement(bool ignore_obstacles):
  *
  * The movement will make circles around the specified fixed point.
  *
- * \param center_point center of the circles to make
+ * \param center_point Center of the circles to make.
  */
 void CircleMovement::set_center(const Point& center_point) {
 
@@ -74,8 +88,8 @@ void CircleMovement::set_center(const Point& center_point) {
  * The movement will make circles around the specified (possibly moving) entity.
  *
  * \param center_entity the entity around which you want to make circles
- * \param x x coordinate of where the center should be placed relative to the entity's origin
- * \param y y coordinate of where the center should be placed relative to the entity's origin
+ * \param x X coordinate of where the center should be placed relative to the entity's origin.
+ * \param y Y coordinate of where the center should be placed relative to the entity's origin.
  */
 void CircleMovement::set_center(
     const EntityPtr& center_entity,
@@ -89,7 +103,7 @@ void CircleMovement::set_center(
 
 /**
  * \brief Returns the radius of the circles.
- * \return the radius in pixels
+ * \return The radius in pixels.
  */
 int CircleMovement::get_radius() const {
   return wanted_radius;
@@ -97,7 +111,7 @@ int CircleMovement::get_radius() const {
 
 /**
  * \brief Sets the radius of the circles.
- * \param radius the radius in pixels
+ * \param radius The radius in pixels.
  */
 void CircleMovement::set_radius(int radius) {
 
@@ -124,7 +138,7 @@ void CircleMovement::set_radius(int radius) {
 
 /**
  * \brief Returns the speed of the radius variations.
- * \return the speed in pixels per second, or 0 if radius variations are immediate
+ * \return The speed in pixels per second, or 0 if radius variations are immediate.
  */
 int CircleMovement::get_radius_speed() const {
 
@@ -136,8 +150,8 @@ int CircleMovement::get_radius_speed() const {
  *
  * Use set_radius() to specify the wanted value.
  *
- * \param radius_speed speed of the radius variation (number of pixels per second),
- * or 0 to update it immediately
+ * \param radius_speed Speed of the radius variation (number of pixels per second),
+ * or 0 to update it immediately.
  */
 void CircleMovement::set_radius_speed(int radius_speed) {
 
@@ -159,32 +173,56 @@ void CircleMovement::set_radius_speed(int radius_speed) {
 
 /**
  * \brief Returns the speed of the angle variation.
- * \return the number of degrees made per second
+ * \return The number of radians made per second.
  */
-int CircleMovement::get_angle_speed() const {
-  return 1000 / angle_change_delay;
+double CircleMovement::get_angular_speed() const {
+  return angular_speed;
 }
 
 /**
  * \brief Sets the speed of the angle variation.
- * \param angle_speed number of degrees to make per second
+ * \param angle_speed Number of radians to make per second.
  */
-void CircleMovement::set_angle_speed(int angle_speed) {
+void CircleMovement::set_angular_speed(double angular_speed) {
 
-  if (angle_speed <= 0) {
+  if (angular_speed <= 0.0) {
     std::ostringstream oss;
-    oss << "Invalid angle speed: " << angle_speed;
+    oss << "Invalid angle speed: " << angular_speed;
     Debug::die(oss.str());
   }
 
-  this->angle_change_delay = 1000 / angle_speed;
-  this->next_angle_change_date = System::now();
+  this->angular_speed = angular_speed;
+  this->angle_change_delay = 1000.0 / Geometry::radians_to_degrees(angular_speed);
+  this->next_angle_change_date = static_cast<double>(System::now());
   recompute_position();
 }
 
 /**
+ * \brief Returns the angle of the current position on the circle.
+ * \return The angle in radians.
+ */
+double CircleMovement::get_angle_from_center() const {
+
+  return current_angle;
+}
+
+/**
+ * \brief Sets the position as an angle from the center.
+ * \param angle_from_center The angle in radians.
+ */
+void CircleMovement::set_angle_from_center(double angle_from_center) {
+
+  // Normalize the angle.
+  angle_from_center = std::fmod(angle_from_center + Geometry::TWO_PI, Geometry::TWO_PI);
+
+  this->initial_angle = angle_from_center;
+
+  start();
+}
+
+/**
  * \brief Returns the angle from where the first circle starts.
- * \return The angle in degrees.
+ * \return The angle in radians.
  */
 double CircleMovement::get_initial_angle() const {
 
@@ -192,25 +230,8 @@ double CircleMovement::get_initial_angle() const {
 }
 
 /**
- * \brief Sets the angle from where the first circle starts.
- * \param initial_angle Angle in degrees.
- */
-void CircleMovement::set_initial_angle(int initial_angle) {
-
-  // Normalize the angle.
-  initial_angle = initial_angle % 360;
-  if (initial_angle < 0) {
-    initial_angle += 360;
-  }
-
-  this->initial_angle = initial_angle;
-
-  start();
-}
-
-/**
  * \brief Returns the direction of the circles.
- * \return true if circles are clockwise
+ * \return \c true if circles are clockwise.
  */
 bool CircleMovement::is_clockwise() const {
 
@@ -219,7 +240,7 @@ bool CircleMovement::is_clockwise() const {
 
 /**
  * \brief Sets the direction of circles.
- * \param clockwise true to make clockwise circles
+ * \param clockwise \c true to make clockwise circles.
  */
 void CircleMovement::set_clockwise(bool clockwise) {
 
@@ -233,7 +254,7 @@ void CircleMovement::set_clockwise(bool clockwise) {
  * Note that if the radius changes gradually, the movement will continue
  * for a while until the radius reaches zero.
  *
- * \return duration of the movement in milliseconds, (0 means infinite)
+ * \return Duration of the movement in milliseconds (0 means unlimited).
  */
 uint32_t CircleMovement::get_duration() const {
 
@@ -247,7 +268,7 @@ uint32_t CircleMovement::get_duration() const {
  * Note that if the radius changes gradually, the movement will continue
  * for a while until the radius reaches zero.
  *
- * \param duration duration of the movement in milliseconds, or 0 to make it infinite
+ * \param duration Duration of the movement in milliseconds (0 means unlimited).
  */
 void CircleMovement::set_duration(uint32_t duration) {
 
@@ -264,7 +285,7 @@ void CircleMovement::set_duration(uint32_t duration) {
  * Note that if the radius changes gradually, the movement will continue
  * for a while until the radius reaches zero.
  *
- * \return the number of rotations to make (0 means infinite rotations)
+ * \return The number of rotations to make (0 means unlimited).
  */
 int CircleMovement::get_max_rotations() const {
 
@@ -278,7 +299,7 @@ int CircleMovement::get_max_rotations() const {
  * Note that is the radius changes gradually, the movement will continue
  * for a while until the radius reaches zero.
  *
- * \param max_rotations number of rotations to make (0 for infinite rotations)
+ * \param max_rotations The number of rotations to make (0 means unlimited).
  */
 void CircleMovement::set_max_rotations(int max_rotations) {
 
@@ -289,12 +310,13 @@ void CircleMovement::set_max_rotations(int max_rotations) {
   }
 
   this->max_rotations = max_rotations;
-  this->nb_rotations = 0;
+  this->num_rotations = 0;
+  this->num_increments = 0;
 }
 
 /**
  * \return Returns the delay after which the movement restarts.
- * \return the delay in milliseconds (0 means no restart)
+ * \return The delay in milliseconds (0 means no restart).
  */
 uint32_t CircleMovement::get_loop() const {
 
@@ -303,7 +325,7 @@ uint32_t CircleMovement::get_loop() const {
 
 /**
  * \brief Makes the movement restart after a delay when it is finished.
- * \param delay the movement will restart after this delay in milliseconds (0 to avoid this)
+ * \param delay The movement will restart after this delay in milliseconds (0 to avoid this).
  */
 void CircleMovement::set_loop(uint32_t delay) {
 
@@ -331,7 +353,7 @@ void CircleMovement::update() {
   bool update_needed = false;
   uint32_t now = System::now();
 
-  // maybe it is time to stop or to restart
+  // Maybe it is time to stop or to restart.
   if (current_radius != 0 &&
       duration != 0 &&
       now >= end_movement_date &&
@@ -347,16 +369,18 @@ void CircleMovement::update() {
     start();
   }
 
-  // update the angle
+  // Update the angle.
   if (is_started()) {
     while (now >= next_angle_change_date) {
 
-      current_angle += angle_increment;
-      current_angle = (360 + current_angle) % 360;
-      if (current_angle == initial_angle) {
-        nb_rotations++;
+      current_angle += Geometry::degrees_to_radians(angle_increment);
+      current_angle = std::fmod(current_angle + Geometry::TWO_PI, Geometry::TWO_PI);
+      ++num_increments;
+      if (num_increments == 360) {
+        num_rotations++;
+        num_increments = 0;
 
-        if (nb_rotations == max_rotations) {
+        if (num_rotations == max_rotations) {
           stop();
         }
       }
@@ -366,7 +390,7 @@ void CircleMovement::update() {
     }
   }
 
-  // update the radius
+  // Update the radius.
   while (current_radius != wanted_radius &&
          now >= next_radius_change_date) {
 
@@ -376,7 +400,7 @@ void CircleMovement::update() {
     update_needed = true;
   }
 
-  // the center may have moved
+  // The center may have moved.
   if (center_entity != nullptr) {
     update_needed = true;
   }
@@ -385,7 +409,7 @@ void CircleMovement::update() {
     recompute_position();
   }
 
-  // Do this at last so that Movement::update() knows whether we are finished.
+  // Do this at last so that Movement::update() knows if we are finished.
   Movement::update();
 }
 
@@ -396,12 +420,8 @@ void CircleMovement::update() {
  */
 void CircleMovement::recompute_position() {
 
-  Point center = this->center_point;
-  if (center_entity != nullptr) {
-    center += center_entity->get_xy();
-  }
-
-  Point xy = Geometry::get_xy(center, Geometry::degrees_to_radians(current_angle), current_radius);
+  Point center = get_center();
+  Point xy = Geometry::get_xy(center, current_angle, current_radius);
   if (get_entity() == nullptr
       || !test_collision_with_obstacles(xy - get_entity()->get_xy())) {
     set_xy(xy);
@@ -436,7 +456,8 @@ void CircleMovement::start() {
 
   current_angle = initial_angle;
   next_angle_change_date = System::now();
-  nb_rotations = 0;
+  num_increments = 0;
+  num_rotations = 0;
 
   if (duration != 0) {
     end_movement_date = System::now() + duration;
@@ -479,6 +500,17 @@ void CircleMovement::stop() {
     restart_date = System::now() + loop_delay;
   }
   recompute_position();
+}
+
+/**
+ * \copydoc Movement::get_displayed_direction4()
+ */
+int CircleMovement::get_displayed_direction4() const {
+
+  int tangent_angle = Geometry::radians_to_degrees(current_angle) +
+      (is_clockwise() ? (-90) : 90);
+  int direction = (tangent_angle + 45 + 360) / 90;
+  return direction % 4;
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -191,7 +191,7 @@ E check_enum_field(
   if (!lua_isstring(l, -1)) {
     arg_error(l, table_index,
         std::string("Bad field '") + key + "' (string expected, got "
-        + luaL_typename(l, -1)
+        + get_type_name(l, -1)
     );
   }
 
@@ -249,7 +249,7 @@ E opt_enum_field(
   if (!lua_isstring(l, -1)) {
     arg_error(l, table_index,
         std::string("Bad field '") + key + "' (string expected, got "
-        + luaL_typename(l, -1) + ")"
+        + get_type_name(l, -1) + ")"
     );
   }
   E value = check_enum<E>(l, -1, names);

@@ -1,27 +1,27 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
- * 
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Solarus is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/core/CommandsEffects.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/System.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/GrabbingState.h"
-#include "solarus/hero/PushingState.h"
 #include "solarus/hero/HeroSprites.h"
 #include "solarus/movements/PlayerMovement.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/CommandsEffects.h"
-#include "solarus/Game.h"
 
 namespace Solarus {
 
@@ -101,22 +101,21 @@ void Hero::FreeState::notify_action_command_pressed() {
     if (get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE ||
         get_commands_effects().is_action_key_acting_on_facing_entity()
     ) {
-
-      // action on the facing entity
+      // Action on the facing entity.
       facing_entity_interaction = facing_entity->notify_action_command_pressed();
     }
   }
 
   if (!facing_entity_interaction) {
     // The event was not handled by the facing entity.
-    if (hero.is_facing_point_on_obstacle()) {
-
-      // grab an obstacle
-      hero.set_state(new GrabbingState(hero));
+    if (hero.is_facing_point_on_obstacle() &&
+        hero.can_grab()
+    ) {
+      // Grab an obstacle.
+      hero.start_grabbing();
     }
     else if (hero.can_run()) {
-
-      // run
+      // Run.
       hero.start_running();
     }
   }
@@ -131,15 +130,19 @@ void Hero::FreeState::notify_obstacle_reached() {
   PlayerMovementState::notify_obstacle_reached();
 
   Hero& hero = get_entity();
-  if (hero.is_facing_point_on_obstacle()) { // he is really facing an obstacle
+  Equipment& equipment = get_equipment();
+  if (hero.is_facing_point_on_obstacle() &&   // He is really facing an obstacle.
+      equipment.has_ability(Ability::PUSH)    // He is able to push.
+  ) {
 
     uint32_t now = System::now();
     if (pushing_direction4 == -1) {
-      start_pushing_date = now + 800; // start animation "pushing" after 800 ms
+      start_pushing_date = now + 800;  // Start animation "pushing" after 800 ms.
       pushing_direction4 = hero.get_animation_direction();
     }
     else if (now >= start_pushing_date) {
-      hero.set_state(new PushingState(hero));
+      equipment.notify_ability_used(Ability::PUSH);
+      hero.start_pushing();
     }
   }
 }
@@ -157,7 +160,7 @@ bool Hero::FreeState::is_free() const {
  * \brief Returns whether the hero can swing his sword in this state.
  * \return true if the hero can swing his sword in this state
  */
-bool Hero::FreeState::can_start_sword() const {
+bool Hero::FreeState::get_can_start_sword() const {
   return true;
 }
 
@@ -166,7 +169,7 @@ bool Hero::FreeState::can_start_sword() const {
  * \param item The equipment item to check.
  * \return true if the hero can use this equipment item in this state.
  */
-bool Hero::FreeState::can_start_item(EquipmentItem& /* item */) const {
+bool Hero::FreeState::get_can_start_item(EquipmentItem& /* item */) const {
 
   return get_entity().get_ground_below() != Ground::HOLE;
 }
@@ -176,7 +179,7 @@ bool Hero::FreeState::can_start_item(EquipmentItem& /* item */) const {
  * If false is returned, stairs have no effect (but they are obstacle for the hero).
  * \return true if the hero ignores the effect of stairs in this state
  */
-bool Hero::FreeState::can_take_stairs() const {
+bool Hero::FreeState::get_can_take_stairs() const {
   return true;
 }
 
@@ -184,7 +187,7 @@ bool Hero::FreeState::can_take_stairs() const {
  * \copydoc Entity::State::get_previous_carried_object_behavior
  */
 CarriedObject::Behavior Hero::FreeState::get_previous_carried_object_behavior() const {
-  return CarriedObject::BEHAVIOR_DESTROY;
+  return CarriedObject::Behavior::REMOVE;
 }
 
 /**

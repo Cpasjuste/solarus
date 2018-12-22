@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #ifndef SOLARUS_PLAYER_MOVEMENT_H
 #define SOLARUS_PLAYER_MOVEMENT_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 #include "solarus/movements/StraightMovement.h"
 
 namespace Solarus {
@@ -36,7 +36,7 @@ class PlayerMovement: public StraightMovement {
     // creation and destruction
     explicit PlayerMovement(int speed);
 
-    virtual void update() override;
+    void update() override;
 
     int get_moving_speed() const;
     void set_moving_speed(int moving_speed);

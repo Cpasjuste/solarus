@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
 #ifndef SOLARUS_CAMERA_H
 #define SOLARUS_CAMERA_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
+#include "solarus/core/Rectangle.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/EntityPtr.h"
-#include "solarus/lowlevel/Rectangle.h"
-#include "solarus/lowlevel/SurfacePtr.h"
+#include "solarus/graphics/SurfacePtr.h"
 #include <memory>
 
 namespace Solarus {
@@ -54,7 +54,7 @@ class Camera : public Entity {
     void notify_movement_started() override;
     void notify_size_changed() override;
 
-    const SurfacePtr& get_surface();
+    const SurfacePtr& get_surface() const;
 
     Point get_position_on_screen() const;
     void set_position_on_screen(const Point& position_on_screen);

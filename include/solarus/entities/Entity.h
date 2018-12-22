@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,16 +17,16 @@
 #ifndef SOLARUS_ENTITY_H
 #define SOLARUS_ENTITY_H
 
-#include "solarus/Common.h"
-#include "solarus/lua/ExportableToLua.h"
+#include "solarus/core/Rectangle.h"
+#include "solarus/core/GameCommand.h"
+#include "solarus/core/Common.h"
 #include "solarus/entities/EntityType.h"
 #include "solarus/entities/Ground.h"
 #include "solarus/entities/CollisionMode.h"
 #include "solarus/entities/EnemyAttack.h"
 #include "solarus/entities/EnemyReaction.h"
-#include "solarus/lowlevel/Rectangle.h"
-#include "solarus/GameCommand.h"
-#include "solarus/SpritePtr.h"
+#include "solarus/graphics/SpritePtr.h"
+#include "solarus/lua/ExportableToLua.h"
 #include <list>
 #include <memory>
 #include <set>
@@ -39,10 +39,12 @@ namespace Solarus {
 
 class Block;
 class Bomb;
+class Camera;
 class Chest;
 class CommandsEffects;
 class Crystal;
 class CrystalBlock;
+class Destination;
 class Destructible;
 class Door;
 class Enemy;
@@ -85,6 +87,8 @@ class SOLARUS_API Entity: public ExportableToLua {
 
   public:
 
+    using UserProperty = std::pair<std::string, std::string>;
+
     struct NamedSprite {
       std::string name;
       SpritePtr sprite;
@@ -109,27 +113,28 @@ class SOLARUS_API Entity: public ExportableToLua {
     bool is_ground_modifier() const;
     virtual Ground get_modified_ground() const;
     virtual bool can_be_drawn() const;
-    bool is_drawn_in_y_order() const;
-    void set_drawn_in_y_order(bool drawn_in_y_order);
     virtual bool is_drawn_at_its_position() const;
 
     virtual void notify_command_pressed(GameCommand command);
     virtual void notify_command_released(GameCommand command);
 
-    // adding to a map
+    // Adding to a map.
     bool is_initialized() const;
     bool is_on_map() const;
     void set_map(Map& map);
     Map& get_map() const;
-    virtual void notify_map_started();
     virtual void notify_creating();
     virtual void notify_created();
-    virtual void notify_map_opening_transition_finished();
+    virtual void notify_map_starting(Map& map, const std::shared_ptr<Destination>& destination);
+    virtual void notify_map_started(Map& map, const std::shared_ptr<Destination>& destination);
+    virtual void notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination);
+    virtual void notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination);
+    virtual void notify_map_finished();
     virtual void notify_tileset_changed();
     Game& get_game();
     const Game& get_game() const;
 
-    // position in the map
+    // Position in the map.
     int get_layer() const;
     void set_layer(int layer);
     Ground get_ground_below() const;
@@ -180,11 +185,14 @@ class SOLARUS_API Entity: public ExportableToLua {
     int get_optimization_distance2() const;
     void set_optimization_distance(int distance);
 
+    int get_z() const;
+    void set_z(int z);
+
     bool is_enabled() const;
     void set_enabled(bool enable);
     virtual void notify_enabled(bool enabled);
 
-    // properties
+    // Properties.
     const std::string& get_name() const;
     void set_name(const std::string& name);
     bool has_name() const;
@@ -192,6 +200,13 @@ class SOLARUS_API Entity: public ExportableToLua {
     int get_direction() const;
     void set_direction(int direction);
     virtual void notify_direction_changed();
+
+    const std::vector<UserProperty>& get_user_properties() const;
+    void set_user_properties(const std::vector<UserProperty>& user_properties);
+    bool has_user_property(const std::string& key) const;
+    const std::string& get_user_property_value(const std::string& key) const;
+    void set_user_property_value(const std::string& key, const std::string& value);
+    void remove_user_property(const std::string& key);
 
     // Sprites.
     bool has_sprite() const;
@@ -212,7 +227,14 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual void notify_sprite_animation_finished(Sprite& sprite, const std::string& animation);
     bool is_visible() const;
     void set_visible(bool visible);
+    bool is_tiled() const;
+    void set_tiled(bool tiled);
+    bool is_drawn_in_y_order() const;
+    void set_drawn_in_y_order(bool drawn_in_y_order);
     void set_animation_ignore_suspend(bool ignore_suspend);
+    void update_sprite(Sprite& sprite);
+    ScopedLuaRef get_draw_override() const;
+    void set_draw_override(const ScopedLuaRef& draw_override);
 
     // Movement.
     const std::shared_ptr<Movement>& get_movement();
@@ -227,10 +249,10 @@ class SOLARUS_API Entity: public ExportableToLua {
     void start_stream_action(std::unique_ptr<StreamAction> stream_action);
     void stop_stream_action();
 
-    virtual void notify_obstacle_reached();
     virtual void notify_position_changed();
     virtual void notify_layer_changed();
     virtual void notify_ground_below_changed();
+    virtual void notify_obstacle_reached();
     virtual void notify_movement_started();
     virtual void notify_movement_finished();
     virtual void notify_movement_changed();
@@ -243,7 +265,7 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual void notify_facing_entity_changed(Entity* facing_entity);
     static const Point& direction_to_xy_move(int direction8);
 
-    // geometry
+    // Geometry.
     bool overlaps(const Rectangle& rectangle) const;
     bool overlaps(const Point& point) const;
     bool overlaps(int x, int y) const;
@@ -280,15 +302,21 @@ class SOLARUS_API Entity: public ExportableToLua {
     void check_collision(Entity& other);
     void check_collision(Entity& other, Sprite& other_sprite);
     void check_collision(Sprite& this_sprite, Entity& other);
-    // TODO void check_collision(Sprite& this_sprite, Entity& other, Sprite& other_sprite);
-    bool test_collision(Entity& entity, CollisionMode collision_mode);
+    bool test_collision(
+        Entity& entity,
+        CollisionMode collision_mode,
+        const SpritePtr& this_sprite,
+        const SpritePtr& other_sprite);
     bool test_collision_rectangle(const Entity& entity) const;
     bool test_collision_inside(const Entity& entity) const;
     bool test_collision_origin_point(const Entity& entity) const;
     bool test_collision_facing_point(const Entity& entity) const;
     bool test_collision_touching(const Entity& entity) const;
     bool test_collision_center(const Entity& entity) const;
-    bool test_collision_sprites(Entity& entity);
+    bool test_collision_sprites(
+        Entity& entity,
+        const SpritePtr& this_sprite,
+        const SpritePtr& other_sprite);
     virtual bool test_collision_custom(Entity& entity);
 
     // Being detected by other entities.
@@ -313,16 +341,19 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual void notify_collision_with_explosion(Explosion& explosion, CollisionMode collision_mode);
     virtual void notify_collision_with_explosion(Explosion& explosion, Sprite& sprite_overlapping);
     virtual void notify_collision_with_fire(Fire& fire, Sprite& sprite_overlapping);
-    virtual void notify_collision_with_enemy(Enemy& enemy);
-    virtual void notify_collision_with_enemy(Enemy& enemy, Sprite& enemy_sprite, Sprite& this_sprite);
+    virtual void notify_collision_with_enemy(Enemy& enemy, CollisionMode collision_mode);
+    virtual void notify_collision_with_enemy(Enemy& enemy, Sprite& this_sprite, Sprite& enemy_sprite);
     virtual void notify_attacked_enemy(
         EnemyAttack attack,
         Enemy& victim,
-        const Sprite* victim_sprite,
-        EnemyReaction::Reaction& result,
+        Sprite* victim_sprite,
+        const EnemyReaction::Reaction& result,
         bool killed);
 
     // Interactions.
+    bool can_be_lifted() const;
+    int get_weight() const;
+    void set_weight(int weight);
     virtual bool notify_action_command_pressed();
     virtual bool notify_interaction_with_item(EquipmentItem& item);
     virtual bool start_movement_by_hero();
@@ -354,7 +385,8 @@ class SOLARUS_API Entity: public ExportableToLua {
     bool is_suspended() const;
     virtual void set_suspended(bool suspended);
     virtual void update();
-    virtual void draw_on_map();
+    void draw(Camera& camera);
+    virtual void built_in_draw(Camera& camera);
 
     // Easy access to various game objects.
     Entities& get_entities();
@@ -376,8 +408,8 @@ class SOLARUS_API Entity: public ExportableToLua {
      */
     class State;                                /**< base class for all states */
 
-    State& get_state() const;
-    void set_state(State* state);
+    std::shared_ptr<State> get_state() const;
+    void set_state(const std::shared_ptr<State>& state);
 
     std::string get_state_name() const;
     void update_state();
@@ -426,14 +458,17 @@ class SOLARUS_API Entity: public ExportableToLua {
 
     void finish_initialization();
     void clear_old_movements();
+    void clear_old_stream_actions();
     void clear_old_sprites();
 
     MainLoop* main_loop;                        /**< The Solarus main loop. */
-    Map* map;                                   /**< The map where this entity is, or nullptr
-                                                 * (automatically set by class MapEntities after adding the entity to the map) */
+    Map* map;                                   /**< The map where this entity is, or nullptr. */
 
     int layer;                                  /**< Layer of the entity on the map.
                                                  * The layer is constant for the tiles and can change for the hero and the dynamic entities. */
+
+    int z;                                      /**< Z order of this entity on its layer.
+                                                 * This value is abitrary, it can be negative and the sequence can have holes. */
 
     Rectangle bounding_box;                     /**< This rectangle represents the position of the entity of the map and is
                                                  * used for the collision tests. It corresponds to the bounding box of the entity.
@@ -453,18 +488,19 @@ class SOLARUS_API Entity: public ExportableToLua {
                                                  * not represent the actual entity's coordinates and does not match necessarily
                                                  * the sprite's rectangle. */
 
-    // other data, used for some kinds of entities only
-
     std::string name;                           /**< Name of the entity or an empty string.
                                                  * The name uniquely identifies the entity in the map. */
 
-    int direction;                              /**< direction of the entity, not used for all kinds of entities */
+    int direction;                              /**< Direction of the entity, not used for all kinds of entities */
+    std::vector<UserProperty> user_properties;  /**< List of user-defined properties. */
 
     std::vector<NamedSprite>
         sprites;                                /**< Sprites representing the entity. */
     std::string default_sprite_name;            /**< Name of the sprite to get in get_sprite() without parameter. */
     bool visible;                               /**< Whether this entity's sprites are currently displayed. */
+    bool tiled;                                 /**< Whether sprites should be repeated with tiling. */
     bool drawn_in_y_order;                      /**< Whether this entity is drawn in Y order or in Z order. */
+    ScopedLuaRef draw_override;                 /**< Lua function that draws this entity, if any. */
     std::shared_ptr<Movement> movement;         /**< Movement of the entity.
                                                  * nullptr indicates that the entity has no movement. */
     std::vector<std::shared_ptr<Movement>>
@@ -475,12 +511,16 @@ class SOLARUS_API Entity: public ExportableToLua {
                                                  * (can be an OR combination of CollisionMode values). */
     bool layer_independent_collisions;          /**< Whether this entity detects collisions on all layers. */
 
+    int weight;                                 /**< Weight of this entity (level of "lift" ability required).
+                                                 * -1 means an entity that cannot be lifted. */
     std::unique_ptr<StreamAction>
         stream_action;                          /**< The stream effect currently applied if any. */
+    std::vector<std::unique_ptr<StreamAction>>
+        old_stream_actions;                     /**< Old stream actions to destroy as soon as possible. */
 
     // state
-    std::unique_ptr<State> state;               /**< The current internal state */
-    std::list<std::unique_ptr<State>>
+    std::shared_ptr<State> state;               /**< The current internal state */
+    std::vector<std::shared_ptr<State>>
         old_states;                             /**< Previous state objects to delete as soon as possible. */
 
     bool initialized;                           /**< Whether all initializations were done. */
@@ -498,6 +538,34 @@ class SOLARUS_API Entity: public ExportableToLua {
         default_optimization_distance = 0;      /**< Default value. */
 
 };
+
+/**
+ * \brief Returns the layer of the entity on the map.
+ * \return The layer of the entity on the map.
+ */
+inline int Entity::get_layer() const {
+  return layer;
+}
+
+/**
+ * \brief Returns the Z order of this entity on its layer.
+ *
+ * This is an arbitrary value that can be used to compare the order of
+ * entities. It can be negative. The sequence can have holes.
+ *
+ * \return The Z order.
+ */
+inline int Entity::get_z() const {
+  return z;
+}
+
+/**
+ * \brief Sets the Z order of this entity on its layer.
+ * \param z The Z order.
+ */
+inline void Entity::set_z(int z) {
+  this->z = z;
+}
 
 /**
  * \brief Returns whether this entity is enabled.

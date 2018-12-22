@@ -106,7 +106,7 @@ void SNES_SPC::enable_rom( int enable )
 		 14, 15, 12, 13,  8, 12, 13, 13, 19, 18, 14, 14, -2,-36, 14, 24,
 		 17, 18, 15, 16, 11, 15, 16, 16, 22, 21, 14, 14, 28, -3, 14, 25,
 		 20, 21, 18, 19, 14, 18, 19, 19, 25, 24, 14, 14, 14, 29, 14, 25,
-		 
+
 		 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
 		 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
 		 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
@@ -434,7 +434,7 @@ void SNES_SPC::cpu_write( int data, int addr, rel_time_t time )
 			// Registers other than $F2 and $F4-$F7
 			//if ( reg != 2 && reg != 4 && reg != 5 && reg != 6 && reg != 7 )
 			// TODO: this is a bit on the fragile side
-			if ( ((~0x2F00 << (bits_in_int - 16)) << reg) < 0 ) // 36%
+			if ( (int) ((~0x2F00u << (bits_in_int - 16)) << reg) < 0 ) // 36%
 				cpu_write_smp_reg( data, time, reg );
 		}
 		// High mem/address wrap-around

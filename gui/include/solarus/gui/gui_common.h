@@ -1,7 +1,7 @@
 #ifndef SOLARUS_GUI_GUI_COMMON_H
 #define SOLARUS_GUI_GUI_COMMON_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 
 /**
  * \file gui_common.h
@@ -11,7 +11,7 @@
 
 // Windows specific.
 #ifndef SOLARUS_GUI_LIBRARY_EXPORT
-#  ifdef solarus_gui_lib_EXPORTS  // Define automatically added by cmake.
+#  ifdef solarus_gui_EXPORTS  // Define automatically added by cmake.
 #    define SOLARUS_GUI_LIBRARY_EXPORT 1
 #  else
 #    define SOLARUS_GUI_LIBRARY_EXPORT 0

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 #ifndef SOLARUS_HERO_STATE_H
 #define SOLARUS_HERO_STATE_H
 
+#include "solarus/core/Common.h"
 #include "solarus/entities/EntityState.h"
 
 namespace Solarus {
@@ -30,7 +31,7 @@ class HeroState: public Entity::State {
 
     virtual Hero& get_entity() override;
     virtual const Hero& get_entity() const override;
-    const HeroSprites& get_sprites() const ;
+    const HeroSprites& get_sprites() const;
     HeroSprites& get_sprites();
 
     void draw_on_map() override;
@@ -38,11 +39,14 @@ class HeroState: public Entity::State {
     void notify_attack_command_pressed() override;
     void notify_item_command_pressed(int slot) override;
 
-    bool is_jumper_obstacle(const Jumper& jumper, const Rectangle& candidate_position) const override;
+    bool is_block_obstacle(Block& block) override;
+    bool is_raised_block_obstacle(CrystalBlock& raised_block) override;
+    bool is_jumper_obstacle(Jumper& jumper, const Rectangle& candidate_position) override;
 
   protected:
 
     HeroState(Hero& hero, const std::string& state_name);
+    explicit HeroState(const std::string& state_name);
 
 };
 

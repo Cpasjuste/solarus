@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,11 @@
 #ifndef SOLARUS_CARRIED_OBJECT_H
 #define SOLARUS_CARRIED_OBJECT_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 #include "solarus/entities/Entity.h"
-#include "solarus/SpritePtr.h"
+#include "solarus/entities/EntityPtr.h"
+#include "solarus/entities/HeroPtr.h"
+#include "solarus/graphics/SpritePtr.h"
 #include <string>
 
 namespace Solarus {
@@ -41,10 +43,10 @@ class CarriedObject: public Entity {
     /**
      * Indicates what to do with a carried object.
      */
-    enum Behavior {
-      BEHAVIOR_THROW,          /**< make the hero throw the item */
-      BEHAVIOR_DESTROY,        /**< destroy the item silently */
-      BEHAVIOR_KEEP            /**< let the hero continue to carry the item */
+    enum class Behavior {
+      THROW,       /**< Make the hero throw the object. */
+      REMOVE,      /**< Destroy the object silently. */
+      KEEP         /**< Let the hero continue to carry the object. */
     };
 
     CarriedObject(
@@ -59,7 +61,11 @@ class CarriedObject: public Entity {
     EntityType get_type() const override;
     bool is_ground_observer() const override;
 
+    EntityPtr get_carrier() const;
     int get_damage_on_enemies() const;
+    void set_damage_on_enemies(int damage_on_enemies);
+    const std::string& get_destruction_sound() const;
+    void set_destruction_sound(const std::string& destruction_sound);
 
     void set_animation_stopped();
     void set_animation_walking();
@@ -73,7 +79,7 @@ class CarriedObject: public Entity {
 
     void set_suspended(bool suspended) override;
     void update() override;
-    void draw_on_map() override;
+    void built_in_draw(Camera& camera) override;
 
     bool is_teletransporter_obstacle(Teletransporter& teletransporter) override;
     bool is_stream_obstacle(Stream& stream) override;
@@ -97,14 +103,14 @@ class CarriedObject: public Entity {
     void notify_collision_with_stairs(Stairs& stairs, CollisionMode collision_mode) override;
     void notify_collision_with_enemy(
         Enemy& enemy,
-        Sprite& enemy_sprite,
-        Sprite& this_sprite
+        Sprite& this_sprite,
+        Sprite& enemy_sprite
     ) override;
     void notify_attacked_enemy(
         EnemyAttack attack,
         Enemy& victim,
-        const Sprite* victim_sprite,
-        EnemyReaction::Reaction& result,
+        Sprite* victim_sprite,
+        const EnemyReaction::Reaction& result,
         bool killed
     ) override;
 
@@ -113,7 +119,7 @@ class CarriedObject: public Entity {
     bool will_explode_soon() const;
 
     // game data
-    Hero& hero;                 /**< the hero, who is carrying or throwing this item */
+    HeroPtr hero;               /**< the hero, who is carrying or throwing this item */
 
     // state
     bool is_lifting;            /**< indicates that the hero is lifting this item */
@@ -138,6 +144,12 @@ class CarriedObject: public Entity {
 
     static const std::string lifting_trajectories[4];   /**< trajectory of the lifting movement for each direction */
 
+};
+
+template <>
+struct SOLARUS_API EnumInfoTraits<CarriedObject::Behavior> {
+  static const std::string pretty_name;
+  static const EnumInfo<CarriedObject::Behavior>::names_type names;
 };
 
 }

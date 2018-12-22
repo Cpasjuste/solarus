@@ -1,26 +1,26 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
- * 
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Solarus is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/hero/SwimmingState.h"
+#include "solarus/audio/Sound.h"
+#include "solarus/core/CommandsEffects.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/System.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/CommandsEffects.h"
-#include "solarus/Equipment.h"
+#include "solarus/hero/SwimmingState.h"
 
 namespace Solarus {
 
@@ -74,7 +74,7 @@ void Hero::SwimmingState::update() {
 
   Hero& hero = get_entity();
   if (hero.get_ground_below() != Ground::DEEP_WATER) {
-    hero.set_state(new FreeState(hero));
+    hero.set_state(std::make_shared<FreeState>(hero));
   }
   else if (fast_swimming && System::now() >= end_fast_swim_date) {
     fast_swimming = false;
@@ -170,7 +170,7 @@ int Hero::SwimmingState::get_fast_swimming_speed() const {
  * \param stairs some stairs
  * \return true if the stairs are obstacle in this state
  */
-bool Hero::SwimmingState::is_stairs_obstacle(const Stairs& /* stairs */) const {
+bool Hero::SwimmingState::is_stairs_obstacle(Stairs& /* stairs */) {
   return false;
 }
 
@@ -179,7 +179,7 @@ bool Hero::SwimmingState::is_stairs_obstacle(const Stairs& /* stairs */) const {
  * \param item The equipment item to obtain.
  * \return true if the hero can pick that treasure in this state.
  */
-bool Hero::SwimmingState::can_pick_treasure(EquipmentItem& /* item */) const {
+bool Hero::SwimmingState::get_can_pick_treasure(EquipmentItem& /* item */) const {
   return true;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,10 +14,12 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/core/CurrentQuest.h"
+#include "solarus/core/InputEvent.h"
+#include "solarus/core/Rectangle.h"
+#include "solarus/graphics/Video.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
-#include "solarus/lowlevel/Rectangle.h"
-#include "solarus/lowlevel/InputEvent.h"
 
 namespace Solarus {
 
@@ -31,7 +33,7 @@ const std::string LuaContext::input_module_name = "sol.input";
  */
 void LuaContext::register_input_module() {
 
-  static const luaL_Reg functions[] = {
+  std::vector<luaL_Reg> functions = {
       { "is_joypad_enabled", input_api_is_joypad_enabled },
       { "set_joypad_enabled", input_api_set_joypad_enabled },
       { "is_key_pressed", input_api_is_key_pressed },
@@ -41,8 +43,16 @@ void LuaContext::register_input_module() {
       { "get_joypad_hat_direction", input_api_get_joypad_hat_direction },
       { "is_mouse_button_pressed", input_api_is_mouse_button_pressed },
       { "get_mouse_position", input_api_get_mouse_position },
-      { nullptr, nullptr }
   };
+  if (CurrentQuest::is_format_at_least({ 1, 6 })) {
+    functions.insert(functions.end(), {
+        { "is_finger_pressed", input_api_is_finger_pressed },
+        { "get_finger_position", input_api_get_finger_position },
+        { "get_finger_pressure", input_api_get_finger_pressure },
+        { "simulate_key_pressed", input_api_simulate_key_pressed },
+        { "simulate_key_released", input_api_simulate_key_released },
+    });
+  }
 
   register_functions(input_module_name, functions);
 }
@@ -54,7 +64,7 @@ void LuaContext::register_input_module() {
  */
 int LuaContext::input_api_is_joypad_enabled(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     lua_pushboolean(l, InputEvent::is_joypad_enabled());
     return 1;
   });
@@ -67,7 +77,7 @@ int LuaContext::input_api_is_joypad_enabled(lua_State* l) {
  */
 int LuaContext::input_api_set_joypad_enabled(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     bool joypad_enabled = LuaTools::opt_boolean(l, 2, true);
 
     InputEvent::set_joypad_enabled(joypad_enabled);
@@ -83,11 +93,11 @@ int LuaContext::input_api_set_joypad_enabled(lua_State* l) {
  */
 int LuaContext::input_api_is_key_pressed(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& key_name = LuaTools::check_string(l, 1);
-    InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KEY_NONE);
+    InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KeyboardKey::NONE);
 
-    if (key == InputEvent::KEY_NONE) {
+    if (key == InputEvent::KeyboardKey::NONE) {
       LuaTools::arg_error(l, 1, std::string(
           "Unknown keyboard key name: '") + key_name + "'");
     }
@@ -104,7 +114,7 @@ int LuaContext::input_api_is_key_pressed(lua_State* l) {
  */
 int LuaContext::input_api_get_key_modifiers(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const bool shift = InputEvent::is_shift_down();
     const bool control = InputEvent::is_control_down();
     const bool alt = InputEvent::is_alt_down();
@@ -144,7 +154,7 @@ int LuaContext::input_api_get_key_modifiers(lua_State* l) {
  */
 int LuaContext::input_api_is_joypad_button_pressed(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     int button = LuaTools::check_int(l, 1);
 
     lua_pushboolean(l, InputEvent::is_joypad_button_down(button));
@@ -159,7 +169,7 @@ int LuaContext::input_api_is_joypad_button_pressed(lua_State* l) {
  */
 int LuaContext::input_api_get_joypad_axis_state(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     int axis = LuaTools::check_int(l, 1);
 
     lua_pushinteger(l, InputEvent::get_joypad_axis_state(axis));
@@ -174,7 +184,7 @@ int LuaContext::input_api_get_joypad_axis_state(lua_State* l) {
  */
 int LuaContext::input_api_get_joypad_hat_direction(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     int hat = LuaTools::check_int(l, 1);
 
     lua_pushinteger(l, InputEvent::get_joypad_hat_direction(hat));
@@ -189,37 +199,16 @@ int LuaContext::input_api_get_joypad_hat_direction(lua_State* l) {
  */
 int LuaContext::input_api_is_mouse_button_pressed(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& button_name = LuaTools::check_string(l, 1);
-    InputEvent::MouseButton button = name_to_enum(button_name, InputEvent::MOUSE_BUTTON_NONE);
+    InputEvent::MouseButton button = name_to_enum(button_name, InputEvent::MouseButton::NONE);
 
-    if (button == InputEvent::MOUSE_BUTTON_NONE) {
+    if (button == InputEvent::MouseButton::NONE) {
       LuaTools::arg_error(l, 1, std::string(
           "Unknown mouse button name: '") + button_name + "'");
     }
 
     lua_pushboolean(l, InputEvent::is_mouse_button_down(button));
-    return 1;
-  });
-}
-
-/**
- * \brief Implementation of sol.input.is_mouse_button_released().
- * \param l The Lua context that is calling this function.
- * \return Number of values to return to Lua.
- */
-int LuaContext::input_api_is_mouse_button_released(lua_State* l) {
-
-  return LuaTools::exception_boundary_handle(l, [&] {
-    const std::string& button_name = LuaTools::check_string(l, 1);
-    InputEvent::MouseButton button = name_to_enum(button_name, InputEvent::MOUSE_BUTTON_NONE);
-
-    if (button == InputEvent::MOUSE_BUTTON_NONE) {
-      LuaTools::arg_error(l, 1, std::string(
-          "Unknown mouse button name: '") + button_name + "'");
-    }
-
-    lua_pushboolean(l, !InputEvent::is_mouse_button_down(button));
     return 1;
   });
 }
@@ -231,16 +220,114 @@ int LuaContext::input_api_is_mouse_button_released(lua_State* l) {
  */
 int LuaContext::input_api_get_mouse_position(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
-    Point mouse_xy;
-    if (!InputEvent::get_global_mouse_position(mouse_xy)) {
-      lua_pushnil(l);
-      return 1;
-    }
+  return state_boundary_handle(l, [&] {
+    const Point mouse_xy = InputEvent::get_global_mouse_position();
 
     lua_pushinteger(l, mouse_xy.x);
     lua_pushinteger(l, mouse_xy.y);
     return 2;
+  });
+}
+
+/**
+ * \brief Implementation of sol.input.is_finger_pressed().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::input_api_is_finger_pressed(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    int finger_id = LuaTools::check_int(l, 1);
+
+    lua_pushboolean(l, InputEvent::is_finger_down(finger_id));
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.input.get_finger_position().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::input_api_get_finger_position(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    int finger_id = LuaTools::check_int(l, 1);
+    Point finger_xy;
+
+    if (!InputEvent::get_global_finger_position(finger_id, finger_xy)) {
+      lua_pushnil(l);
+      return 1;
+    }
+
+    lua_pushinteger(l, finger_xy.x);
+    lua_pushinteger(l, finger_xy.y);
+    return 2;
+  });
+}
+
+/**
+ * \brief Implementation of sol.input.get_finger_pressure().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::input_api_get_finger_pressure(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+
+    int finger_id = LuaTools::check_int(l, 1);
+    float finger_pressure;
+    if (!InputEvent::get_global_finger_pressure(finger_id, finger_pressure)) {
+      lua_pushnil(l);
+      return 1;
+    }
+
+    lua_pushnumber(l, finger_pressure);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.input.simulate_key_pressed().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::input_api_simulate_key_pressed(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+
+    const std::string& key_name = LuaTools::check_string(l, 1);
+    InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KeyboardKey::NONE);
+
+    if (key == InputEvent::KeyboardKey::NONE) {
+      LuaTools::arg_error(l, 1, std::string(
+          "Unknown keyboard key name: '") + key_name + "'");
+    }
+
+    InputEvent::simulate_key_pressed(key);
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of sol.input.simulate_key_released().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::input_api_simulate_key_released(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+
+    const std::string& key_name = LuaTools::check_string(l, 1);
+    InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KeyboardKey::NONE);
+
+    if (key == InputEvent::KeyboardKey::NONE) {
+      LuaTools::arg_error(l, 1, std::string(
+          "Unknown keyboard key name: '") + key_name + "'");
+    }
+
+    InputEvent::simulate_key_released(key);
+    return 0;
   });
 }
 

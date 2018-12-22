@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,20 +14,20 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/entities/Npc.h"
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/EquipmentItemUsage.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/QuestFiles.h"
 #include "solarus/entities/CarriedObject.h"
 #include "solarus/entities/Hero.h"
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/lowlevel/Sound.h"
+#include "solarus/entities/Npc.h"
+#include "solarus/graphics/Sprite.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/ScopedLuaRef.h"
 #include "solarus/movements/Movement.h"
-#include "solarus/Equipment.h"
-#include "solarus/EquipmentItemUsage.h"
-#include "solarus/Game.h"
-#include "solarus/Map.h"
-#include "solarus/Sprite.h"
 #include <lua.hpp>
 #include <memory>
 
@@ -113,6 +113,12 @@ void Npc::initialize_sprite(const std::string& sprite_name, int initial_directio
     const SpritePtr& sprite = create_sprite(sprite_name);
     if (initial_direction != -1) {
       sprite->set_current_direction(initial_direction);
+    }
+
+    if (sprite->get_animation_set_id() == "entities/sign") {
+      // Allow to lift NPCs with sign sprite by default
+      // for historical reasons.
+      set_weight(1);
     }
   }
 }
@@ -221,19 +227,18 @@ void Npc::notify_collision(Entity& entity_overlapping, CollisionMode collision_m
 
     Hero& hero = static_cast<Hero&>(entity_overlapping);
 
-    if (get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
-        && hero.is_free()) {
+    CommandsEffects::ActionKeyEffect action_effect = get_commands_effects().get_action_key_effect();
+    if (action_effect == CommandsEffects::ACTION_KEY_NONE || action_effect == CommandsEffects::ACTION_KEY_LIFT) {
 
-      if (subtype == USUAL_NPC // the hero can talk to usual NPCs from any direction
-          || get_direction() == -1
-          || hero.is_facing_direction4((get_direction() + 2) % 4)) {
+      if (hero.is_free()) {
+        if (subtype == USUAL_NPC // the hero can talk to usual NPCs from any direction
+            || get_direction() == -1
+            || hero.is_facing_direction4((get_direction() + 2) % 4)) {
 
-        // show the appropriate action icon
-        get_commands_effects().set_action_key_effect(subtype == USUAL_NPC ?
-            CommandsEffects::ACTION_KEY_SPEAK : CommandsEffects::ACTION_KEY_LOOK);
-      }
-      else if (can_be_lifted() && get_equipment().has_ability(Ability::LIFT)) {
-        get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LIFT);
+          // show the appropriate action icon
+          get_commands_effects().set_action_key_effect(subtype == USUAL_NPC ?
+              CommandsEffects::ACTION_KEY_SPEAK : CommandsEffects::ACTION_KEY_LOOK);
+        }
       }
     }
   }
@@ -258,9 +263,7 @@ bool Npc::notify_action_command_pressed() {
   if (hero.is_free() &&
       get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
   ) {
-
     CommandsEffects::ActionKeyEffect effect = get_commands_effects().get_action_key_effect();
-    get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
 
     SpritePtr sprite = get_sprite();
 
@@ -274,6 +277,7 @@ bool Npc::notify_action_command_pressed() {
 
     if (effect != CommandsEffects::ACTION_KEY_LIFT) {
       // start the normal behavior
+      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
       if (behavior == BEHAVIOR_DIALOG) {
         get_game().start_dialog(dialog_to_show, ScopedLuaRef(), ScopedLuaRef());
       }
@@ -282,29 +286,8 @@ bool Npc::notify_action_command_pressed() {
       }
       return true;
     }
-    else {
-      // lift the entity
-      if (get_equipment().has_ability(Ability::LIFT)) {
-
-        std::string animation_set_id = "stopped";
-        if (sprite != nullptr) {
-          animation_set_id = sprite->get_animation_set_id();
-        }
-        hero.start_lifting(std::make_shared<CarriedObject>(
-            hero,
-            *this,
-            animation_set_id,
-            "stone",
-            2,
-            0)
-        );
-        Sound::play("lift");
-        remove_from_map();
-        return true;
-      }
-    }
   }
-  return false;
+  return Entity::notify_action_command_pressed();
 }
 
 /**
@@ -394,21 +377,6 @@ void Npc::notify_movement_finished() {
       sprite->set_current_animation("stopped");
     }
   }
-}
-
-
-/**
- * \brief Returns whether this interactive entity can be lifted.
- */
-bool Npc::can_be_lifted() const {
-
-  // there is currently no way to specify from the data file of the map
-  // that an NPC can be lifted (nor its weight, damage, sound, etc) so this is hardcoded
-  // TODO: specify the possibility to lift and the weight from Lua
-  // npc:set_weight()?
-
-  const SpritePtr& sprite = get_sprite();
-  return sprite != nullptr && sprite->get_animation_set_id() == "entities/sign";
 }
 
 }

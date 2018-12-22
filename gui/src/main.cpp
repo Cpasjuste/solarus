@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,9 +16,9 @@
  */
 #include "solarus/gui/main_window.h"
 #include "solarus/gui/settings.h"
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/Arguments.h"
-#include "solarus/MainLoop.h"
+#include "solarus/core/Arguments.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/MainLoop.h"
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QFile>
@@ -124,7 +124,7 @@ int add_quest(int argc, char* argv[]) {
   if (!QFile(canonical_path + "/data/quest.dat").exists() &&
       !QFile(canonical_path + "/data.solarus").exists() &&
       !QFile(canonical_path + "/data.solarus.zip").exists()) {
-    std::cerr << "Not a valid Solarus quest: " << new_path.toStdString() << std::endl;
+    std::cerr << "Not a valid Solarus quest: " << new_path.toLocal8Bit().toStdString() << std::endl;
     return 1;
   }
 
@@ -135,23 +135,23 @@ int add_quest(int argc, char* argv[]) {
   Settings settings(system_settings_writable ? QSettings::SystemScope : QSettings::UserScope);
 
   QStringList all_paths = settings.value("quests_paths").toStringList();
-  Q_FOREACH(const QString& path, all_paths) {
+  for (const QString& path : all_paths) {
     if (QFileInfo(path).canonicalFilePath() == canonical_path) {
-      std::cout << "Nothing to do, quest already registered: " << new_path.toStdString() << std::endl;
+      std::cout << "Nothing to do, quest already registered: " << new_path.toLocal8Bit().toStdString() << std::endl;
       return 0;
     }
   }
 
   if (!settings.isWritable()) {
-    std::cerr << "Settings file is not writable: " << settings.fileName().toStdString() << std::endl;
+    std::cerr << "Settings file is not writable: " << settings.fileName().toLocal8Bit().toStdString() << std::endl;
     return 1;
   }
-  std::cout << "Writing settings file " << settings.fileName().toStdString() << std::endl;
+  std::cout << "Writing settings file " << settings.fileName().toLocal8Bit().toStdString() << std::endl;
 
   all_paths.prepend(canonical_path);
   settings.setValue("quests_paths", all_paths);
   settings.setValue("last_quest", new_path);
-  std::cout << "Quest successfully added to Solarus: " << new_path.toStdString() << std::endl;
+  std::cout << "Quest successfully added to Solarus: " << new_path.toLocal8Bit().toStdString() << std::endl;
 
   return 0;
 }

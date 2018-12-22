@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,16 +14,16 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/hero/HurtState.h"
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/Geometry.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/System.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
+#include "solarus/hero/HurtState.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/movements/StraightMovement.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/Geometry.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/Game.h"
-#include "solarus/Equipment.h"
 #include <algorithm>
 #include <memory>
 
@@ -160,14 +160,14 @@ bool Hero::HurtState::is_touching_ground() const {
  * \return true if the teletransporter is an obstacle in this state
  */
 bool Hero::HurtState::is_teletransporter_obstacle(
-    const Teletransporter& /* teletransporter */) const {
+    Teletransporter& /* teletransporter */) {
   return true;
 }
 
 /**
  * \copydoc Entity::State::is_stream_obstacle
  */
-bool Hero::HurtState::is_stream_obstacle(const Stream& /* stream */) const {
+bool Hero::HurtState::is_stream_obstacle(Stream& /* stream */) {
   return true;
 }
 
@@ -176,14 +176,14 @@ bool Hero::HurtState::is_stream_obstacle(const Stream& /* stream */) const {
  * \param sensor a sensor
  * \return true if the sensor is an obstacle in this state
  */
-bool Hero::HurtState::is_sensor_obstacle(const Sensor& /* sensor */) const {
+bool Hero::HurtState::is_sensor_obstacle(Sensor& /* sensor */) {
   return true;
 }
 
 /**
  * \copydoc Entity::State::is_separator_obstacle
  */
-bool Hero::HurtState::is_separator_obstacle(const Separator& /* separator */) const {
+bool Hero::HurtState::is_separator_obstacle(Separator& /* separator */) {
   return true;
 }
 
@@ -193,7 +193,7 @@ bool Hero::HurtState::is_separator_obstacle(const Separator& /* separator */) co
  * (or nullptr if the source of the attack is not an enemy)
  * \return true if the hero can be hurt in this state
  */
-bool Hero::HurtState::can_be_hurt(Entity* /* attacker */) const {
+bool Hero::HurtState::get_can_be_hurt(Entity* /* attacker */) {
   return false;
 }
 

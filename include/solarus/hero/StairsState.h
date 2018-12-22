@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ class Hero::StairsState: public HeroState {
     virtual void set_suspended(bool suspended) override;
 
     virtual bool is_touching_ground() const override;
-    virtual bool can_come_from_bad_ground() const override;
+    virtual bool get_can_come_from_bad_ground() const override;
     virtual bool is_teletransporter_delayed() const override;
     virtual int get_wanted_movement_direction8() const override;
     virtual std::shared_ptr<CarriedObject> get_carried_object() const override;

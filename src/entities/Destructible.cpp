@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,25 +14,25 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/audio/Sound.h"
+#include "solarus/core/CommandsEffects.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/QuestFiles.h"
+#include "solarus/core/Treasure.h"
+#include "solarus/core/System.h"
 #include "solarus/entities/CarriedObject.h"
 #include "solarus/entities/Destructible.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/Explosion.h"
 #include "solarus/entities/Hero.h"
 #include "solarus/entities/Pickable.h"
+#include "solarus/graphics/Sprite.h"
 #include "solarus/hero/HeroSprites.h"
-#include "solarus/movements/FallingHeight.h"
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/System.h"
 #include "solarus/lua/LuaContext.h"
-#include "solarus/CommandsEffects.h"
-#include "solarus/Game.h"
-#include "solarus/Equipment.h"
-#include "solarus/Treasure.h"
-#include "solarus/Map.h"
-#include "solarus/Sprite.h"
+#include "solarus/movements/FallingHeight.h"
 #include <lauxlib.h>
 #include <memory>
 
@@ -63,7 +63,6 @@ Destructible::Destructible(
   can_be_cut(false),
   can_explode(false),
   can_regenerate(false),
-  weight(0),
   damage_on_enemies(1),
   is_being_cut(false),
   regeneration_date(0),
@@ -71,6 +70,7 @@ Destructible::Destructible(
 
   set_origin(8, 13);
   create_sprite(get_animation_set_id());
+  set_weight(0);
 
   update_collision_modes();
 }
@@ -122,7 +122,7 @@ const std::string& Destructible::get_animation_set_id() const {
 }
 
 /**
- * \brief Returns the id of the sound to play when this item is destroyed.
+ * \brief Returns the id of the sound to play when this object is destroyed.
  * \return The destruction sound id or an empty string.
  */
 const std::string& Destructible::get_destruction_sound() const {
@@ -130,39 +130,11 @@ const std::string& Destructible::get_destruction_sound() const {
 }
 
 /**
- * \brief Sets the id of the sound to play when this item is destroyed.
+ * \brief Sets the id of the sound to play when this object is destroyed.
  * \param destruction_sound_id The destruction sound id or an empty string.
  */
 void Destructible::set_destruction_sound(const std::string& destruction_sound_id) {
   this->destruction_sound_id = destruction_sound_id;
-}
-
-/**
- * \brief Returns the weight of this destructible object.
- *
- * This corresponds to the "lift" ability level required to lift the object.
- * Therefore, a value of 0 allows the hero to lift the item unconditionally.
- * A value of -1 means that the object cannot be lifted.
- *
- * \return The weight of the object or -1.
- */
-int Destructible::get_weight() const {
-  return weight;
-}
-
-/**
- * \brief Sets the weight of this destructible object.
- *
- * This corresponds to the "lift" ability level required to lift the object.
- * Therefore, a value of 0 allows the hero to lift the item unconditionally.
- * A value of -1 means that the object cannot be lifted.
- *
- * \param weight The weight of the object or -1.
- */
-void Destructible::set_weight(int weight) {
-
-  this->weight = weight;
-  update_collision_modes();
 }
 
 /**
@@ -330,10 +302,7 @@ void Destructible::notify_collision_with_hero(Hero& hero, CollisionMode /* colli
       && get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
       && hero.is_free()) {
 
-    if (get_equipment().has_ability(Ability::LIFT, get_weight())) {
-      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LIFT);
-    }
-    else {
+    if (!get_equipment().has_ability(Ability::LIFT, get_weight())) {
       get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LOOK);
     }
   }
@@ -398,14 +367,15 @@ bool Destructible::notify_action_command_pressed() {
     if (get_equipment().has_ability(Ability::LIFT, get_weight())) {
 
       uint32_t explosion_date = get_can_explode() ? System::now() + 6000 : 0;
-      get_hero().start_lifting(std::make_shared<CarriedObject>(
+      std::shared_ptr<CarriedObject> carried_object = std::make_shared<CarriedObject>(
           get_hero(),
           *this,
           get_animation_set_id(),
           get_destruction_sound(),
           get_damage_on_enemies(),
-          explosion_date)
+          explosion_date
       );
+      get_hero().start_lifting(carried_object);
 
       // Play the sound.
       Sound::play("lift");
@@ -423,11 +393,13 @@ bool Destructible::notify_action_command_pressed() {
       }
 
       // Notify Lua.
-      get_lua_context()->destructible_on_lifting(*this);
+      get_lua_context()->entity_on_lifting(*this, get_hero(), *carried_object);
     }
     else {
       // Cannot lift the object.
-      get_hero().start_grabbing();
+      if (get_hero().can_grab()) {
+        get_hero().start_grabbing();
+      }
       get_lua_context()->destructible_on_looked(*this);
     }
 

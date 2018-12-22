@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,17 +14,17 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Geometry.h"
+#include "solarus/core/QuestFiles.h"
 #include "solarus/entities/Enemy.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
 #include "solarus/hero/SpinAttackState.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/lowlevel/Geometry.h"
-#include "solarus/lowlevel/Sound.h"
 #include "solarus/movements/CircleMovement.h"
 #include "solarus/movements/StraightMovement.h"
-#include "solarus/Equipment.h"
-#include "solarus/Game.h"
 #include <memory>
 #include <sstream>
 #include <string>
@@ -57,14 +57,15 @@ void Hero::SpinAttackState::start(const State* previous_state) {
   if (get_equipment().has_ability(Ability::SWORD_KNOWLEDGE)) {
     get_sprites().set_animation_super_spin_attack();
     std::shared_ptr<CircleMovement> movement =
-        std::make_shared<CircleMovement>(false);
+        std::make_shared<CircleMovement>();
     movement->set_center(hero.get_xy());
     movement->set_radius_speed(128);
     movement->set_radius(24);
-    movement->set_angle_speed(540);
+    movement->set_angular_speed(Geometry::degrees_to_radians(1000));
     movement->set_max_rotations(3);
     movement->set_clockwise(true);
     hero.set_movement(movement);
+    get_equipment().notify_ability_used(Ability::SWORD_KNOWLEDGE);
   }
   else {
     get_sprites().set_animation_spin_attack();
@@ -94,7 +95,7 @@ void Hero::SpinAttackState::update() {
   // check the animation
   Hero& hero = get_entity();
   if (get_sprites().is_animation_finished()) {
-    hero.set_state(new FreeState(hero));
+    hero.set_state(std::make_shared<FreeState>(hero));
   }
 
   // check the movement if any
@@ -103,7 +104,7 @@ void Hero::SpinAttackState::update() {
 
     if (!being_pushed) {
       // end of a super spin attack
-      hero.set_state(new FreeState(hero));
+      hero.set_state(std::make_shared<FreeState>(hero));
     }
   }
 }
@@ -121,7 +122,7 @@ bool Hero::SpinAttackState::can_sword_hit_crystal() const {
  * \param item The equipment item to obtain.
  * \return true if the hero can pick that treasure in this state.
  */
-bool Hero::SpinAttackState::can_pick_treasure(EquipmentItem& /* item */) const {
+bool Hero::SpinAttackState::get_can_pick_treasure(EquipmentItem& /* item */) const {
   return true;
 }
 
@@ -131,7 +132,7 @@ bool Hero::SpinAttackState::can_pick_treasure(EquipmentItem& /* item */) const {
  * \param attacker an attacker that is trying to hurt the hero
  * (or nullptr if the source of the attack is not an enemy)
  */
-bool Hero::SpinAttackState::can_be_hurt(Entity* /* attacker */) const {
+bool Hero::SpinAttackState::get_can_be_hurt(Entity* /* attacker */) {
   return false;
 }
 
@@ -208,7 +209,7 @@ bool Hero::SpinAttackState::is_prickle_obstacle() const {
  * \return true if the teletransporter is an obstacle in this state
  */
 bool Hero::SpinAttackState::is_teletransporter_obstacle(
-    const Teletransporter& /* teletransporter */) const {
+    Teletransporter& /* teletransporter */) {
 
   // if the hero is pushed by an enemy or making a super spin attack,
   // don't go on a teletransporter
@@ -219,7 +220,7 @@ bool Hero::SpinAttackState::is_teletransporter_obstacle(
  * \copydoc Entity::State::is_separator_obstacle
  */
 bool Hero::SpinAttackState::is_separator_obstacle(
-    const Separator& /* separator */) const {
+    Separator& /* separator */) {
   return true;
 }
 
@@ -245,30 +246,30 @@ void Hero::SpinAttackState::notify_obstacle_reached() {
 void Hero::SpinAttackState::notify_attacked_enemy(
     EnemyAttack attack,
     Enemy& victim,
-    const Sprite* victim_sprite,
-    EnemyReaction::Reaction& result,
+    Sprite* victim_sprite,
+    const EnemyReaction::Reaction& result,
     bool /* killed */) {
 
   Hero& hero = get_entity();
-  if (result.type != EnemyReaction::ReactionType::IGNORED && attack == EnemyAttack::SWORD) {
+  if (attack == EnemyAttack::SWORD &&
+      victim.get_push_hero_on_sword() &&
+      result.type != EnemyReaction::ReactionType::IGNORED &&
+      result.type != EnemyReaction::ReactionType::LUA_CALLBACK) {
 
-    if (victim.get_push_hero_on_sword()) {
-
-      if (hero.get_movement() != nullptr) {
-        // interrupting a super spin attack: finish with a normal one
-        hero.clear_movement();
-        get_sprites().set_animation_spin_attack();
-      }
-
-      being_pushed = true;
-      double angle = victim.get_angle(hero, victim_sprite, nullptr);
-      std::shared_ptr<StraightMovement> movement =
-          std::make_shared<StraightMovement>(false, true);
-      movement->set_max_distance(24);
-      movement->set_speed(120);
-      movement->set_angle(angle);
-      hero.set_movement(movement);
+    if (hero.get_movement() != nullptr) {
+      // interrupting a super spin attack: finish with a normal one
+      hero.clear_movement();
+      get_sprites().set_animation_spin_attack();
     }
+
+    being_pushed = true;
+    double angle = victim.get_angle(hero, victim_sprite, nullptr);
+    std::shared_ptr<StraightMovement> movement =
+        std::make_shared<StraightMovement>(false, true);
+    movement->set_max_distance(24);
+    movement->set_speed(120);
+    movement->set_angle(angle);
+    hero.set_movement(movement);
   }
 }
 

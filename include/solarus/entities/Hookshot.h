@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
 #ifndef SOLARUS_HOOKSHOT_H
 #define SOLARUS_HOOKSHOT_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 #include "solarus/entities/Entity.h"
-#include "solarus/Sprite.h"
+#include "solarus/graphics/Sprite.h"
 
 namespace Solarus {
 
@@ -34,43 +34,43 @@ class Hookshot: public Entity {
 
     explicit Hookshot(const Hero& hero);
 
-    virtual EntityType get_type() const override;
+    EntityType get_type() const override;
 
-    virtual bool is_teletransporter_obstacle(Teletransporter& teletransporter) override;
-    virtual bool is_stream_obstacle(Stream& stream) override;
-    virtual bool is_stairs_obstacle(Stairs& stairs) override;
-    virtual bool is_deep_water_obstacle() const override;
-    virtual bool is_hole_obstacle() const override;
-    virtual bool is_lava_obstacle() const override;
-    virtual bool is_prickle_obstacle() const override;
-    virtual bool is_ladder_obstacle() const override;
-    virtual bool is_switch_obstacle(Switch& sw) override;
-    virtual bool is_crystal_obstacle(Crystal& crystal) override;
-    virtual bool is_jumper_obstacle(Jumper& jumper, const Rectangle& candidate_position) override;
+    bool is_teletransporter_obstacle(Teletransporter& teletransporter) override;
+    bool is_stream_obstacle(Stream& stream) override;
+    bool is_stairs_obstacle(Stairs& stairs) override;
+    bool is_deep_water_obstacle() const override;
+    bool is_hole_obstacle() const override;
+    bool is_lava_obstacle() const override;
+    bool is_prickle_obstacle() const override;
+    bool is_ladder_obstacle() const override;
+    bool is_switch_obstacle(Switch& sw) override;
+    bool is_crystal_obstacle(Crystal& crystal) override;
+    bool is_jumper_obstacle(Jumper& jumper, const Rectangle& candidate_position) override;
 
     // state
-    virtual void update() override;
-    virtual void draw_on_map() override;
+    void update() override;
+    void built_in_draw(Camera& camera) override;
     bool is_flying() const;
     bool is_going_back() const;
     void go_back();
     void attach_to(Entity& entity_reached);
 
     // collisions
-    virtual void notify_obstacle_reached() override;
-    virtual void notify_collision_with_enemy(Enemy& enemy, Sprite& enemy_sprite, Sprite& this_sprite) override;
-    virtual void notify_attacked_enemy(
+    void notify_obstacle_reached() override;
+    void notify_collision_with_enemy(Enemy& enemy, Sprite& this_sprite, Sprite& enemy_sprite) override;
+    void notify_attacked_enemy(
         EnemyAttack attack,
         Enemy& victim,
-        const Sprite* victim_sprite,
-        EnemyReaction::Reaction& result,
+        Sprite* victim_sprite,
+        const EnemyReaction::Reaction& result,
         bool killed
     ) override;
-    virtual void notify_collision_with_chest(Chest& chest) override;
-    virtual void notify_collision_with_destructible(Destructible& destructible, CollisionMode collision_mode) override;
-    virtual void notify_collision_with_block(Block& block) override;
-    virtual void notify_collision_with_switch(Switch& sw, CollisionMode collision_mode) override;
-    virtual void notify_collision_with_crystal(Crystal& crystal, CollisionMode collision_mode) override;
+    void notify_collision_with_chest(Chest& chest) override;
+    void notify_collision_with_destructible(Destructible& destructible, CollisionMode collision_mode) override;
+    void notify_collision_with_block(Block& block) override;
+    void notify_collision_with_switch(Switch& sw, CollisionMode collision_mode) override;
+    void notify_collision_with_crystal(Crystal& crystal, CollisionMode collision_mode) override;
 
   private:
 

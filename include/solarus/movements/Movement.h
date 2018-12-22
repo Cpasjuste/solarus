@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 #ifndef SOLARUS_MOVEMENT_H
 #define SOLARUS_MOVEMENT_H
 
-#include "solarus/Common.h"
-#include "solarus/lowlevel/Rectangle.h"
+#include "solarus/core/Common.h"
+#include "solarus/core/Rectangle.h"
 #include "solarus/lua/ExportableToLua.h"
 #include "solarus/lua/ScopedLuaRef.h"
 #include <cstdint>
@@ -56,6 +56,8 @@ class SOLARUS_API Movement: public ExportableToLua {
     virtual void update(); // called repeatedly
     bool is_suspended() const;
     virtual void set_suspended(bool suspended);
+    bool get_ignore_suspend() const;
+    void set_ignore_suspend(bool ignore_suspend);
 
     // position
     int get_x() const;
@@ -124,6 +126,8 @@ class SOLARUS_API Movement: public ExportableToLua {
     // suspended
     bool suspended;                              /**< Indicates whether the movement is suspended. */
     uint32_t when_suspended;                     /**< Indicates when the movement was suspended. */
+    bool ignore_suspend;                         /**< Whether the movement continues when the game is suspended
+                                                  * (for entity movements only). */
 
     // obstacles (only when the movement is applied to an entity)
     mutable Rectangle

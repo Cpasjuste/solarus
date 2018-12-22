@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,21 +14,21 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/hero/RunningState.h"
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/GameCommands.h"
+#include "solarus/core/Geometry.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/System.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
+#include "solarus/hero/RunningState.h"
 #include "solarus/entities/Enemy.h"
 #include "solarus/entities/Jumper.h"
 #include "solarus/entities/Stream.h"
-#include "solarus/movements/StraightMovement.h"
 #include "solarus/movements/JumpMovement.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/Geometry.h"
-#include "solarus/Game.h"
-#include "solarus/GameCommands.h"
-#include "solarus/Map.h"
-#include "solarus/Equipment.h"
+#include "solarus/movements/StraightMovement.h"
 #include <memory>
 
 namespace Solarus {
@@ -112,7 +112,7 @@ void Hero::RunningState::update() {
       phase++;
     }
     else if (!is_pressing_running_key()) {
-      hero.set_state(new FreeState(hero));
+      hero.set_state(std::make_shared<FreeState>(hero));
     }
   }
   else if (hero.get_movement()->is_finished()) {
@@ -162,7 +162,7 @@ void Hero::RunningState::notify_direction_command_pressed(int direction4) {
   if (!is_bouncing()
       && direction4 != get_sprites().get_animation_direction()) {
     Hero& hero = get_entity();
-    hero.set_state(new FreeState(hero));
+    hero.set_state(std::make_shared<FreeState>(hero));
   }
 }
 
@@ -203,7 +203,7 @@ int Hero::RunningState::get_wanted_movement_direction8() const {
  * If false is returned, stairs have no effect (but they are obstacle for the hero).
  * \return true if the hero ignores the effect of stairs in this state
  */
-bool Hero::RunningState::can_take_stairs() const {
+bool Hero::RunningState::get_can_take_stairs() const {
   return !is_bouncing();
 }
 
@@ -215,7 +215,7 @@ bool Hero::RunningState::can_take_stairs() const {
  *
  * \return true if the hero can use jumpers in this state
  */
-bool Hero::RunningState::can_take_jumper() const {
+bool Hero::RunningState::get_can_take_jumper() const {
   return !is_bouncing();
 }
 
@@ -240,7 +240,7 @@ void Hero::RunningState::notify_jumper_activated(Jumper& jumper) {
  * (or nullptr if the source of the attack is not an enemy)
  * \return true if the hero can be hurt in this state
  */
-bool Hero::RunningState::can_be_hurt(Entity* attacker) const {
+bool Hero::RunningState::get_can_be_hurt(Entity* attacker) {
 
   if (phase == 0) {
     // Preparing to run.
@@ -261,7 +261,7 @@ bool Hero::RunningState::can_be_hurt(Entity* attacker) const {
  * \param item The equipment item to obtain.
  * \return true if the hero can pick that treasure in this state.
  */
-bool Hero::RunningState::can_pick_treasure(EquipmentItem& /* item */) const {
+bool Hero::RunningState::get_can_pick_treasure(EquipmentItem& /* item */) const {
   return true;
 }
 
@@ -349,7 +349,7 @@ bool Hero::RunningState::can_persist_on_stream(const Stream& stream) const {
  * \param sensor a sensor
  * \return true if the sensor is an obstacle in this state
  */
-bool Hero::RunningState::is_sensor_obstacle(const Sensor& /* sensor */) const {
+bool Hero::RunningState::is_sensor_obstacle(Sensor& /* sensor */) {
   return is_bouncing();
 }
 

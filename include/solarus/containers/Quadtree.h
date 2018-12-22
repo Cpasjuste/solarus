@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
 #ifndef SOLARUS_QUADTREE_H
 #define SOLARUS_QUADTREE_H
 
-#include "solarus/Common.h"
-#include "solarus/lowlevel/Color.h"
-#include "solarus/lowlevel/Rectangle.h"
-#include "solarus/lowlevel/Size.h"
-#include "solarus/lowlevel/SurfacePtr.h"
+#include "solarus/core/Common.h"
+#include "solarus/core/Rectangle.h"
+#include "solarus/core/Size.h"
+#include "solarus/graphics/Color.h"
+#include "solarus/graphics/SurfacePtr.h"
 #include <array>
 #include <map>
 #include <memory>
@@ -40,10 +40,12 @@ class Color;
  *
  * \param T Type of objects.
  */
-template <typename T>
+template <typename T, typename Comparator = std::less<T>>
 class Quadtree {
 
   public:
+
+    using Set = std::set<T, Comparator>;
 
     Quadtree();
     explicit Quadtree(const Rectangle& space);
@@ -105,7 +107,7 @@ class Quadtree {
 
         void get_elements(
             const Rectangle& region,
-            std::set<T>& result
+            Set& result
         ) const;
 
         int get_num_elements() const;
@@ -142,7 +144,7 @@ class Quadtree {
 
     std::map<T, ElementInfo> elements;      /**< Elements in the quadtree and
                                              * intersecting its space. */
-    std::set<T> elements_outside;           /**< Elements that were added to
+    Set elements_outside;                   /**< Elements that were added to
                                              * the quadtree but that are
                                              * currently outside its space. */
     Node root;                              /** The root node of the tree. */

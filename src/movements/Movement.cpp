@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/movements/Movement.h"
+#include "solarus/core/System.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/Map.h"
+#include "solarus/graphics/Drawable.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/lua/LuaContext.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/Map.h"
-#include "solarus/Drawable.h"
+#include "solarus/movements/Movement.h"
 #include <lua.hpp>
 
 namespace Solarus {
@@ -49,6 +49,7 @@ Movement::Movement(bool ignore_obstacles):
   lua_notifications_enabled(true),
   suspended(false),
   when_suspended(0),
+  ignore_suspend(false),
   last_collision_box_on_obstacle(-1, -1),
   default_ignore_obstacles(ignore_obstacles),
   current_ignore_obstacles(ignore_obstacles),
@@ -390,6 +391,29 @@ void Movement::set_suspended(bool suspended) {
       when_suspended = now;
     }
   }
+}
+
+/**
+ * \brief Returns whether this movement continues when the game is suspended.
+ *
+ * Only makes sense for entity movements.
+ *
+ * \return \c true if the movement continues even when the game is suspended.
+ */
+bool Movement::get_ignore_suspend() const {
+  return ignore_suspend;
+}
+
+/**
+ * \brief Sets whether this movement continues when the game is suspended.
+ *
+ * Only makes sense for entity movements.
+ *
+ * \param ignore_suspend \c true to make the movement continue
+ * even when the game is suspended.
+ */
+void Movement::set_ignore_suspend(bool ignore_suspend) {
+  this->ignore_suspend = ignore_suspend;
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,14 +17,15 @@
 #ifndef SOLARUS_TILE_H
 #define SOLARUS_TILE_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 #include "solarus/entities/Entity.h"
-#include "solarus/lowlevel/SurfacePtr.h"
+#include "solarus/graphics/SurfacePtr.h"
 #include <string>
 
 namespace Solarus {
 
 struct TileInfo;
+class Tileset;
 class TilePattern;
 
 /**
@@ -52,8 +53,9 @@ class Tile: public Entity {
 
     EntityType get_type() const override;
     bool is_drawn_at_its_position() const override;
-    void draw_on_map() override;
-    void draw(const SurfacePtr& dst_surface, const Point& viewport);
+    void built_in_draw(Camera& camera) override;
+    void draw_on_surface(const SurfacePtr& dst_surface, const Point& viewport);
+    void notify_tileset_changed() override;
     const TilePattern& get_tile_pattern() const;
     const std::string& get_tile_pattern_id() const;
     bool is_animated() const;
@@ -61,7 +63,9 @@ class Tile: public Entity {
   private:
 
     const std::string tile_pattern_id;       /**< Id of the tile pattern. */
-    const TilePattern& tile_pattern;         /**< Pattern of the tile. */
+    std::shared_ptr<TilePattern>
+        tile_pattern;                        /**< Pattern of the tile, or nullptr if it does not exist. */
+    const Tileset* tileset;                  /**< Tileset of the pattern (nullptr means the one of the map). */
 
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,12 @@
 #include "solarus/entities/CrystalBlock.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/Hero.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/lowlevel/Sound.h"
+#include "solarus/core/QuestFiles.h"
+#include "solarus/audio/Sound.h"
 #include "solarus/movements/PlayerMovement.h"
-#include "solarus/Game.h"
-#include "solarus/Map.h"
-#include "solarus/Sprite.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Map.h"
+#include "solarus/graphics/Sprite.h"
 
 namespace Solarus {
 
@@ -40,6 +40,7 @@ CrystalBlock::CrystalBlock(Game& game, const std::string& name,
   Entity(name, 0, layer, xy, size),
   subtype(subtype) {
 
+  set_tiled(true);
   set_collision_modes(CollisionMode::COLLISION_OVERLAPPING);
   Sprite& sprite = *create_sprite("entities/crystal_block");
 
@@ -202,30 +203,6 @@ void CrystalBlock::update() {
   }
 
   Entity::update();
-}
-
-/**
- * \brief Draws the entity on the map.
- *
- * This is a redefinition of Entity::draw_on_map to repeat the block pattern.
- */
-void CrystalBlock::draw_on_map() {
-
-  const SpritePtr& sprite = get_sprite();
-  if (sprite == nullptr) {
-    return;
-  }
-
-  int x1 = get_top_left_x();
-  int y1 = get_top_left_y();
-  int x2 = x1 + get_width();
-  int y2 = y1 + get_height();
-
-  for (int y = y1; y < y2; y += 16) {
-    for (int x = x1; x < x2; x += 16) {
-      get_map().draw_visual(*sprite, x, y);
-    }
-  }
 }
 
 }

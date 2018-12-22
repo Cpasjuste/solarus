@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/hero/PushingState.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/GameCommands.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/GrabbingState.h"
 #include "solarus/hero/HeroSprites.h"
+#include "solarus/hero/PushingState.h"
 #include "solarus/movements/PathMovement.h"
-#include "solarus/Game.h"
-#include "solarus/GameCommands.h"
 #include <string>
 
 namespace Solarus {
@@ -75,17 +75,19 @@ void Hero::PushingState::update() {
 
     // stop pushing if there is no more obstacle
     if (!hero.is_facing_obstacle()) {
-      hero.set_state(new FreeState(hero));
+      hero.set_state(std::make_shared<FreeState>(hero));
     }
 
     // stop pushing if the player changes his direction
     else if (get_commands().get_wanted_direction8() != pushing_direction4 * 2) {
 
-      if (get_commands().is_command_pressed(GameCommand::ACTION)) {
-        hero.set_state(new GrabbingState(hero));
+      if (get_commands().is_command_pressed(GameCommand::ACTION) &&
+          hero.can_grab()
+      ) {
+        hero.start_grabbing();
       }
       else {
-        hero.set_state(new FreeState(hero));
+        hero.set_state(std::make_shared<FreeState>(hero));
       }
     }
 
@@ -127,7 +129,7 @@ bool Hero::PushingState::can_avoid_stream(const Stream& /* stream */) const {
  * \brief Returns whether the hero can swing his sword in this state.
  * \return true if the hero can swing his sword in this state
  */
-bool Hero::PushingState::can_start_sword() const {
+bool Hero::PushingState::get_can_start_sword() const {
   return !is_moving_grabbed_entity();
 }
 
@@ -179,9 +181,15 @@ void Hero::PushingState::notify_obstacle_reached() {
 void Hero::PushingState::notify_position_changed() {
 
   if (is_moving_grabbed_entity()) {
-    // if the entity has made more than 8 pixels and is aligned on the grid,
-    // we stop the movement
 
+    // Check that the entity still exists.
+    if (pushed_entity->is_being_removed()) {
+      stop_moving_pushed_entity();
+      return;
+    }
+
+    // If the entity has made more than 8 pixels and is aligned on the grid,
+    // we stop the movement.
     bool horizontal = pushing_direction4 % 2 == 0;
     bool has_reached_grid = pushing_movement->get_total_distance_covered() > 8
       && ((horizontal && pushed_entity->is_aligned_to_grid_x())
@@ -241,17 +249,19 @@ void Hero::PushingState::stop_moving_pushed_entity() {
     return;
   }
 
-  if (!get_commands().is_command_pressed(GameCommand::ACTION)) {
+  if (get_commands().is_command_pressed(GameCommand::ACTION) &&
+      hero.can_grab()
+  ) {
+    // The hero was pushing an entity and grabbing it.
+    hero.start_grabbing();
+  }
+  else {
     // The hero was pushing an entity without grabbing it.
 
     // Stop the animation pushing if his direction changed.
     if (get_commands().get_wanted_direction8() != pushing_direction4 * 2) {
-      hero.set_state(new FreeState(hero));
+      hero.set_state(std::make_shared<FreeState>(hero));
     }
-  }
-  else {
-    // The hero was pushing an entity and grabbing it.
-    hero.set_state(new GrabbingState(hero));
   }
 }
 
@@ -261,7 +271,7 @@ void Hero::PushingState::stop_moving_pushed_entity() {
  * (or nullptr if the source of the attack is not an enemy)
  * \return true if the hero can be hurt in this state
  */
-bool Hero::PushingState::can_be_hurt(Entity* /* attacker */) const {
+bool Hero::PushingState::get_can_be_hurt(Entity* /* attacker */) {
   return !is_moving_grabbed_entity();
 }
 
@@ -270,7 +280,7 @@ bool Hero::PushingState::can_be_hurt(Entity* /* attacker */) const {
  * \param item The equipment item to obtain.
  * \return true if the hero can pick that treasure in this state.
  */
-bool Hero::PushingState::can_pick_treasure(EquipmentItem& /* item */) const {
+bool Hero::PushingState::get_can_pick_treasure(EquipmentItem& /* item */) const {
   return true;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus Quest Editor is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,9 @@
 #define SOLARUS_GUI_QUESTS_VIEW_H
 
 #include "solarus/gui/gui_common.h"
-#include "solarus/QuestProperties.h"
-#include <QListView>
+#include "solarus/core/QuestProperties.h"
+#include <QSortFilterProxyModel>
+#include <QTableView>
 
 namespace SolarusGui {
 
@@ -29,7 +30,7 @@ class QuestsItemDelegate;
 /**
  * @brief A widget where the user can select a quest.
  */
-class SOLARUS_GUI_API QuestsView : public QListView {
+class SOLARUS_GUI_API QuestsView : public QTableView {
 
 public:
 
@@ -57,8 +58,9 @@ public:
 
 private:
 
-  QuestsModel* model;
-  QuestsItemDelegate* itemDelegate;
+  QuestsModel* quests_model;
+  QSortFilterProxyModel* proxy_model;
+  QuestsItemDelegate* item_delegate;
 };
 
 }

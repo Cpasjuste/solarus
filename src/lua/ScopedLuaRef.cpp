@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,9 +14,11 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/lua/ScopedLuaRef.h"
 #include "solarus/lua/LuaTools.h"
+#include "solarus/lua/ScopedLuaRef.h"
+#include "solarus/lua/LuaContext.h"
 #include <lua.hpp>
+#include <sstream>
 
 namespace Solarus {
 
@@ -145,7 +147,6 @@ int ScopedLuaRef::get() const {
  * This calls luaL_unref().
  */
 void ScopedLuaRef::clear() {
-
   if (l != nullptr) {
     luaL_unref(l, LUA_REGISTRYINDEX, ref);
   }
@@ -158,11 +159,14 @@ void ScopedLuaRef::clear() {
  *
  * The ref must not be empty.
  */
-void ScopedLuaRef::push() const {
+void ScopedLuaRef::push(lua_State *dst) const {
 
   Debug::check_assertion(!is_empty(), "Attempt to push an empty ref");
 
   lua_rawgeti(l, LUA_REGISTRYINDEX, ref);
+  if(dst != l) {
+    lua_xmove(l,dst,1);
+  }
 }
 
 /**
@@ -175,11 +179,13 @@ void ScopedLuaRef::push() const {
  * print the error message if any).
  */
 void ScopedLuaRef::call(const std::string& function_name) const {
-
-  if (!is_empty()) {
-    push();
-    LuaTools::call_function(l, 0, 0, function_name.c_str());
-  }
+  //LuaContext::run_on_main([this,function_name](lua_State* ctx){ //TODO check if this is pertinent
+    lua_State* ctx = LuaContext::get().get_internal_state();
+    if (!is_empty()) {
+      push(ctx);
+      LuaTools::call_function(ctx, 0, 0, function_name.c_str());
+    }
+  //});
 }
 
 /**
@@ -206,9 +212,47 @@ void ScopedLuaRef::clear_and_call(const std::string& function_name) {
   }
 
   lua_State* l = this->l;
-  push();
+  push(l);
   clear();  // The function is still alive, onto the stack.
   LuaTools::call_function(l, 0, 0, function_name.c_str());
+}
+
+bool ScopedLuaRef::equals(lua_State* l, int index) const {
+  if(is_empty()) {
+    return false;
+  }
+  int pi = LuaTools::get_positive_index(l,index);
+  push(l);
+  bool result = lua_equal(l,-1,pi);
+  lua_pop(l,1);
+  return result;
+}
+
+/**
+ * @brief compare two values of the lua world
+ * @param other other lua ref
+ * @return true if value are equal to lua
+ */
+bool ScopedLuaRef::operator==(const ScopedLuaRef& other) const {
+  if(is_empty() || other.is_empty()) {
+    return false;
+  }
+  push(l);
+  other.push(l);
+  bool result = lua_equal(l,-1,-2);
+  lua_pop(l,2);
+  return  result;
+}
+
+bool ScopedLuaRef::operator==(ExportableToLua& other) const {
+  if(!other.is_known_to_lua()) {
+    return false;
+  }
+  push(l);
+  LuaContext::push_userdata(l,other);
+  bool result = lua_equal(l,-1,-2);
+  lua_pop(l,2);
+  return result;
 }
 
 }

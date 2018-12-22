@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus Quest Editor is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@ const QRegularExpression output_regexp("^\\[Solarus\\] \\[(\\d+)\\] (\\w*): (.+)
 const QRegularExpression output_command_result_begin_regexp("^====== Begin Lua command #(\\d+) ======$");
 const QRegularExpression output_command_result_end_regexp("^====== End Lua command #(\\d+): (\\w+) ======$");
 const QRegularExpression output_simplify_console_error_regexp("In Lua command: \\[string \".*\"\\]:\\d+: ");
-const QRegularExpression output_setting_video_mode_regexp("^Video mode: (\\w+)$");
 const QRegularExpression output_setting_fullscreen_regexp("^Fullscreen: (\\w+)$");
 
 }
@@ -56,6 +55,36 @@ Console::Console(QWidget* parent) :
   command_enabled(true) {
 
   ui.setupUi(this);
+}
+
+/**
+ * @brief Clears the content of the console.
+ */
+void Console::clear() {
+
+  ui.log_view->clear();
+}
+
+/**
+ * @brief Adds a message to the console.
+ * @param log_level Log level of the message.
+ * @param message The text to add.
+ */
+void Console::add_message(const QString& log_level, const QString& message) {
+
+  QStringList lines = message.split("\n");
+  for (const QString& line : lines) {
+    add_html(colorize_output(log_level, line));
+  }
+}
+
+/**
+ * @brief Adds some HTML text to the console.
+ * @param html The content to add.
+ */
+void Console::add_html(const QString& html) {
+
+  ui.log_view->appendHtml(html);
 }
 
 /**
@@ -101,6 +130,8 @@ void Console::set_quest_runner(QuestRunner& quest_runner) {
  */
 void Console::quest_running() {
 
+  clear();
+
   // Apply settings to the running quest as Lua commands,
   // for quests that don't read the settings.dat file.
   apply_settings();
@@ -122,7 +153,7 @@ void Console::quest_finished() {
  */
 void Console::quest_output_produced(const QStringList& lines) {
 
-  Q_FOREACH (const QString& line, lines) {
+  for (const QString& line : lines) {
     parse_output(line);
   }
 }
@@ -194,7 +225,7 @@ void Console::parse_output(const QString& line) {
     // 4 captures expected: full line, time, log level, message.
     QStringList captures = match_result.capturedTexts();
     if (captures.size() != 4) {
-      ui.log_view->appendHtml(line.toHtmlEscaped());
+      add_html(line.toHtmlEscaped());
       return;
     }
 
@@ -214,7 +245,7 @@ void Console::parse_output(const QString& line) {
 
   if (log_level.isEmpty()) {
     // Not a line from Solarus, probably one from the quest.
-    ui.log_view->appendHtml(line.toHtmlEscaped());
+    add_html(line.toHtmlEscaped());
     return;
   }
 
@@ -232,7 +263,7 @@ void Console::parse_output(const QString& line) {
     return;
   }
 
-  ui.log_view->appendHtml(line_html);
+  add_html(line_html);
 }
 
 /**
@@ -263,7 +294,7 @@ bool Console::detect_command_result(
     // We show the command only when receiving its results,
     // to make sure it is displayed just before its results.
     QString command = pending_commands.take(output_command_id);
-    ui.log_view->appendHtml(QString("> %1").arg(command).toHtmlEscaped());
+    add_html(QString("> %1").arg(command).toHtmlEscaped());
 
     return true;
   }
@@ -319,13 +350,6 @@ void Console::detect_setting_change(
   }
 
   QRegularExpressionMatch match_result;
-
-  match_result = output_setting_video_mode_regexp.match(message);
-  if (match_result.lastCapturedIndex() == 1) {
-    QVariant value = match_result.captured(1);
-    emit setting_changed_in_quest("quest_video_mode", value);
-    return;
-  }
 
   match_result = output_setting_fullscreen_regexp.match(message);
   if (match_result.lastCapturedIndex() == 1) {
@@ -388,11 +412,6 @@ QStringList Console::get_quest_lua_commands_from_settings() const {
 
   Settings settings;
   QStringList commands;
-  QVariant video_mode = settings.value("quest_video_mode");
-  if (video_mode.isValid()) {
-    commands << QString("sol.video.set_mode(\"%1\")").
-                arg(video_mode.toString());
-  }
 
   QVariant fullscreen = settings.value("quest_fullscreen");
   if (fullscreen.isValid()) {
@@ -436,9 +455,9 @@ bool Console::apply_settings() {
     return false;
   }
 
-  QStringList commands = get_quest_lua_commands_from_settings();
+  const QStringList& commands = get_quest_lua_commands_from_settings();
   bool success = true;
-  Q_FOREACH (const QString& command, commands) {
+  for (const QString& command : commands) {
     success = execute_command(command) && success;
   }
   return success;

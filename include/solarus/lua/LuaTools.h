@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
 #ifndef SOLARUS_LUA_TOOLS_H
 #define SOLARUS_LUA_TOOLS_H
 
-#include "solarus/Common.h"
-#include "solarus/EnumInfo.h"
-#include "solarus/lowlevel/Debug.h"
+#include "solarus/core/Common.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/EnumInfo.h"
+#include "solarus/core/SolarusFatal.h"
 #include "solarus/lua/LuaException.h"
-#include "solarus/SolarusFatal.h"
 #include <map>
 #include <string>
 #include <lua.hpp>
@@ -45,6 +45,8 @@ namespace LuaTools {
 // Helpers.
 int get_positive_index(lua_State* l, int index);
 bool is_valid_lua_identifier(const std::string& name);
+std::string get_type_name(lua_State*l, int index);
+
 ScopedLuaRef create_ref(lua_State* l);
 ScopedLuaRef create_ref(lua_State* l, int index);
 bool call_function(
@@ -52,11 +54,6 @@ bool call_function(
     int nb_arguments,
     int nb_results,
     const char* function_name
-);
-bool do_string(
-    lua_State* l,
-    const std::string& code,
-    const std::string& chunk_name
 );
 
 // Error handling.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/hero/PullingState.h"
-#include "solarus/hero/GrabbingState.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/GameCommands.h"
 #include "solarus/hero/FreeState.h"
+#include "solarus/hero/GrabbingState.h"
 #include "solarus/hero/HeroSprites.h"
+#include "solarus/hero/PullingState.h"
 #include "solarus/movements/PathMovement.h"
-#include "solarus/Game.h"
-#include "solarus/GameCommands.h"
 #include <string>
 
 namespace Solarus {
@@ -78,12 +78,14 @@ void Hero::PullingState::update() {
     // stop pulling if the action key is released or if there is no more obstacle
     if (!get_commands().is_command_pressed(GameCommand::ACTION)
         || !hero.is_facing_obstacle()) {
-      hero.set_state(new FreeState(hero));
+      hero.set_state(std::make_shared<FreeState>(hero));
     }
 
     // stop pulling the obstacle if the player changes his direction
-    else if (wanted_direction8 != opposite_direction8) {
-      hero.set_state(new GrabbingState(hero));
+    else if (wanted_direction8 != opposite_direction8 &&
+             hero.can_grab()
+    ) {
+      hero.start_grabbing();
     }
 
     // see if the obstacle is an entity that the hero can pull
@@ -230,7 +232,12 @@ void Hero::PullingState::stop_moving_pulled_entity() {
     entity_just_moved->notify_moved_by(hero);
   }
 
-  hero.set_state(new GrabbingState(hero));
+  if (hero.can_grab()) {
+    hero.start_grabbing();
+  }
+  else {
+    hero.start_free();
+  }
 }
 
 /**
@@ -239,7 +246,7 @@ void Hero::PullingState::stop_moving_pulled_entity() {
  * \param attacker an attacker that is trying to hurt the hero
  * (or nullptr if the source of the attack is not an enemy)
  */
-bool Hero::PullingState::can_be_hurt(Entity* /* attacker */) const {
+bool Hero::PullingState::get_can_be_hurt(Entity* /* attacker */) {
   return !is_moving_grabbed_entity();
 }
 
@@ -248,7 +255,7 @@ bool Hero::PullingState::can_be_hurt(Entity* /* attacker */) const {
  * \param item The equipment item to obtain.
  * \return true if the hero can pick that treasure in this state.
  */
-bool Hero::PullingState::can_pick_treasure(EquipmentItem& /* item */) const {
+bool Hero::PullingState::get_can_pick_treasure(EquipmentItem& /* item */) const {
   return true;
 }
 
@@ -295,7 +302,7 @@ bool Hero::PullingState::is_prickle_obstacle() const {
 /**
  * \copydoc Entity::State::is_stream_obstacle
  */
-bool Hero::PullingState::is_stream_obstacle(const Stream& /* stream */) const {
+bool Hero::PullingState::is_stream_obstacle(Stream& /* stream */) {
   return true;
 }
 
@@ -303,7 +310,7 @@ bool Hero::PullingState::is_stream_obstacle(const Stream& /* stream */) const {
  * \copydoc Entity::State::is_separator_obstacle
  */
 bool Hero::PullingState::is_separator_obstacle(
-    const Separator& /* separator */) const {
+    Separator& /* separator */) {
   return true;
 }
 

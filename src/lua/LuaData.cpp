@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/lowlevel/QuestFiles.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/QuestFiles.h"
 #include "solarus/lua/LuaData.h"
 #include <lua.hpp>
 #include <cstdio>
@@ -55,8 +55,10 @@ bool LuaData::import_from_buffer(
  * Unlike import_from_quest_file(), this function acts on a regular file on the
  * filesystem, independently of any notion of quest search path.
  *
+ * The content of the file must be encoded in UTF-8.
+ *
  * \param[in] file_name Path of the file to load.
- * The file must be encoded in UTF-8.
+ * The path must be encoded in system 8-bit encoding.
  * \return \c true in case of success, \c false if the file could not be loaded.
  */
 bool LuaData::import_from_file(const std::string& file_name) {
@@ -81,11 +83,13 @@ bool LuaData::import_from_file(const std::string& file_name) {
  * in the quest write directory or in the quest data archive (see QuestFiles).
  * This function does the search for you.
  *
+ * The content of the file must be encoded in UTF-8.
+ *
  * \param[in] quest_file_name Path of the file to load, relative to the quest
  * data path.
+ * The path must be encoded in system 8-bit encoding.
  * \param[in] language_specific \c true to search in the language-specific
  * directory of the current language.
- * The file must be encoded in UTF-8.
  * \return \c true in case of success, \c false if the file could not be loaded.
  */
 bool LuaData::import_from_quest_file(
@@ -123,8 +127,11 @@ bool LuaData::export_to_buffer(std::string& buffer) const {
 
 /**
  * \brief Saves the data into a Lua file.
+ *
+ * The content of the file will be encoded in UTF-8.
+ *
  * \param[in] file_name Path of the file to save.
- * The file will be encoded in UTF-8.
+ * The path must be encoded in system 8-bit encoding.
  * \return \c true in case of success, \c false if the data
  * could not be exported.
  */
@@ -157,6 +164,7 @@ bool LuaData::export_to_file(const std::string& file_name) const {
   in.close();
   std::remove(tmp_file_name.c_str());
   out.flush();
+  out.close();
   return true;
 }
 
@@ -253,6 +261,25 @@ std::string LuaData::unescape_multiline_string(std::string value) {
   }
 
   return value;
+}
+
+/**
+ * \brief Exports a multiline string field to an output stream.
+ * \param field_name Name of the field to put.
+ * \param value Possibly multiline string value.
+ * \param out The stream to write.
+ */
+void LuaData::export_multiline_string(
+    const std::string& field_name,
+    const std::string& value,
+    std::ostream& out) const {
+
+  out << "  " << field_name << " = [[\n" << escape_multiline_string(value);
+  if (!value.empty() && value[value.size() - 1] != '\n') {
+    // Make sure that the closing ]] is always on a new line.
+    out << '\n';
+  }
+  out << "]],\n";
 }
 
 }

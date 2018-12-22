@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,9 @@
 #ifndef SOLARUS_CUSTOM_ENTITY_H
 #define SOLARUS_CUSTOM_ENTITY_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 #include "solarus/entities/Entity.h"
+#include "solarus/entities/TraversableInfo.h"
 #include "solarus/lua/ScopedLuaRef.h"
 #include <map>
 #include <string>
@@ -46,6 +47,7 @@ class SOLARUS_API CustomEntity: public Entity {
         int layer,
         const Point& xy,
         const Size& size,
+        const Point& origin,
         const std::string& sprite_name,
         const std::string& model
     );
@@ -56,10 +58,7 @@ class SOLARUS_API CustomEntity: public Entity {
 
     // Game loop.
     void notify_creating() override;
-    void set_suspended(bool suspended) override;
-    void notify_enabled(bool enabled) override;
     void update() override;
-    void draw_on_map() override;
 
     // Direction.
     int get_sprites_direction() const;
@@ -154,8 +153,8 @@ class SOLARUS_API CustomEntity: public Entity {
     void notify_collision_with_explosion(Explosion& explosion, CollisionMode collision_mode) override;
     void notify_collision_with_explosion(Explosion& explosion, Sprite& sprite_overlapping) override;
     void notify_collision_with_fire(Fire& fire, Sprite& sprite_overlapping) override;
-    void notify_collision_with_enemy(Enemy& enemy) override;
-    void notify_collision_with_enemy(Enemy& enemy, Sprite& enemy_sprite, Sprite& this_sprite) override;
+    void notify_collision_with_enemy(Enemy& enemy, CollisionMode collision_mode) override;
+    void notify_collision_with_enemy(Enemy& enemy, Sprite& this_sprite, Sprite& enemy_sprite) override;
     bool notify_action_command_pressed() override;
     bool notify_interaction_with_item(EquipmentItem& item) override;
 
@@ -167,43 +166,10 @@ class SOLARUS_API CustomEntity: public Entity {
     Ground get_modified_ground() const override;
     void set_modified_ground(Ground modified_ground);
 
+    bool get_follow_streams() const;
+    void set_follow_streams(bool follow_streams);
+
   private:
-
-    /**
-     * \brief Stores whether a custom entity can be traversed by or can traverse
-     * other entities.
-     */
-    class TraversableInfo {
-
-      public:
-
-        TraversableInfo();
-        TraversableInfo(
-            LuaContext& lua_context,
-            bool traversable
-        );
-        TraversableInfo(
-            LuaContext& lua_context,
-            const ScopedLuaRef& traversable_test_ref
-        );
-
-        bool is_empty() const;
-        bool is_traversable(
-            CustomEntity& current_entity,
-            Entity& other_entity
-        ) const;
-
-      private:
-
-        LuaContext* lua_context;       /**< The Lua world.
-                                        * nullptr means no info. */
-        ScopedLuaRef
-            traversable_test_ref;      /**< Lua ref to a boolean function
-                                        * that decides, or LUA_REFNIL. */
-        bool traversable;              /**< Traversable property (unused if
-                                        * there is a Lua function). */
-
-    };
 
     /**
      * \brief Stores a callback to be executed when the specified test
@@ -215,12 +181,10 @@ class SOLARUS_API CustomEntity: public Entity {
 
         CollisionInfo();
         CollisionInfo(
-            LuaContext& lua_context,
             CollisionMode built_in_test,
             const ScopedLuaRef& callback_ref
         );
         CollisionInfo(
-            LuaContext& lua_context,
             const ScopedLuaRef& custom_test_ref,
             const ScopedLuaRef& callback_ref
         );
@@ -231,8 +195,6 @@ class SOLARUS_API CustomEntity: public Entity {
 
       private:
 
-        LuaContext* lua_context;         /**< The Lua world.
-                                          * nullptr means no info. */
         CollisionMode built_in_test;     /**< A built-in collision test
                                           * or COLLISION_CUSTOM. */
         ScopedLuaRef custom_test_ref;    /**< Ref to a custom collision test
@@ -246,7 +208,7 @@ class SOLARUS_API CustomEntity: public Entity {
     const TraversableInfo& get_can_traverse_entity_info(EntityType type);
 
     void notify_collision_from(Entity& other_entity);
-    void notify_collision_from(Entity& other_entity, Sprite& other_sprite, Sprite& this_sprite);
+    void notify_collision_from(Entity& other_entity, Sprite& this_sprite, Sprite& other_sprite);
 
     void update_ground_observer();
 
@@ -254,11 +216,11 @@ class SOLARUS_API CustomEntity: public Entity {
 
     // Obstacles.
 
-    TraversableInfo traversable_by_entities_general;  /**< Whether entities can traverse me by default or nullptr. */
+    TraversableInfo traversable_by_entities_general;  /**< Whether entities can traverse me by default. */
     std::map<EntityType, TraversableInfo>
         traversable_by_entities_type;                 /**< Whether entities of a type can traverse me. */
 
-    TraversableInfo can_traverse_entities_general;    /**< Whether I can traverse entities by default or nullptr. */
+    TraversableInfo can_traverse_entities_general;    /**< Whether I can traverse entities by default. */
     std::map<EntityType, TraversableInfo>
         can_traverse_entities_type;                   /**< Whether I can traverse entities of a type. */
     std::map<Ground, bool> can_traverse_grounds;      /**< Whether I can traverse each kind of ground. */
@@ -275,6 +237,8 @@ class SOLARUS_API CustomEntity: public Entity {
     bool ground_observer;              /**< Whether this custom entity is a ground observer. */
     Ground modified_ground;            /**< The ground defined by this custom
                                         * entity or GROUND_EMPTY. */
+
+    bool follow_streams;               /**< Whether this custom entity should follow streams. */
 };
 
 }

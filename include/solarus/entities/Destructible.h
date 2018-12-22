@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,10 @@
 #ifndef SOLARUS_DESTRUCTIBLE_H
 #define SOLARUS_DESTRUCTIBLE_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
+#include "solarus/core/Treasure.h"
 #include "solarus/entities/Ground.h"
 #include "solarus/entities/Entity.h"
-#include "solarus/Treasure.h"
 #include <string>
 
 namespace Solarus {
@@ -62,8 +62,6 @@ class Destructible: public Entity {
     const std::string& get_animation_set_id() const;
     const std::string& get_destruction_sound() const;
     void set_destruction_sound(const std::string& destruction_sound);
-    int get_weight() const;
-    void set_weight(int weight);
     bool get_can_be_cut() const;
     void set_can_be_cut(bool can_be_cut);
     bool get_can_explode() const;
@@ -111,8 +109,6 @@ class Destructible: public Entity {
     bool can_be_cut;                   /**< Whether this object can be cut with the sword. */
     bool can_explode;                  /**< Whether this object explodes after a delay when lifted. */
     bool can_regenerate;               /**< Whether this object regenerates once destroyed. */
-    int weight;                        /**< Weight of this object (level of "lift" ability required).
-                                        * -1 means an object that cannot be lifted. */
     int damage_on_enemies;             /**< Damage this object can cause to enemies. */
 
     bool is_being_cut;                 /**< Whether this object is being cut */

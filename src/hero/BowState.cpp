@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/entities/Arrow.h"
-#include "solarus/entities/Entities.h"
-#include "solarus/entities/NonAnimatedRegions.h"
+#include "solarus/audio/Sound.h"
 #include "solarus/hero/BowState.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
-#include "solarus/lowlevel/Sound.h"
+#include "solarus/entities/Arrow.h"
+#include "solarus/entities/Entities.h"
+#include "solarus/entities/NonAnimatedRegions.h"
 #include <memory>
 
 namespace Solarus {
@@ -54,7 +54,7 @@ void Hero::BowState::update() {
   if (get_sprites().is_animation_finished()) {
     Sound::play("bow");
     get_entities().add_entity(std::make_shared<Arrow>(hero));
-    hero.set_state(new FreeState(hero));
+    hero.set_state(std::make_shared<FreeState>(hero));
   }
 }
 

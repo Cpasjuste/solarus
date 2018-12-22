@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,19 +14,19 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/System.h"
 #include "solarus/entities/Boomerang.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/hero/BackToSolidGroundState.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/System.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
 #include "solarus/movements/TargetMovement.h"
-#include "solarus/Equipment.h"
-#include "solarus/Game.h"
-#include "solarus/Map.h"
 #include <lua.hpp>
 #include <memory>
 
@@ -76,12 +76,17 @@ void Hero::BackToSolidGroundState::start(const State* previous_state) {
   int layer = 0;
 
   Hero& hero = get_entity();
-  lua_State* l = hero.get_lua_context()->get_internal_state();
+  lua_State* l = get_lua_context().get_internal_state();
 
   // Call the Lua function to get the coordinates and layer.
   Debug::check_assertion(!target_position.is_empty(), "Missing solid ground callback");
-  target_position.push();
+  target_position.push(l);
   bool success = LuaTools::call_function(l, 0, 3, "Solid ground callback");
+  if (success &&
+      (!lua_isnumber(l, -3) || !lua_isnumber(l, -2))) {
+    Debug::error("The hero:save_solid_ground() callback did not return x and y coordinates");
+    success = false;
+  }
   if (!success) {
     // Fallback: use the last solid ground position.
     xy = hero.get_last_solid_ground_coords();
@@ -91,7 +96,7 @@ void Hero::BackToSolidGroundState::start(const State* previous_state) {
     // Normal case: use the result of the function.
     xy.x = LuaTools::check_int(l, -3);
     xy.y = LuaTools::check_int(l, -2);
-    layer = LuaTools::check_int(l, -1);
+    layer = LuaTools::opt_int(l, -1, hero.get_layer());
     lua_pop(l, 3);
   }
 
@@ -129,7 +134,7 @@ void Hero::BackToSolidGroundState::update() {
     return;
   }
 
-  // the current movement is an instance of TargetMovement
+  // The current movement is an instance of TargetMovement.
   Hero& hero = get_entity();
   if (hero.get_movement()->is_finished()) {
 
@@ -224,8 +229,7 @@ bool Hero::BackToSolidGroundState::can_avoid_prickle() const {
 }
 
 /**
- * \brief Returns whether the hero is touching the ground in the current state.
- * \return true if the hero is touching the ground in the current state
+ * \copydoc Entity::State::is_touching_ground
  */
 bool Hero::BackToSolidGroundState::is_touching_ground() const {
   return false;

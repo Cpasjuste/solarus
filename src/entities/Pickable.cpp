@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,23 +14,25 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/EquipmentItem.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/QuestFiles.h"
+#include "solarus/core/System.h"
 #include "solarus/entities/Boomerang.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/Hero.h"
 #include "solarus/entities/Hookshot.h"
 #include "solarus/entities/Pickable.h"
+#include "solarus/graphics/Sprite.h"
+#include "solarus/entities/Stream.h"
+#include "solarus/entities/StreamAction.h"
 #include "solarus/hero/HeroSprites.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/System.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/movements/FallingOnFloorMovement.h"
 #include "solarus/movements/RelativeMovement.h"
-#include "solarus/Equipment.h"
-#include "solarus/EquipmentItem.h"
-#include "solarus/Game.h"
-#include "solarus/Map.h"
-#include "solarus/Sprite.h"
 #include <lua.hpp>
 #include <sstream>
 
@@ -280,6 +282,14 @@ EntityPtr Pickable::get_entity_followed() {
 }
 
 /**
+ * \copydoc Entity::is_stream_obstacle
+ */
+bool Pickable::is_stream_obstacle(Stream& /* stream */) {
+
+  return false;
+}
+
+/**
  * \brief This function is called by the engine when an entity overlaps the pickable item.
  *
  * If the entity is the player, we give him the item, and the map is notified
@@ -341,6 +351,21 @@ void Pickable::notify_collision(
     if (other_sprite.get_animation_set_id() == hero.get_hero_sprites().get_sword_sprite_id()) {
       try_give_item_to_player();
     }
+  }
+}
+
+/**
+ * \copydoc Entity::notify_collision_with_stream
+ */
+void Pickable::notify_collision_with_stream(
+    Stream& stream, int /* dx */, int /* dy */) {
+
+  if (has_stream_action()) {
+    get_stream_action()->update();
+  }
+
+  if (!has_stream_action()) {
+    stream.activate(*this);
   }
 }
 
@@ -570,20 +595,19 @@ void Pickable::update() {
 }
 
 /**
- * \brief Draws the pickable item on the map.
+ * \copydoc Entity::built_in_draw
  *
- * This is a redefinition of Entity::draw_on_map
- * to draw the shadow independently of the item movement.
+ * This is a redefinition to draw the shadow independently of the movement.
  */
-void Pickable::draw_on_map() {
+void Pickable::built_in_draw(Camera& camera) {
 
-  // draw the shadow
+  // Draw the shadow.
   if (shadow_sprite != nullptr) {
     get_map().draw_visual(*shadow_sprite, shadow_xy);
   }
 
-  // draw the sprite
-  Entity::draw_on_map();
+  // Draw the sprite.
+  Entity::built_in_draw(camera);
 }
 
 }

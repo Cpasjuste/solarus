@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2015 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/core/Debug.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/Savegame.h"
+#include "solarus/core/System.h"
 #include "solarus/entities/CustomEntity.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/Npc.h"
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/Map.h"
-#include "solarus/Game.h"
-#include "solarus/Savegame.h"
 #include "test_tools/TestEnvironment.h"
 
 namespace Solarus {
@@ -31,12 +31,16 @@ namespace Solarus {
  */
 TestEnvironment::TestEnvironment(int argc, char** argv):
     arguments(argc, argv),
-    main_loop(arguments),
+    main_loop(),
     map_id("traversable") {
 
+  bool fatal_errors = get_arguments().get_argument_value("-fatal-errors", "yes") == "yes";
+
   Debug::set_show_popup_on_die(false);
-  Debug::set_die_on_error(true);
+  Debug::set_die_on_error(fatal_errors);
   Debug::set_abort_on_die(true);
+
+  main_loop = std::unique_ptr<MainLoop>(new MainLoop(arguments));
 }
 
 /**
@@ -51,7 +55,7 @@ const Arguments& TestEnvironment::get_arguments() const {
  * \brief Returns the main loop.
  */
 MainLoop& TestEnvironment::get_main_loop() {
-  return main_loop;
+  return *main_loop;
 }
 
 /**
@@ -59,6 +63,7 @@ MainLoop& TestEnvironment::get_main_loop() {
  */
 Game& TestEnvironment::get_game() {
 
+  MainLoop& main_loop = get_main_loop();
   if (main_loop.get_game() == nullptr) {
     std::shared_ptr<Savegame> savegame = std::make_shared<Savegame>(
         main_loop, "save_initial.dat"
@@ -133,6 +138,7 @@ std::shared_ptr<CustomEntity> TestEnvironment::make_entity<CustomEntity>(
      layer,
      xy,
      Size(16, 16),
+     Point(8, 13),
      "",
      ""
   );

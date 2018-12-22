@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -177,7 +177,7 @@ bool Hero::ForcedWalkingState::can_avoid_switch() const {
  * (or nullptr if the source of the attack is not an enemy).
  * \return true if the hero can be hurt in this state
  */
-bool Hero::ForcedWalkingState::can_be_hurt(Entity* /* attacker */) const {
+bool Hero::ForcedWalkingState::get_can_be_hurt(Entity* /* attacker */) {
   return false;
 }
 

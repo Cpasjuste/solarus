@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,18 +14,18 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/hero/SwordTappingState.h"
-#include "solarus/hero/SwordLoadingState.h"
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/GameCommands.h"
+#include "solarus/core/Geometry.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/System.h"
+#include "solarus/entities/Enemy.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
-#include "solarus/entities/Enemy.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/lowlevel/Sound.h"
+#include "solarus/hero/SwordTappingState.h"
+#include "solarus/hero/SwordLoadingState.h"
 #include "solarus/movements/StraightMovement.h"
-#include "solarus/lowlevel/Geometry.h"
-#include "solarus/Game.h"
-#include "solarus/GameCommands.h"
-#include "solarus/Map.h"
 #include <memory>
 #include <string>
 
@@ -92,7 +92,7 @@ void Hero::SwordTappingState::update() {
 
       if (get_sprites().get_current_frame() >= 5) {
         // when the animation is ok, stop tapping the wall, go back to loading the sword
-        hero.set_state(new SwordLoadingState(hero));
+        hero.set_state(std::make_shared<SwordLoadingState>(hero, 1000));
       }
     }
     else {
@@ -116,7 +116,7 @@ void Hero::SwordTappingState::update() {
   }
   else if (hero.get_movement()->is_finished()) {
     // the hero was pushed by an enemy
-    hero.set_state(new FreeState(hero));
+    hero.set_state(std::make_shared<FreeState>(hero));
   }
 }
 
@@ -146,14 +146,14 @@ bool Hero::SwordTappingState::can_sword_hit_crystal() const {
  * \param item The equipment item to obtain.
  * \return true if the hero can pick that treasure in this state.
  */
-bool Hero::SwordTappingState::can_pick_treasure(EquipmentItem& /* item */) const {
+bool Hero::SwordTappingState::get_can_pick_treasure(EquipmentItem& /* item */) const {
   return true;
 }
 
 /**
  * \copydoc Entity::State::can_use_shield
  */
-bool Hero::SwordTappingState::can_use_shield() const {
+bool Hero::SwordTappingState::get_can_use_shield() const {
   return false;
 }
 
@@ -174,7 +174,7 @@ bool Hero::SwordTappingState::is_cutting_with_sword(Entity& entity) {
  * \return true if the teletransporter is an obstacle in this state
  */
 bool Hero::SwordTappingState::is_teletransporter_obstacle(
-    const Teletransporter& /* teletransporter */) const {
+    Teletransporter& /* teletransporter */) {
 
   // if the hero was pushed by an enemy, don't go on a teletransporter
   return get_entity().get_movement() != nullptr;
@@ -189,7 +189,7 @@ void Hero::SwordTappingState::notify_obstacle_reached() {
   // the hero reached an obstacle while being pushed after hitting an enemy
   Hero& hero = get_entity();
   hero.clear_movement();
-  hero.set_state(new FreeState(hero));
+  hero.set_state(std::make_shared<FreeState>(hero));
 }
 
 /**
@@ -198,24 +198,24 @@ void Hero::SwordTappingState::notify_obstacle_reached() {
 void Hero::SwordTappingState::notify_attacked_enemy(
     EnemyAttack attack,
     Enemy& victim,
-    const Sprite* victim_sprite,
-    EnemyReaction::Reaction& result,
+    Sprite* victim_sprite,
+    const EnemyReaction::Reaction& result,
     bool /* killed */) {
 
-  if (result.type != EnemyReaction::ReactionType::IGNORED && attack == EnemyAttack::SWORD) {
+  if (attack == EnemyAttack::SWORD &&
+      victim.get_push_hero_on_sword() &&
+      result.type != EnemyReaction::ReactionType::IGNORED &&
+      result.type != EnemyReaction::ReactionType::LUA_CALLBACK) {
 
-    if (victim.get_push_hero_on_sword()) {
-
-      Hero& hero = get_entity();
-      double angle = victim.get_angle(hero, victim_sprite, nullptr);
-      std::shared_ptr<StraightMovement> movement =
-          std::make_shared<StraightMovement>(false, true);
-      movement->set_max_distance(24);
-      movement->set_speed(120);
-      movement->set_angle(angle);
-      hero.set_movement(movement);
-      get_sprites().set_animation_walking_normal();
-    }
+    Hero& hero = get_entity();
+    double angle = victim.get_angle(hero, victim_sprite, nullptr);
+    std::shared_ptr<StraightMovement> movement =
+        std::make_shared<StraightMovement>(false, true);
+    movement->set_max_distance(24);
+    movement->set_speed(120);
+    movement->set_angle(angle);
+    hero.set_movement(movement);
+    get_sprites().set_animation_walking_normal();
   }
 }
 

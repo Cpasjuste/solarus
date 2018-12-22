@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
 #ifndef SOLARUS_NPC_H
 #define SOLARUS_NPC_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
+#include "solarus/core/CommandsEffects.h"
 #include "solarus/entities/Entity.h"
-#include "solarus/CommandsEffects.h"
 #include <string>
 
 namespace Solarus {
@@ -96,7 +96,6 @@ class SOLARUS_API Npc: public Entity {
     virtual bool notify_interaction_with_item(EquipmentItem& item) override;
     virtual void notify_position_changed() override;
     virtual void notify_movement_finished() override;
-    bool can_be_lifted() const;
 
   private:
 

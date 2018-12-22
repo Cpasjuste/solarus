@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 #ifndef SOLARUS_HERO_GRABBING_STATE_H
 #define SOLARUS_HERO_GRABBING_STATE_H
 
+#include "solarus/core/Common.h"
 #include "solarus/hero/HeroState.h"
 
 namespace Solarus {
@@ -30,11 +31,11 @@ class Hero::GrabbingState: public HeroState {
 
     explicit GrabbingState(Hero& hero);
 
-    virtual void start(const State* previous_state) override;
-    virtual void update() override;
-    virtual bool is_grabbing_or_pulling() const override;
-    virtual bool can_be_hurt(Entity* attacker) const override;
-    virtual bool can_pick_treasure(EquipmentItem& item) const override;
+    void start(const State* previous_state) override;
+    void update() override;
+    bool is_grabbing_or_pulling() const override;
+    bool get_can_be_hurt(Entity* attacker) override;
+    bool get_can_pick_treasure(EquipmentItem& item) const override;
 
 };
 

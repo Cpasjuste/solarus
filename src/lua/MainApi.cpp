@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,15 +14,17 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/core/CurrentQuest.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Geometry.h"
+#include "solarus/core/MainLoop.h"
+#include "solarus/core/QuestFiles.h"
+#include "solarus/core/QuestDatabase.h"
+#include "solarus/core/QuestProperties.h"
+#include "solarus/core/Settings.h"
+#include "solarus/core/System.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
-#include "solarus/lowlevel/Geometry.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/CurrentQuest.h"
-#include "solarus/QuestProperties.h"
-#include "solarus/MainLoop.h"
-#include "solarus/Settings.h"
 #include <lua.hpp>
 
 namespace Solarus {
@@ -37,7 +39,7 @@ const std::string LuaContext::main_module_name = "sol.main";
  */
 void LuaContext::register_main_module() {
 
-  static const luaL_Reg functions[] = {
+  std::vector<luaL_Reg> functions = {
       { "get_solarus_version", main_api_get_solarus_version },
       { "get_quest_format", main_api_get_quest_format },
       { "load_file", main_api_load_file },
@@ -53,10 +55,19 @@ void LuaContext::register_main_module() {
       { "get_angle", main_api_get_angle },
       { "get_type", main_api_get_type },
       { "get_metatable", main_api_get_metatable },
-      { "get_os", main_api_get_os },
-      { nullptr, nullptr }
+      { "get_os", main_api_get_os }
   };
-
+  if (CurrentQuest::is_format_at_least({ 1, 6 })) {
+    functions.insert(functions.end(), {
+        { "get_quest_version", main_api_get_quest_version },
+        { "get_resource_ids", main_api_get_resource_ids },
+        { "resource_exists", main_api_resource_exists },
+        { "get_resource_description", main_api_get_resource_description },
+        { "add_resource", main_api_add_resource },
+        { "remove_resource", main_api_remove_resource },
+        { "get_game", main_api_get_game },
+    });
+  }
   register_functions(main_module_name, functions);
 
   // Store sol.main in the registry to access it safely
@@ -68,13 +79,13 @@ void LuaContext::register_main_module() {
   // like the name "sol".
 
                                   // ...
-  lua_getglobal(l, "sol");
+  lua_getglobal(current_l, "sol");
                                   // ... sol
-  lua_getfield(l, -1, "main");
+  lua_getfield(current_l, -1, "main");
                                   // ... sol main
-  lua_setfield(l, LUA_REGISTRYINDEX, main_module_name.c_str());
+  lua_setfield(current_l, LUA_REGISTRYINDEX, main_module_name.c_str());
                                   // ... sol
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
                                   // ...
 }
 
@@ -88,16 +99,49 @@ void LuaContext::push_main(lua_State* l) {
 }
 
 /**
+ * \brief Returns whether a value is the sol.main table.
+ * \param l A Lua context.
+ * \param index An index in the stack.
+ * \return \c true if the value at this index is sol.main.
+ */
+bool LuaContext::is_main(lua_State* l, int index) {
+  push_main(l);
+  bool result = lua_equal(l, index, -1);
+  lua_pop(l, 1);
+  return result;
+}
+
+/**
  * \brief Implementation of sol.main.get_solarus_version().
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::main_api_get_solarus_version(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& solarus_version = SOLARUS_VERSION;
 
     push_string(l, solarus_version);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.main.get_quest_version().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_get_quest_version(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const std::string& quest_version = CurrentQuest::get_properties().get_quest_version();
+
+    if (quest_version.empty()) {
+      lua_pushnil(l);
+    }
+    else {
+      push_string(l, quest_version);
+    }
     return 1;
   });
 }
@@ -109,7 +153,7 @@ int LuaContext::main_api_get_solarus_version(lua_State* l) {
  */
 int LuaContext::main_api_get_quest_format(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& quest_format = CurrentQuest::get_properties().get_solarus_version();
 
     push_string(l, quest_format);
@@ -124,10 +168,10 @@ int LuaContext::main_api_get_quest_format(lua_State* l) {
  */
 int LuaContext::main_api_load_file(lua_State *l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& file_name = LuaTools::check_string(l, 1);
 
-    if (!load_file(l, file_name)) {
+    if (!get().load_file(file_name)) {
       lua_pushnil(l);
     }
 
@@ -142,10 +186,10 @@ int LuaContext::main_api_load_file(lua_State *l) {
  */
 int LuaContext::main_api_do_file(lua_State *l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& file_name = LuaTools::check_string(l, 1);
 
-    do_file(l, file_name);
+    get().do_file(file_name);
 
     return 0;
   });
@@ -158,8 +202,8 @@ int LuaContext::main_api_do_file(lua_State *l) {
  */
 int LuaContext::main_api_reset(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
-    get_lua_context(l).get_main_loop().set_resetting();
+  return state_boundary_handle(l, [&] {
+    get().get_main_loop().set_resetting();
 
     return 0;
   });
@@ -172,8 +216,8 @@ int LuaContext::main_api_reset(lua_State* l) {
  */
 int LuaContext::main_api_exit(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
-    get_lua_context(l).get_main_loop().set_exiting();
+  return state_boundary_handle(l, [&] {
+    get().get_main_loop().set_exiting();
 
     return 0;
   });
@@ -186,7 +230,7 @@ int LuaContext::main_api_exit(lua_State* l) {
  */
 int LuaContext::main_api_get_elapsed_time(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     uint32_t elapsed_time = System::now();
 
     lua_pushinteger(l, elapsed_time);
@@ -201,7 +245,7 @@ int LuaContext::main_api_get_elapsed_time(lua_State* l) {
  */
 int LuaContext::main_api_get_quest_write_dir(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& quest_write_dir = QuestFiles::get_quest_write_dir();
 
     if (quest_write_dir.empty()) {
@@ -221,7 +265,7 @@ int LuaContext::main_api_get_quest_write_dir(lua_State* l) {
  */
 int LuaContext::main_api_set_quest_write_dir(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& quest_write_dir = LuaTools::opt_string(l, 1, "");
 
     QuestFiles::set_quest_write_dir(quest_write_dir);
@@ -237,7 +281,7 @@ int LuaContext::main_api_set_quest_write_dir(lua_State* l) {
  */
 int LuaContext::main_api_load_settings(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     std::string file_name = LuaTools::opt_string(l, 1, "settings.dat");
 
     if (QuestFiles::get_quest_write_dir().empty()) {
@@ -245,7 +289,8 @@ int LuaContext::main_api_load_settings(lua_State* l) {
     }
 
     bool success = false;
-    if (QuestFiles::data_file_exists(file_name)) {
+    if (QuestFiles::data_file_exists(file_name) &&
+        !QuestFiles::data_file_is_dir(file_name)) {
       Settings settings;
       success = settings.load(file_name);
       if (success) {
@@ -265,7 +310,7 @@ int LuaContext::main_api_load_settings(lua_State* l) {
  */
 int LuaContext::main_api_save_settings(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     std::string file_name = LuaTools::opt_string(l, 1, "settings.dat");
 
     if (QuestFiles::get_quest_write_dir().empty()) {
@@ -288,7 +333,7 @@ int LuaContext::main_api_save_settings(lua_State* l) {
  */
 int LuaContext::main_api_get_distance(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     int x1 = LuaTools::check_int(l, 1);
     int y1 = LuaTools::check_int(l, 2);
     int x2 = LuaTools::check_int(l, 3);
@@ -308,7 +353,7 @@ int LuaContext::main_api_get_distance(lua_State* l) {
  */
 int LuaContext::main_api_get_angle(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     int x1 = LuaTools::check_int(l, 1);
     int y1 = LuaTools::check_int(l, 2);
     int x2 = LuaTools::check_int(l, 3);
@@ -322,26 +367,135 @@ int LuaContext::main_api_get_angle(lua_State* l) {
 }
 
 /**
+ * \brief Implementation of sol.main.get_resource_ids().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_get_resource_ids(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+
+    ResourceType resource_type = LuaTools::check_enum<ResourceType>(l, 1);
+    const QuestDatabase::ResourceMap& elements = CurrentQuest::get_database().get_resource_elements(resource_type);
+
+    // Build a Lua array containing the ids.
+    lua_settop(l, 0);
+    lua_newtable(l);
+    int i = 1;
+    for (const std::pair<std::string, std::string>& kvp : elements) {
+      const std::string& id = kvp.first;
+      push_string(l, id);
+      lua_rawseti(l, 1, i);
+      ++i;
+    }
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.main.resource_exists().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_resource_exists(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+
+    ResourceType resource_type = LuaTools::check_enum<ResourceType>(l, 1);
+    const std::string& id = LuaTools::check_string(l, 2);
+
+    lua_pushboolean(l, CurrentQuest::resource_exists(resource_type, id));
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.main.get_resource_description().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_get_resource_description(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+
+    ResourceType resource_type = LuaTools::check_enum<ResourceType>(l, 1);
+    const std::string& id = LuaTools::check_string(l, 2);
+
+    const QuestDatabase& database = CurrentQuest::get_database();
+    if (!database.resource_exists(resource_type, id)) {
+      LuaTools::arg_error(l, 2, "No such resource element: '" + id + "'");
+    }
+
+    const std::string& description = database.get_description(resource_type, id);
+    if (description.empty()) {
+      lua_pushnil(l);
+    }
+    else {
+      push_string(l, description);
+    }
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.main.add_resource().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_add_resource(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+
+    ResourceType resource_type = LuaTools::check_enum<ResourceType>(l, 1);
+    const std::string& id = LuaTools::check_string(l, 2);
+    const std::string& description = LuaTools::opt_string(l, 3, "");
+
+    QuestDatabase& database = CurrentQuest::get_database();
+    if (database.resource_exists(resource_type, id)) {
+      LuaTools::arg_error(l, 2, "Resource element already exists: '" + id + "'");
+    }
+
+    database.add(resource_type, id, description);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of sol.main.remove_resource().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_remove_resource(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+
+    ResourceType resource_type = LuaTools::check_enum<ResourceType>(l, 1);
+    const std::string& id = LuaTools::check_string(l, 2);
+
+    QuestDatabase& database = CurrentQuest::get_database();
+    if (!database.resource_exists(resource_type, id)) {
+      LuaTools::arg_error(l, 2, "No such resource element: '" + id + "'");
+    }
+
+    database.remove(resource_type, id);
+
+    return 0;
+  });
+}
+
+/**
  * \brief Implementation of sol.main.get_type().
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::main_api_get_type(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
 
     luaL_checkany(l, 1);
-    std::string module_name;
-    if (!is_solarus_userdata(l, 1, module_name)) {
-      // Return the same thing as the usual Lua type() function.
-      std::string type_name = luaL_typename(l, 1);
-      push_string(l, type_name);
-    }
-    else {
-      // Remove the "sol." prefix.
-      push_string(l, module_name.substr(4));
-    }
-
+    push_string(l, LuaTools::get_type_name(l, 1));
     return 1;
   });
 }
@@ -353,7 +507,7 @@ int LuaContext::main_api_get_type(lua_State* l) {
  */
 int LuaContext::main_api_get_metatable(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& type_name = LuaTools::check_string(l, 1);
 
     luaL_getmetatable(l, (std::string("sol.") + type_name).c_str());
@@ -368,10 +522,33 @@ int LuaContext::main_api_get_metatable(lua_State* l) {
  */
 int LuaContext::main_api_get_os(lua_State* l) {
 
-  const std::string& os = System::get_os();
+  return state_boundary_handle(l, [&] {
+    const std::string& os = System::get_os();
 
-  push_string(l, os);
-  return 1;
+    push_string(l, os);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.main.get_game().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_get_game(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    LuaContext& lua_context = get();
+
+    Game* game = lua_context.get_main_loop().get_game();
+    if (game == nullptr) {
+      lua_pushnil(l);
+    }
+    else {
+      push_game(l, game->get_savegame());
+    }
+    return 1;
+  });
 }
 
 /**
@@ -383,9 +560,9 @@ int LuaContext::main_api_get_os(lua_State* l) {
  */
 void LuaContext::main_on_started() {
 
-  push_main(l);
+  push_main(current_l);
   on_started();
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -395,11 +572,11 @@ void LuaContext::main_on_started() {
  */
 void LuaContext::main_on_finished() {
 
-  push_main(l);
+  push_main(current_l);
   on_finished();
   remove_timers(-1);  // Stop timers associated to sol.main.
   remove_menus(-1);  // Stop menus associated to sol.main.
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -408,11 +585,11 @@ void LuaContext::main_on_finished() {
  * This function is called at each cycle by the main loop.
  */
 void LuaContext::main_on_update() {
-
-  push_main(l);
+  current_l = main_l; //Always execute main on the main thread
+  push_main(current_l);
   on_update();
   menus_on_update(-1);
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -421,10 +598,10 @@ void LuaContext::main_on_update() {
  */
 void LuaContext::main_on_draw(const SurfacePtr& dst_surface) {
 
-  push_main(l);
+  push_main(current_l);
   on_draw(dst_surface);
   menus_on_draw(-1, dst_surface);
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -437,12 +614,12 @@ void LuaContext::main_on_draw(const SurfacePtr& dst_surface) {
  */
 bool LuaContext::main_on_input(const InputEvent& event) {
 
-  push_main(l);
+  push_main(current_l);
   bool handled = on_input(event);
   if (!handled) {
     handled = menus_on_input(-1, event);
   }
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
   return handled;
 }
 

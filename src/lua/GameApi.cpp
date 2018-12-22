@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,18 +14,18 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/lowlevel/QuestFiles.h"
+#include "solarus/core/AbilityInfo.h"
+#include "solarus/core/CommandsEffects.h"
+#include "solarus/core/CurrentQuest.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/EquipmentItem.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/MainLoop.h"
+#include "solarus/core/QuestFiles.h"
+#include "solarus/core/Savegame.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
-#include "solarus/AbilityInfo.h"
-#include "solarus/CommandsEffects.h"
-#include "solarus/CurrentQuest.h"
-#include "solarus/Equipment.h"
-#include "solarus/EquipmentItem.h"
-#include "solarus/Game.h"
-#include "solarus/MainLoop.h"
-#include "solarus/Savegame.h"
 
 namespace Solarus {
 
@@ -40,15 +40,14 @@ const std::string LuaContext::game_module_name = "sol.game";
 void LuaContext::register_game_module() {
 
   // Functions of sol.game.
-  static const luaL_Reg functions[] = {
+  const std::vector<luaL_Reg> functions = {
       { "exists", game_api_exists },
       { "delete", game_api_delete },
-      { "load", game_api_load },
-      { nullptr, nullptr }
+      { "load", game_api_load }
   };
 
   // Methods of the game type.
-  static const luaL_Reg methods[] = {
+  const std::vector<luaL_Reg> methods = {
       { "save", game_api_save },
       { "start", game_api_start },
       { "is_started", game_api_is_started },
@@ -105,15 +104,13 @@ void LuaContext::register_game_module() {
       { "set_command_joypad_binding", game_api_set_command_joypad_binding },
       { "capture_command_binding", game_api_capture_command_binding },
       { "simulate_command_pressed", game_api_simulate_command_pressed },
-      { "simulate_command_released", game_api_simulate_command_released },
-      { nullptr, nullptr }
+      { "simulate_command_released", game_api_simulate_command_released }
   };
 
-  static const luaL_Reg metamethods[] = {
+  const std::vector<luaL_Reg> metamethods = {
       { "__gc", userdata_meta_gc },
       { "__newindex", userdata_meta_newindex_as_table },
       { "__index", userdata_meta_index_as_table },
-      { nullptr, nullptr }
   };
 
   register_type(game_module_name, functions, methods, metamethods);
@@ -158,14 +155,15 @@ void LuaContext::push_game(lua_State* l, Savegame& game) {
  */
 int LuaContext::game_api_exists(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& file_name = LuaTools::check_string(l, 1);
 
     if (QuestFiles::get_quest_write_dir().empty()) {
       LuaTools::error(l, "Cannot check savegame: no write directory was specified in quest.dat");
     }
 
-    bool exists = QuestFiles::data_file_exists(file_name);
+    bool exists = QuestFiles::data_file_exists(file_name) &&
+        !QuestFiles::data_file_is_dir(file_name);
 
     lua_pushboolean(l, exists);
     return 1;
@@ -179,7 +177,7 @@ int LuaContext::game_api_exists(lua_State* l) {
  */
 int LuaContext::game_api_delete(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& file_name = LuaTools::check_string(l, 1);
 
     if (QuestFiles::get_quest_write_dir().empty()) {
@@ -199,7 +197,7 @@ int LuaContext::game_api_delete(lua_State* l) {
  */
 int LuaContext::game_api_load(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     const std::string& file_name = LuaTools::check_string(l, 1);
 
     if (QuestFiles::get_quest_write_dir().empty()) {
@@ -207,7 +205,7 @@ int LuaContext::game_api_load(lua_State* l) {
     }
 
     std::shared_ptr<Savegame> savegame = std::make_shared<Savegame>(
-        get_lua_context(l).get_main_loop(), file_name
+        get().get_main_loop(), file_name
     );
     savegame->initialize();
 
@@ -223,7 +221,7 @@ int LuaContext::game_api_load(lua_State* l) {
  */
 int LuaContext::game_api_save(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     if (QuestFiles::get_quest_write_dir().empty()) {
@@ -243,7 +241,7 @@ int LuaContext::game_api_save(lua_State* l) {
  */
 int LuaContext::game_api_start(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     std::shared_ptr<Savegame> savegame = check_game(l, 1);
 
     if (CurrentQuest::get_resources(ResourceType::MAP).empty()) {
@@ -277,7 +275,7 @@ int LuaContext::game_api_start(lua_State* l) {
  */
 int LuaContext::game_api_is_started(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -295,7 +293,7 @@ int LuaContext::game_api_is_started(lua_State* l) {
  */
 int LuaContext::game_api_is_suspended(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -313,7 +311,7 @@ int LuaContext::game_api_is_suspended(lua_State* l) {
  */
 int LuaContext::game_api_set_suspended(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     bool suspended = LuaTools::opt_boolean(l, 2, true);
 
@@ -333,7 +331,7 @@ int LuaContext::game_api_set_suspended(lua_State* l) {
  */
 int LuaContext::game_api_is_paused(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -351,7 +349,7 @@ int LuaContext::game_api_is_paused(lua_State* l) {
  */
 int LuaContext::game_api_set_paused(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     bool paused = LuaTools::opt_boolean(l, 2, true);
 
@@ -371,7 +369,7 @@ int LuaContext::game_api_set_paused(lua_State* l) {
  */
 int LuaContext::game_api_is_pause_allowed(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -389,7 +387,7 @@ int LuaContext::game_api_is_pause_allowed(lua_State* l) {
  */
 int LuaContext::game_api_set_pause_allowed(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     bool pause_allowed = LuaTools::opt_boolean(l, 2, true);
 
@@ -409,7 +407,7 @@ int LuaContext::game_api_set_pause_allowed(lua_State* l) {
  */
 int LuaContext::game_api_is_dialog_enabled(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -430,11 +428,16 @@ int LuaContext::game_api_is_dialog_enabled(lua_State* l) {
  */
 int LuaContext::game_api_start_dialog(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     const std::string& dialog_id = LuaTools::check_string(l, 2);
     ScopedLuaRef info_ref;
     ScopedLuaRef callback_ref;
+
+    const std::string& language = CurrentQuest::get_language();
+    if (language.empty()) {
+      LuaTools::error(l, "Cannot start dialog: no language was set");
+    }
 
     if (!CurrentQuest::dialog_exists(dialog_id)) {
       LuaTools::arg_error(l, 2, std::string("No such dialog: '") + dialog_id + "'");
@@ -451,7 +454,7 @@ int LuaContext::game_api_start_dialog(lua_State* l) {
 
     if (lua_gettop(l) >= 3) {
 
-      LuaContext& lua_context = get_lua_context(l);
+      LuaContext& lua_context = get();
       int callback_index = 3;
       if (lua_type(l, 3) != LUA_TFUNCTION) {
         // There is an info parameter.
@@ -475,7 +478,7 @@ int LuaContext::game_api_start_dialog(lua_State* l) {
  */
 int LuaContext::game_api_stop_dialog(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -491,10 +494,12 @@ int LuaContext::game_api_stop_dialog(lua_State* l) {
     ScopedLuaRef status_ref;
     if (lua_gettop(l) >= 2) {
       lua_settop(l, 2);
-      status_ref = get_lua_context(l).create_ref();
+      status_ref = get().create_ref();
     }
 
-    game->stop_dialog(status_ref);
+    run_on_main([game,status_ref](lua_State*){
+      game->stop_dialog(status_ref);
+    });
 
     return 0;
   });
@@ -507,7 +512,7 @@ int LuaContext::game_api_stop_dialog(lua_State* l) {
  */
 int LuaContext::game_api_is_game_over_enabled(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -528,7 +533,7 @@ int LuaContext::game_api_is_game_over_enabled(lua_State* l) {
  */
 int LuaContext::game_api_start_game_over(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -549,7 +554,7 @@ int LuaContext::game_api_start_game_over(lua_State* l) {
  */
 int LuaContext::game_api_stop_game_over(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -570,7 +575,7 @@ int LuaContext::game_api_stop_game_over(lua_State* l) {
  */
 int LuaContext::game_api_get_map(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -591,7 +596,7 @@ int LuaContext::game_api_get_map(lua_State* l) {
  */
 int LuaContext::game_api_get_hero(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
@@ -612,7 +617,7 @@ int LuaContext::game_api_get_hero(lua_State* l) {
  */
 int LuaContext::game_api_get_value(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     const std::string& key = LuaTools::check_string(l, 2);
 
@@ -647,7 +652,7 @@ int LuaContext::game_api_get_value(lua_State* l) {
  */
 int LuaContext::game_api_set_value(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     const std::string& key = LuaTools::check_string(l, 2);
 
@@ -683,10 +688,7 @@ int LuaContext::game_api_set_value(lua_State* l) {
       break;
 
     default:
-      LuaTools::arg_error(l, 3,
-          std::string("Expected string, number or boolean, got ")
-      + luaL_typename(l, 3)
-      );
+      LuaTools::type_error(l, 3, "string, number or boolean");
     }
 
     return 0;
@@ -700,7 +702,7 @@ int LuaContext::game_api_set_value(lua_State* l) {
  */
 int LuaContext::game_api_get_starting_location(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     const std::string& starting_map = savegame.get_string(Savegame::KEY_STARTING_MAP);
@@ -729,7 +731,7 @@ int LuaContext::game_api_get_starting_location(lua_State* l) {
  */
 int LuaContext::game_api_set_starting_location(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     const std::string& map_id = LuaTools::check_string(l, 2);
     const std::string& destination_name = LuaTools::opt_string(l, 3, "");
@@ -748,7 +750,7 @@ int LuaContext::game_api_set_starting_location(lua_State* l) {
  */
 int LuaContext::game_api_get_life(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     int life = savegame.get_equipment().get_life();
@@ -764,7 +766,7 @@ int LuaContext::game_api_get_life(lua_State* l) {
  */
 int LuaContext::game_api_set_life(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int life = LuaTools::check_int(l, 2);
 
@@ -781,7 +783,7 @@ int LuaContext::game_api_set_life(lua_State* l) {
  */
 int LuaContext::game_api_add_life(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int life = LuaTools::check_int(l, 2);
 
@@ -802,7 +804,7 @@ int LuaContext::game_api_add_life(lua_State* l) {
  */
 int LuaContext::game_api_remove_life(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int life = LuaTools::check_int(l, 2);
 
@@ -823,7 +825,7 @@ int LuaContext::game_api_remove_life(lua_State* l) {
  */
 int LuaContext::game_api_get_max_life(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     int life = savegame.get_equipment().get_max_life();
@@ -840,7 +842,7 @@ int LuaContext::game_api_get_max_life(lua_State* l) {
  */
 int LuaContext::game_api_set_max_life(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int life = LuaTools::check_int(l, 2);
 
@@ -861,7 +863,7 @@ int LuaContext::game_api_set_max_life(lua_State* l) {
  */
 int LuaContext::game_api_add_max_life(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int life = LuaTools::check_int(l, 2);
 
@@ -883,7 +885,7 @@ int LuaContext::game_api_add_max_life(lua_State* l) {
  */
 int LuaContext::game_api_get_money(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     int money = savegame.get_equipment().get_money();
@@ -900,7 +902,7 @@ int LuaContext::game_api_get_money(lua_State* l) {
  */
 int LuaContext::game_api_set_money(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int money = LuaTools::check_int(l, 2);
 
@@ -917,7 +919,7 @@ int LuaContext::game_api_set_money(lua_State* l) {
  */
 int LuaContext::game_api_add_money(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int money = LuaTools::check_int(l, 2);
 
@@ -938,7 +940,7 @@ int LuaContext::game_api_add_money(lua_State* l) {
  */
 int LuaContext::game_api_remove_money(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int money = LuaTools::check_int(l, 2);
 
@@ -959,7 +961,7 @@ int LuaContext::game_api_remove_money(lua_State* l) {
  */
 int LuaContext::game_api_get_max_money(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     int money = savegame.get_equipment().get_max_money();
@@ -976,7 +978,7 @@ int LuaContext::game_api_get_max_money(lua_State* l) {
  */
 int LuaContext::game_api_set_max_money(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int money = LuaTools::check_int(l, 2);
 
@@ -997,7 +999,7 @@ int LuaContext::game_api_set_max_money(lua_State* l) {
  */
 int LuaContext::game_api_get_magic(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     int magic = savegame.get_equipment().get_magic();
@@ -1014,7 +1016,7 @@ int LuaContext::game_api_get_magic(lua_State* l) {
  */
 int LuaContext::game_api_set_magic(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int magic = LuaTools::check_int(l, 2);
 
@@ -1031,7 +1033,7 @@ int LuaContext::game_api_set_magic(lua_State* l) {
  */
 int LuaContext::game_api_add_magic(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int magic = LuaTools::check_int(l, 2);
 
@@ -1052,7 +1054,7 @@ int LuaContext::game_api_add_magic(lua_State* l) {
  */
 int LuaContext::game_api_remove_magic(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int magic = LuaTools::check_int(l, 2);
 
@@ -1073,7 +1075,7 @@ int LuaContext::game_api_remove_magic(lua_State* l) {
  */
 int LuaContext::game_api_get_max_magic(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
     int magic = savegame.get_equipment().get_max_magic();
@@ -1090,7 +1092,7 @@ int LuaContext::game_api_get_max_magic(lua_State* l) {
  */
 int LuaContext::game_api_set_max_magic(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int magic = LuaTools::check_int(l, 2);
 
@@ -1111,7 +1113,7 @@ int LuaContext::game_api_set_max_magic(lua_State* l) {
  */
 int LuaContext::game_api_has_ability(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Ability ability = LuaTools::check_enum<Ability>(l, 2);
 
@@ -1129,7 +1131,7 @@ int LuaContext::game_api_has_ability(lua_State* l) {
  */
 int LuaContext::game_api_get_ability(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Ability ability = LuaTools::check_enum<Ability>(l, 2);
 
@@ -1147,7 +1149,7 @@ int LuaContext::game_api_get_ability(lua_State* l) {
  */
 int LuaContext::game_api_set_ability(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Ability ability = LuaTools::check_enum<Ability>(l, 2);
     int level = LuaTools::check_int(l, 3);
@@ -1165,7 +1167,7 @@ int LuaContext::game_api_set_ability(lua_State* l) {
  */
 int LuaContext::game_api_get_item(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     const std::string& item_name = LuaTools::check_string(l, 2);
 
@@ -1185,7 +1187,7 @@ int LuaContext::game_api_get_item(lua_State* l) {
  */
 int LuaContext::game_api_has_item(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     const std::string& item_name = LuaTools::check_string(l, 2);
 
@@ -1210,7 +1212,7 @@ int LuaContext::game_api_has_item(lua_State* l) {
  */
 int LuaContext::game_api_get_item_assigned(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int slot = LuaTools::check_int(l, 2);
 
@@ -1237,7 +1239,7 @@ int LuaContext::game_api_get_item_assigned(lua_State* l) {
  */
 int LuaContext::game_api_set_item_assigned(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     int slot = LuaTools::check_int(l, 2);
     EquipmentItem* item = nullptr;
@@ -1262,7 +1264,7 @@ int LuaContext::game_api_set_item_assigned(lua_State* l) {
  */
 int LuaContext::game_api_get_command_effect(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1356,7 +1358,7 @@ int LuaContext::game_api_get_command_effect(lua_State* l) {
  */
 int LuaContext::game_api_get_command_keyboard_binding(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1382,7 +1384,7 @@ int LuaContext::game_api_get_command_keyboard_binding(lua_State* l) {
  */
 int LuaContext::game_api_set_command_keyboard_binding(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1392,8 +1394,8 @@ int LuaContext::game_api_set_command_keyboard_binding(lua_State* l) {
     const std::string& key_name = LuaTools::opt_string(l, 3, "");
 
     GameCommands& commands = savegame.get_game()->get_commands();
-    InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KEY_NONE);
-    if (!key_name.empty() && key == InputEvent::KEY_NONE) {
+    InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KeyboardKey::NONE);
+    if (!key_name.empty() && key == InputEvent::KeyboardKey::NONE) {
       LuaTools::arg_error(l, 3,
           std::string("Invalid keyboard key name: '") + key_name + "'");
     }
@@ -1410,7 +1412,7 @@ int LuaContext::game_api_set_command_keyboard_binding(lua_State* l) {
  */
 int LuaContext::game_api_get_command_joypad_binding(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1435,7 +1437,7 @@ int LuaContext::game_api_get_command_joypad_binding(lua_State* l) {
  */
 int LuaContext::game_api_set_command_joypad_binding(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1462,7 +1464,7 @@ int LuaContext::game_api_set_command_joypad_binding(lua_State* l) {
  */
 int LuaContext::game_api_capture_command_binding(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1482,7 +1484,7 @@ int LuaContext::game_api_capture_command_binding(lua_State* l) {
  */
 int LuaContext::game_api_is_command_pressed(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1501,8 +1503,12 @@ int LuaContext::game_api_is_command_pressed(lua_State* l) {
  */
 int LuaContext::game_api_get_commands_direction(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
+
+    if(!savegame.get_game()) {
+      return 0;
+    }
 
     GameCommands& commands = savegame.get_game()->get_commands();
     int wanted_direction8 = commands.get_wanted_direction8();
@@ -1524,7 +1530,7 @@ int LuaContext::game_api_get_commands_direction(lua_State* l) {
  */
 int LuaContext::game_api_simulate_command_pressed(lua_State* l){
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1542,7 +1548,7 @@ int LuaContext::game_api_simulate_command_pressed(lua_State* l){
  */
 int LuaContext::game_api_simulate_command_released(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
@@ -1566,9 +1572,9 @@ void LuaContext::game_on_started(Game& game) {
     return;
   }
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   on_started();
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -1580,13 +1586,13 @@ void LuaContext::game_on_started(Game& game) {
  */
 void LuaContext::game_on_finished(Game& game) {
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   if (userdata_has_field(game.get_savegame(), "on_finished")) {
     on_finished();
   }
   remove_timers(-1);  // Stop timers and menus associated to this game.
   remove_menus(-1);
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -1598,15 +1604,15 @@ void LuaContext::game_on_finished(Game& game) {
  */
 void LuaContext::game_on_update(Game& game) {
 
-  push_game(l, game.get_savegame());
-  // This particular method is tried so often that we want to save optimize
+  push_game(current_l, game.get_savegame());
+  // This particular method is tried so often that we want to optimize
   // the std::string construction.
   static const std::string method_name = "on_update";
   if (userdata_has_field(game.get_savegame(), method_name)) {
     on_update();
   }
   menus_on_update(-1);
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -1619,16 +1625,16 @@ void LuaContext::game_on_update(Game& game) {
  */
 void LuaContext::game_on_draw(Game& game, const SurfacePtr& dst_surface) {
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   if (userdata_has_field(game.get_savegame(), "on_draw")) {
     on_draw(dst_surface);
   }
   menus_on_draw(-1, dst_surface);
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
- * \brief Calls the on_changed() method of a Lua game.
+ * \brief Calls the on_map_changed() method of a Lua game.
  *
  * Does nothing if the method is not defined.
  *
@@ -1641,9 +1647,38 @@ void LuaContext::game_on_map_changed(Game& game, Map& map) {
     return;
   }
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   on_map_changed(map);
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
+}
+
+/**
+ * \brief Calls the on_world_changed() method of a Lua game.
+ *
+ * Does nothing if the method is not defined
+ * or if the quest format is lower than 1.6.
+ *
+ * \param game A game.
+ * \param previous_world The previous world or an empty string.
+ * \param new_world The new world or an empty string.
+ */
+void LuaContext::game_on_world_changed(
+    Game& game,
+    const std::string& previous_world,
+    const std::string& new_world
+) {
+
+  if (!CurrentQuest::is_format_at_least({ 1, 6 })) {
+    return;
+  }
+
+  if (!userdata_has_field(game.get_savegame(), "on_world_changed")) {
+    return;
+  }
+
+  push_game(current_l, game.get_savegame());
+  on_world_changed(previous_world, new_world);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -1659,9 +1694,11 @@ void LuaContext::game_on_paused(Game& game) {
     return;
   }
 
-  push_game(l, game.get_savegame());
-  on_paused();
-  lua_pop(l, 1);
+  run_on_main([this,&game](lua_State* l){
+    push_game(l, game.get_savegame());
+    on_paused();
+    lua_pop(l, 1);
+  });
 }
 
 /**
@@ -1677,9 +1714,11 @@ void LuaContext::game_on_unpaused(Game& game) {
     return;
   }
 
-  push_game(l, game.get_savegame());
-  on_unpaused();
-  lua_pop(l, 1);
+  run_on_main([this,&game](lua_State* l){
+    push_game(l, game.get_savegame());
+    on_unpaused();
+    lua_pop(l, 1);
+  });
 }
 
 /**
@@ -1702,9 +1741,9 @@ bool LuaContext::game_on_dialog_started(
     return false;
   }
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   bool exists = on_dialog_started(dialog, info_ref);
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 
   return exists;
 }
@@ -1724,9 +1763,9 @@ void LuaContext::game_on_dialog_finished(Game& game,
     return;
   }
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   on_dialog_finished(dialog);
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -1743,9 +1782,9 @@ bool LuaContext::game_on_game_over_started(Game& game) {
     return false;
   }
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   bool exists = on_game_over_started();
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 
   return exists;
 }
@@ -1763,9 +1802,9 @@ void LuaContext::game_on_game_over_finished(Game& game) {
     return;
   }
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   on_game_over_finished();
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
 }
 
 /**
@@ -1781,12 +1820,12 @@ void LuaContext::game_on_game_over_finished(Game& game) {
  */
 bool LuaContext::game_on_input(Game& game, const InputEvent& event) {
 
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   bool handled = on_input(event);
   if (!handled) {
     handled = menus_on_input(-1, event);
   }
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
   return handled;
 }
 
@@ -1803,14 +1842,14 @@ bool LuaContext::game_on_input(Game& game, const InputEvent& event) {
 bool LuaContext::game_on_command_pressed(Game& game, GameCommand command) {
 
   bool handled = false;
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   if (userdata_has_field(game.get_savegame(), "on_command_pressed")) {
     handled = on_command_pressed(command);
   }
   if (!handled) {
     handled = menus_on_command_pressed(-1, command);
   }
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
   return handled;
 }
 
@@ -1827,14 +1866,14 @@ bool LuaContext::game_on_command_pressed(Game& game, GameCommand command) {
 bool LuaContext::game_on_command_released(Game& game, GameCommand command) {
 
   bool handled = false;
-  push_game(l, game.get_savegame());
+  push_game(current_l, game.get_savegame());
   if (userdata_has_field(game.get_savegame(), "on_command_released")) {
     handled = on_command_released(command);
   }
   if (!handled) {
     handled = menus_on_command_released(-1, command);
   }
-  lua_pop(l, 1);
+  lua_pop(current_l, 1);
   return handled;
 }
 

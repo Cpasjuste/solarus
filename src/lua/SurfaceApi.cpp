@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ *
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,14 +15,16 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include "solarus/core/CurrentQuest.h"
+#include "solarus/graphics/Color.h"
+#include "solarus/graphics/Sprite.h"
+#include "solarus/graphics/Surface.h"
+#include "solarus/graphics/TransitionFade.h"
+#include "solarus/graphics/Video.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
-#include "solarus/lowlevel/Color.h"
-#include "solarus/lowlevel/Surface.h"
-#include "solarus/lowlevel/Video.h"
 #include "solarus/movements/Movement.h"
-#include "solarus/Sprite.h"
-#include "solarus/TransitionFade.h"
 
 namespace Solarus {
 
@@ -35,35 +38,49 @@ const std::string LuaContext::surface_module_name = "sol.surface";
  */
 void LuaContext::register_surface_module() {
 
-  static const luaL_Reg functions[] = {
-      { "create", surface_api_create },
-      { nullptr, nullptr }
+  const std::vector<luaL_Reg> functions = {
+      { "create", surface_api_create }
   };
 
-  static const luaL_Reg methods[] = {
+  std::vector<luaL_Reg> methods = {
       { "get_size", surface_api_get_size },
       { "clear", surface_api_clear },
       { "fill_color", surface_api_fill_color },
-      { "get_opacity", surface_api_get_opacity },
-      { "set_opacity", surface_api_set_opacity },
-      { "get_pixels", surface_api_get_pixels },
-      { "set_pixels", surface_api_set_pixels },
       { "draw", drawable_api_draw },
       { "draw_region", drawable_api_draw_region },
       { "get_blend_mode", drawable_api_get_blend_mode },
       { "set_blend_mode", drawable_api_set_blend_mode },
+      { "get_opacity", drawable_api_get_opacity },
+      { "set_opacity", drawable_api_set_opacity },
       { "fade_in", drawable_api_fade_in },
       { "fade_out", drawable_api_fade_out },
       { "get_xy", drawable_api_get_xy },
       { "set_xy", drawable_api_set_xy },
       { "get_movement", drawable_api_get_movement },
       { "stop_movement", drawable_api_stop_movement },
-      { nullptr, nullptr }
+      { "get_pixels", surface_api_get_pixels } //Was already present in 1.5.x
   };
 
-  static const luaL_Reg metamethods[] = {
-      { "__gc", drawable_meta_gc },
-      { nullptr, nullptr }
+  if (CurrentQuest::is_format_at_least({ 1, 6 })) {
+    methods.insert(methods.end(), {
+      { "set_color_modulation", drawable_api_set_color_modulation },
+      { "get_color_modulation", drawable_api_get_color_modulation },
+      { "set_pixels", surface_api_set_pixels },
+      { "set_shader", drawable_api_set_shader },
+      { "get_shader", drawable_api_get_shader },
+      { "set_rotation", drawable_api_set_rotation },
+      { "get_rotation", drawable_api_get_rotation },
+      { "set_scale", drawable_api_set_scale },
+      { "get_scale", drawable_api_get_scale },
+      { "set_transformation_origin", drawable_api_set_transformation_origin },
+      { "get_transformation_origin", drawable_api_get_transformation_origin },
+      { "gl_bind_as_texture", surface_api_gl_bind_as_texture},
+      { "gl_bind_as_target", surface_api_gl_bind_as_target}
+    });
+  }
+
+  const std::vector<luaL_Reg> metamethods = {
+      { "__gc", drawable_meta_gc }
   };
 
   register_type(surface_module_name, functions, methods, metamethods);
@@ -108,7 +125,7 @@ void LuaContext::push_surface(lua_State* l, Surface& surface) {
  */
 int LuaContext::surface_api_create(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     SurfacePtr surface;
     if (lua_gettop(l) == 0) {
       // create an empty surface with the screen size
@@ -136,7 +153,7 @@ int LuaContext::surface_api_create(lua_State* l) {
       lua_pushnil(l);
     }
     else {
-      get_lua_context(l).add_drawable(surface);
+      get().add_drawable(surface);
       push_surface(l, *surface);
     }
     return 1;
@@ -150,7 +167,7 @@ int LuaContext::surface_api_create(lua_State* l) {
  */
 int LuaContext::surface_api_get_size(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Surface& surface = *check_surface(l, 1);
 
     lua_pushinteger(l, surface.get_width());
@@ -166,7 +183,7 @@ int LuaContext::surface_api_get_size(lua_State* l) {
  */
 int LuaContext::surface_api_clear(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Surface& surface = *check_surface(l, 1);
 
     surface.clear();
@@ -182,7 +199,7 @@ int LuaContext::surface_api_clear(lua_State* l) {
  */
 int LuaContext::surface_api_fill_color(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Surface& surface = *check_surface(l, 1);
     Color color = LuaTools::check_color(l, 2);
 
@@ -203,47 +220,13 @@ int LuaContext::surface_api_fill_color(lua_State* l) {
 }
 
 /**
- * \brief Implementation of surface:get_opacity().
- * \param l The Lua context that is calling this function.
- * \return Number of values to return to Lua.
- */
-int LuaContext::surface_api_get_opacity(lua_State* l) {
-
-  return LuaTools::exception_boundary_handle(l, [&] {
-    const Surface& surface = *check_surface(l, 1);
-
-    uint8_t opacity = surface.get_opacity();
-
-    lua_pushinteger(l, opacity);
-    return 1;
-  });
-}
-
-/**
- * \brief Implementation of surface:set_opacity().
- * \param l The Lua context that is calling this function.
- * \return Number of values to return to Lua.
- */
-int LuaContext::surface_api_set_opacity(lua_State* l) {
-
-  return LuaTools::exception_boundary_handle(l, [&] {
-    Surface& surface = *check_surface(l, 1);
-    uint8_t opacity = (uint8_t) LuaTools::check_int(l, 2);
-
-    surface.set_opacity(opacity);
-
-    return 0;
-  });
-}
-
-/**
  * \brief Implementation of surface:get_pixels().
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::surface_api_get_pixels(lua_State* l) {
 
-  return LuaTools::exception_boundary_handle(l, [&] {
+  return state_boundary_handle(l, [&] {
     Surface& surface = *check_surface(l, 1);
     // TODO optional parameters x, y, width, height
 
@@ -258,10 +241,37 @@ int LuaContext::surface_api_get_pixels(lua_State* l) {
  * \return Number of values to return to Lua.
  */
 int LuaContext::surface_api_set_pixels(lua_State* l) {
-
-  return LuaTools::exception_boundary_handle(l, [&] {
-    // TODO
+  return state_boundary_handle(l, [&] {
+    Surface& surface = *check_surface(l,1);
+    const std::string& buffer = LuaTools::check_string(l,2);
+    surface.set_pixels(buffer);
     return 0;
+  });
+}
+
+/**
+ * \brief Implementation of surface:gl_bind_as_texture().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::surface_api_gl_bind_as_texture(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+      const Surface& surface = *check_surface(l,1);
+      surface.bind_as_texture();
+      return 0;
+  });
+}
+
+/**
+ * \brief Implementation of surface:gl_bind_as_target().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::surface_api_gl_bind_as_target(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+      Surface& surface = *check_surface(l,1);
+      surface.bind_as_target();
+      return 0;
   });
 }
 

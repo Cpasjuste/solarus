@@ -30,10 +30,10 @@ block{
   layer = 0,
   x = 24,
   y = 61,
-  sprite = "entities/block",
+  sprite = "blocks/block_brown",
   pushable = true,
   pullable = false,
-  maximum_moves = 1,
+  max_moves = 1,
 }
 
 custom_entity{

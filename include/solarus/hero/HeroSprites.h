@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
 #ifndef SOLARUS_HERO_SPRITES_H
 #define SOLARUS_HERO_SPRITES_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
+#include "solarus/core/Rectangle.h"
 #include "solarus/entities/Ground.h"
-#include "solarus/lowlevel/Rectangle.h"
+#include "solarus/graphics/SpritePtr.h"
 #include "solarus/lua/ScopedLuaRef.h"
-#include "solarus/SpritePtr.h"
 #include <memory>
 #include <string>
 
@@ -53,7 +53,7 @@ class HeroSprites {
     void draw_on_map();
     void set_suspended(bool suspended);
     void rebuild_equipment();
-    void notify_map_started();
+    void notify_map_starting();
     void notify_tileset_changed();
 
     const std::string& get_tunic_sprite_id() const;
@@ -185,7 +185,7 @@ class HeroSprites {
                                              * An empty string means no shield sprite.
                                              * By default, "hero/shieldX" where X is the shield level. */
     bool has_default_shield_sprite;         /**< Whether shield_sprite_id has the defaut value. */
-    SpritePtr shield_sprite;                  /**< Current shield sprite. */
+    SpritePtr shield_sprite;                /**< Current shield sprite. */
 
     // Other sprites.
     SpritePtr shadow_sprite;                /**< shadow of the hero, only in specific states (most of the time

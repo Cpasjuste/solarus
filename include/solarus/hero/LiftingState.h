@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 #ifndef SOLARUS_HERO_LIFTING_STATE_H
 #define SOLARUS_HERO_LIFTING_STATE_H
 
+#include "solarus/core/Common.h"
 #include "solarus/entities/EntityState.h"
 #include <memory>
 
@@ -35,7 +36,7 @@ class Hero::LiftingState: public HeroState {
     virtual void stop(const State* next_state) override;
     virtual void update() override;
     virtual void set_suspended(bool suspended) override;
-    virtual bool can_be_hurt(Entity* attacker) const override;
+    virtual bool get_can_be_hurt(Entity* attacker) override;
 
   private:
 

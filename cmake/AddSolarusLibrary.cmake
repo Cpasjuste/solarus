@@ -3,15 +3,76 @@ file(
   GLOB
   solarus_SOURCES
 
+  include/solarus/audio/ItDecoder.h
+  include/solarus/audio/Music.h
+  include/solarus/audio/OggDecoder.h
+  include/solarus/audio/Sound.h
+  include/solarus/audio/SpcDecoder.h
+
   include/solarus/containers/Grid.h
   include/solarus/containers/Quadtree.h
   include/solarus/containers/Quadtree.inl
+
+  include/solarus/core/Ability.h
+  include/solarus/core/AbilityInfo.h
+  include/solarus/core/Arguments.h
+  include/solarus/core/CommandsEffects.h
+  include/solarus/core/Common.h
+  include/solarus/core/config.h
+  include/solarus/core/Debug.h
+  include/solarus/core/CurrentQuest.h
+  include/solarus/core/DialogBoxSystem.h
+  include/solarus/core/Dialog.h
+  include/solarus/core/DialogResources.h
+  include/solarus/core/EnumInfo.h
+  include/solarus/core/EnumInfo.inl
+  include/solarus/core/Equipment.h
+  include/solarus/core/EquipmentItem.h
+  include/solarus/core/EquipmentItemUsage.h
+  include/solarus/core/FontResource.h
+  include/solarus/core/GameCommand.h
+  include/solarus/core/GameCommands.h
+  include/solarus/core/Game.h
+  include/solarus/core/Geometry.h
+  include/solarus/core/InputEvent.h
+  include/solarus/core/Logger.h
+  include/solarus/core/MainLoop.h
+  include/solarus/core/Map.h
+  include/solarus/core/MapData.h
+  include/solarus/core/PixelBits.h
+  include/solarus/core/Point.h
+  include/solarus/core/Point.inl
+  include/solarus/core/QuestFiles.h
+  include/solarus/core/QuestDatabase.h
+  include/solarus/core/QuestProperties.h
+  include/solarus/core/Random.h
+  include/solarus/core/Rectangle.h
+  include/solarus/core/ResourceProvider.h
+  include/solarus/core/ResourceType.h
+  include/solarus/core/SavegameConverterV1.h
+  include/solarus/core/Savegame.h
+  include/solarus/core/Settings.h
+  include/solarus/core/Scale.h
+  include/solarus/core/Scale.inl
+  include/solarus/core/Size.h
+  include/solarus/core/Size.inl
+  include/solarus/core/SolarusFatal.h
+  include/solarus/core/String.h
+  include/solarus/core/StringResources.h
+  include/solarus/core/System.h
+  include/solarus/core/Timer.h
+  include/solarus/core/TimerPtr.h
+  include/solarus/core/Transform.h
+  include/solarus/core/Transform.inl
+  include/solarus/core/Treasure.h
 
   include/solarus/entities/AnimatedTilePattern.h
   include/solarus/entities/Arrow.h
   include/solarus/entities/Block.h
   include/solarus/entities/Bomb.h
   include/solarus/entities/Boomerang.h
+  include/solarus/entities/BorderKind.h
+  include/solarus/entities/BorderSet.h
   include/solarus/entities/Camera.h
   include/solarus/entities/CameraPtr.h
   include/solarus/entities/CarriedObject.h
@@ -29,6 +90,7 @@ file(
   include/solarus/entities/EnemyReaction.h
   include/solarus/entities/Entities.h
   include/solarus/entities/Entity.h
+  include/solarus/entities/EntityData.h
   include/solarus/entities/EntityPtr.h
   include/solarus/entities/EntityState.h
   include/solarus/entities/EntityType.h
@@ -64,13 +126,59 @@ file(
   include/solarus/entities/TilePtr.h
   include/solarus/entities/TilesetData.h
   include/solarus/entities/Tileset.h
-  include/solarus/entities/TimeScrollingTilePattern.h
+  include/solarus/entities/TraversableInfo.h
   include/solarus/entities/Wall.h
+
+  include/solarus/graphics/BlendMode.h
+  include/solarus/graphics/BlendModeInfo.h
+  include/solarus/graphics/Color.h
+  include/solarus/graphics/Drawable.h
+  include/solarus/graphics/DrawablePtr.h
+  include/solarus/graphics/DrawProxies.h
+  include/solarus/graphics/Hq2xFilter.h
+  include/solarus/graphics/Hq3xFilter.h
+  include/solarus/graphics/Hq4xFilter.h
+  include/solarus/graphics/RenderTexture.h
+  include/solarus/graphics/Scale2xFilter.h
+  include/solarus/graphics/SDLPtrs.h
+  include/solarus/graphics/Shader.h
+  include/solarus/graphics/DefaultShaders.h
+  include/solarus/graphics/Renderer.h
+  include/solarus/graphics/sdlrenderer/SDLRenderer.h
+  include/solarus/graphics/sdlrenderer/SDLSurfaceImpl.h
+  include/solarus/graphics/sdlrenderer/SDLShader.h
+  include/solarus/graphics/glrenderer/GlRenderer.h
+  include/solarus/graphics/glrenderer/GlShader.h
+  include/solarus/graphics/glrenderer/GlTexture.h
+  include/solarus/graphics/ShaderContext.h
+  include/solarus/graphics/ShaderData.h
+  include/solarus/graphics/ShaderPtr.h
+  include/solarus/graphics/SoftwarePixelFilter.h
+  include/solarus/graphics/SoftwareVideoMode.h
+  include/solarus/graphics/SpriteAnimationDirection.h
+  include/solarus/graphics/SpriteAnimation.h
+  include/solarus/graphics/SpriteAnimationSet.h
+  include/solarus/graphics/Sprite.h
+  include/solarus/graphics/SpriteData.h
+  include/solarus/graphics/SpritePtr.h
+  include/solarus/graphics/Surface.h
+  include/solarus/graphics/SurfaceImpl.h
+  include/solarus/graphics/SurfacePtr.h
+  include/solarus/graphics/TextSurface.h
+  include/solarus/graphics/Texture.h
+  include/solarus/graphics/TransitionFade.h
+  include/solarus/graphics/Transition.h
+  include/solarus/graphics/TransitionImmediate.h
+  include/solarus/graphics/TransitionScrolling.h
+  include/solarus/graphics/VertexArray.h
+  include/solarus/graphics/VertexArrayPtr.h
+  include/solarus/graphics/Video.h
 
   include/solarus/hero/BackToSolidGroundState.h
   include/solarus/hero/BoomerangState.h
   include/solarus/hero/BowState.h
   include/solarus/hero/CarryingState.h
+  include/solarus/hero/CustomState.h
   include/solarus/hero/FallingState.h
   include/solarus/hero/ForcedWalkingState.h
   include/solarus/hero/FreeState.h
@@ -96,46 +204,6 @@ file(
   include/solarus/hero/TreasureState.h
   include/solarus/hero/UsingItemState.h
   include/solarus/hero/VictoryState.h
-
-  include/solarus/lowlevel/apple/AppleInterface.h
-  include/solarus/lowlevel/BlendMode.h
-  include/solarus/lowlevel/BlendModeInfo.h
-  include/solarus/lowlevel/Color.h
-  include/solarus/lowlevel/Debug.h
-  include/solarus/lowlevel/FontResource.h
-  include/solarus/lowlevel/Geometry.h
-  include/solarus/lowlevel/Hq2xFilter.h
-  include/solarus/lowlevel/Hq3xFilter.h
-  include/solarus/lowlevel/Hq4xFilter.h
-  include/solarus/lowlevel/InputEvent.h
-  include/solarus/lowlevel/ItDecoder.h
-  include/solarus/lowlevel/Logger.h
-  include/solarus/lowlevel/Music.h
-  include/solarus/lowlevel/OggDecoder.h
-  include/solarus/lowlevel/PixelBits.h
-  include/solarus/lowlevel/PixelFilter.h
-  include/solarus/lowlevel/Point.h
-  include/solarus/lowlevel/Point.inl
-  include/solarus/lowlevel/QuestFiles.h
-  include/solarus/lowlevel/Random.h
-  include/solarus/lowlevel/Rectangle.h
-  include/solarus/lowlevel/Scale2xFilter.h
-  include/solarus/lowlevel/shaders/GL_2DShader.h
-  include/solarus/lowlevel/shaders/GL_ARBShader.h
-  include/solarus/lowlevel/shaders/GLContext.h
-  include/solarus/lowlevel/shaders/ShaderContext.h
-  include/solarus/lowlevel/shaders/Shader.h
-  include/solarus/lowlevel/Size.h
-  include/solarus/lowlevel/Size.inl
-  include/solarus/lowlevel/Sound.h
-  include/solarus/lowlevel/SpcDecoder.h
-  include/solarus/lowlevel/String.h
-  include/solarus/lowlevel/Surface.h
-  include/solarus/lowlevel/SurfacePtr.h
-  include/solarus/lowlevel/System.h
-  include/solarus/lowlevel/TextSurface.h
-  include/solarus/lowlevel/Video.h
-  include/solarus/lowlevel/VideoMode.h
 
   include/solarus/lua/ExportableToLua.h
   include/solarus/lua/ExportableToLuaPtr.h
@@ -174,64 +242,66 @@ file(
   include/solarus/third_party/snes_spc/SPC_DSP.h
   include/solarus/third_party/snes_spc/SPC_Filter.h
   include/solarus/third_party/snes_spc/spc.h
+  include/solarus/third_party/shelf-pack.h
 
-  include/solarus/Ability.h
-  include/solarus/AbilityInfo.h
-  include/solarus/Arguments.h
-  include/solarus/CommandsEffects.h
-  include/solarus/Common.h
-  include/solarus/config.h
-  include/solarus/CurrentQuest.h
-  include/solarus/DialogBoxSystem.h
-  include/solarus/Dialog.h
-  include/solarus/DialogResources.h
-  include/solarus/Drawable.h
-  include/solarus/DrawablePtr.h
-  include/solarus/EntityData.h
-  include/solarus/EnumInfo.h
-  include/solarus/EnumInfo.inl
-  include/solarus/Equipment.h
-  include/solarus/EquipmentItem.h
-  include/solarus/EquipmentItemUsage.h
-  include/solarus/GameCommand.h
-  include/solarus/GameCommands.h
-  include/solarus/Game.h
-  include/solarus/MainLoop.h
-  include/solarus/Map.h
-  include/solarus/MapData.h
-  include/solarus/QuestProperties.h
-  include/solarus/QuestResources.h
-  include/solarus/ResourceProvider.h
-  include/solarus/ResourceType.h
-  include/solarus/SavegameConverterV1.h
-  include/solarus/Savegame.h
-  include/solarus/Settings.h
-  include/solarus/SolarusFatal.h
-  include/solarus/SpriteAnimationDirection.h
-  include/solarus/SpriteAnimation.h
-  include/solarus/SpriteAnimationSet.h
-  include/solarus/Sprite.h
-  include/solarus/SpriteData.h
-  include/solarus/SpritePtr.h
-  include/solarus/StringResources.h
-  include/solarus/Timer.h
-  include/solarus/TimerPtr.h
-  include/solarus/TransitionFade.h
-  include/solarus/Transition.h
-  include/solarus/TransitionImmediate.h
-  include/solarus/TransitionScrolling.h
-  include/solarus/Treasure.h
+  src/audio/ItDecoder.cpp
+  src/audio/Music.cpp
+  src/audio/OggDecoder.cpp
+  src/audio/Sound.cpp
+  src/audio/SpcDecoder.cpp
+
+
+  src/core/AbilityInfo.cpp
+  src/core/Arguments.cpp
+  src/core/CommandsEffects.cpp
+  src/core/CurrentQuest.cpp
+  src/core/Debug.cpp
+  src/core/DialogBoxSystem.cpp
+  src/core/Dialog.cpp
+  src/core/DialogResources.cpp
+  src/core/Equipment.cpp
+  src/core/EquipmentItem.cpp
+  src/core/EquipmentItemUsage.cpp
+  src/core/FontResource.cpp
+  src/core/GameCommands.cpp
+  src/core/Game.cpp
+  src/core/Geometry.cpp
+  src/core/InputEvent.cpp
+  src/core/Logger.cpp
+  src/core/MainLoop.cpp
+  src/core/Map.cpp
+  src/core/MapData.cpp
+  src/core/PixelBits.cpp
+  src/core/Point.cpp
+  src/core/QuestFiles.cpp
+  src/core/QuestDatabase.cpp
+  src/core/QuestProperties.cpp
+  src/core/Random.cpp
+  src/core/Rectangle.cpp
+  src/core/ResourceProvider.cpp
+  src/core/SavegameConverterV1.cpp
+  src/core/Savegame.cpp
+  src/core/Settings.cpp
+  src/core/Size.cpp
+  src/core/SolarusFatal.cpp
+  src/core/String.cpp
+  src/core/System.cpp
+  src/core/StringResources.cpp
+  src/core/Timer.cpp
+  src/core/Treasure.cpp
 
   src/entities/AnimatedTilePattern.cpp
   src/entities/Arrow.cpp
   src/entities/Block.cpp
   src/entities/Bomb.cpp
   src/entities/Boomerang.cpp
+  src/entities/BorderSet.cpp
   src/entities/Camera.cpp
   src/entities/CarriedObject.cpp
   src/entities/Chest.cpp
   src/entities/CrystalBlock.cpp
   src/entities/Crystal.cpp
+  src/entities/CollisionMode.cpp
   src/entities/CustomEntity.cpp
   src/entities/Destination.cpp
   src/entities/Destructible.cpp
@@ -241,6 +311,7 @@ file(
   src/entities/EnemyReaction.cpp
   src/entities/Entities.cpp
   src/entities/Entity.cpp
+  src/entities/EntityData.cpp
   src/entities/EntityState.cpp
   src/entities/EntityTypeInfo.cpp
   src/entities/Explosion.cpp
@@ -268,13 +339,50 @@ file(
   src/entities/TilePattern.cpp
   src/entities/Tileset.cpp
   src/entities/TilesetData.cpp
-  src/entities/TimeScrollingTilePattern.cpp
+  src/entities/TraversableInfo.cpp
   src/entities/Wall.cpp
+
+  src/graphics/BlendModeInfo.cpp
+  src/graphics/Color.cpp
+  src/graphics/Drawable.cpp
+  src/graphics/Hq2xFilter.cpp
+  src/graphics/Hq3xFilter.cpp
+  src/graphics/Hq4xFilter.cpp
+  src/graphics/RenderTexture.cpp
+  src/graphics/Renderer.cpp
+  src/graphics/sdlrenderer/SDLRenderer.cpp
+  src/graphics/sdlrenderer/SDLSurfaceImpl.cpp
+  src/graphics/sdlrenderer/SDLShader.cpp
+  src/graphics/glrenderer/GlRenderer.cpp
+  src/graphics/glrenderer/GlShader.cpp
+  src/graphics/glrenderer/GlTexture.cpp
+  src/graphics/Scale2xFilter.cpp
+  src/graphics/ShaderContext.cpp
+  src/graphics/ShaderData.cpp
+  src/graphics/Shader.cpp
+  src/graphics/SoftwarePixelFilter.cpp
+  src/graphics/SoftwareVideoMode.cpp
+  src/graphics/SpriteAnimation.cpp
+  src/graphics/SpriteAnimationDirection.cpp
+  src/graphics/SpriteAnimationSet.cpp
+  src/graphics/Sprite.cpp
+  src/graphics/SpriteData.cpp
+  src/graphics/Surface.cpp
+  src/graphics/SurfaceImpl.cpp
+  src/graphics/TextSurface.cpp
+  src/graphics/Texture.cpp
+  src/graphics/Transition.cpp
+  src/graphics/TransitionFade.cpp
+  src/graphics/TransitionImmediate.cpp
+  src/graphics/TransitionScrolling.cpp
+  src/graphics/VertexArray.cpp
+  src/graphics/Video.cpp
 
   src/hero/BackToSolidGroundState.cpp
   src/hero/BoomerangState.cpp
   src/hero/BowState.cpp
   src/hero/CarryingState.cpp
+  src/hero/CustomState.cpp
   src/hero/FallingState.cpp
   src/hero/ForcedWalkingState.cpp
   src/hero/FreeState.cpp
@@ -301,41 +409,6 @@ file(
   src/hero/UsingItemState.cpp
   src/hero/VictoryState.cpp
 
-  src/lowlevel/BlendModeInfo.cpp
-  src/lowlevel/Color.cpp
-  src/lowlevel/Debug.cpp
-  src/lowlevel/FontResource.cpp
-  src/lowlevel/Geometry.cpp
-  src/lowlevel/Hq2xFilter.cpp
-  src/lowlevel/Hq3xFilter.cpp
-  src/lowlevel/Hq4xFilter.cpp
-  src/lowlevel/InputEvent.cpp
-  src/lowlevel/ItDecoder.cpp
-  src/lowlevel/Logger.cpp
-  src/lowlevel/Music.cpp
-  src/lowlevel/OggDecoder.cpp
-  src/lowlevel/PixelBits.cpp
-  src/lowlevel/PixelFilter.cpp
-  src/lowlevel/Point.cpp
-  src/lowlevel/QuestFiles.cpp
-  src/lowlevel/Random.cpp
-  src/lowlevel/Rectangle.cpp
-  src/lowlevel/Scale2xFilter.cpp
-  src/lowlevel/shaders/GL_2DShader.cpp
-  src/lowlevel/shaders/GL_ARBShader.cpp
-  src/lowlevel/shaders/GLContext.cpp
-  src/lowlevel/shaders/ShaderContext.cpp
-  src/lowlevel/shaders/Shader.cpp
-  src/lowlevel/Size.cpp
-  src/lowlevel/Sound.cpp
-  src/lowlevel/SpcDecoder.cpp
-  src/lowlevel/String.cpp
-  src/lowlevel/Surface.cpp
-  src/lowlevel/System.cpp
-  src/lowlevel/TextSurface.cpp
-  src/lowlevel/Video.cpp
-  src/lowlevel/VideoMode.cpp
-
   src/lua/AudioApi.cpp
   src/lua/DrawableApi.cpp
   src/lua/EntityApi.cpp
@@ -354,7 +427,9 @@ file(
   src/lua/MenuApi.cpp
   src/lua/MovementApi.cpp
   src/lua/ScopedLuaRef.cpp
+  src/lua/ShaderApi.cpp
   src/lua/SpriteApi.cpp
+  src/lua/StateApi.cpp
   src/lua/SurfaceApi.cpp
   src/lua/TextSurfaceApi.cpp
   src/lua/TimerApi.cpp
@@ -375,43 +450,6 @@ file(
   src/movements/StraightMovement.cpp
   src/movements/TargetMovement.cpp
 
-  src/AbilityInfo.cpp
-  src/Arguments.cpp
-  src/CommandsEffects.cpp
-  src/CurrentQuest.cpp
-  src/DialogBoxSystem.cpp
-  src/Dialog.cpp
-  src/DialogResources.cpp
-  src/Drawable.cpp
-  src/EntityData.cpp
-  src/Equipment.cpp
-  src/EquipmentItem.cpp
-  src/EquipmentItemUsage.cpp
-  src/GameCommands.cpp
-  src/Game.cpp
-  src/MainLoop.cpp
-  src/Map.cpp
-  src/MapData.cpp
-  src/QuestProperties.cpp
-  src/QuestResources.cpp
-  src/ResourceProvider.cpp
-  src/SavegameConverterV1.cpp
-  src/Savegame.cpp
-  src/Settings.cpp
-  src/SolarusFatal.cpp
-  src/SpriteAnimation.cpp
-  src/SpriteAnimationDirection.cpp
-  src/SpriteAnimationSet.cpp
-  src/Sprite.cpp
-  src/SpriteData.cpp
-  src/StringResources.cpp
-  src/Timer.cpp
-  src/Transition.cpp
-  src/TransitionFade.cpp
-  src/TransitionImmediate.cpp
-  src/TransitionScrolling.cpp
-  src/Treasure.cpp
-
   src/third_party/hqx/hq2x.c
   src/third_party/hqx/hq3x.c
   src/third_party/hqx/hq4x.c
@@ -423,16 +461,15 @@ file(
   src/third_party/snes_spc/spc.cpp
   src/third_party/snes_spc/SPC_DSP.cpp
   src/third_party/snes_spc/SPC_Filter.cpp
-
 )
 
 # Additional source files for Apple systems.
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(solarus_SOURCES
     ${solarus_SOURCES}
-    src/lowlevel/apple/AppleInterface.mm
-    include/solarus/lowlevel/apple/AppleInterface.h
-  )
+    src/core/AppleInterface.mm
+    include/solarus/core/AppleInterface.h
+    )
 endif()
 
 # Build the Solarus library.
@@ -445,6 +482,7 @@ target_link_libraries(solarus
   "${SDL2_LIBRARY}"
   "${SDL2_IMAGE_LIBRARY}"
   "${SDL2_TTF_LIBRARY}"
+  "${OPENGL_LIBRARY}"
   "${OPENAL_LIBRARY}"
   "${LUA_LIBRARY}"
   "${DL_LIBRARY}"

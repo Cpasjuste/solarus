@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #ifndef SOLARUS_LUA_DATA_FILE_H
 #define SOLARUS_LUA_DATA_FILE_H
 
-#include "solarus/Common.h"
+#include "solarus/core/Common.h"
 #include <iosfwd>
 #include <string>
 
@@ -51,6 +51,11 @@ class SOLARUS_API LuaData {
     static std::string escape_string(std::string value);
     static std::string escape_multiline_string(std::string value);
     static std::string unescape_multiline_string(std::string value);
+
+    void export_multiline_string(
+        const std::string& field_name,
+        const std::string& value,
+        std::ostream& out) const;
 
 };
 

@@ -1,21 +1,23 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
- * 
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Solarus is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef SOLARUS_COLLISION_MODE_H
 #define SOLARUS_COLLISION_MODE_H
+
+#include "solarus/core/EnumInfo.h"
 
 namespace Solarus {
 
@@ -42,7 +44,14 @@ enum CollisionMode {
   COLLISION_CUSTOM            = 0x0080  /**< Custom collision function, defined by a subclass of Entity. */
 };
 
+template <>
+struct SOLARUS_API EnumInfoTraits<CollisionMode> {
+  static const std::string pretty_name;
+
+  static const EnumInfo<CollisionMode>::names_type names;
+  static const EnumInfo<CollisionMode>::names_type names_no_none_no_custom;
+};
+
 }
 
 #endif
-

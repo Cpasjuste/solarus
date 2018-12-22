@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,21 +14,21 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/audio/Sound.h"
+#include "solarus/core/CommandsEffects.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/EquipmentItem.h"
+#include "solarus/core/FontResource.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/QuestFiles.h"
+#include "solarus/core/Savegame.h"
 #include "solarus/entities/Hero.h"
 #include "solarus/entities/ShopTreasure.h"
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/lowlevel/FontResource.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/TextSurface.h"
+#include "solarus/graphics/Sprite.h"
+#include "solarus/graphics/TextSurface.h"
 #include "solarus/lua/LuaContext.h"
-#include "solarus/CommandsEffects.h"
-#include "solarus/Equipment.h"
-#include "solarus/EquipmentItem.h"
-#include "solarus/Game.h"
-#include "solarus/Map.h"
-#include "solarus/Savegame.h"
-#include "solarus/Sprite.h"
 #include <sstream>
 
 namespace Solarus {
@@ -193,7 +193,7 @@ bool ShopTreasure::notify_action_command_pressed() {
     return true;
   }
 
-  return false;
+  return Entity::notify_action_command_pressed();
 }
 
 /**
@@ -208,32 +208,29 @@ void ShopTreasure::update() {
 }
 
 /**
- * \brief Draws the entity on the map.
+ * \copydoc Entity::built_in_draw
  */
-void ShopTreasure::draw_on_map() {
+void ShopTreasure::built_in_draw(Camera& camera) {
 
-  const CameraPtr& camera = get_map().get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-
-  const SurfacePtr& map_surface = get_map().get_camera_surface();
+  const SurfacePtr& camera_surface = camera.get_surface();
   int x = get_x();
   int y = get_y();
 
   // draw the treasure
-  treasure_sprite->draw(map_surface,
-      x + 16 - camera->get_top_left_x(),
-      y + 13 - camera->get_top_left_y()
+  treasure_sprite->draw(camera_surface,
+      x + 16 - camera.get_top_left_x(),
+      y + 13 - camera.get_top_left_y()
   );
 
   // also draw the price
-  price_digits.draw(map_surface,
-      x + 12 - camera->get_top_left_x(),
-      y + 21 - camera->get_top_left_y());
-  rupee_icon_sprite->draw(map_surface,
-      x - camera->get_top_left_x(),
-      y + 22 - camera->get_top_left_y());
+  price_digits.draw(camera_surface,
+      x + 12 - camera.get_top_left_x(),
+      y + 21 - camera.get_top_left_y());
+  rupee_icon_sprite->draw(camera_surface,
+      x - camera.get_top_left_x(),
+      y + 22 - camera.get_top_left_y());
+
+  Entity::built_in_draw(camera);
 }
 
 }

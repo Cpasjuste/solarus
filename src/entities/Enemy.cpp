@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,16 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Debug.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Geometry.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/QuestFiles.h"
+#include "solarus/core/Random.h"
+#include "solarus/core/Savegame.h"
+#include "solarus/core/System.h"
 #include "solarus/entities/Block.h"
 #include "solarus/entities/CarriedObject.h"
 #include "solarus/entities/CrystalBlock.h"
@@ -23,24 +33,13 @@
 #include "solarus/entities/Fire.h"
 #include "solarus/entities/Hero.h"
 #include "solarus/entities/Pickable.h"
-#include "solarus/lowlevel/Debug.h"
-#include "solarus/lowlevel/Geometry.h"
-#include "solarus/lowlevel/QuestFiles.h"
-#include "solarus/lowlevel/Random.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/System.h"
+#include "solarus/entities/Stream.h"
+#include "solarus/graphics/Sprite.h"
+#include "solarus/graphics/SpriteAnimationSet.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/movements/FallingHeight.h"
 #include "solarus/movements/StraightMovement.h"
-#include "solarus/Equipment.h"
-#include "solarus/Game.h"
-#include "solarus/Map.h"
-#include "solarus/Savegame.h"
-#include "solarus/Sprite.h"
-#include "solarus/SpriteAnimationSet.h"
 #include <memory>
-#include <sstream>
-#include <iostream>
 
 namespace Solarus {
 
@@ -89,12 +88,14 @@ Enemy::Enemy(
   damage_on_hero(1),
   life(1),
   hurt_style(HurtStyle::NORMAL),
+  dying_sprite_id("enemies/enemy_killed"),
   pushed_back_when_hurt(true),
   push_hero_on_sword(false),
   can_hurt_hero_running(false),
   minimum_shield_needed(0),
   savegame_variable(),
   traversable(true),
+  attacking_collision_mode(CollisionMode::COLLISION_SPRITE),
   obstacle_behavior(ObstacleBehavior::NORMAL),
   being_hurt(false),
   stop_hurt_date(0),
@@ -111,7 +112,10 @@ Enemy::Enemy(
   nb_explosions(0),
   next_explosion_date(0) {
 
-  set_collision_modes(CollisionMode::COLLISION_OVERLAPPING | CollisionMode::COLLISION_SPRITE);
+  set_collision_modes(
+        CollisionMode::COLLISION_OVERLAPPING |  // Also for some entities like the boomerang.
+        CollisionMode::COLLISION_SPRITE         // For collisions with the hero by default.
+  );
   set_size(16, 16);
   set_origin(8, 13);
   set_drawn_in_y_order(true);
@@ -216,18 +220,6 @@ void Enemy::notify_created() {
 }
 
 /**
- * \brief Notifies this entity that its map has just become active.
- */
-void Enemy::notify_map_opening_transition_finished() {
-
-  Entity::notify_map_opening_transition_finished();
-
-  if (is_enabled() && is_in_normal_state()) {
-    restart();
-  }
-}
-
-/**
  * \brief Returns the breed of this enemy.
  * \return The breed.
  */
@@ -319,6 +311,19 @@ bool Enemy::is_raised_block_obstacle(CrystalBlock& raised_block) {
   }
 
   return true;
+}
+
+/**
+ * \copydoc Entity::is_stream_obstacle
+ */
+bool Enemy::is_stream_obstacle(Stream& stream) {
+
+  // Enemies can move on non-blocking streams only.
+  if (!stream.get_allow_movement()) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -472,6 +477,22 @@ void Enemy::set_hurt_style(HurtStyle hurt_style) {
 }
 
 /**
+ * \brief Returns the id of the sprite to show during the normal dying animation.
+ * \return The dying sprite id or an empty string.
+ */
+std::string Enemy::get_dying_sprite_id() const {
+  return dying_sprite_id;
+}
+
+/**
+ * \brief Sets the id of the sprite to show during the normal dying animation.
+ * \param dying_sprite_id The dying sprite id or an empty string.
+ */
+void Enemy::set_dying_sprite_id(const std::string& dying_sprite_id) {
+  this->dying_sprite_id = dying_sprite_id;
+}
+
+/**
  * \brief Returns whether this enemy can currently attack the hero.
  * \return true if this enemy can currently attack the hero
  */
@@ -533,6 +554,26 @@ bool Enemy::is_traversable() const {
  */
 void Enemy::set_traversable(bool traversable) {
   this->traversable = traversable;
+}
+
+/**
+ * \brief Sets the collision test used to detect when attacking the hero.
+ * \return The attacking collision mode.
+ */
+CollisionMode Enemy::get_attacking_collision_mode() const {
+  return attacking_collision_mode;
+}
+
+/**
+ * \brief Returns the collision test used to detect when attacking the hero.
+ * \param attacking_collision_mode The attacking collision mode.
+ */
+void Enemy::set_attacking_collision_mode(CollisionMode attacking_collision_mode) {
+  this->attacking_collision_mode = attacking_collision_mode;
+  set_collision_modes(
+        CollisionMode::COLLISION_OVERLAPPING |
+        CollisionMode::COLLISION_SPRITE |
+        attacking_collision_mode);
 }
 
 /**
@@ -631,14 +672,10 @@ EnemyReaction::Reaction Enemy::get_attack_consequence(
 void Enemy::set_attack_consequence(
     EnemyAttack attack,
     EnemyReaction::ReactionType reaction,
-    int life_lost) {
+    int life_lost,
+    const ScopedLuaRef& callback) {
 
-  if (life_lost < 0) {
-    std::ostringstream oss;
-    oss << "Invalid amount of life: " << life_lost;
-    Debug::die(oss.str());
-  }
-  attack_reactions[attack].set_general_reaction(reaction, life_lost);
+  attack_reactions[attack].set_general_reaction(reaction, life_lost, callback);
 }
 
 /**
@@ -652,14 +689,10 @@ void Enemy::set_attack_consequence_sprite(
     const Sprite& sprite,
     EnemyAttack attack,
     EnemyReaction::ReactionType reaction,
-    int life_lost) {
+    int life_lost,
+    const ScopedLuaRef& callback) {
 
-  if (life_lost < 0) {
-    std::ostringstream oss;
-    oss << "Invalid amount of life: " << life_lost;
-    Debug::die(oss.str());
-  }
-  attack_reactions[attack].set_sprite_reaction(&sprite, reaction, life_lost);
+  attack_reactions[attack].set_sprite_reaction(&sprite, reaction, life_lost, callback);
 }
 
 /**
@@ -879,22 +912,10 @@ void Enemy::set_suspended(bool suspended) {
     end_shaking_date += diff;
     next_explosion_date += diff;
   }
-  get_lua_context()->entity_on_suspended(*this, suspended);
 }
 
 /**
- * \brief Draws the entity on the map.
- */
-void Enemy::draw_on_map() {
-
-  get_lua_context()->entity_on_pre_draw(*this);
-  Entity::draw_on_map();
-  get_lua_context()->entity_on_post_draw(*this);
-}
-
-/**
- * \brief Notifies this entity that it was just enabled or disabled.
- * \param enabled true if the entity is now enabled
+ * \copydoc Entity::notify_enabled
  */
 void Enemy::notify_enabled(bool enabled) {
 
@@ -906,10 +927,6 @@ void Enemy::notify_enabled(bool enabled) {
 
   if (enabled) {
     restart();
-    get_lua_context()->entity_on_enabled(*this);
-  }
-  else {
-    get_lua_context()->entity_on_disabled(*this);
   }
 }
 
@@ -953,13 +970,11 @@ void Enemy::notify_ground_below_changed() {
 }
 
 /**
- * \brief Notifies the enemy that a collision was just detected with another entity
- * \param entity_overlapping the other entity
- * \param collision_mode the collision mode that detected the collision
+ * \copydoc Entity::notify_collision(Entity&, CollisionMode)
  */
-void Enemy::notify_collision(Entity& entity_overlapping, CollisionMode /* collision_mode */) {
+void Enemy::notify_collision(Entity& entity_overlapping, CollisionMode collision_mode) {
 
-  entity_overlapping.notify_collision_with_enemy(*this);
+  entity_overlapping.notify_collision_with_enemy(*this, collision_mode);
 }
 
 /**
@@ -967,7 +982,7 @@ void Enemy::notify_collision(Entity& entity_overlapping, CollisionMode /* collis
  */
 void Enemy::notify_collision(Entity& other_entity, Sprite& this_sprite, Sprite& other_sprite) {
 
-  other_entity.notify_collision_with_enemy(*this, this_sprite, other_sprite);
+  other_entity.notify_collision_with_enemy(*this, other_sprite, this_sprite);
 }
 
 /**
@@ -993,13 +1008,10 @@ void Enemy::notify_collision_with_fire(Fire& fire, Sprite& sprite_overlapping) {
 }
 
 /**
- * \brief This function is called when this enemy detects a collision with another enemy.
- * \param other the other enemy
- * \param other_sprite the other enemy's sprite that overlaps a sprite of this enemy
- * \param this_sprite this enemy's sprite that overlaps the other
+ * \copydoc Entity::notify_collision_with_enemy(Enemy&, Sprite&, Sprite&)
  */
 void Enemy::notify_collision_with_enemy(Enemy& other,
-    Sprite& other_sprite, Sprite& this_sprite) {
+    Sprite& this_sprite, Sprite& other_sprite) {
 
   if (is_in_normal_state()) {
     get_lua_context()->enemy_on_collision_enemy(
@@ -1168,8 +1180,14 @@ void Enemy::try_hurt(EnemyAttack attack, Entity& source, Sprite* this_sprite) {
     return;
   }
 
-  invulnerable = true;
-  vulnerable_again_date = System::now() + 500;
+  if (reaction.type != EnemyReaction::ReactionType::LUA_CALLBACK) {
+      // Make the enemy invulnerable for a while except if the reaction
+      // is a callback, in which case the user decides what to do.
+      // Ideally, ReactionType::CUSTOM should not make the enemy invulnerable
+      // either, but we don't want to break the behavior of existing scripts.
+      invulnerable = true;
+      vulnerable_again_date = System::now() + 500;
+  }
 
   switch (reaction.type) {
 
@@ -1186,7 +1204,7 @@ void Enemy::try_hurt(EnemyAttack attack, Entity& source, Sprite* this_sprite) {
       break;
 
     case EnemyReaction::ReactionType::CUSTOM:
-      // custom attack (defined in the script)
+      // Lua event enemy:on_custom_attack_received.
       if (is_in_normal_state()) {
         custom_attack(attack, this_sprite);
       }
@@ -1196,6 +1214,18 @@ void Enemy::try_hurt(EnemyAttack attack, Entity& source, Sprite* this_sprite) {
         invulnerable = false;
       }
       break;
+
+  case EnemyReaction::ReactionType::LUA_CALLBACK:
+    // Lua callback.
+    if (is_in_normal_state()) {
+      reaction.callback.call("Enemy reaction callback");
+    }
+    else {
+      // no attack was made: notify the source correctly
+      reaction.type = EnemyReaction::ReactionType::IGNORED;
+      invulnerable = false;
+    }
+    break;
 
     case EnemyReaction::ReactionType::HURT:
 
@@ -1383,7 +1413,12 @@ void Enemy::kill() {
 
     if (!special_ground) {
       // Normal dying animation.
-      create_sprite("enemies/enemy_killed");
+      if (!dying_sprite_id.empty()) {
+        if (!QuestFiles::data_file_exists("sprites/" + dying_sprite_id + ".dat")) {
+          Debug::error("No such sprite for enemy dying animation: '" + dying_sprite_id + "'");
+        }
+        create_sprite(dying_sprite_id);
+      }
       Sound::play("enemy_killed");
     }
   }
@@ -1436,7 +1471,7 @@ bool Enemy::is_dying_animation_finished() const {
     return sprite->is_animation_finished();
   }
 
-  // There is no dying animation (case of holes, water and lava for now).
+  // There is no dying animation (case of bad ground or empty dying sprite id).
   return true;
 }
 
@@ -1515,9 +1550,6 @@ bool Enemy::is_immobilized() const {
 
 /**
  * \brief This function is called when the enemy is attacked by a custom effect attack.
- *
- * Redefine this function to handle the attack.
- *
  * \param attack the attack
  * \param this_sprite the sprite of this enemy subject to the attack, or nullptr
  * if the attack does not come from a pixel-precise collision test

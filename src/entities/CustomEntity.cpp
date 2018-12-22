@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +32,11 @@
 #include "solarus/entities/Separator.h"
 #include "solarus/entities/Stairs.h"
 #include "solarus/entities/Stream.h"
+#include "solarus/entities/StreamAction.h"
 #include "solarus/entities/Switch.h"
 #include "solarus/entities/Teletransporter.h"
+#include "solarus/graphics/Sprite.h"
 #include "solarus/lua/LuaContext.h"
-#include "solarus/Sprite.h"
 #include <lua.hpp>
 
 namespace Solarus {
@@ -58,6 +59,7 @@ CustomEntity::CustomEntity(
     int layer,
     const Point& xy,
     const Size& size,
+    const Point& origin,
     const std::string& sprite_name,
     const std::string& model
 ):
@@ -66,14 +68,15 @@ CustomEntity::CustomEntity(
   ),
   model(model),
   ground_observer(false),
-  modified_ground(Ground::EMPTY) {
+  modified_ground(Ground::EMPTY),
+  follow_streams(false) {
 
   set_collision_modes(
       CollisionMode::COLLISION_FACING |
       CollisionMode::COLLISION_CUSTOM |
       CollisionMode::COLLISION_SPRITE
   );
-  set_origin(8, 13);
+  set_origin(origin);
 
   if (!sprite_name.empty()) {
     create_sprite(sprite_name);
@@ -135,7 +138,7 @@ void CustomEntity::set_sprites_direction(int direction) {
  * \param type Type of entity to test.
  * \return The corresponding traversable property.
  */
-const CustomEntity::TraversableInfo& CustomEntity::get_traversable_by_entity_info(
+const TraversableInfo& CustomEntity::get_traversable_by_entity_info(
     EntityType type) {
 
   const auto it = traversable_by_entities_type.find(type);
@@ -293,7 +296,7 @@ bool CustomEntity::is_obstacle_for(Entity& other) {
  * \param type Type of entity to test.
  * \return The corresponding traversable property.
  */
-const CustomEntity::TraversableInfo& CustomEntity::get_can_traverse_entity_info(
+const TraversableInfo& CustomEntity::get_can_traverse_entity_info(
     EntityType type) {
 
   // Find the obstacle settings.
@@ -407,7 +410,7 @@ void CustomEntity::set_can_traverse_entities(
 /**
  * \brief Restores the default setting of whether this custom entity can
  * traverse other entities of the specified type.
- callback_ref This reverts the settings of previous calls to
+ * This reverts the settings of previous calls to
  * set_can_traverse_entities(EntityType, bool)
  * and
  * set_can_traverse_entities(EntityType, const ScopedLuaRef&).
@@ -464,7 +467,7 @@ bool CustomEntity::is_stream_obstacle(Stream& stream) {
   if (!info.is_empty()) {
     return !info.is_traversable(*this, stream);
   }
-  return Entity::is_stream_obstacle(stream);
+  return false;
 }
 
 /**
@@ -775,7 +778,6 @@ void CustomEntity::add_collision_test(
   Debug::check_assertion(!callback_ref.is_empty(), "Missing collision callback");
 
   collision_tests.emplace_back(
-      *get_lua_context(),
       collision_test,
       callback_ref
   );
@@ -799,7 +801,6 @@ void CustomEntity::add_collision_test(
   add_collision_mode(COLLISION_CUSTOM);
 
   collision_tests.emplace_back(
-      *get_lua_context(),
       collision_test_ref,
       callback_ref
   );
@@ -969,13 +970,13 @@ void CustomEntity::notify_collision_from(Entity& other_entity) {
  * \brief Notifies this custom entity that another entity has detected a
  * pixel-precise collision with it.
  * \param other_entity The other entity.
- * \param other_sprite Sprite of the other entity involved in the collision.
  * \param this_sprite Sprite of this custom entity entity involved in the collision.
+ * \param other_sprite Sprite of the other entity involved in the collision.
  */
-void CustomEntity::notify_collision_from(Entity& other_entity, Sprite& other_sprite, Sprite& this_sprite) {
+void CustomEntity::notify_collision_from(Entity& other_entity, Sprite& this_sprite, Sprite& other_sprite) {
 
   // No need to check the collision again: sprite collisions are symmetrical.
-  notify_collision(other_entity, other_sprite, this_sprite);
+  notify_collision(other_entity, this_sprite, other_sprite);
 }
 
 /**
@@ -1002,6 +1003,14 @@ void CustomEntity::notify_collision_with_teletransporter(
 void CustomEntity::notify_collision_with_stream(
     Stream& stream, int /* dx */, int /* dy */) {
 
+  if (get_follow_streams()) {
+    if (has_stream_action()) {
+      get_stream_action()->update();
+    }
+    if (!has_stream_action()) {
+      stream.activate(*this);
+    }
+  }
   notify_collision_from(stream);
 }
 
@@ -1047,7 +1056,7 @@ void CustomEntity::notify_collision_with_switch(
 void CustomEntity::notify_collision_with_switch(
     Switch& sw, Sprite& sprite_overlapping) {
 
-  notify_collision_from(sw, *sw.get_sprite(), sprite_overlapping);
+  notify_collision_from(sw, sprite_overlapping, *sw.get_sprite());
 }
 
 /**
@@ -1065,7 +1074,7 @@ void CustomEntity::notify_collision_with_crystal(
 void CustomEntity::notify_collision_with_crystal(
     Crystal& crystal, Sprite& sprite_overlapping) {
 
-  notify_collision_from(crystal, *crystal.get_sprite(), sprite_overlapping);
+  notify_collision_from(crystal, sprite_overlapping, *crystal.get_sprite());
 }
 
 /**
@@ -1117,7 +1126,7 @@ void CustomEntity::notify_collision_with_explosion(
 void CustomEntity::notify_collision_with_explosion(
     Explosion& explosion, Sprite& sprite_overlapping) {
 
-  notify_collision_from(explosion, *explosion.get_sprite(), sprite_overlapping);
+  notify_collision_from(explosion, sprite_overlapping, *explosion.get_sprite());
 }
 
 /**
@@ -1126,13 +1135,13 @@ void CustomEntity::notify_collision_with_explosion(
 void CustomEntity::notify_collision_with_fire(
     Fire& fire, Sprite& sprite_overlapping) {
 
-  notify_collision_from(fire, *fire.get_sprite(), sprite_overlapping);
+  notify_collision_from(fire, sprite_overlapping, *fire.get_sprite());
 }
 
 /**
- * \copydoc Entity::notify_collision_with_enemy(Enemy&)
+ * \copydoc Entity::notify_collision_with_enemy(Enemy&, CollisionMode)
  */
-void CustomEntity::notify_collision_with_enemy(Enemy& enemy) {
+void CustomEntity::notify_collision_with_enemy(Enemy& enemy, CollisionMode /* collision_mode */) {
 
   notify_collision_from(enemy);
 }
@@ -1141,9 +1150,9 @@ void CustomEntity::notify_collision_with_enemy(Enemy& enemy) {
  * \copydoc Entity::notify_collision_with_enemy(Enemy&, Sprite&, Sprite&)
  */
 void CustomEntity::notify_collision_with_enemy(
-    Enemy& enemy, Sprite& enemy_sprite, Sprite& this_sprite) {
+    Enemy& enemy, Sprite& this_sprite, Sprite& enemy_sprite) {
 
-  notify_collision_from(enemy, enemy_sprite, this_sprite);
+  notify_collision_from(enemy, this_sprite, enemy_sprite);
 }
 
 /**
@@ -1151,7 +1160,10 @@ void CustomEntity::notify_collision_with_enemy(
  */
 bool CustomEntity::notify_action_command_pressed() {
 
-  return get_lua_context()->entity_on_interaction(*this);
+  if (get_lua_context()->entity_on_interaction(*this)) {
+    return true;
+  }
+  return Entity::notify_action_command_pressed();
 }
 
 /**
@@ -1242,121 +1254,25 @@ void CustomEntity::update() {
 }
 
 /**
- * \copydoc Entity::set_suspended
+ * \brief Returns whether this entity is affected by streams.
+ * \return \c true if this entity follows streams.
  */
-void CustomEntity::set_suspended(bool suspended) {
-
-  Entity::set_suspended(suspended);
-
-  get_lua_context()->entity_on_suspended(*this, suspended);
+bool CustomEntity::get_follow_streams() const {
+  return follow_streams;
 }
 
 /**
- * \copydoc Entity::notify_enabled
+ * \brief Sets whether this entity is affected by streams.
+ * \param follow_streams \c true if this entity should follow streams.
  */
-void CustomEntity::notify_enabled(bool enabled) {
-
-  Entity::notify_enabled(enabled);
-
-  if (enabled) {
-    get_lua_context()->entity_on_enabled(*this);
-  }
-  else {
-    get_lua_context()->entity_on_disabled(*this);
-  }
-}
-
-/**
- * \copydoc Entity::draw_on_map
- */
-void CustomEntity::draw_on_map() {
-
-  get_lua_context()->entity_on_pre_draw(*this);
-  Entity::draw_on_map();
-  get_lua_context()->entity_on_post_draw(*this);
-}
-
-/**
- * \brief Empty constructor.
- */
-CustomEntity::TraversableInfo::TraversableInfo():
-    lua_context(nullptr),
-    traversable_test_ref(),
-    traversable(false) {
-
-}
-
-/**
- * \brief Creates a boolean traversable property.
- * \param lua_context The Lua context.
- * \param traversable The value to store.
- */
-CustomEntity::TraversableInfo::TraversableInfo(
-    LuaContext& lua_context,
-    bool traversable
-):
-    lua_context(&lua_context),
-    traversable_test_ref(),
-    traversable(traversable) {
-
-}
-
-/**
- * \brief Creates a traversable property as a Lua boolean function.
- * \param lua_context The Lua context.
- * \param traversable_test_ref Lua ref to a function.
- */
-CustomEntity::TraversableInfo::TraversableInfo(
-    LuaContext& lua_context,
-    const ScopedLuaRef& traversable_test_ref
-):
-    lua_context(&lua_context),
-    traversable_test_ref(traversable_test_ref),
-    traversable(false) {
-
-}
-
-/**
- * \brief Returns whether this traversable property is empty.
- * \return \c true if no property is set.
- */
-bool CustomEntity::TraversableInfo::is_empty() const {
-
-  return lua_context == nullptr;
-}
-
-/**
- * \brief Tests this traversable property with the specified other entity.
- *
- * This traversable property must not be empty.
- *
- * \param current_entity A custom entity.
- * \param other_entity Another entity.
- * \return \c true if traversing is allowed, \c false otherwise.
- */
-bool CustomEntity::TraversableInfo::is_traversable(
-    CustomEntity& current_entity,
-    Entity& other_entity
-) const {
-
-  Debug::check_assertion(!is_empty(), "Empty traversable info");
-
-  if (traversable_test_ref.is_empty()) {
-    // A fixed boolean was set.
-    return traversable;
-  }
-
-  // A Lua boolean function was set.
-  return lua_context->do_custom_entity_traversable_test_function(
-      traversable_test_ref, current_entity, other_entity
-  );
+void CustomEntity::set_follow_streams(bool follow_streams) {
+  this->follow_streams = follow_streams;
 }
 
 /**
  * \brief Empty constructor.
  */
 CustomEntity::CollisionInfo::CollisionInfo():
-    lua_context(nullptr),
     built_in_test(COLLISION_NONE),
     custom_test_ref(),
     callback_ref() {
@@ -1365,17 +1281,14 @@ CustomEntity::CollisionInfo::CollisionInfo():
 
 /**
  * \brief Creates a collision test info.
- * \param lua_context The Lua context.
  * \param collision_test A built-in collision test.
  * \param callback_ref Lua ref to a function to call when this collision is
  * detected.
  */
 CustomEntity::CollisionInfo::CollisionInfo(
-    LuaContext& lua_context,
     CollisionMode built_in_test,
     const ScopedLuaRef& callback_ref
 ):
-    lua_context(&lua_context),
     built_in_test(built_in_test),
     custom_test_ref(),
     callback_ref(callback_ref) {
@@ -1385,17 +1298,14 @@ CustomEntity::CollisionInfo::CollisionInfo(
 
 /**
  * \brief Creates a collision test info.
- * \param lua_context The Lua context.
  * \param collision_test_ref Lua ref to a custom collision test.
  * \param callback_ref Lua ref to a function to call when this collision is
  * detected.
  */
 CustomEntity::CollisionInfo::CollisionInfo(
-    LuaContext& lua_context,
     const ScopedLuaRef& custom_test_ref,
     const ScopedLuaRef& callback_ref
 ):
-    lua_context(&lua_context),
     built_in_test(COLLISION_CUSTOM),
     custom_test_ref(custom_test_ref),
     callback_ref(callback_ref) {

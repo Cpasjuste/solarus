@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 #ifndef SOLARUS_HERO_HURT_STATE_H
 #define SOLARUS_HERO_HURT_STATE_H
 
+#include "solarus/core/Common.h"
 #include "solarus/hero/HeroState.h"
 #include <cstdint>
 
@@ -39,11 +40,11 @@ class Hero::HurtState: public HeroState {
     virtual void set_suspended(bool suspended) override;
     virtual bool can_start_gameover_sequence() const override;
     virtual bool is_touching_ground() const override;
-    virtual bool is_teletransporter_obstacle(const Teletransporter& teletransporter) const override;
-    virtual bool is_stream_obstacle(const Stream& stream) const override;
-    virtual bool is_sensor_obstacle(const Sensor& sensor) const override;
-    virtual bool is_separator_obstacle(const Separator& separator) const override;
-    virtual bool can_be_hurt(Entity* attacker) const override;
+    virtual bool is_teletransporter_obstacle(Teletransporter& teletransporter) override;
+    virtual bool is_stream_obstacle(Stream& stream) override;
+    virtual bool is_sensor_obstacle(Sensor& sensor) override;
+    virtual bool is_separator_obstacle(Separator& separator) override;
+    virtual bool get_can_be_hurt(Entity* attacker) override;
     virtual bool can_avoid_switch() const override;
     virtual bool can_avoid_ice() const override;
 

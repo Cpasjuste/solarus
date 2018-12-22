@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,26 +14,27 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/audio/Sound.h"
+#include "solarus/core/Game.h"
+#include "solarus/core/Geometry.h"
+#include "solarus/core/Map.h"
+#include "solarus/core/System.h"
 #include "solarus/entities/CarriedObject.h"
+#include "solarus/entities/Crystal.h"
 #include "solarus/entities/Destructible.h"
 #include "solarus/entities/Hero.h"
 #include "solarus/entities/Enemy.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/Explosion.h"
+#include "solarus/entities/Npc.h"
 #include "solarus/entities/Sensor.h"
 #include "solarus/entities/Stairs.h"
 #include "solarus/entities/Switch.h"
-#include "solarus/entities/Crystal.h"
-#include "solarus/entities/Npc.h"
-#include "solarus/lowlevel/System.h"
-#include "solarus/lowlevel/Sound.h"
-#include "solarus/lowlevel/Geometry.h"
+#include "solarus/graphics/Sprite.h"
+#include "solarus/lua/LuaContext.h"
 #include "solarus/movements/PixelMovement.h"
 #include "solarus/movements/RelativeMovement.h"
 #include "solarus/movements/StraightMovement.h"
-#include "solarus/Sprite.h"
-#include "solarus/Game.h"
-#include "solarus/Map.h"
 #include <memory>
 
 namespace Solarus {
@@ -70,7 +71,7 @@ CarriedObject::CarriedObject(
     uint32_t explosion_date
 ):
   Entity("", 0, hero.get_layer(), Point(0, 0), Size(0, 0)),
-  hero(hero),
+  hero(std::static_pointer_cast<Hero>(hero.shared_from_this())),
   is_lifting(true),
   is_throwing(false),
   is_breaking(false),
@@ -102,7 +103,9 @@ CarriedObject::CarriedObject(
   );
   main_sprite = create_sprite(animation_set_id, "main");
   main_sprite->enable_pixel_collisions();
-  main_sprite->set_current_animation("stopped");
+  if (main_sprite->has_animation("stopped")) {
+    main_sprite->set_current_animation("stopped");
+  }
   set_default_sprite_name("main");
   set_movement(movement);
 
@@ -133,11 +136,43 @@ bool CarriedObject::is_ground_observer() const {
 }
 
 /**
+ * \brief Returns the entity that is carrying this object.
+ * \return The carrier.
+ */
+EntityPtr CarriedObject::get_carrier() const {
+  return hero;
+}
+
+/**
  * \brief Returns the damage this item can cause to ennemies.
  * \return the damage on enemies
  */
 int CarriedObject::get_damage_on_enemies() const {
   return damage_on_enemies;
+}
+
+/**
+ * \brief Sets the damage this object causes to enemies when thrown at them.
+ * \param damage_on_enemies The damage on enemies.
+ */
+void CarriedObject::set_damage_on_enemies(int damage_on_enemies) {
+  this->damage_on_enemies = damage_on_enemies;
+}
+
+/**
+ * \brief Returns the id of the sound to play when this object is destroyed.
+ * \return The destruction sound id or an empty string.
+ */
+const std::string& CarriedObject::get_destruction_sound() const {
+  return destruction_sound_id;
+}
+
+/**
+ * \brief Sets the id of the sound to play when this object is destroyed.
+ * \param destruction_sound_id The destruction sound id or an empty string.
+ */
+void CarriedObject::set_destruction_sound(const std::string& destruction_sound_id) {
+  this->destruction_sound_id = destruction_sound_id;
 }
 
 /**
@@ -150,7 +185,9 @@ void CarriedObject::set_animation_stopped() {
 
   if (!is_lifting && !is_throwing) {
     std::string animation = will_explode_soon() ? "stopped_explosion_soon" : "stopped";
-    main_sprite->set_current_animation(animation);
+    if (main_sprite->has_animation(animation)) {
+      main_sprite->set_current_animation(animation);
+    }
   }
 }
 
@@ -164,7 +201,9 @@ void CarriedObject::set_animation_walking() {
 
   if (!is_lifting && !is_throwing) {
     std::string animation = will_explode_soon() ? "walking_explosion_soon" : "walking";
-    main_sprite->set_current_animation(animation);
+    if (main_sprite->has_animation(animation)) {
+      main_sprite->set_current_animation(animation);
+    }
   }
 }
 
@@ -182,11 +221,13 @@ void CarriedObject::throw_item(int direction) {
   Sound::play("throw");
 
   // Set up sprites.
-  main_sprite->set_current_animation("stopped");
+  if (main_sprite->has_animation("stopped")) {
+    main_sprite->set_current_animation("stopped");
+  }
   shadow_sprite->start_animation();
 
   // set the movement of the item sprite
-  set_y(hero.get_y());
+  set_y(hero->get_y());
   std::shared_ptr<StraightMovement> movement =
       std::make_shared<StraightMovement>(false, false);
   movement->set_speed(200);
@@ -197,6 +238,8 @@ void CarriedObject::throw_item(int direction) {
   this->y_increment = -2;
   this->next_down_date = System::now() + 40;
   this->item_height = 18;
+
+  get_lua_context()->carried_object_on_thrown(*this);
 }
 
 /**
@@ -258,6 +301,7 @@ void CarriedObject::break_item() {
   }
   is_throwing = false;
   is_breaking = true;
+  get_lua_context()->carried_object_on_breaking(*this);
 }
 
 /**
@@ -368,11 +412,12 @@ void CarriedObject::update() {
     // make the item follow the hero
     clear_movement();
     set_movement(std::make_shared<RelativeMovement>(
-        std::static_pointer_cast<Hero>(hero.shared_from_this()),
+        hero,
         0,
         -18,
         true
     ));
+    get_lua_context()->carried_object_on_lifted(*this);
   }
 
   // when the item has finished flying, destroy it
@@ -387,10 +432,14 @@ void CarriedObject::update() {
 
       std::string animation = main_sprite->get_current_animation();
       if (animation == "stopped") {
-        main_sprite->set_current_animation("stopped_explosion_soon");
+        if (main_sprite->has_animation("stopped_explosion_soon")) {
+          main_sprite->set_current_animation("stopped_explosion_soon");
+        }
       }
       else if (animation == "walking") {
-        main_sprite->set_current_animation("walking_explosion_soon");
+        if (main_sprite->has_animation("walking_explosion_soon")) {
+          main_sprite->set_current_animation("walking_explosion_soon");
+        }
       }
     }
   }
@@ -435,20 +484,18 @@ void CarriedObject::notify_obstacle_reached() {
 }
 
 /**
- * \brief Draws the carried object on the map.
+ * \copydoc Entity::built_in_draw
  *
- * This is a redefinition of Entity::draw_on_map()
- * to draw the shadow independently of the item movement.
+ * This is a redefinition to draw the shadow independently of the movement.
  */
-void CarriedObject::draw_on_map() {
+void CarriedObject::built_in_draw(Camera& camera) {
 
   if (!is_throwing) {
-    // draw the sprite normally
-    Entity::draw_on_map();
+    // Draw the sprite normally.
+    Entity::built_in_draw(camera);
   }
   else {
-    // when the item is being thrown, draw the shadow and the item separately
-    // TODO: this could probably be simplified by using a JumpMovement
+    // When the item is being thrown, draw the shadow and the item separately.
     get_map().draw_visual(*shadow_sprite, get_xy());
     get_map().draw_visual(*main_sprite, get_x(), get_y() - item_height);
   }
@@ -459,8 +506,8 @@ void CarriedObject::draw_on_map() {
  */
 void CarriedObject::notify_collision_with_enemy(
     Enemy& enemy,
-    Sprite& enemy_sprite,
-    Sprite& /* this_sprite */) {
+    Sprite& /* this_sprite */,
+    Sprite& enemy_sprite) {
 
   if (is_throwing
       && !can_explode()
@@ -475,11 +522,12 @@ void CarriedObject::notify_collision_with_enemy(
 void CarriedObject::notify_attacked_enemy(
     EnemyAttack /* attack */,
     Enemy& /* victim */,
-    const Sprite* /* victim_sprite */,
-    EnemyReaction::Reaction& result,
+    Sprite* /* victim_sprite */,
+    const EnemyReaction::Reaction& result,
     bool /* killed */) {
 
-  if (result.type != EnemyReaction::ReactionType::IGNORED) {
+  if (result.type != EnemyReaction::ReactionType::IGNORED &&
+      result.type != EnemyReaction::ReactionType::LUA_CALLBACK) {
     break_item();
   }
 }
@@ -667,6 +715,17 @@ void CarriedObject::notify_collision_with_stairs(Stairs& stairs, CollisionMode /
     break_one_layer_above = true; // show the destruction animation above the stairs
   }
 }
+
+const std::string EnumInfoTraits<CarriedObject::Behavior>::pretty_name = "carried object behavior";
+
+/**
+ * \brief Lua name of each value of the CarriedObject::Behavior enum.
+ */
+const EnumInfo<CarriedObject::Behavior>::names_type EnumInfoTraits<CarriedObject::Behavior>::names = {
+  { CarriedObject::Behavior::THROW, "throw" },
+  { CarriedObject::Behavior::REMOVE, "remove" },
+  { CarriedObject::Behavior::KEEP, "keep" }
+};
 
 }
 
