@@ -125,6 +125,7 @@ class LuaContext {
     static const std::string audio_module_name;
     static const std::string video_module_name;
     static const std::string input_module_name;
+    static const std::string joypad_module_name;
     static const std::string file_module_name;
     static const std::string timer_module_name;
     static const std::string game_module_name;
@@ -354,6 +355,15 @@ class LuaContext {
 
     // Video events.
     void video_on_draw(const SurfacePtr& screen);
+
+    // Input events.
+    void input_on_joypad_connected(Joypad& joy);
+
+    // Joypad events.
+    bool on_joypad_axis_moved(Joypad& joypad, JoyPadAxis axis, double val);
+    bool on_joypad_button_pressed(Joypad& joypad, JoyPadButton button);
+    bool on_joypad_button_released(Joypad& joaypad, JoyPadButton button);
+    bool on_joypad_removed(Joypad& joypad);
 
     // Menu events.
     void menu_on_started(const ScopedLuaRef& menu_ref);
@@ -617,6 +627,14 @@ class LuaContext {
       video_api_get_shader,
       video_api_set_shader,
 
+      // Joypad API.
+      joypad_api_get_axis,
+      joypad_api_is_button_pressed,
+      joypad_api_get_name,
+      joypad_api_rumble,
+      joypad_api_has_rumble,
+      joypad_api_is_attached,
+
       // Input API.
       input_api_is_joypad_enabled,
       input_api_set_joypad_enabled,
@@ -632,6 +650,8 @@ class LuaContext {
       input_api_get_finger_pressure,
       input_api_simulate_key_pressed,
       input_api_simulate_key_released,
+      input_api_get_joypad_count,
+      input_api_get_joypads,
 
       // File API.
       file_api_open,
@@ -1337,6 +1357,7 @@ class LuaContext {
     void register_audio_module();
     void register_video_module();
     void register_input_module();
+    void register_joypad_module();
     void register_file_module();
     void register_timer_module();
     void register_item_module();
@@ -1355,6 +1376,7 @@ class LuaContext {
     // Pushing objects to Lua.
     static void push_main(lua_State* current_l);
     static void push_video(lua_State* current_l);
+    static void push_input(lua_State* current_l);
     static void push_string(lua_State* current_l, const std::string& text);
     static void push_color(lua_State* current_l, const Color& color);
 public:
@@ -1395,6 +1417,7 @@ private:
     static void push_dynamic_tile(lua_State* current_l, DynamicTile& dynamic_tile);
     static void push_enemy(lua_State* current_l, Enemy& enemy);
     static void push_custom_entity(lua_State* current_l, CustomEntity& entity);
+    static void push_joypad(lua_State* current_l, Joypad& joypad);
 
     // Getting objects from Lua.
     static bool is_main(lua_State* current_l, int index);
@@ -1484,6 +1507,8 @@ private:
     static std::shared_ptr<Enemy> check_enemy(lua_State* current_l, int index);
     static bool is_custom_entity(lua_State* current_l, int index);
     static std::shared_ptr<CustomEntity> check_custom_entity(lua_State* current_l, int index);
+    static bool is_joypad(lua_State* current_l, int index);
+    static std::shared_ptr<Joypad> check_joypad(lua_State* current_l, int index);
 
     // Events.
     void check_callback_thread() const;

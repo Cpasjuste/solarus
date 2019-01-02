@@ -1,0 +1,16 @@
+quest{
+  solarus_version = "1.6",
+  write_dir = "0196cdd0-d3a1-4a5d-b60c-cc3da9a1fe2c",
+  title = "joypad test",
+  short_description = "test the joypad api",
+  long_description = [[
+]],
+  author = "",
+  quest_version = "",
+  release_date = "",
+  website = "",
+  normal_quest_size = "320x240",
+  min_quest_size = "320x240",
+  max_quest_size = "320x240",
+}
+

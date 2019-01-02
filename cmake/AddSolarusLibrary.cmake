@@ -35,6 +35,7 @@ file(
   include/solarus/core/Game.h
   include/solarus/core/Geometry.h
   include/solarus/core/InputEvent.h
+  include/solarus/core/Joypad.cpp
   include/solarus/core/Logger.h
   include/solarus/core/MainLoop.h
   include/solarus/core/Map.h
@@ -267,6 +268,7 @@ file(
   src/core/Game.cpp
   src/core/Geometry.cpp
   src/core/InputEvent.cpp
+  src/core/Joypad.cpp
   src/core/Logger.cpp
   src/core/MainLoop.cpp
   src/core/Map.cpp
@@ -434,6 +436,7 @@ file(
   src/lua/TextSurfaceApi.cpp
   src/lua/TimerApi.cpp
   src/lua/VideoApi.cpp
+  src/lua/JoypadApi.cpp
 
   src/movements/CircleMovement.cpp
   src/movements/FallingOnFloorMovement.cpp

@@ -44,7 +44,7 @@ uint32_t System::ticks = 0;
 void System::initialize(const Arguments& args) {
 
   // initialize SDL
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
   initial_time = get_real_time();
   ticks = 0;
 

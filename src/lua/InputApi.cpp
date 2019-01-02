@@ -51,10 +51,27 @@ void LuaContext::register_input_module() {
         { "get_finger_pressure", input_api_get_finger_pressure },
         { "simulate_key_pressed", input_api_simulate_key_pressed },
         { "simulate_key_released", input_api_simulate_key_released },
+                       //TODO put in 1.7 functions
+        { "get_joypad_count", input_api_get_joypad_count},
+        { "get_joypads", input_api_get_joypads}
     });
   }
 
   register_functions(input_module_name, functions);
+
+  // ...
+  lua_getglobal(current_l, "sol");
+  // ... sol
+  lua_getfield(current_l, -1, "input");
+  // ... sol input
+  lua_setfield(current_l, LUA_REGISTRYINDEX, input_module_name.c_str());
+  // ... sol
+  lua_pop(current_l, 1);
+  // ...
+}
+
+void LuaContext::push_input(lua_State *current_l) {
+  lua_getfield(current_l, LUA_REGISTRYINDEX, input_module_name.c_str());
 }
 
 /**
@@ -329,6 +346,48 @@ int LuaContext::input_api_simulate_key_released(lua_State* l) {
     InputEvent::simulate_key_released(key);
     return 0;
   });
+}
+
+/**
+ * \brief Implementation of sol.input.get_joypad_count().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::input_api_get_joypad_count(lua_State* l) {
+  return state_boundary_handle(l,[&]{
+    lua_pushnumber(l,InputEvent::get_jopad_count());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.input.get_joypads().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::input_api_get_joypads(lua_State* l) {
+  return state_boundary_handle(l,[&]{
+    lua_newtable(l); // t
+    int i = 1;
+    for(const auto& pair : InputEvent::get_joypads()) {
+      lua_pushnumber(l,i); // t i
+      push_joypad(l,*pair.second); // t i j
+      lua_settable(l,-3); // t
+      i++;
+    }
+    return 1;
+  });
+}
+
+// Events
+void LuaContext::input_on_joypad_connected(Joypad& joy) {
+  check_callback_thread();
+  push_input(current_l); //push_input(current_l);
+  if(find_method("on_joypad_connected")) {
+    push_joypad(current_l, joy);
+    call_function(2, 0, "on_joypad_connected");
+  }
+  lua_pop(current_l,1);
 }
 
 }

@@ -1084,6 +1084,7 @@ void LuaContext::register_modules() {
   register_menu_module();
   register_language_module();
   register_state_module();
+  register_joypad_module();
 
   Debug::check_assertion(lua_gettop(current_l) == 0,
       "Lua stack is not empty after modules initialization");
@@ -1534,6 +1535,7 @@ int LuaContext::userdata_meta_index_as_table(lua_State* l) {
 void LuaContext::check_callback_thread() const {
   Debug::check_assertion(current_l == main_l, "Events should be called in the main Lua thread");
 }
+
 
 /**
  * \brief Calls the on_started() method of the object on top of the stack.

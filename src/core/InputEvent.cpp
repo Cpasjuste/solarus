@@ -19,6 +19,7 @@
 #include "solarus/core/Logger.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/graphics/Video.h"
+#include "solarus/lua/LuaContext.h"
 #include <SDL.h>
 #include <cstdlib>  // std::abs
 
@@ -33,11 +34,11 @@ const InputEvent::KeyboardKey InputEvent::directional_keys[] = {
 };
 bool InputEvent::initialized = false;
 bool InputEvent::joypad_enabled = false;
-SDL_Joystick* InputEvent::joystick = nullptr;
 bool InputEvent::repeat_keyboard = false;
 std::set<SDL_Keycode> InputEvent::keys_pressed;
+std::map<SDL_JoystickID,
+  JoypadPtr> InputEvent::joypads;
 // Default the axis states to centered
-std::vector<int> InputEvent::joypad_axis_state;
 
 // Keyboard key names.
 const std::string EnumInfoTraits<InputEvent::KeyboardKey>::pretty_name = "keyboard key";
@@ -202,16 +203,11 @@ void InputEvent::initialize() {
  */
 void InputEvent::quit() {
 
-  if (joystick != nullptr) {
-    SDL_JoystickClose(joystick);
-  }
   SDL_StopTextInput();
 
-  joypad_enabled = false;
-  joystick = nullptr;
+  set_joypad_enabled(false);
   repeat_keyboard = false;
   keys_pressed.clear();
-  joypad_axis_state.clear();
   initialized = false;
 }
 
@@ -246,70 +242,46 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
   SDL_Event internal_event;
   if (SDL_PollEvent(&internal_event)) {
 
-    // If this is a joypad axis event
-    if (internal_event.type == SDL_JOYAXISMOTION) {
-      // Determine the current state of the axis
-      int axis = internal_event.jaxis.axis;
-      int value = internal_event.jaxis.value;
-      int joystick_deadzone = 8000;
-      if (axis == 0) {  // X axis
-        int x_dir = 0;
-        if (value < -joystick_deadzone) {
-          // Left of dead zone
-          x_dir = -1;
-        } else if(value > joystick_deadzone) {
-          // Right of dead zone
-          x_dir =  1;
-        } else {
-          x_dir = 0;
-        }
-        joypad_axis_state[axis] = x_dir;
-      } else if (axis == 1) {  // Y axis
-        int y_dir = 0;
-        if (value < -joystick_deadzone) {
-          // Below dead zone
-          y_dir = -1;
-        } else if(value > joystick_deadzone) {
-          // Above dead zone
-          y_dir =  1;
-        } else {
-          y_dir = 0;
-        }
-        joypad_axis_state[axis] = y_dir;
-      }
-    }
+    //TODO Joypads events
+
+    switch(internal_event.type) {
 
     // Check if keyboard events are correct.
     // For some reason, when running Solarus from a Qt application
     // (which is not recommended)
     // multiple SDL_KEYUP events are generated when a key remains pressed
     // (Qt/SDL conflict). This fixes most problems but not all of them.
-    else if (internal_event.type == SDL_KEYDOWN) {
+    case SDL_KEYDOWN:
+    {
       SDL_Keycode key = internal_event.key.keysym.sym;
       if (!keys_pressed.insert(key).second) {
         // Already known as pressed: mark repeated.
         internal_event.key.repeat = 1;
       }
     }
-    else if (internal_event.type == SDL_KEYUP) {
+    break;
+    case SDL_KEYUP:
+    {
       SDL_Keycode key = internal_event.key.keysym.sym;
       if (keys_pressed.erase(key) == 0) {
         // Already known as not pressed: mark repeated.
         internal_event.key.repeat = 1;
       }
     }
-
-    // Capture mouse movements outside the window
-    // only while dragging.
-    else if (internal_event.type == SDL_MOUSEBUTTONDOWN) {
+    break;
+    case SDL_MOUSEBUTTONDOWN:
       SDL_CaptureMouse(SDL_TRUE);
-    }
-    else if (internal_event.type == SDL_MOUSEBUTTONUP) {
+      break;
+    case SDL_MOUSEBUTTONUP:
+    {
       Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
       if (buttons == 0) {
         SDL_CaptureMouse(SDL_FALSE);  // No more buttons pressed.
       }
     }
+      break;
+    }
+
 
     // Always return a Solarus event if an SDL event occurred, so that
     // multiple SDL events in the same frame are all treated.
@@ -411,11 +383,8 @@ bool InputEvent::is_key_down(KeyboardKey key) {
  */
 bool InputEvent::is_joypad_button_down(int button) {
 
-  if (joystick == nullptr) {
-    return false;
-  }
-
-  return SDL_JoystickGetButton(joystick, button) != 0;
+  if(joypads.empty()) return false;
+  return joypads.begin()->second->is_button_pressed((JoyPadButton)button); //TODO correct this
 }
 
 /**
@@ -450,23 +419,13 @@ bool InputEvent::is_finger_down(int finger_id) {
  * \return The state of that axis:
  * -1 (left or up), 0 (centered) or 1 (right or down).
  */
-int InputEvent::get_joypad_axis_state(int axis) {
+float InputEvent::get_joypad_axis_state(int axis) {
 
-  if (joystick == nullptr) {
+  if (joypads.empty()) {
     return 0;
   }
 
-  int state = SDL_JoystickGetAxis(joystick, axis);
-
-  int result;
-  if (std::abs(state) < 10000) {
-    result = 0;
-  }
-  else {
-    result = (state > 0) ? 1 : -1;
-  }
-
-  return result;
+  return joypads.begin()->second->get_axis((JoyPadAxis)axis); //TODO : better
 }
 
 /**
@@ -476,50 +435,49 @@ int InputEvent::get_joypad_axis_state(int axis) {
  */
 int InputEvent::get_joypad_hat_direction(int hat) {
 
-  if (joystick == nullptr) {
+  if (joypads.empty() or hat > 0) {
     return -1;
   }
 
-  int state = SDL_JoystickGetHat(joystick, hat);
-  int result = -1;
-
-  switch (state) {
-
-    case SDL_HAT_RIGHT:
-      result = 0;
-      break;
-
-    case SDL_HAT_RIGHTUP:
-      result = 1;
-      break;
-
-    case SDL_HAT_UP:
-      result = 2;
-      break;
-
-    case SDL_HAT_LEFTUP:
-      result = 3;
-      break;
-
-    case SDL_HAT_LEFT:
-      result = 4;
-      break;
-
-    case SDL_HAT_LEFTDOWN:
-      result = 5;
-      break;
-
-    case SDL_HAT_DOWN:
-      result = 6;
-      break;
-
-    case SDL_HAT_RIGHTDOWN:
-      result = 7;
-      break;
-
+  auto joypad = joypads.begin()->second;
+  int state = joypad->is_button_pressed(JoyPadButton::DPAD_UP) |
+              joypad->is_button_pressed(JoyPadButton::DPAD_DOWN) << 1 |
+              joypad->is_button_pressed(JoyPadButton::DPAD_LEFT) << 2 |
+              joypad->is_button_pressed(JoyPadButton::DPAD_RIGHT) << 3;
+  switch (state) { //TODO depracate all joystick apis
+    case 1:
+      return 2;
+    case 2:
+      return 6;
+    case 3:
+      return -1;
+    case 4:
+      return 4;
+    case 5:
+      return 3;
+    case 6:
+      return 5;
+    case 7:
+      return 4;
+    case 8:
+      return 0;
+    case 9:
+      return 1;
+    case 10:
+      return 7;
+    case 11:
+      return 0;
+    case 12:
+      return -1;
+    case 13:
+      return 2;
+    case 14:
+      return 6;
+    case 15:
+      return -1;
   }
 
-  return result;
+  return -1;
 }
 
 /**
@@ -649,6 +607,16 @@ bool InputEvent::is_window_event() const {
 
   return internal_event.type == SDL_QUIT; // other SDL window events are ignored
 }
+
+/**
+ * @brief InputEvent::is_controller_event
+ * @return
+ */
+bool InputEvent::is_controller_event() const {
+  return internal_event.type >= SDL_CONTROLLERAXISMOTION and
+      internal_event.type <= SDL_CONTROLLERDEVICEREMAPPED;
+}
+
 
 // keyboard
 
@@ -915,26 +883,22 @@ bool InputEvent::is_joypad_enabled() {
  */
 void InputEvent::set_joypad_enabled(bool joypad_enabled) {
 
+  if(not joypad_enabled) {
+    joypads.clear();
+  }
+
+  if(joypad_enabled) {
+    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+      if (SDL_IsGameController(i)) {
+          SDL_GameController* gc = SDL_GameControllerOpen(i);
+          SDL_Joystick* js = SDL_JoystickOpen(i);
+          SDL_JoystickID id = SDL_JoystickInstanceID(js);
+          joypads.emplace(id,std::make_shared<Joypad>(gc,js));
+      }
+    }
+  }
+
   if (joypad_enabled != is_joypad_enabled()) {
-
-    InputEvent::joypad_enabled = joypad_enabled;
-
-    if (joystick != nullptr) {
-      SDL_JoystickClose(joystick);
-      joystick = nullptr;
-      joypad_axis_state.clear();
-    }
-
-    if (joypad_enabled && SDL_NumJoysticks() > 0) {
-        SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-        joystick = SDL_JoystickOpen(0);
-        joypad_axis_state.assign(SDL_JoystickNumAxes(joystick), 0);
-    }
-    else {
-      SDL_JoystickEventState(SDL_IGNORE);
-      SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-    }
-
     Logger::info(std::string("Joypad support enabled: ") + (joypad_enabled ? "true" : "false"));
   }
 }
@@ -1406,6 +1370,22 @@ int InputEvent::get_direction() const {
 }
 
 /**
+ * @brief return the amount of connected joypads
+ * @return the count
+ */
+int InputEvent::get_jopad_count() {
+  return joypads.size();
+}
+
+/**
+ * @brief get all connected joypads
+ * @return
+ */
+const InputEvent::Joypads& InputEvent::get_joypads() {
+  return joypads;
+}
+
+/**
  * \brief Returns whether this keyboard, joypad or mouse event
  * corresponds to pressing something.
  *
@@ -1495,6 +1475,58 @@ bool InputEvent::is_window_resizing() const {
  */
 Size InputEvent::get_window_size() const {
   return {internal_event.window.data1,internal_event.window.data2};
+}
+
+/**
+ * @brief notify this joypad event on the lua side
+ * @param lua_context
+ */
+bool InputEvent::notify_joypad(LuaContext& lua_context) const {
+
+  switch(internal_event.type) {
+  case SDL_CONTROLLERAXISMOTION: {
+    auto joy = joypads.at(internal_event.caxis.which);
+    return lua_context.on_joypad_axis_moved(*joy,
+                                     JoyPadAxis(internal_event.caxis.axis),
+                                     Joypad::computeAxisVal(internal_event.caxis.value));
+  }
+  case SDL_CONTROLLERBUTTONUP: {
+    auto joy = joypads.at(internal_event.cbutton.which);
+    return lua_context.on_joypad_button_released(
+          *joy,
+          JoyPadButton(internal_event.cbutton.button));
+  }
+  case SDL_CONTROLLERBUTTONDOWN: {
+    auto joy = joypads.at(internal_event.cbutton.which);
+    return lua_context.on_joypad_button_pressed(
+          *joy,
+          JoyPadButton(internal_event.cbutton.button));
+  }
+  case SDL_CONTROLLERDEVICEADDED:
+  {
+
+    int i = internal_event.cdevice.which;
+    if(joypads.find(i) != joypads.end()) {
+      return false; //Consider joypads where already added
+    }
+    SDL_GameController* gc = SDL_GameControllerOpen(i);
+    SDL_Joystick* js = SDL_JoystickOpen(i);
+    SDL_JoystickID id = SDL_JoystickInstanceID(js);
+    auto itp = joypads.emplace(id,std::make_shared<Joypad>(gc,js));
+
+    lua_context.input_on_joypad_connected(*itp.first->second);
+    return true; //Connected event always considered handled TODO verify this
+  }
+  case SDL_CONTROLLERDEVICEREMOVED: {
+    auto joy = joypads.at(internal_event.cbutton.which);
+    joy->reset();
+    bool handled = lua_context.on_joypad_removed(*joy);
+    joypads.erase(internal_event.caxis.which);
+    return handled;
+  }
+  }
+  //In case we missed smth, event is not handled
+  return false;
 }
 
 }

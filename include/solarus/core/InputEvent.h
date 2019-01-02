@@ -19,6 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/core/EnumInfo.h"
+#include "solarus/core/Joypad.h"
 #include <map>
 #include <memory>
 #include <set>
@@ -203,6 +204,8 @@ class InputEvent {
       X2              = SDL_BUTTON_X2,
     };
 
+    using Joypads = std::map<SDL_JoystickID,JoypadPtr>;
+
     static void initialize();
     static void quit();
     static bool is_initialized();
@@ -221,11 +224,14 @@ class InputEvent {
     static bool is_joypad_button_down(int button);
     static bool is_mouse_button_down(MouseButton button);
     static bool is_finger_down(int finger_id);
-    static int get_joypad_axis_state(int axis);
+    static float get_joypad_axis_state(int axis);
     static int get_joypad_hat_direction(int hat);
     static Point get_global_mouse_position();
     static bool get_global_finger_position(int finger_id, Point& finger_xy);
     static bool get_global_finger_pressure(int finger_id, float& finger_pressure);
+
+    static int get_jopad_count();
+    static const Joypads &get_joypads();
 
     // event type
     bool is_valid() const;
@@ -234,6 +240,7 @@ class InputEvent {
     bool is_mouse_event() const;
     bool is_finger_event() const;
     bool is_window_event() const;
+    bool is_controller_event() const;
 
     // keyboard
     bool is_keyboard_key_pressed() const;
@@ -311,7 +318,15 @@ class InputEvent {
 
     Size get_window_size() const;
 
+    // controller event
+    bool notify_joypad(LuaContext& lua_context) const;
+
   private:
+
+    static inline void SDL_Controller_Deleter(SDL_GameController* controller) {
+          SDL_GameControllerClose(controller);
+    }
+    using SDL_GameControllerPtr = std::shared_ptr<SDL_GameController>;
 
     explicit InputEvent(const SDL_Event& event);
 
@@ -319,8 +334,9 @@ class InputEvent {
     static bool initialized;                      /**< Whether the input manager is initialized. */
     static bool joypad_enabled;                   /**< true if joypad support is enabled
                                                    * (may be true even without joypad plugged) */
-    static SDL_Joystick* joystick;                /**< the joystick object if enabled and plugged */
-    static std::vector<int> joypad_axis_state;    /**< keep track of the current horizontal and vertical axis states */
+    //static SDL_Joystick* joystick;                /**< the joystick object if enabled and plugged */
+    //static std::vector<int> joypad_axis_state;    /**< keep track of the current horizontal and vertical axis states */
+    static Joypads joypads;       /**< Mapping from sdl joystick index to Controller */
     static std::map<KeyboardKey, std::string>
       keyboard_key_names;                         /**< Names of all existing keyboard keys. */
     static std::map<MouseButton, std::string>

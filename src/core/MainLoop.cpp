@@ -475,14 +475,14 @@ void MainLoop::step() {
 void MainLoop::check_input() {
 
   // Check SDL events.
-  std::unique_ptr<InputEvent> event = InputEvent::get_event();
-  while (event != nullptr) {
-    notify_input(*event);
-    event = InputEvent::get_event();
+  for(std::unique_ptr<InputEvent> event =  InputEvent::get_event();
+      event != nullptr;
+      event = InputEvent::get_event()) {
+     notify_input(*event);
   }
 
   // Check Lua requests.
-  if (!lua_commands.empty()) {
+  /*if (!lua_commands.empty()) {
     std::lock_guard<std::mutex> lock(lua_commands_mutex);
     for (const std::string& command : lua_commands) {
       std::cout << "\n";  // To make sure that the command delimiter starts on a new line.
@@ -499,7 +499,7 @@ void MainLoop::check_input() {
       ++num_lua_commands_done;
     }
     lua_commands.clear();
-  }
+  }*/
 }
 
 /**
@@ -524,6 +524,9 @@ void MainLoop::notify_input(const InputEvent& event) {
       exiting = true;
     }
 #endif
+  } else if (event.is_controller_event()) {
+    //TODO take handled into account
+    event.notify_joypad(*lua_context);
   }
 
   // Send the event to Lua and to the current screen.
