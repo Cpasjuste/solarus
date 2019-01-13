@@ -4,7 +4,7 @@
 
 local function joypad_listen(jpad)
   local i = jpad:get_name()
-  print("registred callbacks for", i)
+  print("registred callbacks for", i, "rumble" , jpad:has_rumble())
   function jpad:on_button_pressed(button)
       print(i,"pressed",button)
   end
