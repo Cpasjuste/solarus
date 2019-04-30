@@ -36,6 +36,11 @@ Joypad::Joypad(SDL_GameController *sdl_gc, SDL_Joystick *sdl_js) :
   controller(sdl_gc), joystick(sdl_js)
 {
   haptic.reset(SDL_HapticOpenFromJoystick(sdl_js));
+  if(haptic) {
+    if(SDL_HapticRumbleInit(haptic.get()) != 0) {
+      haptic = nullptr;
+    }
+  }
 }
 
 bool Joypad::is_button_pressed(JoyPadButton button) const {

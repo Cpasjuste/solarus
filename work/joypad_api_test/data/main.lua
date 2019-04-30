@@ -7,6 +7,9 @@ local function joypad_listen(jpad)
   print("registred callbacks for", i, "rumble" , jpad:has_rumble())
   function jpad:on_button_pressed(button)
       print(i,"pressed",button)
+      if button == 'A' then
+        jpad:rumble(1, 200)
+      end
   end
   function jpad:on_button_released(button)
     print(i,"released",button)
