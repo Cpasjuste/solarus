@@ -23,7 +23,6 @@
 #include "solarus/graphics/Drawable.h"
 #include <map>
 #include <string>
-#include <SDL_ttf.h>
 
 namespace Solarus {
 
@@ -71,6 +70,16 @@ class TextSurface: public Drawable {
       ANTIALIASING                               /**< letters are drawn with a smooth effect (slower) */
     };
 
+    /**
+     * Font hinting setting.
+     */
+    enum class HintingSetting {
+      NORMAL,                                    /**< Normal setting */
+      LIGHT,                                     /**< Light setting */
+      MONO,                                      /**< Monochrome setting */
+      NONE                                       /**< Disable hinting */
+    };
+
     TextSurface(int x, int y);
     TextSurface(int x, int y,
         HorizontalAlignment horizontal_alignment,
@@ -90,6 +99,10 @@ class TextSurface: public Drawable {
     void set_text_color(const Color& color);
     int get_font_size() const;
     void set_font_size(int font_size);
+    HintingSetting get_font_hinting() const;
+    void set_font_hinting(HintingSetting font_hinting);
+    bool is_font_kerning() const;
+    void set_font_kerning(bool font_kerning);
 
     void set_position(int x, int y);
     int get_x() const;
@@ -126,6 +139,8 @@ class TextSurface: public Drawable {
     RenderingMode rendering_mode;                     /**< rendering mode of the current text surface */
     Color text_color;                                 /**< color of the text */
     int font_size;                                    /**< size of the font */
+    HintingSetting font_hinting;                      /**< hinting setting of the font */
+    bool font_kerning;                                /**< whether to use kerning when rendering the font */
 
     int x;                                            /**< x coordinate of where the text is aligned */
     int y;                                            /**< y coordinate of where the text is aligned */

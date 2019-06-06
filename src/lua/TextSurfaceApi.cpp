@@ -21,12 +21,14 @@
 #include "solarus/graphics/Surface.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
+#include <SDL_ttf.h>
 
 namespace Solarus {
 
 using RenderingMode = TextSurface::RenderingMode;
 using HorizontalAlignment = TextSurface::HorizontalAlignment;
 using VerticalAlignment = TextSurface::VerticalAlignment;
+using HintingSetting = TextSurface::HintingSetting;
 
 /**
  * Name of the Lua table representing the text surface module.
@@ -50,6 +52,13 @@ const std::map<VerticalAlignment, std::string> vertical_alignment_names = {
     { VerticalAlignment::TOP, "top" },
     { VerticalAlignment::MIDDLE, "middle" },
     { VerticalAlignment::BOTTOM, "bottom" }
+};
+
+const std::map<HintingSetting, std::string> font_hinting_names = {
+    { HintingSetting::NORMAL, "normal" },
+    { HintingSetting::LIGHT, "light" },
+    { HintingSetting::MONO, "mono" },
+    { HintingSetting::NONE, "none" }
 };
 
 }
@@ -185,6 +194,14 @@ int LuaContext::text_surface_api_create(lua_State* l) {
           LuaTools::opt_enum_field<VerticalAlignment>(
               l, 1, "vertical_alignment", vertical_alignment_names, VerticalAlignment::MIDDLE
           );
+      HintingSetting font_hinting =
+          LuaTools::opt_enum_field<HintingSetting>(
+              l, 1, "font_hinting", font_hinting_names, HintingSetting::NORMAL
+          );
+      bool font_kerning =
+          LuaTools::opt_boolean_field(
+              l, 1, "font_kerning", true
+          );
       const Color& color = LuaTools::opt_color_field(l, 1, "color", Color::white);
       int font_size = LuaTools::opt_int_field(l, 1, "font_size", TextSurface::default_font_size);
       const std::string& text = LuaTools::opt_string_field(l, 1, "text", "");
@@ -199,6 +216,8 @@ int LuaContext::text_surface_api_create(lua_State* l) {
       text_surface->set_vertical_alignment(vertical_alignment);
       text_surface->set_text_color(color);
       text_surface->set_font_size(font_size);
+      text_surface->set_font_hinting(font_hinting);
+      text_surface->set_font_kerning(font_kerning);
 
       if (!text.empty()) {
         text_surface->set_text(text);
@@ -246,7 +265,8 @@ int LuaContext::text_surface_api_get_predicted_size(lua_State* l) {
       h = bitmap_size.height / 16;
       w = (char_width-1)*utf8len+1;
     } else {
-      TTF_Font& font = FontResource::get_outline_font(font_id, font_size);
+      // TODO API change needed for passing font hinting and kerning, using defaults for now
+      TTF_Font& font = FontResource::get_outline_font(font_id, font_size, HintingSetting::NORMAL, true);
       TTF_SizeUTF8(&font,text.c_str(),&w,&h);
     }
     lua_pushinteger(l,w);
