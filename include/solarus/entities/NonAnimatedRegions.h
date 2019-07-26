@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include "solarus/core/Common.h"
 #include "solarus/containers/Grid.h"
 #include "solarus/entities/TileInfo.h"
+#include "solarus/entities/Camera.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include <vector>
 
@@ -44,7 +45,7 @@ class NonAnimatedRegions {
     void add_tile(const TileInfo& tile);
     void build(std::vector<TileInfo>& rejected_tiles);
     void notify_tileset_changed();
-    void draw_on_map();
+    void draw_on_map(const Camera& camera);
 
   private:
 

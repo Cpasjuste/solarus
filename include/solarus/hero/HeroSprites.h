@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/entities/Ground.h"
+#include "solarus/entities/Camera.h"
 #include "solarus/graphics/SpritePtr.h"
 #include "solarus/lua/ScopedLuaRef.h"
 #include <memory>
@@ -50,10 +51,10 @@ class HeroSprites {
     HeroSprites(Hero& hero, Equipment& equipment);
 
     void update();
-    void draw_on_map();
+    void draw_on_map(Camera &camera);
     void set_suspended(bool suspended);
     void rebuild_equipment();
-    void notify_map_starting();
+    void notify_creating();
     void notify_tileset_changed();
 
     const std::string& get_tunic_sprite_id() const;
@@ -64,8 +65,6 @@ class HeroSprites {
     void set_sword_sound_id(const std::string& sound_id);
     const std::string& get_shield_sprite_id() const;
     void set_shield_sprite_id(const std::string& sprite_id);
-
-    Rectangle get_max_bounding_box() const;
 
     void blink(uint32_t duration);
     void stop_blinking();
@@ -156,9 +155,6 @@ class HeroSprites {
 
     LuaContext& get_lua_context();
 
-    void reorder_sprites();
-    void recompute_sprites_bounding_box();
-
     Hero& hero;                             /**< The hero. */
     Equipment& equipment;                   /**< Equipment of the player. */
 
@@ -206,18 +202,13 @@ class HeroSprites {
     bool blinking;                          /**< Whether the hero's sprites are blinking. */
     uint32_t end_blink_date;                /**< When the hero's sprites stop blinking.
                                              * 0 means infinite. */
-
     bool walking;                           /**< stopped or walking? */
-
     Rectangle clipping_rectangle;           /**< when drawing the sprites onto a map, indicates an area of the map to be restricted to
                                              * (usually, the whole map is considered and this rectangle's values are all 0) */
-
     std::shared_ptr<CarriedObject>
         lifted_item;                        /**< if not nullptr, an item to display above the hero */
 
     ScopedLuaRef animation_callback_ref;    /**< Lua ref of a function to call when a custom animation ends. */
-
-    Rectangle sprites_bounding_box;         /**< Union of bounding boxes of all hero sprites at position 0,0. */
 };
 
 }

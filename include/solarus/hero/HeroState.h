@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ class HeroState: public Entity::State {
     const HeroSprites& get_sprites() const;
     HeroSprites& get_sprites();
 
-    void draw_on_map() override;
+    void draw_on_map(Camera& camera) override;
 
     void notify_attack_command_pressed() override;
     void notify_item_command_pressed(int slot) override;

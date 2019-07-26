@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,7 @@
 #include "solarus/core/MainLoop.h"
 #include <iostream>
 #include <string>
-
-// On iOS SDL provides a main function that creates an application delegate
-// and starts the iOS application run loop.
-#if defined(SOLARUS_IOS)
-#  include "SDL_main.h"
-#endif
+#include <SDL.h>
 
 namespace Solarus {
 
@@ -68,6 +63,22 @@ void print_help(const Arguments& args) {
     << "  -turbo=yes|no                 runs as fast as possible rather than simulating real time (default no)"
     << std::endl
     << "  -lag=X                        slows down each frame of X milliseconds to simulate slower systems for debugging (default 0)"
+    << std::endl
+    << "  -cursor-visible=yes|no        sets the mouse cursor visibility on start (default leave unchanged)"
+    << std::endl
+    << "  -fullscreen=yes|no            sets fullscreen mode on start (default leave unchanged)"
+    << std::endl
+    << "  -perf-sound-play=yes|no       enables performance reporting of sound playing (default no)"
+    << std::endl
+    << "  -perf-video-render=yes|no     enables performance reporting of video rendering, i.e. FPS (default no)"
+    << std::endl
+    << "  -joypad-deadzone=<value>      sets the joypad axis deadzone between 0-32767 (default 10000)"
+    << std::endl
+    << "  -quit-combo=<b1>+<b2>+...     enables joypad buttons combo for quitting (default disabled)"
+    << std::endl
+    << "  -s=<script>                   set a script to be executed before the main.lua of the quest."
+    << std::endl
+    << "  -force-software-rendering     force the engine to use SDL software rendering. Disabling opengl."
     << std::endl;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  */
 #include "solarus/core/Debug.h"
 #include "solarus/core/Map.h"
+#include "solarus/entities/Camera.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/NonAnimatedRegions.h"
 #include "solarus/entities/Tileset.h"
@@ -161,18 +162,12 @@ bool NonAnimatedRegions::overlaps_animated_tile(const TileInfo& tile) const {
 /**
  * \brief Draws a layer of non-animated regions of tiles on the current map.
  */
-void NonAnimatedRegions::draw_on_map() {
-
-  const CameraPtr& camera = map.get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-
+void NonAnimatedRegions::draw_on_map(const Camera &camera) {
   // Check all grid cells that overlap the camera.
   const int num_rows = non_animated_tiles.get_num_rows();
   const int num_columns = non_animated_tiles.get_num_columns();
   const Size& cell_size = non_animated_tiles.get_cell_size();
-  const Rectangle& camera_position = camera->get_bounding_box();
+  const Rectangle& camera_position = camera.get_bounding_box();
 
   const int row1 = camera_position.get_y() / cell_size.height;
   const int row2 = (camera_position.get_y() + camera_position.get_height()) / cell_size.height;
@@ -183,6 +178,8 @@ void NonAnimatedRegions::draw_on_map() {
     // No cell.
     return;
   }
+
+  const auto& surface = camera.get_surface();
 
   for (int i = row1; i <= row2; ++i) {
     if (i < 0 || i >= num_rows) {
@@ -206,9 +203,9 @@ void NonAnimatedRegions::draw_on_map() {
           i * cell_size.height
       };
 
-      const Point dst_position = cell_xy - camera_position.get_xy();
+      const Point dst_position = cell_xy;// - camera_position.get_xy();
       optimized_tiles_surfaces[cell_index]->draw(
-          map.get_camera_surface(), dst_position
+          surface, dst_position
       );
     }
   }

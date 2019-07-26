@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 #include "solarus/core/Map.h"
 #include "solarus/core/QuestFiles.h"
 #include "solarus/core/ResourceProvider.h"
+#include "solarus/entities/Camera.h"
 #include "solarus/entities/DynamicTile.h"
 #include "solarus/entities/Hero.h"
 #include "solarus/entities/Tileset.h"

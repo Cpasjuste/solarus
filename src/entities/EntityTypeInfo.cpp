@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,12 +140,12 @@ bool EntityTypeInfo::can_be_created_from_lua_api(EntityType type) {
   case EntityType::SWITCH:
   case EntityType::TELETRANSPORTER:
   case EntityType::WALL:
+  case EntityType::CAMERA:
     // These ones can be created by scripts.
     return true;
 
   case EntityType::ARROW:
   case EntityType::BOOMERANG:
-  case EntityType::CAMERA:
   case EntityType::CARRIED_OBJECT:
   case EntityType::HERO:
   case EntityType::HOOKSHOT:

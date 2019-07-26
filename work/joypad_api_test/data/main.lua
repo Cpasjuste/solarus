@@ -2,6 +2,8 @@
 -- You will probably make a title screen and then start a game.
 -- See the Lua API! http://www.solarus-games.org/doc/latest
 
+local game_manager = require'scripts/game_manager'
+
 local function joypad_listen(jpad)
   local i = jpad:get_name()
   print("registred callbacks for", i, "rumble" , jpad:has_rumble())
@@ -31,6 +33,9 @@ function sol.main:on_started()
   for _, jpad in ipairs(joypads) do
     joypad_listen(jpad)
   end
+  
+  local game = game_manager:create('foo.sav')
+  game:start()
 end
 
 function sol.input:on_joypad_connected(joypad)

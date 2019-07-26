@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -611,7 +611,8 @@ void Game::draw(const SurfacePtr& dst_surface) {
                                              *transition);
 
       } else {
-        camera_surface->draw(dst_surface, camera->get_position_on_screen());
+        //camera_surface->draw(dst_surface, camera->get_position_on_screen());
+        current_map->draw_cameras(dst_surface);
       }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ class Hero::TreasureState: public HeroState {
     void start(const State* previous_state) override;
     void stop(const State* next_state) override;
     void update() override;
-    void draw_on_map() override;
+    void draw_on_map(Camera& camera) override;
     CarriedObject::Behavior get_previous_carried_object_behavior() const override;
     bool is_brandishing_treasure() const override;
 

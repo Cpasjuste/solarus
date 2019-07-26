@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -266,7 +266,6 @@ class LuaContext {
     void destroy_timers();
     void update_timers();
     void notify_timers_map_suspended(bool suspended);
-    void set_entity_timers_suspended(Entity& entity, bool suspended);
     void set_entity_timers_suspended_as_map(Entity& entity, bool suspended);
     void do_timer_callback(const TimerPtr& timer);
 
@@ -1291,6 +1290,12 @@ class LuaContext {
       state_api_set_pushing_delay,
       state_api_get_can_pick_treasure,
       state_api_set_can_pick_treasure,
+      state_api_get_can_use_teletransporter,
+      state_api_set_can_use_teletransporter,
+      state_api_get_can_use_switch,
+      state_api_set_can_use_switch,
+      state_api_get_can_use_stream,
+      state_api_set_can_use_stream,
       state_api_get_can_use_stairs,
       state_api_set_can_use_stairs,
       state_api_get_can_use_jumper,
@@ -1331,7 +1336,7 @@ class LuaContext {
      */
     struct LuaTimerData {
       ScopedLuaRef callback_ref;  /**< Lua ref of the function to call after the timer. */
-      ScopedLuaRef context;        /**< Lua table or userdata the timer is attached to. */
+      ScopedLuaRef context;       /**< Lua table or userdata the timer is attached to. */
     };
 
     // Executing Lua code.
@@ -1664,7 +1669,8 @@ private:
       l_create_custom_entity,
       l_create_bomb,
       l_create_explosion,
-      l_create_fire;
+      l_create_fire,
+      l_create_camera;
 
     // Script data.
     lua_State* main_l;                 /**< The MAIN Lua state encapsulated. */

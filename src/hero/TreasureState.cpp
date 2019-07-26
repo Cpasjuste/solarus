@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,21 +103,17 @@ void Hero::TreasureState::update() {
 /**
  * \brief Draws this state.
  */
-void Hero::TreasureState::draw_on_map() {
+void Hero::TreasureState::draw_on_map(Camera &camera) {
 
-  HeroState::draw_on_map();
+  HeroState::draw_on_map(camera);
 
   const Hero& hero = get_entity();
   int x = hero.get_x();
   int y = hero.get_y();
 
-  const CameraPtr& camera = get_map().get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-  treasure_sprite->draw(get_map().get_camera_surface(),
-      x - camera->get_top_left_x(),
-      y - 24 - camera->get_top_left_y());
+  treasure_sprite->draw(camera.get_surface(),
+      x,// - camera.get_top_left_x(),
+      y - 24);// - camera.get_top_left_y());
 }
 
 /**

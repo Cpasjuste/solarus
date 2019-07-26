@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,6 +75,11 @@ class Surface: public Drawable {
         const std::string& file_name
     );
 
+    static SDL_Surface_UniquePtr create_sdl_surface_from_memory(
+        void* data,
+        size_t data_len
+    );
+
     int get_width() const;
     int get_height() const;
     virtual Size get_size() const override;
@@ -114,6 +119,10 @@ class Surface: public Drawable {
     const std::string& get_lua_type_name() const override;
 
     static void empty_cache();
+
+    void set_view(const View& view);
+    const View& get_view() const;
+    View& get_view();
   private:
     static SurfaceImplPtr get_surface_from_file(
         const std::string& file_name,

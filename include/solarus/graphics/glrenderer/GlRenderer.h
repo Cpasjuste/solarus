@@ -30,15 +30,6 @@ public:
               const void *userParam);
 
   /**
-   * @brief Structure containing all usefull GlFunctions
-   */
-  struct GlFunctions {
-    #define SDL_PROC(ret,func,params) ret (APIENTRY* func) params;
-    #include "gles2funcs.h"
-    #undef SDL_PROC
-  };
-
-  /**
    * @brief Draw destination
    */
   struct Fbo{
@@ -47,7 +38,7 @@ public:
   };
 
   GlRenderer(SDL_GLContext ctx);
-  static RendererPtr create(SDL_Window* window);
+  static RendererPtr create(SDL_Window* window, bool force_software);
   SurfaceImplPtr create_texture(int width, int height) override;
   SurfaceImplPtr create_texture(SDL_Surface_UniquePtr &&surface) override;
   SurfaceImplPtr create_window_surface(SDL_Window* w, int width, int height) override;
@@ -102,8 +93,9 @@ private:
 
   void shader_about_to_change(GlShader* shader);
 
+  const glm::mat4& dst_mvp(GlTexture* dst) const;
+
   static GlRenderer* instance;
-  static GlFunctions ctx;
   SDL_GLContext sdl_gl_context;
   GlShader* current_shader = nullptr;
   const GlTexture* current_texture = nullptr;
@@ -121,6 +113,7 @@ private:
   Vertex* current_vertex = nullptr;
   size_t buffered_sprites = 0;
   size_t buffer_size = 0;
+
   std::vector<Vertex> vertex_buffer;
 
   Fbo screen_fbo = {0,glm::mat4()};

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  */
 #include "solarus/core/QuestFiles.h"
 #include "solarus/core/Map.h"
+#include "solarus/entities/Camera.h"
 #include "solarus/entities/Tile.h"
 #include "solarus/entities/TileInfo.h"
 #include "solarus/entities/Tileset.h"
@@ -70,7 +71,7 @@ void Tile::built_in_draw(Camera& camera) {
   // Note that the tiles are also optimized for drawing.
   // This function is called at each frame only if the tile is in an
   // animated region. Otherwise, tiles are drawn once when loading the map.
-  draw_on_surface(camera.get_surface(), camera.get_top_left_xy());
+  draw_on_surface(camera.get_surface(), Point());//camera.get_top_left_xy());
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,6 @@ class Timer: public ExportableToLua {
     void set_expiration_date(uint32_t expiration_date);
 
     void update();
-    void notify_map_suspended(bool suspended);
 
     virtual const std::string& get_lua_type_name() const override;
 

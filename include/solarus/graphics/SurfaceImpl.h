@@ -3,6 +3,7 @@
 #include "solarus/core/Rectangle.h"
 #include "solarus/core/Point.h"
 #include "solarus/graphics/SoftwarePixelFilter.h"
+#include "solarus/graphics/View.h"
 
 #include <SDL_render.h>
 #include <memory>
@@ -19,6 +20,9 @@ class Surface;
 class SurfaceImpl
 {
 public:
+
+  SurfaceImpl(const Size& size);
+
   /**
      * @brief get the synchronised SDL_Surface
      *
@@ -104,8 +108,13 @@ public:
   template<class T> const T& as() const {
     return *static_cast<const T*>(this);
   }
+
+  void set_view(const View& view);
+  const View& get_view() const;
+  View& get_view();
 private:
   bool premultiplied = false;
+  View view;
 };
 
 using SurfaceImplPtr = std::shared_ptr<SurfaceImpl>;

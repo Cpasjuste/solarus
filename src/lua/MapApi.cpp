@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1340,6 +1340,33 @@ int LuaContext::l_create_explosion(lua_State* l) {
 }
 
 /**
+ * @brief Creates a camera on the map
+ * @param  l The Lua context that is calling this function.
+ * @return Number of values to return to Lua.
+ */
+int LuaContext::l_create_camera(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Map& map = *check_map(l, 1);
+    EntityData& data = *(static_cast<EntityData*>(lua_touserdata(l, 2)));
+
+    CameraPtr entity = std::make_shared<Camera>(
+        map,
+        data.get_name()
+    );
+    entity->set_xy(data.get_xy());
+    entity->set_layer(data.get_layer());
+    entity->set_user_properties(data.get_user_properties());
+    entity->set_enabled(data.is_enabled_at_start());
+    map.get_entities().add_entity(entity);
+    if (map.is_started()) {
+      push_entity(l, *entity);
+      return 1;
+    }
+    return 0;
+  });
+}
+
+/**
  * \brief Creates a fire entity on the map.
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
@@ -1390,6 +1417,7 @@ const std::map<EntityType, lua_CFunction> LuaContext::entity_creation_functions 
     { EntityType::SEPARATOR, LuaContext::l_create_separator },
     { EntityType::CUSTOM, LuaContext::l_create_custom_entity },
     { EntityType::EXPLOSION, LuaContext::l_create_explosion },
+    { EntityType::CAMERA, LuaContext::l_create_camera},
     { EntityType::BOMB, LuaContext::l_create_bomb },
     { EntityType::FIRE, LuaContext::l_create_fire },
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,9 +81,9 @@ HeroSprites& HeroState::get_sprites() {
 /**
  * \brief Draws this state.
  */
-void HeroState::draw_on_map() {
+void HeroState::draw_on_map(Camera &camera) {
 
-  get_sprites().draw_on_map();
+  get_sprites().draw_on_map(camera);
 }
 
 /**

@@ -23,7 +23,9 @@ SDL_Texture* create_texture_from_renderer(SDL_Renderer* renderer, int width, int
   return tex;
 }
 
-SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer *renderer, int width, int height, bool screen_tex) : target(true) {
+SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer *renderer, int width, int height, bool screen_tex) :
+  SurfaceImpl({width, height}),
+  target(true) {
   texture.reset(screen_tex ? nullptr : create_texture_from_renderer(renderer,width,height));
 
   SDL_PixelFormat* format = Video::get_pixel_format();
@@ -42,7 +44,8 @@ SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer *renderer, int width, int height, bo
 }
 
 SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer* renderer, SDL_Surface_UniquePtr surface)
-  : target(false), surface(std::move(surface)) {
+  : SurfaceImpl({surface->w, surface->h}),
+    target(false), surface(std::move(surface)) {
   SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, this->surface.get());
   Debug::check_assertion(tex != nullptr,
         std::string("Failed to convert surface to texture") + SDL_GetError());

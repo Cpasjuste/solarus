@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -361,12 +361,14 @@ void Pickable::notify_collision_with_stream(
     Stream& stream, int /* dx */, int /* dy */) {
 
   if (has_stream_action()) {
-    get_stream_action()->update();
+    return;
   }
 
-  if (!has_stream_action()) {
-    stream.activate(*this);
+  if (!stream.overlaps(get_ground_point())) {
+    return;
   }
+
+  stream.activate(*this);
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -543,23 +543,28 @@ void Map::draw() {
     return;
   }
 
-  const SurfacePtr& camera_surface = get_camera_surface();
+  for(const CameraPtr& camera : entities->get_cameras()) {
+    camera->apply_view();
+    const SurfacePtr& camera_surface = camera->get_surface();
+    // background
+    draw_background(camera_surface);
 
-  if (camera_surface == nullptr) {
-    return;
+    // draw all entities (including the hero)
+    entities->draw(*camera);
+
+    // foreground
+    draw_foreground(camera_surface);
+
+    // Lua
+    get_lua_context().map_on_draw(*this, camera_surface); //TODO check for coordinates problem
   }
+}
 
-  // background
-  draw_background(camera_surface);
-
-  // draw all entities (including the hero)
-  entities->draw();
-
-  // foreground
-  draw_foreground(camera_surface);
-
-  // Lua
-  get_lua_context().map_on_draw(*this, camera_surface);
+void Map::draw_cameras(const SurfacePtr& dst_surface) const {
+  for(const CameraPtr& cam : entities->get_cameras()) {
+    const auto& cam_surf = cam->get_surface();
+    cam_surf->draw(dst_surface, cam->get_position_on_screen());
+  }
 }
 
 /**

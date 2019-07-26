@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -225,8 +225,8 @@ ManualState::ManualState(Camera& camera) :
  * \brief Creates a camera.
  * \param map The map.
  */
-Camera::Camera(Map& map):
-  Entity("", 0, map.get_max_layer(), Point(0, 0), Video::get_quest_size()),
+Camera::Camera(Map& map, const std::string &name):
+  Entity(name, 0, map.get_max_layer(), Point(0, 0), Video::get_quest_size()),
   surface(nullptr),
   position_on_screen(0, 0) {
 
@@ -278,6 +278,30 @@ void Camera::notify_size_changed() {
   if (surface == nullptr || get_size() != surface->get_size()) {
     create_surface();
   }
+}
+
+/**
+ * \copydoc Entity::is_separator_obstacle
+ */
+bool Camera::is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) {
+
+  const Point& center = separator.get_center_point();
+  if (separator.is_vertical()) {
+    if (candidate_position.get_x() + get_width() <= center.x) {
+      return false;
+    }
+    if (candidate_position.get_x() >= center.x) {
+      return false;
+    }
+  } else if (separator.is_horizontal()) {
+    if (candidate_position.get_y() + get_height() <= center.y) {
+      return false;
+    }
+    if (candidate_position.get_y() >= center.y) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -542,6 +566,14 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
  */
 Rectangle Camera::apply_separators_and_map_bounds(const Rectangle& area) const {
   return apply_map_bounds(apply_separators(area));
+}
+
+/**
+ * @brief Compute and apply the view of this camera to its surface
+ */
+void Camera::apply_view() {
+  //TODO add rotation and zoom
+  surface->get_view().reset(get_bounding_box());
 }
 
 }

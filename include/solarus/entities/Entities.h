@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/graphics/Transition.h"
-#include "solarus/entities/Camera.h"
 #include "solarus/entities/CameraPtr.h"
+#include "solarus/entities/Entity.h"
 #include "solarus/entities/EntityPtr.h"
 #include "solarus/entities/EntityType.h"
 #include "solarus/entities/Ground.h"
@@ -36,6 +36,7 @@
 
 namespace Solarus {
 
+class Camera;
 class Destination;
 class Hero;
 class Map;
@@ -103,6 +104,11 @@ class SOLARUS_API Entities {
 
   public:
 
+     /**
+     * A bunch of cameras
+     */
+    using Cameras = std::vector<CameraPtr>;
+
     // Creation and destruction.
     Entities(Game& game, Map& map);
     ~Entities();
@@ -110,6 +116,7 @@ class SOLARUS_API Entities {
     // Get entities.
     Hero& get_hero();
     const CameraPtr& get_camera() const;
+    const Cameras& get_cameras() const;
     Ground get_tile_ground(int layer, int x, int y) const;
     EntityVector get_entities();
     const std::shared_ptr<Destination>& get_default_destination();
@@ -174,7 +181,7 @@ class SOLARUS_API Entities {
     // Game loop.
     void set_suspended(bool suspended);
     void update();
-    void draw();
+    void draw(Camera &camera);
 
   private:
 
@@ -237,6 +244,7 @@ class SOLARUS_API Entities {
     HeroPtr hero;                                   /**< The hero, also stored in Game because
                                                      * it is kept when changing maps. */
     CameraPtr camera;                               /**< The visible area of the map. */
+    Cameras cameras;                 /**< The visibles area of the map. */
 
     std::map<std::string, EntityPtr>
         named_entities;                             /**< Entities identified by a name. */
@@ -286,6 +294,14 @@ inline Ground Entities::get_tile_ground(int layer, int x, int y) const {
 inline const CameraPtr& Entities::get_camera() const {
 
   return camera;
+}
+
+/**
+ * \brief Returns the cameras of the map.
+ * \return The cameras
+ */
+inline const Entities::Cameras& Entities::get_cameras() const {
+  return cameras;
 }
 
 /**

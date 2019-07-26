@@ -4,6 +4,12 @@
 
 namespace Solarus {
 
+SurfaceImpl::SurfaceImpl(const Size &size) :
+  view(size)
+{
+
+}
+
 SurfaceImpl::~SurfaceImpl() {
   Video::invalidate(*this);
 }
@@ -90,6 +96,18 @@ bool SurfaceImpl::is_pixel_transparent(int index) const {
   Debug::check_assertion(surface->format->BytesPerPixel == 4 and surface->format->Amask != 0, "Surface is not in RGBA format");
   uint32_t pixel = static_cast<uint32_t*>(surface->pixels)[index];
   return (pixel & surface->format->Amask) == 0;
+}
+
+void SurfaceImpl::set_view(const View& view) {
+  this->view = view;
+}
+
+const View& SurfaceImpl::get_view() const {
+  return view;
+}
+
+View& SurfaceImpl::get_view() {
+  return view;
 }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -158,6 +158,7 @@ int LuaContext::drawable_api_draw_region(lua_State* l) {
         LuaTools::check_int(l, 4),
         LuaTools::check_int(l, 5)
     };
+    region = region.get_intersection(drawable.get_region());
     SurfacePtr dst_surface = check_surface(l, 6);
     Point dst_position = {
         LuaTools::opt_int(l, 7, 0),

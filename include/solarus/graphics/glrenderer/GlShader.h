@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,11 +31,7 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef SOLARUS_HAVE_OPENGL
-#  include <SDL_opengl.h>
-#else
-#  include <SDL_opengles2.h>
-#endif
+#include "../SolarusGl.h"
 
 namespace Solarus {
 
@@ -136,11 +132,7 @@ class SOLARUS_API GlShader : public Shader {
       GLuint unit;
     };
 
-
-    std::string sanitize_shader_source(const std::string source);
-
     GLuint create_shader(unsigned int type, const char* source);
-    static void set_rendering_settings();
     GLint get_uniform_location(const std::string& uniform_name) const;
 
     bool bound = false;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -392,7 +392,7 @@ bool Entities::has_entity_with_prefix(const std::string& prefix) const {
  * \brief Returns all entities whose bounding box overlaps the given rectangle.
  * Entities are sorted according to their Z index on the map.
  * \param[in] rectangle A rectangle.
- * \param[out] result The entities in that rectangle, in arbitrary order.
+ * \param[out] result The entities in that rectangle.
  */
 void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, ConstEntityVector& result
@@ -921,10 +921,15 @@ void Entities::add_entity(const EntityPtr& entity) {
     switch (entity->get_type()) {
 
       case EntityType::CAMERA:
-        Debug::check_assertion(camera == nullptr, "Only one camera is supported");
-        camera = std::static_pointer_cast<Camera>(entity);
+        {
+          //Debug::check_assertion(camera == nullptr, "Only one camera is supported"); //Not anymore
+          CameraPtr new_camera = std::static_pointer_cast<Camera>(entity);
+          if(!camera) {
+            camera = new_camera;
+          }
+          cameras.push_back(new_camera);
+        }
         break;
-
       case EntityType::DESTINATION:
         {
           std::shared_ptr<Destination> destination =
@@ -1141,8 +1146,10 @@ void Entities::update() {
     }
   }
 
-  // Update the camera after everyone else.
-  camera->update();
+  // Update the cameras after everyone else.
+  for(const auto& camera : cameras) {
+    camera->update();
+  }
   entities_to_draw.clear();  // Invalidate entities to draw.
 
   // Remove the entities that have to be removed now.
@@ -1152,14 +1159,7 @@ void Entities::update() {
 /**
  * \brief Draws the entities on the map surface.
  */
-void Entities::draw() {
-
-  const CameraPtr& camera = get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-
-  const SurfacePtr& camera_surface = camera->get_surface();
+void Entities::draw(Camera& camera) {
 
   // Lazily build the list of entities to draw.
   if (entities_to_draw.empty()) {
@@ -1173,10 +1173,10 @@ void Entities::draw() {
     EntityVector entities_in_camera;
     Rectangle around_camera(
         Point(
-            camera->get_x() - camera->get_size().width,
-            camera->get_y() - camera->get_size().height
+            camera.get_x() - camera.get_size().width,
+            camera.get_y() - camera.get_size().height
         ),
-        camera->get_size() * 3
+        camera.get_size() * 3
     );
     get_entities_in_rectangle_z_sorted(around_camera, entities_in_camera);
 
@@ -1213,28 +1213,29 @@ void Entities::draw() {
     // will be drawn later).
     for (unsigned int i = 0; i < tiles_in_animated_regions[layer].size(); ++i) {
       Tile& tile = *tiles_in_animated_regions[layer][i];
-      if (tile.overlaps(*camera) || !tile.is_drawn_at_its_position()) {
-        tile.draw(*camera);
+      if (tile.overlaps(camera) || !tile.is_drawn_at_its_position()) {
+        tile.draw(camera);
       }
     }
 
     // Draw the non-animated tiles (with transparent rectangles on the regions of animated tiles
     // since they are already drawn).
-    non_animated_regions[layer]->draw_on_map();
+    non_animated_regions[layer]->draw_on_map(camera);
 
     // Draw dynamic entities, ordered by their data structure.
     for (const EntityPtr& entity: entities_to_draw[layer]) {
       if (!entity->is_being_removed() &&
           entity->is_enabled() &&
           entity->is_visible()) {
-        entity->draw(*camera);
+        entity->draw(camera);
       }
     }
   }
 
   if (EntityTree::debug_quadtrees) {
+    const SurfacePtr& camera_surface = camera.get_surface();
     // Draw the quadtree structure for debugging.
-    quadtree->draw(camera_surface, -camera->get_top_left_xy());
+    quadtree->draw(camera_surface, -camera.get_top_left_xy());
   }
 }
 

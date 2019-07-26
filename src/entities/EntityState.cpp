@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -264,10 +264,10 @@ void Entity::State::update() {
  * \brief Draws this state.
  *
  * This function draws this entity in its current state.
- * The default implement does nothing.
+ * The default implementation does nothing.
  * If your state needs to draw additional elements, you can redefine this function.
  */
-void Entity::State::draw_on_map() {
+void Entity::State::draw_on_map(Camera& /*camera*/) {
 
 }
 

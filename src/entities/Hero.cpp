@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -242,12 +242,7 @@ void Hero::update_movement() {
   }
   // TODO clear_old_movements() is missing
 
-  if (has_stream_action()) {
-    get_stream_action()->update();
-    if (!get_stream_action()->is_active()) {
-      stop_stream_action();
-    }
-  }
+  update_stream_action();
 }
 
 /**
@@ -428,10 +423,9 @@ void Hero::check_gameover() {
 /**
  * \copydoc Entity::built_in_draw
  */
-void Hero::built_in_draw(Camera& /* camera */) {
+void Hero::built_in_draw(Camera&  camera) {
 
-  // The state may call get_sprites()->draw_on_map() or make its own drawings.
-  get_state()->draw_on_map();
+  get_state()->draw_on_map(camera);
 }
 
 /**
@@ -521,14 +515,6 @@ void Hero::rebuild_equipment() {
 }
 
 /**
- * \copydoc Entity::get_max_bounding_box
- */
-Rectangle Hero::get_max_bounding_box() const {
-
-  return get_bounding_box() | sprites->get_max_bounding_box();
-}
-
-/**
  * \brief Returns whether the shadow should be currently displayed, separate from the tunic sprite.
  * \return true if the shadow should be currently displayed.
  */
@@ -542,6 +528,7 @@ bool Hero::is_shadow_visible() const {
 void Hero::notify_creating() {
 
   Entity::notify_creating();
+  get_hero_sprites().notify_creating();
 
   // At this point the map is known and loaded. Notify the state.
   get_state()->set_map(get_map());
@@ -553,7 +540,6 @@ void Hero::notify_creating() {
 void Hero::notify_map_starting(Map& map, const std::shared_ptr<Destination>& destination) {
 
   Entity::notify_map_starting(map, destination);
-  get_hero_sprites().notify_map_starting();
 
   // At this point the map is known and loaded. Notify the state.
   get_state()->set_map(get_map());
@@ -1678,7 +1664,7 @@ bool Hero::is_destructible_obstacle(Destructible& destructible) {
 /**
  * \copydoc Entity::is_separator_obstacle
  */
-bool Hero::is_separator_obstacle(Separator& separator) {
+bool Hero::is_separator_obstacle(Separator& separator, const Rectangle& /* candidate_position */) {
   return get_state()->is_separator_obstacle(separator);
 }
 

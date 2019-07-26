@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,7 +100,7 @@ class SOLARUS_API CustomEntity: public Entity {
     bool is_enemy_obstacle(Enemy& enemy) override;
     bool is_jumper_obstacle(Jumper& jumper, const Rectangle& candidate_position) override;
     bool is_destructible_obstacle(Destructible& destructible) override;
-    bool is_separator_obstacle(Separator& separator) override;
+    bool is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) override;
 
     bool can_traverse_ground(Ground ground) const;
     void set_can_traverse_ground(Ground ground, bool traversable);

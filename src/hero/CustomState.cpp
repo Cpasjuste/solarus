@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,6 +75,9 @@ CustomState::CustomState(
   pushing_direction4(-1),
   start_pushing_date(0),
   can_pick_treasure(true),
+  can_take_teletransporter(true),
+  can_take_switch(true),
+  can_take_stream(true),
   can_take_stairs(true),
   can_take_jumper(true),
   current_jumper(nullptr),
@@ -401,13 +404,11 @@ void CustomState::notify_command_released(GameCommand command) {
 /**
  * \copydoc Entity::State::draw_on_map
  */
-void CustomState::draw_on_map() {
-
-  Camera& camera = *get_entity().get_map().get_camera();
+void CustomState::draw_on_map(Camera &camera) {
   get_lua_context().state_on_pre_draw(*this, camera);
   if (draw_override.is_empty()) {
     // Use the built-in default state draw.
-    HeroState::draw_on_map();
+    HeroState::draw_on_map(camera);
   }
   else {
     get_lua_context().do_state_draw_override_function(draw_override, *this, camera);
@@ -495,7 +496,7 @@ int CustomState::get_wanted_movement_direction8() const {
     return -1;
   }
 
-  if (!get_can_control_direction()) {
+  if (!get_can_control_movement()) {
     return -1;
   }
 
@@ -1338,6 +1339,75 @@ bool CustomState::get_can_pick_treasure(EquipmentItem& /* item */) const {
  */
 void CustomState::set_can_pick_treasure(bool can_pick_treasure) {
   this->can_pick_treasure = can_pick_treasure;
+}
+
+/**
+ * \copydoc EntityState::can_avoid_teletransporter
+ */
+bool CustomState::can_avoid_teletransporter() const {
+  return !get_can_take_teletransporter();
+}
+
+/**
+ * \brief Returns whether teletransporters can be used during this state.
+ * \return \c true if teletransporters are allowed.
+ */
+bool CustomState::get_can_take_teletransporter() const {
+  return can_take_teletransporter;
+}
+
+/**
+ * \brief Sets whether teletransporters can be used during this state.
+ * \param can_take_teletransporter \c true to allow teletransporters.
+ */
+void CustomState::set_can_take_teletransporter(bool can_take_teletransporter) {
+  this->can_take_teletransporter = can_take_teletransporter;
+}
+
+/**
+ * \copydoc EntityState::can_avoid_switch
+ */
+bool CustomState::can_avoid_switch() const {
+  return !get_can_take_switch();
+}
+
+/**
+ * \brief Returns whether switches can be used during this state.
+ * \return \c true if switches are allowed.
+ */
+bool CustomState::get_can_take_switch() const {
+  return can_take_switch;
+}
+
+/**
+ * \brief Sets whether switches can be used during this state.
+ * \param can_take_switch \c true to allow switches.
+ */
+void CustomState::set_can_take_switch(bool can_take_switch) {
+  this->can_take_switch = can_take_switch;
+}
+
+/**
+ * \copydoc EntityState::get_can_take_stream
+ */
+bool CustomState::can_avoid_stream(const Stream& /* stream */) const {
+  return !get_can_take_stream();
+}
+
+/**
+ * \brief Returns whether streams can be used during this state.
+ * \return \c true if streams are allowed.
+ */
+bool CustomState::get_can_take_stream() const {
+  return can_take_stream;
+}
+
+/**
+ * \brief Sets whether streams can be used during this state.
+ * \param can_take_stream \c true to allow streams.
+ */
+void CustomState::set_can_take_stream(bool can_take_stream) {
+  this->can_take_stream = can_take_stream;
 }
 
 /**

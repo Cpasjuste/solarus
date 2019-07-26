@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -190,17 +190,6 @@ void Timer::update() {
         next_sound_date += 250;
       }
     }
-  }
-}
-
-/**
- * \brief Notifies this timer that the current map is being suspended or resumed.
- * \param suspended true if the map is suspended, false if it is resumed.
- */
-void Timer::notify_map_suspended(bool suspended) {
-
-  if (suspended_with_map) {
-    set_suspended(suspended);
   }
 }
 

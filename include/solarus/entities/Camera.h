@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ class Camera : public Entity {
 
     static constexpr EntityType ThisType = EntityType::CAMERA;
 
-    explicit Camera(Map& map);
+    explicit Camera(Map& map, const std::string& name = "");
 
     EntityType get_type() const override;
 
@@ -53,6 +53,7 @@ class Camera : public Entity {
     void set_suspended(bool suspended) override;
     void notify_movement_started() override;
     void notify_size_changed() override;
+    bool is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) override;
 
     const SurfacePtr& get_surface() const;
 
@@ -70,6 +71,8 @@ class Camera : public Entity {
     Rectangle apply_map_bounds(const Rectangle& area) const;
     Rectangle apply_separators(const Rectangle& area) const;
     Rectangle apply_separators_and_map_bounds(const Rectangle& area) const;
+
+    void apply_view();
 
 private:
 

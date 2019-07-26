@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "solarus/entities/EnemyAttack.h"
 #include "solarus/entities/EnemyReaction.h"
 #include "solarus/graphics/SpritePtr.h"
+#include "solarus/graphics/SurfacePtr.h"
 #include "solarus/lua/ExportableToLua.h"
 #include <list>
 #include <memory>
@@ -215,8 +216,10 @@ class SOLARUS_API Entity: public ExportableToLua {
     std::vector<NamedSprite> get_named_sprites() const;
     SpritePtr create_sprite(
         const std::string& animation_set_id,
-        const std::string& sprite_name = ""
+        const std::string& sprite_name = "",
+        int order = -1
     );
+    int get_sprite_order(Sprite& sprite);
     bool remove_sprite(Sprite& sprite);
     void clear_sprites();
     bool bring_sprite_to_back(Sprite& sprite);
@@ -378,7 +381,7 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual bool is_enemy_obstacle(Enemy& enemy);
     virtual bool is_jumper_obstacle(Jumper& jumper, const Rectangle& candidate_position);
     virtual bool is_destructible_obstacle(Destructible& destructible);
-    virtual bool is_separator_obstacle(Separator& separator);
+    virtual bool is_separator_obstacle(Separator& separator, const Rectangle& candidate_position);
     virtual bool is_sword_ignored() const;
 
     // Game loop.
@@ -386,7 +389,8 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual void set_suspended(bool suspended);
     virtual void update();
     void draw(Camera& camera);
-    virtual void built_in_draw(Camera& camera);
+    virtual void built_in_draw(Camera& surface);
+    void draw_sprites(Camera& surface);
 
     // Easy access to various game objects.
     Entities& get_entities();
@@ -440,6 +444,7 @@ class SOLARUS_API Entity: public ExportableToLua {
         Entity& entity_overlapping, CollisionMode collision_mode);
     virtual void notify_collision(
         Entity& other_entity, Sprite& this_sprite, Sprite& other_sprite);
+    void update_stream_action();
 
     // Obstacles.
     virtual bool is_traversable_obstacle() const;

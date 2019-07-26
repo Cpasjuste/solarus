@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ void System::initialize(const Arguments& args) {
   Sound::initialize(args);
 
   // input
-  InputEvent::initialize();
+  InputEvent::initialize(args);
 
   // random number generator
   Random::initialize();

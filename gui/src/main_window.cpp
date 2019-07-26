@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -148,6 +148,16 @@ void MainWindow::update_fullscreen_action() {
 
   bool fullscreen = settings.value("quest_fullscreen", false).toBool();
   ui.action_fullscreen->setChecked(fullscreen);
+}
+
+/**
+ * @brief Updates the force software action with the current settings.
+ */
+void MainWindow::update_force_software_action() {
+  Settings settings;
+
+  bool force_software = settings.value("force_software_rendering", false).toBool();
+  ui.action_force_software->setChecked(force_software);
 }
 
 /**
@@ -335,6 +345,13 @@ void MainWindow::on_action_fullscreen_triggered() {
     QString command = QString("sol.video.set_fullscreen(%1)").arg(fullscreen ? "true" : "false");
     ui.console->execute_command(command);
   }
+}
+
+void MainWindow::on_action_force_software_triggered() {
+  bool force = ui.action_force_software->isChecked();
+
+  Settings settings;
+  settings.setValue("force_software_rendering", force);
 }
 
 /**

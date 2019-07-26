@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 
 namespace Solarus {
 
+class Arguments;
 class Point;
 class Rectangle;
 class Size;
@@ -204,9 +205,13 @@ class InputEvent {
       X2              = SDL_BUTTON_X2,
     };
 
+
     using Joypads = std::map<SDL_JoystickID,JoypadPtr>;
 
     static void initialize();
+
+    static void initialize(const Arguments& args);
+
     static void quit();
     static bool is_initialized();
 
@@ -266,6 +271,7 @@ class InputEvent {
 
     static void simulate_key_pressed(KeyboardKey key);
     static void simulate_key_released(KeyboardKey key);
+    static void simulate_window_closing();
 
     // joypad
     static bool is_joypad_enabled();
@@ -337,6 +343,7 @@ class InputEvent {
     //static SDL_Joystick* joystick;                /**< the joystick object if enabled and plugged */
     //static std::vector<int> joypad_axis_state;    /**< keep track of the current horizontal and vertical axis states */
     static Joypads joypads;       /**< Mapping from sdl joystick index to Controller */
+
     static std::map<KeyboardKey, std::string>
       keyboard_key_names;                         /**< Names of all existing keyboard keys. */
     static std::map<MouseButton, std::string>
@@ -344,6 +351,10 @@ class InputEvent {
     static bool repeat_keyboard;                  /**< True to handle repeat KEYDOWN and KEYUP events. */
     static std::set<SDL_Keycode> keys_pressed;    /**< Keys currently down, only according to SDL_KEYDOWN and SDL_KEYUP events
                                                    * (i.e. independently of the real current state SDL_GetKeyboardState()). */
+    static int joypad_deadzone;                   /**< Joypad axis deadzone for detecting directions. */
+    static std::set<Uint8> jbuttons_pressed;      /**< Joypad buttons currently down, only according to SDL_JOYBUTTONDOWN and
+                                                   * SDL_JOYBUTTONUP events. */
+    static std::set<Uint8> quit_combo;            /**< Optional joypad buttons combination for quitting the application. */
 
     const SDL_Event internal_event;               /**< the internal event encapsulated */
 
