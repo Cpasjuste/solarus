@@ -1150,7 +1150,7 @@ void Entities::update() {
   for(const auto& camera : cameras) {
     camera->update();
   }
-  entities_to_draw.clear();  // Invalidate entities to draw.
+
 
   // Remove the entities that have to be removed now.
   remove_marked_entities();
@@ -1237,6 +1237,8 @@ void Entities::draw(Camera& camera) {
     // Draw the quadtree structure for debugging.
     quadtree->draw(camera_surface, -camera.get_top_left_xy());
   }
+
+  entities_to_draw.clear();  // Invalidate entities to draw.
 }
 
 /**
