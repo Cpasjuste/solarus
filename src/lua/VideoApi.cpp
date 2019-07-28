@@ -55,8 +55,10 @@ void LuaContext::register_video_module() {
     functions.insert(functions.end(), {
       { "get_shader", video_api_get_shader },
       { "set_shader", video_api_set_shader},
+      { "set_geometry_mode", video_api_set_geometry_mode }
     });
   }
+
   register_functions(video_module_name, functions);
   lua_getglobal(current_l, "sol");
                                   // ... sol
@@ -428,6 +430,20 @@ void LuaContext::video_on_draw(const SurfacePtr &screen) {
   push_video(current_l);
   on_draw(screen);
   lua_pop(current_l, 1);
+}
+
+/**
+ * \brief Implementation of drawable:set_blend_mode().
+ * \param l the Lua context that is calling this function
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::video_api_set_geometry_mode(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Video::GeometryMode mode = LuaTools::check_enum<Video::GeometryMode>(l, 1);
+
+    Video::set_geometry_mode(mode);
+    return 0;
+  });
 }
 
 }

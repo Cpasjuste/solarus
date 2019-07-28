@@ -42,6 +42,7 @@ target_sources(solarus
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/QuestProperties.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Random.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Rectangle.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/FRectangle.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/ResourceProvider.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/ResourceType.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/SavegameConverterV1.h"

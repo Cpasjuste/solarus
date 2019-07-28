@@ -228,10 +228,13 @@ ManualState::ManualState(Camera& camera) :
 Camera::Camera(Map& map, const std::string &name):
   Entity(name, 0, map.get_max_layer(), Point(0, 0), Video::get_quest_size()),
   surface(nullptr),
-  position_on_screen(0, 0) {
+  position_on_screen(0, 0),
+  viewport(0.f, 0.f, 1.f, 1.f) {
+
 
   create_surface();
   set_map(map);
+  notify_window_size_changed(Video::get_window_size());
 }
 
 /**
@@ -552,6 +555,54 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
   return Rectangle(x, y, width, height);
 }
 
+void Camera::notify_window_size_changed(const Size& new_size) {
+  int x = new_size.width * viewport.left;
+  int y = new_size.height * viewport.top;
+  int w = new_size.width * viewport.width;
+  int h = new_size.height * viewport.height;
+  switch (Video::get_geometry_mode()) {
+  case Video::GeometryMode::DYNAMIC_QUEST_SIZE:{
+    Size quest_size = Video::get_quest_size();
+    float qratio = quest_size.width / static_cast<float>(quest_size.height);
+    float wratio = w / static_cast<float>(h);
+    float cw = quest_size.width;
+    float ch = quest_size.width/wratio;
+    if(qratio > wratio) {
+      ch = quest_size.height;
+      cw = quest_size.height*wratio;
+    }
+    set_position_on_screen({x,y});
+    set_size(Size(cw,ch));
+    surface->set_scale(Scale(w/cw, h/ch));
+    break;
+  }
+  case Video::GeometryMode::DYNAMIC_ABSOLUTE: {
+    set_position_on_screen({x, y});
+    set_size({w, h});
+    surface->set_scale(Scale(1,1)); //Draw the surface 1:1 on screen
+    break;
+  }
+  default:
+    break;
+  }
+}
+
+/**
+ * @brief set the fraction of the screen occupied by this camera
+ * @param viewport
+ */
+void Camera::set_viewport(const FRectangle& viewport) {
+  this->viewport = viewport;
+}
+
+/**
+ * @brief get the fraction of the screen occupied by this camera
+ * @return
+ */
+const FRectangle& Camera::get_viewport() const {
+  return viewport;
+}
+
 /**
  * \brief Ensures that a rectangle does not cross separators nor map bounds.
  * \param area The rectangle to check.
@@ -566,6 +617,13 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
  */
 Rectangle Camera::apply_separators_and_map_bounds(const Rectangle& area) const {
   return apply_map_bounds(apply_separators(area));
+}
+
+/**
+ * @brief Sets the surface's view to the default one
+ */
+void Camera::reset_view() {
+  surface->get_view().reset(Rectangle(surface->get_size()));
 }
 
 /**

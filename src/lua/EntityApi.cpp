@@ -237,6 +237,8 @@ void LuaContext::register_entity_module() {
       { "start_manual", camera_api_start_manual },
       { "get_position_to_track", camera_api_get_position_to_track },
       { "get_tracked_entity", camera_api_get_tracked_entity },
+      { "set_viewport", camera_api_set_viewport },
+      { "get_viewport", camera_api_get_viewport }
   };
   if (CurrentQuest::is_format_at_most({ 1, 5 })) {
     camera_methods.insert(camera_methods.end(), {
@@ -3091,6 +3093,45 @@ int LuaContext::camera_api_set_position_on_screen(lua_State* l) {
     int y = LuaTools::check_int(l, 3);
 
     camera.set_position_on_screen({ x, y });
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of camera:get_position_on_screen().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_get_viewport(lua_State * l) {
+  return state_boundary_handle(l, [&] {
+    const Camera& camera = *check_camera(l, 1);
+
+    const auto& viewport = camera.get_viewport();
+
+    lua_pushnumber(l, viewport.left);
+    lua_pushnumber(l, viewport.top);
+    lua_pushnumber(l, viewport.width);
+    lua_pushnumber(l, viewport.height);
+
+    return 4;
+  });
+}
+
+/**
+ * \brief Implementation of camera:get_position_on_screen().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_set_viewport(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    double x = LuaTools::check_number(l, 2);
+    double y = LuaTools::check_number(l, 3);
+    double w = LuaTools::check_number(l, 4);
+    double h = LuaTools::check_number(l, 5);
+
+    camera.set_viewport(FRectangle(x, y, w, h));
 
     return 0;
   });

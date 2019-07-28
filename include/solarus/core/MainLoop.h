@@ -71,6 +71,8 @@ class SOLARUS_API MainLoop {
     void initialize_lua_console();
     void quit_lua_console();
 
+    void make_root_surface();
+
     std::unique_ptr<LuaContext>
         lua_context;              /**< The Lua world where scripts are run. */
     ResourceProvider

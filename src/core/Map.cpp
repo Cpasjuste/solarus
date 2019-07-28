@@ -454,22 +454,6 @@ int Map::get_destination_side() const {
 }
 
 /**
- * \brief Returns the camera surface where the map is displayed.
- * \return The camera surface.
- */
-SurfacePtr Map::get_camera_surface() {
-
-  if (!is_loaded()) {
-    return nullptr;
-  }
-  const CameraPtr& camera = get_camera();
-  if (camera == nullptr) {
-    return nullptr;
-  }
-  return camera->get_surface();
-}
-
-/**
  * \brief Suspends or resumes the movement and animations of the entities.
  *
  * This function is called when the game is being suspended
@@ -544,12 +528,14 @@ void Map::draw() {
   }
 
   for(const CameraPtr& camera : entities->get_cameras()) {
-    camera->apply_view();
+
     const SurfacePtr& camera_surface = camera->get_surface();
     // background
+    camera->reset_view();
     draw_background(camera_surface);
 
     // draw all entities (including the hero)
+    camera->apply_view();
     entities->draw(*camera);
 
     // foreground
@@ -1469,6 +1455,19 @@ void Map::check_collision_with_detectors(Entity& entity, Sprite& sprite) {
         && entity_nearby->is_enabled()) {
       entity_nearby->check_collision(entity, sprite);
     }
+  }
+}
+
+/**
+ * @brief notify the map that window size changed
+ *
+ * Updates the cameras if dynamic video mode is enabled
+ *
+ * @param new_size
+ */
+void Map::notify_window_size_changed(const Size& new_size) {
+  for(const CameraPtr& cam : entities->get_cameras()) {
+    cam->notify_window_size_changed(new_size);
   }
 }
 

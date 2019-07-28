@@ -204,10 +204,7 @@ MainLoop::MainLoop(const Arguments& args):
   // Read the quest general properties.
   load_quest_properties();
 
-  // Create the quest surface.
-  root_surface = Surface::create(
-      Video::get_quest_size()
-  );
+  make_root_surface();
 
   // Run the Lua world.
   // Do this after the creation of the window, but before showing the window,
@@ -566,7 +563,13 @@ void MainLoop::notify_input(const InputEvent& event) {
     set_exiting();
   }
   else if (event.is_window_resizing()) {
+    // Let video module resize it's geometry
     Video::on_window_resized(event.get_window_size());
+    //Notify game if any
+    make_root_surface();
+    if(game) {
+      game->notify_window_size_changed(event.get_window_size());
+    }
   }
   else if (event.is_keyboard_key_pressed()) {
     // A key was pressed.
@@ -677,6 +680,24 @@ void MainLoop::quit_lua_console() {
   }
 
   stdin_thread.join();
+}
+
+/**
+ * @brief create the root surface
+ */
+void MainLoop::make_root_surface() {
+  Size s = Video::get_quest_size();
+  switch (Video::get_geometry_mode()) {
+  case Video::GeometryMode::DYNAMIC_ABSOLUTE:
+  case Video::GeometryMode::DYNAMIC_QUEST_SIZE:
+    s = Video::get_window_size();
+    break;
+  default:
+    break;
+  }
+  if(!root_surface or root_surface->get_size() != s) {
+    root_surface = Surface::create(s);
+  }
 }
 
 }

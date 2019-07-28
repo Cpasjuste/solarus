@@ -1,0 +1,4 @@
+[Solarus] [0] Error: In on_started: main.lua:29: attempt to call field 'get_joypad_count' (a nil value)
+stack traceback:
+	[C]: in function 'get_joypad_count'
+	main.lua:29: in function <main.lua:28>

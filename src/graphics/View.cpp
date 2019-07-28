@@ -8,14 +8,17 @@ View::View(const glm::vec2& size) : View(size/2.f, size) {
 
 }
 
-View::View(const Rectangle& rect) {
+View::View(const Rectangle& rect)
+  : viewport(0.f,0.f,1.f,1.f)
+{
   reset(rect);
 }
 
 View::View(const glm::vec2& center, const glm::vec2& size) :
   center(center),
   size(size),
-  rotation(0)
+  rotation(0),
+  viewport(0.f,0.f,1.f,1.f)
 {
 
 }
@@ -53,7 +56,7 @@ void View::move(const glm::vec2& delta) {
 }
 
 void View::zoom(const glm::vec2& factor) {
-  size *= factor;
+  size /= factor;
   invalidate();
 }
 
@@ -64,14 +67,15 @@ void View::rotate(float rotation) {
 
 const glm::mat4& View::get_transform() const {
   if(transform_dirty) {
-    auto view = glm::rotate(
-                  glm::translate(
-                    glm::mat4(),
-                    glm::vec3(-center, 0.f)
-                  ),
+    auto view =
+            glm::translate(
+              glm::rotate(
+                glm::mat4(),
                   rotation,
                   glm::vec3(0.f,0.f,-1.f)
-                );
+                ),
+              glm::vec3(-center, 0.f)
+            );
     transform = glm::ortho<float>(-size.x*0.5f, size.x*0.5f, -size.y*0.5f, size.y*0.5f)*view;
     transform_dirty = false;
   }
@@ -90,6 +94,14 @@ void View::set_transform(const glm::mat4& transform) {
   this->transform = transform;
   transform_dirty = false;
   inv_transform_dirty = true;
+}
+
+void View::set_viewport(const FRectangle& viewport) {
+  this->viewport = viewport;
+}
+
+const FRectangle& View::get_viewport() {
+  return viewport;
 }
 
 void View::reset(const Rectangle &rect) {

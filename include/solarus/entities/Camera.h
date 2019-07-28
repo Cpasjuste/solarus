@@ -19,6 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/core/Rectangle.h"
+#include "solarus/core/FRectangle.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/EntityPtr.h"
 #include "solarus/graphics/SurfacePtr.h"
@@ -72,15 +73,19 @@ class Camera : public Entity {
     Rectangle apply_separators(const Rectangle& area) const;
     Rectangle apply_separators_and_map_bounds(const Rectangle& area) const;
 
+    void reset_view();
     void apply_view();
 
-private:
+    void notify_window_size_changed(const Size& new_size);
 
+    void set_viewport(const FRectangle& viewport);
+    const FRectangle& get_viewport() const;
+private:
     void create_surface();
 
     SurfacePtr surface;           /**< Surface where this camera draws its entities. */
-    Point position_on_screen;     /**< Where to draw this camera on the screen. */
-
+    Point position_on_screen;     /**< Where to draw this camera on the screen. Used by Legacy LetterBoxing mode. */
+    FRectangle viewport;          /**< Relative geometry of the camera on screen. Used by dynamic video modes. */
 };
 
 }

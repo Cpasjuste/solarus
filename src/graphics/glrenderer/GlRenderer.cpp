@@ -203,9 +203,7 @@ void GlRenderer::set_render_target(GlTexture* target) {
     glBindFramebuffer(GL_FRAMEBUFFER,fbo->id);
     if(fbo->id) { //Render to Texture
       glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,target->get_texture(),0);
-      glViewport(0,0,
-                 target->get_width(),
-                 target->get_height());
+      setup_viewport(target);
 #ifndef SOLARUS_GL_ES
       Debug::check_assertion(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"glFrameBufferTexture2D failed");
 #endif
@@ -217,6 +215,17 @@ void GlRenderer::set_render_target(GlTexture* target) {
     }
     current_target = target;
   }
+}
+
+void GlRenderer::setup_viewport(GlTexture* target) {
+  const auto& viewport = target->get_view().get_viewport();
+
+  GLint x = viewport.left * target->get_width();
+  GLint y = (viewport.top) * target->get_height();
+  GLsizei w = viewport.width * target->get_width();
+  GLsizei h = viewport.height * target->get_height();
+
+  glViewport(x, y, w, h);
 }
 
 void GlRenderer::bind_as_gl_target(SurfaceImpl& surf) {
@@ -668,7 +677,7 @@ void GlRenderer::add_sprite(const DrawInfos& infos) {
   vec2 br = (otobr) * scale;
   vec2 tr = vec2(otobr.x,ototl.y) * scale;
   if(infos.should_use_ex()) {
-    float alpha = infos.rotation;
+    float alpha = static_cast<float>(infos.rotation);
     mat2 rot = mat2(cos(alpha),-sin(alpha),sin(alpha),cos(alpha));
     tl = rot * tl;
     bl = rot * bl;

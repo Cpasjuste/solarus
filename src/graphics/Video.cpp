@@ -44,13 +44,23 @@
 
 namespace Solarus {
 
+/**
+ * @brief Infos about video mode enumeration
+ */
+const std::string EnumInfoTraits<Video::GeometryMode>::pretty_name = "video_geometry_mode";
+
+const EnumInfo<Video::GeometryMode>::names_type EnumInfoTraits<Video::GeometryMode>::names = {
+  {Video::GeometryMode::LETTER_BOXING, "letter_boxing"},
+  {Video::GeometryMode::DYNAMIC_QUEST_SIZE, "dynamic_quest_size"},
+  {Video::GeometryMode::DYNAMIC_ABSOLUTE, "dynamic_absolute"},
+};
+
 namespace {
 
 /**
  * \brief Wraps the current video context and settings.
  */
 struct VideoContext {
-  Video::Geometry geometry;                  // Sizes.
   std::vector<SoftwareVideoMode>
   all_video_modes;                      /**< Display information for each supported software video mode. */
   SDL_Window* main_window = nullptr;        /**< The window. */
@@ -76,6 +86,7 @@ struct VideoContext {
   bool fullscreen_window = false;           /**< True if the window is in fullscreen. */
   bool visible_cursor = true;               /**< True if the mouse cursor is visible. */
   bool pc_render = false;                   /**< Whether rendering performance counter is used. */
+  Video::Geometry geometry;                 // Sizes.
 };
 
 VideoContext context;
@@ -913,11 +924,24 @@ Rectangle get_letter_box(const Size& basesize) {
  * @param size new window size
  */
 void on_window_resized(const Size& size) {
-  Rectangle letter = get_letter_box(size);
-  context.renderer->on_window_size_changed(letter);
-  SurfaceImplPtr surface_impl = context.renderer->create_window_surface(context.main_window,letter.get_width(),letter.get_height());
-  context.screen_surface = Surface::create(surface_impl);
-  context.geometry.logical_size = letter.get_size();
+  switch (context.geometry.mode) {
+  case Video::GeometryMode::LETTER_BOXING:{
+    Rectangle letter = get_letter_box(size);
+    context.renderer->on_window_size_changed(letter);
+    SurfaceImplPtr surface_impl = context.renderer->create_window_surface(context.main_window,letter.get_width(),letter.get_height());
+    context.screen_surface = Surface::create(surface_impl);
+    context.geometry.logical_size = letter.get_size();
+    break;
+  }
+  case Video::GeometryMode::DYNAMIC_QUEST_SIZE:
+  case Video::GeometryMode::DYNAMIC_ABSOLUTE:{
+    context.renderer->on_window_size_changed(Rectangle(size));
+    SurfaceImplPtr surface_impl = context.renderer->create_window_surface(context.main_window, size.width, size.height);
+    context.screen_surface = Surface::create(surface_impl);
+    context.geometry.logical_size = size;
+    break;
+  }
+  }
 }
 
 /**
@@ -952,6 +976,19 @@ Size get_output_size() {
  */
 Size get_output_size_no_bars() {
   return context.geometry.logical_size;
+}
+
+/**
+ * @brief get the current geometry mode
+ *
+ * @return
+ */
+Video::GeometryMode get_geometry_mode() {
+  return context.geometry.mode;
+}
+
+void set_geometry_mode(Video::GeometryMode mode) {
+  context.geometry.mode = mode;
 }
 
 /**

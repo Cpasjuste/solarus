@@ -90,6 +90,7 @@ private:
   size_t buffered_indices() const;
   size_t buffered_vertices() const;
   Fbo* get_fbo(int width, int height, bool screen = false);
+  void setup_viewport(GlTexture* target);
 
   void shader_about_to_change(GlShader* shader);
 

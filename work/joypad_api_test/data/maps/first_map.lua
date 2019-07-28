@@ -10,13 +10,15 @@
 local map = ...
 local game = map:get_game()
 
+local cam1, cam2
+
 -- Event called at initialization time, as soon as this map becomes is loaded.
 function map:on_started()
 
   -- You can initialize the movement and sprites of various
   -- map entities here.
-  local cam1 = map:get_camera()
-  local cam2 = map:create_camera{
+  cam1 = map:get_camera()
+  cam2 = map:create_camera{
     name  = "camera2",
     layer = 0,
     x = 320,
@@ -26,6 +28,10 @@ function map:on_started()
   cam1:set_position_on_screen(5,5)
   cam2:set_size(320/2-10, 240-10)
   cam2:set_position_on_screen(320/2+5,5)
+  
+  cam1:set_viewport(0,0,0.5,1)
+  cam2:set_viewport(0.5,0,0.5,1)
+  
   cam2:start_tracking(richard)
   
   local mov = sol.movement.create"random"

@@ -3,6 +3,7 @@
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
 #include "solarus/core/Rectangle.h"
+#include "solarus/core/FRectangle.h"
 
 namespace Solarus {
 
@@ -40,6 +41,9 @@ public:
   const glm::mat4& get_inverse_transform() const;
 
   void set_transform(const glm::mat4& transform);
+
+  void set_viewport(const FRectangle& viewport);
+  const FRectangle& get_viewport();
 private:
   inline void invalidate() {
     transform_dirty = true;
@@ -48,6 +52,7 @@ private:
   glm::vec2 center;                         /**< Center at which the view looks */
   glm::vec2 size;                           /**< Size the view covers */
   float rotation = 0;                       /**< Rotation of the view around the center */
+  FRectangle viewport;                      /**< Viewport of this view, in fraction of the */
   mutable glm::mat4 transform;              /**< Cached transform from the viewed space to target space */
   mutable glm::mat4 inv_transform;          /**< Cached transform from the target space to viewed space */
   mutable bool transform_dirty = true;      /**< Is the tranform up to date ? */

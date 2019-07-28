@@ -501,7 +501,7 @@ void Game::update_transitions() {
             current_map->get_camera()->get_size()
         );
         current_map->draw();
-        current_map->get_camera_surface()->draw(previous_map_surface);
+        current_map->get_camera()->get_surface()->draw(previous_map_surface); //TODO save all cams
       }
 
       if (next_map == current_map) {
@@ -623,6 +623,19 @@ void Game::draw(const SurfacePtr& dst_surface) {
   }
 
   get_lua_context().game_on_draw(*this, dst_surface);
+}
+
+/**
+ * @brief Called by the main loop when the window size changed
+ *
+ * Propagate window size change events
+ *
+ * @param size the new window size
+ */
+void Game::notify_window_size_changed(const Size& size) {
+  if(current_map) {
+    current_map->notify_window_size_changed(size);
+  }
 }
 
 /**
