@@ -139,30 +139,21 @@ void TilePattern::fill_surface(
     const Rectangle& dst_position,
     const Tileset& tileset,
     const Point& viewport
-) const {
+    ) const {
   Point dst;
 
   int limit_x = dst_position.get_x() + dst_position.get_width();
   int limit_y = dst_position.get_y() + dst_position.get_height();
 
   for (int y = dst_position.get_y();
-      y < limit_y;
-      y += get_height()) {
-
-    if ((y <= dst_surface->get_height() && y + get_height() > 0)
-        || !is_drawn_at_its_position()) {
-      dst.y = y;
-
-      for (int x = dst_position.get_x();
-          x < limit_x;
-          x += get_width()) {
-
-        if ((x <= dst_surface->get_width() && x + get_width() > 0)
-            || !is_drawn_at_its_position()) {
-          dst.x = x;
-          draw(dst_surface, dst, tileset, viewport);
-        }
-      }
+       y < limit_y;
+       y += get_height()) {
+    dst.y = y;
+    for (int x = dst_position.get_x();
+         x < limit_x;
+         x += get_width()) {
+      dst.x = x;
+      draw(dst_surface, dst, tileset, viewport);
     }
   }
 }

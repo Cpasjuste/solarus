@@ -539,6 +539,7 @@ void Map::draw() {
     entities->draw(*camera);
 
     // foreground
+    camera->reset_view();
     draw_foreground(camera_surface);
 
     // Lua
@@ -657,8 +658,8 @@ void Map::draw_visual(Drawable& drawable, int x, int y) {
   }
   const SurfacePtr& camera_surface = camera->get_surface();
   drawable.draw(camera_surface,
-      x - camera->get_top_left_x(),
-      y - camera->get_top_left_y()
+      x,
+      y
   );
 }
 
@@ -692,8 +693,8 @@ void Map::draw_visual(Drawable& drawable, int x, int y,
       clipping_area.get_height()
   );
   const Point dst_position = {
-      x - camera->get_top_left_x(),
-      y - camera->get_top_left_y()
+      x,
+      y
   };
   drawable.draw_region(
       region_in_frame,

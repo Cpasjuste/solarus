@@ -1211,8 +1211,8 @@ void Entities::draw(Camera& camera) {
     // in other words, draw all regions containing animated tiles
     // (and maybe more, but we don't care because non-animated tiles
     // will be drawn later).
-    for (unsigned int i = 0; i < tiles_in_animated_regions[layer].size(); ++i) {
-      Tile& tile = *tiles_in_animated_regions[layer][i];
+    for (const TilePtr& ptile : tiles_in_animated_regions[layer]) {
+      Tile& tile = *ptile;
       if (tile.overlaps(camera) || !tile.is_drawn_at_its_position()) {
         tile.draw(camera);
       }

@@ -24,22 +24,30 @@ function map:on_started()
     x = 320,
     y = 0
   }
+  
   cam1:set_size(320/2-10, 240-10)
   cam1:set_position_on_screen(5,5)
   cam2:set_size(320/2-10, 240-10)
   cam2:set_position_on_screen(320/2+5,5)
   
-  cam1:set_viewport(0,0,0.5,1)
-  cam2:set_viewport(0.5,0,0.5,1)
+  cam1:set_viewport(0,0,0.25,1)
+  cam2:set_viewport(0.25,0,0.75,1)
   
   cam2:start_tracking(richard)
+  
+
   
   local mov = sol.movement.create"random"
   mov:start(richard)
 end
 
+function map:on_draw(dst)
+  local x,y = cam1:get_position()
+  local w,h = cam1:get_size()
+  dst:fill_color({255,0,0,128},x,y,w,h)
+end
+
 -- Event called after the opening transition effect of the map,
 -- that is, when the player takes control of the hero.
 function map:on_opening_transition_finished()
-
 end

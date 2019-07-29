@@ -558,8 +558,8 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
 void Camera::notify_window_size_changed(const Size& new_size) {
   int x = new_size.width * viewport.left;
   int y = new_size.height * viewport.top;
-  int w = new_size.width * viewport.width;
-  int h = new_size.height * viewport.height;
+  int w = std::ceil(new_size.width * viewport.width);
+  int h = std::ceil(new_size.height * viewport.height);
   switch (Video::get_geometry_mode()) {
   case Video::GeometryMode::DYNAMIC_QUEST_SIZE:{
     Size quest_size = Video::get_quest_size();
@@ -572,7 +572,7 @@ void Camera::notify_window_size_changed(const Size& new_size) {
       cw = quest_size.height*wratio;
     }
     set_position_on_screen({x,y});
-    set_size(Size(cw,ch));
+    set_size(Size(cw, ch));
     surface->set_scale(Scale(w/cw, h/ch));
     break;
   }
@@ -593,6 +593,7 @@ void Camera::notify_window_size_changed(const Size& new_size) {
  */
 void Camera::set_viewport(const FRectangle& viewport) {
   this->viewport = viewport;
+  notify_window_size_changed(Video::get_window_size());
 }
 
 /**
