@@ -22,6 +22,7 @@
 #include "solarus/core/FRectangle.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/EntityPtr.h"
+#include "solarus/core/Scale.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include <memory>
 
@@ -85,11 +86,16 @@ class Camera : public Entity {
 
     void notify_window_size_changed(const Size& new_size);
 
+    Rectangle get_viewport_rectangle() const;
+
     void set_viewport(const FRectangle& viewport);
     const FRectangle& get_viewport() const;
 
-    void set_zoom(float zoom);
-    float get_zoom() const;
+    void set_zoom(const Scale& zoom);
+    const Scale& get_zoom() const;
+
+    void set_rotation(float rotation);
+    float get_rotation() const;
 private:
     void create_surface(const Size& size);
     void update_view(const Size& viewport_size);
@@ -97,7 +103,9 @@ private:
     SurfacePtr surface;           /**< Surface where this camera draws its entities. */
     Point position_on_screen;     /**< Where to draw this camera on the screen. Used by Legacy LetterBoxing mode. */
     FRectangle viewport;          /**< Relative geometry of the camera on screen. Used by dynamic video modes. */
-    float zoom;                   /**< Level of zoom of this camera compared to 1:1 cam. */
+    Scale zoom;                   /**< Level of zoom of this camera compared to 1:1 cam. */
+    Scale zoom_corr;              /**< Correction factor for the zoom, to compensate integer rounding of the camera size */
+    float rotation;               /**< Rotation of this camera */
 };
 
 }

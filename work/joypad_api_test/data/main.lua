@@ -4,7 +4,7 @@
 
 local game_manager = require'scripts/game_manager'
 
-sol.video.set_geometry_mode('dynamic_quest_size')
+sol.video.set_geometry_mode('dynamic_absolute')
 
 local function joypad_listen(jpad)
   local i = jpad:get_name()

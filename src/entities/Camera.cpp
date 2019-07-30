@@ -560,11 +560,12 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
  * @brief Camera::notify_window_size_changed
  * @param new_size
  */
-void Camera::notify_window_size_changed(const Size& new_size) {
-  int x = new_size.width * viewport.left;
-  int y = new_size.height * viewport.top;
-  int w = std::ceil(new_size.width * viewport.width);
-  int h = std::ceil(new_size.height * viewport.height);
+void Camera::notify_window_size_changed(const Size& /*new_size*/) {
+  Rectangle vrect = get_viewport_rectangle();
+  int x = vrect.get_left();
+  int y = vrect.get_top();
+  int w = vrect.get_width();
+  int h = vrect.get_height();
   switch (Video::get_geometry_mode()) {
   case Video::GeometryMode::DYNAMIC_QUEST_SIZE:
   case Video::GeometryMode::DYNAMIC_ABSOLUTE:
@@ -589,22 +590,59 @@ void Camera::update_view(const Size& viewport_size) {
     Size quest_size = Video::get_quest_size();
     float qratio = quest_size.width / static_cast<float>(quest_size.height);
     float wratio = w / static_cast<float>(h);
+
+    //Compute wanted size
     float cw = quest_size.width;
     float ch = quest_size.width/wratio;
     if(qratio > wratio) {
       ch = quest_size.height;
       cw = quest_size.height*wratio;
     }
-    set_size(Size(cw, ch));
+
+    //Apply zoom
+    cw /= zoom.x;
+    ch /= zoom.y;
+
+    int icw = cw;
+    int ich = ch;
+
+    zoom_corr.x = icw/cw;
+    zoom_corr.y = ich/ch;
+
+    set_size(Size(icw, ich));
     break;
   }
   case Video::GeometryMode::DYNAMIC_ABSOLUTE: {
-    set_size({w, h});
+    // Apply zoom
+    float cw = w / zoom.x;
+    float ch = h / zoom.y;
+
+    int icw = cw;
+    int ich = ch;
+
+    zoom_corr.x = icw/cw;
+    zoom_corr.y = ich/ch;
+
+    set_size({icw, ich});
     break;
   }
   default:
     break;
   }
+}
+
+/**
+ * @brief Camera::get_viewport_rectangle
+ * @return
+ */
+Rectangle Camera::get_viewport_rectangle() const {
+  Size wsize = Video::get_window_size();
+  return Rectangle(
+    wsize.width * viewport.left,
+    wsize.height * viewport.top,
+    std::ceil(wsize.width * viewport.width),
+    std::ceil(wsize.height * viewport.height)
+  );
 }
 
 /**
@@ -622,6 +660,40 @@ void Camera::set_viewport(const FRectangle& viewport) {
  */
 const FRectangle& Camera::get_viewport() const {
   return viewport;
+}
+
+/**
+ * @brief Camera::set_zoom
+ * @param zoom
+ */
+void Camera::set_zoom(const Scale& zoom) {
+  this->zoom = zoom;
+  update_view(get_viewport_rectangle().get_size());
+}
+
+/**
+ * @brief Camera::get_zoom
+ * @return
+ */
+const Scale& Camera::get_zoom() const {
+  return zoom;
+}
+
+/**
+ * @brief Camera::set_rotation
+ * @param rotation
+ */
+void Camera::set_rotation(float rotation) {
+  this->rotation = rotation;
+  update_view(get_viewport_rectangle().get_size());
+}
+
+/**
+ * @brief Camera::get_rotation
+ * @return
+ */
+float Camera::get_rotation() const {
+  return rotation;
 }
 
 /**
@@ -653,6 +725,7 @@ void Camera::reset_view() {
 void Camera::apply_view() {
   //TODO add rotation and zoom
   surface->get_view().reset(get_bounding_box());
+  surface->get_view().zoom(zoom_corr);
 }
 
 }

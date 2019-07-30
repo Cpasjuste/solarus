@@ -35,16 +35,19 @@ function map:on_started()
   
   cam2:start_tracking(richard)
   
-
+  cam1:set_zoom(4,4)
+  cam2:set_zoom(4,4)
   
   local mov = sol.movement.create"random"
   mov:start(richard)
 end
 
-function map:on_draw(dst)
-  local x,y = cam1:get_position()
-  local w,h = cam1:get_size()
-  dst:fill_color({255,0,0,128},x,y,w,h)
+
+function map:on_update_off()
+  local fac1 = 4 + 0.1*math.sin(sol.main.get_elapsed_time()*0.001)
+  local fac2 = 4 + 0.1*math.cos(sol.main.get_elapsed_time()*0.001)
+  cam1:set_zoom(fac1, fac2)
+  cam2:set_zoom(fac2, fac1)
 end
 
 -- Event called after the opening transition effect of the map,

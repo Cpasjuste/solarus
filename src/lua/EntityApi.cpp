@@ -238,7 +238,11 @@ void LuaContext::register_entity_module() {
       { "get_position_to_track", camera_api_get_position_to_track },
       { "get_tracked_entity", camera_api_get_tracked_entity },
       { "set_viewport", camera_api_set_viewport },
-      { "get_viewport", camera_api_get_viewport }
+      { "get_viewport", camera_api_get_viewport },
+      { "set_zoom", camera_api_set_zoom},
+      { "get_zoom", camera_api_get_zoom},
+      { "set_rotation", camera_api_set_rotation},
+      { "get_rotation", camera_api_get_rotation}
   };
   if (CurrentQuest::is_format_at_most({ 1, 5 })) {
     camera_methods.insert(camera_methods.end(), {
@@ -3134,6 +3138,71 @@ int LuaContext::camera_api_set_viewport(lua_State* l) {
     camera.set_viewport(FRectangle(x, y, w, h));
 
     return 0;
+  });
+}
+
+/**
+ * \brief Implementation of camera:set_zoom().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_set_zoom(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    double zx = LuaTools::check_number(l, 2);
+    double zy = LuaTools::check_number(l, 3);
+
+    camera.set_zoom(Scale(zx, zy));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of camera:get_zoom().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_get_zoom(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    Scale s = camera.get_zoom();
+
+    lua_pushnumber(l, static_cast<double>(s.x));
+    lua_pushnumber(l, static_cast<double>(s.y));
+
+    return 2;
+  });
+}
+
+/**
+ * \brief Implementation of camera:set_rotation().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_set_rotation(lua_State *l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    double r = LuaTools::check_number(l, 2);
+
+    camera.set_rotation(static_cast<float>(r));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of camera:get_rotation().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_get_rotation(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    double rot = static_cast<double>(camera.get_rotation());
+
+    lua_pushnumber(l, rot);
+    return 1;
   });
 }
 
