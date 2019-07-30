@@ -44,6 +44,11 @@ class Camera : public Entity {
 
   public:
 
+    enum class SurfaceMode {
+      ABSOLUTE,
+      MAP
+    };
+
     static constexpr EntityType ThisType = EntityType::CAMERA;
 
     explicit Camera(Map& map, const std::string& name = "");
@@ -76,16 +81,23 @@ class Camera : public Entity {
     void reset_view();
     void apply_view();
 
+    void set_surface_mode();
+
     void notify_window_size_changed(const Size& new_size);
 
     void set_viewport(const FRectangle& viewport);
     const FRectangle& get_viewport() const;
+
+    void set_zoom(float zoom);
+    float get_zoom() const;
 private:
-    void create_surface();
+    void create_surface(const Size& size);
+    void update_view(const Size& viewport_size);
 
     SurfacePtr surface;           /**< Surface where this camera draws its entities. */
     Point position_on_screen;     /**< Where to draw this camera on the screen. Used by Legacy LetterBoxing mode. */
     FRectangle viewport;          /**< Relative geometry of the camera on screen. Used by dynamic video modes. */
+    float zoom;                   /**< Level of zoom of this camera compared to 1:1 cam. */
 };
 
 }

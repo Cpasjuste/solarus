@@ -108,18 +108,4 @@ SDLSurfaceImpl& SDLSurfaceImpl::targetable()  {
   return *this;
 }
 
-/**
- * \copydoc SurfaceImpl::get_width
- */
-int SDLSurfaceImpl::get_width() const {
-    return surface->w;
-}
-
-/**
- * \copydoc SurfaceImpl::get_height
- */
-int SDLSurfaceImpl::get_height() const {
-    return surface->h;
-}
-
 }

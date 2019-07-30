@@ -39,17 +39,11 @@ public:
    */
   virtual void upload_surface() = 0;
 
-  /**
-     * @brief get texture width
-     * @return width
-     */
-  virtual int get_width() const = 0;
+  int get_width() const;
 
-  /**
-     * @brief get texture height
-     * @return height
-     */
-  virtual int get_height() const = 0;
+  int get_height() const;
+
+  const Size& get_size() const;
 
 
   /**
@@ -113,6 +107,7 @@ public:
   const View& get_view() const;
   View& get_view();
 private:
+  Size size;
   bool premultiplied = false;
   View view;
 };

@@ -23,19 +23,6 @@ GlTexture::GlTexture(int width, int height, bool screen_tex)
   glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
 
   set_texture_params();
-  SDL_PixelFormat* format = Video::get_pixel_format();
-  SDL_Surface* surf_ptr = SDL_CreateRGBSurface(
-        0,
-        width,
-        height,
-        32,
-        format->Rmask,
-        format->Gmask,
-        format->Bmask,
-        format->Amask);
-  Debug::check_assertion(surf_ptr != nullptr,
-                         std::string("Failed to create backup surface ") + SDL_GetError());
-  surface.reset(surf_ptr);
   GlRenderer::get().rebind_texture();
 }
 
@@ -83,6 +70,9 @@ GLuint GlTexture::get_texture() const {
  * \copydoc SurfaceImpl::get_surface
  */
 SDL_Surface* GlTexture::get_surface() const {
+  if(!surface) {
+    create_surface();
+  }
   if (target and surface_dirty) {
     GlRenderer::get().read_pixels(const_cast<GlTexture*>(this),surface->pixels);
     surface_dirty = false;
@@ -90,25 +80,30 @@ SDL_Surface* GlTexture::get_surface() const {
   return surface.get();
 }
 
+/**
+ * @brief create_surface
+ */
+void GlTexture::create_surface() const {
+  SDL_PixelFormat* format = Video::get_pixel_format();
+  SDL_Surface* surf_ptr = SDL_CreateRGBSurface(
+        0,
+        get_size().width,
+        get_size().height,
+        32,
+        format->Rmask,
+        format->Gmask,
+        format->Bmask,
+        format->Amask);
+  Debug::check_assertion(surf_ptr != nullptr,
+                         std::string("Failed to create backup surface ") + SDL_GetError());
+  surface.reset(surf_ptr);
+}
+
 GlTexture& GlTexture::targetable()  {
   surface_dirty = true; //Just tag the surface as outdated
   if(!fbo)
     fbo = GlRenderer::get().get_fbo(get_width(),get_height());
   return *this;
-}
-
-/**
- * \copydoc SurfaceImpl::get_width
- */
-int GlTexture::get_width() const {
-  return surface->w;
-}
-
-/**
- * \copydoc SurfaceImpl::get_height
- */
-int GlTexture::get_height() const {
-  return surface->h;
 }
 
 void GlTexture::release() const {

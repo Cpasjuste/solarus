@@ -5,7 +5,7 @@
 namespace Solarus {
 
 SurfaceImpl::SurfaceImpl(const Size &size) :
-  view(size)
+  size(size), view(size)
 {
 
 }
@@ -89,6 +89,30 @@ void SurfaceImpl::apply_pixel_filter(const SoftwarePixelFilter& pixel_filter, Su
   SDL_UnlockSurface(dst_internal_surface);
   SDL_UnlockSurface(src_internal_surface);
   dst_surface.upload_surface();
+}
+
+/**
+ * @brief get_width
+ * @return
+ */
+int SurfaceImpl::get_width() const {
+  return size.width;
+}
+
+/**
+ * @brief get_height
+ * @return
+ */
+int SurfaceImpl::get_height() const {
+  return size.height;
+}
+
+/**
+ * @brief get_size
+ * @return
+ */
+const Size& SurfaceImpl::get_size() const {
+  return size;
 }
 
 bool SurfaceImpl::is_pixel_transparent(int index) const {

@@ -528,7 +528,6 @@ void Map::draw() {
   }
 
   for(const CameraPtr& camera : entities->get_cameras()) {
-
     const SurfacePtr& camera_surface = camera->get_surface();
     // background
     camera->reset_view();

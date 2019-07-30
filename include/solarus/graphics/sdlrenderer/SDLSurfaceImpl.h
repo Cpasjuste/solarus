@@ -26,9 +26,6 @@ public:
 
   SDLSurfaceImpl& targetable();
 
-  int get_width() const override;
-  int get_height() const override;
-
   /**
    * @brief upload potentially modified surface
    *

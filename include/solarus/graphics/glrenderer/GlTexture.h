@@ -25,9 +25,6 @@ public:
 
   GlTexture& targetable();
 
-  int get_width() const override;
-  int get_height() const override;
-
   /**
    * @brief upload potentially modified surface
    *
@@ -39,6 +36,7 @@ private:
   bool target = false;
   void release() const;
   void set_texture_params();
+  void create_surface() const;
   glm::mat3 uv_transform;
   mutable bool surface_dirty = true;
   GLuint tex_id = 0;

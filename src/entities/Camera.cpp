@@ -232,7 +232,7 @@ Camera::Camera(Map& map, const std::string &name):
   viewport(0.f, 0.f, 1.f, 1.f) {
 
 
-  create_surface();
+  create_surface(get_size());
   set_map(map);
   notify_window_size_changed(Video::get_window_size());
 }
@@ -259,9 +259,9 @@ bool Camera::can_be_drawn() const {
  *
  * This function should be called when the camera size is changed.
  */
-void Camera::create_surface() {
+void Camera::create_surface(const Size& size) {
 
-  surface = Surface::create(get_size());
+  surface = Surface::create(size);
 }
 
 /**
@@ -278,8 +278,9 @@ const SurfacePtr& Camera::get_surface() const {
 void Camera::notify_size_changed() {
 
   // The size thas changed: rebuild the surface.
-  if (surface == nullptr || get_size() != surface->get_size()) {
-    create_surface();
+  if(Video::get_geometry_mode() == Video::GeometryMode::LETTER_BOXING &&
+     (surface == nullptr || get_size() != surface->get_size())) {
+    create_surface(get_size());
   }
 }
 
@@ -555,11 +556,34 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
   return Rectangle(x, y, width, height);
 }
 
+/**
+ * @brief Camera::notify_window_size_changed
+ * @param new_size
+ */
 void Camera::notify_window_size_changed(const Size& new_size) {
   int x = new_size.width * viewport.left;
   int y = new_size.height * viewport.top;
   int w = std::ceil(new_size.width * viewport.width);
   int h = std::ceil(new_size.height * viewport.height);
+  switch (Video::get_geometry_mode()) {
+  case Video::GeometryMode::DYNAMIC_QUEST_SIZE:
+  case Video::GeometryMode::DYNAMIC_ABSOLUTE:
+    set_position_on_screen({x, y});
+    create_surface({w, h});
+    surface->set_scale(Scale(1,1)); //Draw the surface 1:1 on screen
+    update_view({w,h});
+    break;
+  default:
+    break;
+  }
+}
+
+/**
+ * @brief Camera::update_view
+ */
+void Camera::update_view(const Size& viewport_size) {
+  int w = viewport_size.width;
+  int h = viewport_size.height;
   switch (Video::get_geometry_mode()) {
   case Video::GeometryMode::DYNAMIC_QUEST_SIZE:{
     Size quest_size = Video::get_quest_size();
@@ -571,15 +595,11 @@ void Camera::notify_window_size_changed(const Size& new_size) {
       ch = quest_size.height;
       cw = quest_size.height*wratio;
     }
-    set_position_on_screen({x,y});
     set_size(Size(cw, ch));
-    surface->set_scale(Scale(w/cw, h/ch));
     break;
   }
   case Video::GeometryMode::DYNAMIC_ABSOLUTE: {
-    set_position_on_screen({x, y});
     set_size({w, h});
-    surface->set_scale(Scale(1,1)); //Draw the surface 1:1 on screen
     break;
   }
   default:
