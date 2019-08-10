@@ -1,7 +1,9 @@
-cmake_minimum_required(VERSION 2.8.11)
-project(solarus-engine)
+cmake_minimum_required(VERSION 3.1)
 
-include(cmake/AddSolarusVersion.cmake)
+# Android: version information must be updated manually in AndroidConfig.h
+project(solarus-engine VERSION 1.6.1)
+
+include(cmake/AddGitRevision.cmake)
 include(cmake/AddDefines.cmake)
 include(cmake/AddCompilationFlags.cmake)
 include(cmake/AddDependencies.cmake)
@@ -10,5 +12,6 @@ include(cmake/AddConfigurationHeader.cmake)
 include(cmake/AddSolarusLibrary.cmake)
 include(cmake/AddSolarusExecutable.cmake)
 include(cmake/AddInstallTargets.cmake)
+include(cmake/AddUninstallTargets.cmake)
 include(cmake/AddUnitTests.cmake)
 include(cmake/AddGui.cmake)

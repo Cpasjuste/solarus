@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -142,6 +142,14 @@ class Entity::State : public ExportableToLua {
     virtual bool is_jumper_obstacle(Jumper& jumper, const Rectangle& candidate_position);
     virtual bool is_destructible_obstacle(Destructible& destructible);
     virtual bool is_separator_obstacle(Separator& separator);
+    virtual bool get_can_start_sword() const;
+    virtual bool get_can_pick_treasure(EquipmentItem& item) const;
+    virtual bool get_can_use_shield() const;
+    virtual bool get_can_start_item(EquipmentItem& item) const;
+    virtual bool get_can_take_stairs() const;
+    virtual bool can_sword_hit_crystal() const;
+    virtual bool get_can_take_jumper() const;
+    virtual void notify_jumper_activated(Jumper& jumper);
     virtual bool can_avoid_sensor() const;
     virtual bool can_avoid_explosion() const;
     virtual bool can_avoid_switch() const;
@@ -165,14 +173,6 @@ class Entity::State : public ExportableToLua {
     virtual bool is_moving_grabbed_entity() const;
     virtual void notify_grabbed_entity_collision();
     virtual bool is_cutting_with_sword(Entity& entity);
-    virtual bool get_can_start_sword() const;
-    virtual bool get_can_pick_treasure(EquipmentItem& item) const;
-    virtual bool get_can_use_shield() const;
-    virtual bool get_can_start_item(EquipmentItem& item) const;
-    virtual bool get_can_take_stairs() const;
-    virtual bool can_sword_hit_crystal() const;
-    virtual bool get_can_take_jumper() const;
-    virtual void notify_jumper_activated(Jumper& jumper);
     bool is_carrying_item() const;
     virtual std::shared_ptr<CarriedObject> get_carried_object() const;
     virtual CarriedObject::Behavior get_previous_carried_object_behavior() const;

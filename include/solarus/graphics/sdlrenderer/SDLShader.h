@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,11 +30,7 @@
 #include <string>
 #include <unordered_map>
 
-#ifdef SOLARUS_HAVE_OPENGL
-#  include <SDL_opengl.h>
-#else
-#  include <SDL_opengles2.h>
-#endif
+#include "../SolarusGl.h"
 
 namespace Solarus {
 
@@ -43,6 +39,7 @@ namespace Solarus {
  */
 class SOLARUS_API SDLShader : public Shader {
   public:
+    SDLShader();
     explicit SDLShader(const std::string& shader_id);
     SDLShader(const std::string& vertex_source,
            const std::string& fragment_source,
@@ -83,6 +80,8 @@ class SOLARUS_API SDLShader : public Shader {
 
   private:
     void compile();
+    static std::string sanitize_shader_source(const std::string source);
+
 
     static VertexArray screen_quad; /**< The quad used to draw surfaces with shaders */
 

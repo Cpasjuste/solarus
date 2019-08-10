@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +26,7 @@
 #include <string>
 
 struct SDL_PixelFormat;
-struct SDL_Renderer;
 struct SDL_Window;
-struct SDL_Renderer;
-struct SDL_Texture;
 struct SDL_PixelFormat;
 
 namespace Solarus {
@@ -82,6 +79,8 @@ namespace Video {
     std::string get_window_title();
     void set_window_title(const std::string& window_title);
 
+    void set_window_icon(SDL_Surface* icon);
+
     const ShaderPtr& get_shader();
     void set_shader(const ShaderPtr& shader);
 
@@ -114,8 +113,7 @@ namespace Video {
     Size get_output_size();
     Size get_output_size_no_bars();
 
-    Rectangle get_viewport();
-    Point window_to_quest_coordinates(const Point& window_xy);
+    Point output_to_quest_coordinates(const Point& output_xy);
     Point renderer_to_quest_coordinates(const Point& renderer_xy);
 
     void render(const SurfacePtr& quest_surface);

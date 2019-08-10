@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -337,6 +337,10 @@ Rectangle Stairs::get_clipping_rectangle(Way /* way */) const {
 void Stairs::notify_enabled(bool enabled) {
 
   Entity::notify_enabled(enabled);
+
+  if (!is_on_map()) {
+    return;
+  }
 
   update_dynamic_tiles();
 }

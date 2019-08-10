@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -281,14 +281,6 @@ bool Hero::JumpingState::is_sensor_obstacle(Sensor& /* sensor */) {
 bool Hero::JumpingState::is_separator_obstacle(
     Separator& /* separator */) {
   return true;
-}
-
-/**
- * \brief Returns whether the hero ignores the effect of sensors in this state.
- * \return true if the hero ignores the effect of sensors in this state
- */
-bool Hero::JumpingState::can_avoid_sensor() const {
-  return false;
 }
 
 /**

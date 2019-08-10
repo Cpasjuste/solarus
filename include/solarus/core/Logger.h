@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ namespace Solarus {
  */
 namespace Logger {
 
-SOLARUS_API void print(const std::string& message, std::ostream& out = std::cout);
+SOLARUS_API void print(const std::string& message, std::ostream& out = std::cerr);
 
 SOLARUS_API void debug(const std::string& message);
 SOLARUS_API void info(const std::string& message);

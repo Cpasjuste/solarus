@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,8 +44,8 @@ class StraightMovement: public Movement {
     double get_x_speed() const;
     double get_y_speed() const;
     double get_speed() const;
-    void set_x_speed(double x_speed);
-    void set_y_speed(double y_speed);
+    void set_x_speed(double x_speed, double keep_factor = 0);
+    void set_y_speed(double y_speed, double keep_factor = 0);
     void set_speed(double speed);
     double get_angle() const;
     void set_angle(double angle);

@@ -27,8 +27,8 @@ class SDLRenderer : public Renderer {
     virtual void draw(Surface& dst_surface, const Surface& src_surface, const DrawInfos& params) const override;
   };
 public:
-  SDLRenderer(SDL_Renderer* window);
-  static RendererPtr create(SDL_Window* window);
+  SDLRenderer(SDL_Renderer* window, bool shaders);
+  static RendererPtr create(SDL_Window* window, bool force_software);
   SurfaceImplPtr create_texture(int width, int height) override;
   SurfaceImplPtr create_texture(SDL_Surface_UniquePtr &&surface) override;
   SurfaceImplPtr create_window_surface(SDL_Window* w, int width, int height) override;
@@ -50,6 +50,9 @@ public:
   const DrawProxy& default_terminal() const override {
     return surface_draw;
   }
+  bool needs_window_workaround() const override {
+    return true;
+  }
   ~SDLRenderer() override;
 private:
   static SDLRenderer* instance;
@@ -61,6 +64,7 @@ private:
   SDL_Texture*  render_target = nullptr;
   bool valid_target = false;
   SDL_Renderer* renderer;
+  bool shaders = false;
   SurfaceDraw surface_draw;
 };
 }

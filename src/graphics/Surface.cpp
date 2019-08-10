@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -188,6 +188,12 @@ SDL_Surface_UniquePtr Surface::create_sdl_surface_from_file(
   Debug::check_assertion(surface != nullptr,
                          std::string("Cannot load image '") + file_name + "'");
 
+  // Check if the surface is too large and emit a warning
+  if (surface->w > 2048 || surface->h > 2048) {
+    Debug::warning(std::string("Image '") + file_name +
+                               "' is larger than 2048 x 2048 and may not render correctly on some systems");
+  }
+
   SDL_PixelFormat* pixel_format = Video::get_pixel_format();
   if (surface->format->format == pixel_format->format) {
     return surface;
@@ -204,6 +210,21 @@ SDL_Surface_UniquePtr Surface::create_sdl_surface_from_file(
   Debug::check_assertion(converted_surface != nullptr,
                          std::string("Failed to convert software surface: ") + SDL_GetError());
   return converted_surface;
+}
+
+/**
+ * @brief create_sdl_surface_from_memory
+ * @param data
+ * @param data_len
+ * @return
+ */
+SDL_Surface_UniquePtr Surface::create_sdl_surface_from_memory(
+    void* data,
+    size_t data_len
+    ) {
+  SDL_RWops* rw = SDL_RWFromMem(data, data_len);
+  SDL_Surface* surface = IMG_Load_RW(rw, true);
+  return SDL_Surface_UniquePtr{surface};
 }
 
 /**

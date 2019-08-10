@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "solarus/core/Arguments.h"
 #include "solarus/core/Debug.h"
 #include "solarus/core/InputEvent.h"
 #include "solarus/core/Logger.h"
@@ -21,6 +22,7 @@
 #include "solarus/graphics/Video.h"
 #include <SDL.h>
 #include <cstdlib>  // std::abs
+#include <sstream>
 
 namespace Solarus {
 
@@ -36,8 +38,9 @@ bool InputEvent::joypad_enabled = false;
 SDL_Joystick* InputEvent::joystick = nullptr;
 bool InputEvent::repeat_keyboard = false;
 std::set<SDL_Keycode> InputEvent::keys_pressed;
-// Default the axis states to centered
-std::vector<int> InputEvent::joypad_axis_state;
+int InputEvent::joypad_deadzone = 10000;
+std::set<Uint8> InputEvent::jbuttons_pressed;
+std::set<Uint8> InputEvent::quit_combo;
 
 // Keyboard key names.
 const std::string EnumInfoTraits<InputEvent::KeyboardKey>::pretty_name = "keyboard key";
@@ -186,7 +189,26 @@ const EnumInfo<InputEvent::MouseButton>::names_type EnumInfoTraits<InputEvent::M
 /**
  * \brief Initializes the input event manager.
  */
-void InputEvent::initialize() {
+void InputEvent::initialize(const Arguments& args) {
+
+  // Check the -quit-combo option.
+  const std::string& quit_combo_arg = args.get_argument_value("-quit-combo");
+  if (!quit_combo_arg.empty()) {
+    quit_combo.clear();
+    std::stringstream ss(quit_combo_arg);
+    std::string jbutton;
+    while (std::getline(ss, jbutton, '+')) {
+      quit_combo.insert(std::stoi(jbutton));
+    }
+    Logger::info(std::string("Joypad quit combo enabled: ") + quit_combo_arg);
+  }
+
+  // Check the -joypad-deadzone option.
+  const std::string joypad_deadzone_arg = args.get_argument_value("-joypad-deadzone");
+  if (!joypad_deadzone_arg.empty()) {
+    joypad_deadzone = std::stoi(joypad_deadzone_arg);
+    Logger::info(std::string("Joypad axis deadzone: ") + joypad_deadzone_arg);
+  }
 
   initialized = true;
 
@@ -211,7 +233,7 @@ void InputEvent::quit() {
   joystick = nullptr;
   repeat_keyboard = false;
   keys_pressed.clear();
-  joypad_axis_state.clear();
+  jbuttons_pressed.clear();
   initialized = false;
 }
 
@@ -246,45 +268,12 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
   SDL_Event internal_event;
   if (SDL_PollEvent(&internal_event)) {
 
-    // If this is a joypad axis event
-    if (internal_event.type == SDL_JOYAXISMOTION) {
-      // Determine the current state of the axis
-      int axis = internal_event.jaxis.axis;
-      int value = internal_event.jaxis.value;
-      int joystick_deadzone = 8000;
-      if (axis == 0) {  // X axis
-        int x_dir = 0;
-        if (value < -joystick_deadzone) {
-          // Left of dead zone
-          x_dir = -1;
-        } else if(value > joystick_deadzone) {
-          // Right of dead zone
-          x_dir =  1;
-        } else {
-          x_dir = 0;
-        }
-        joypad_axis_state[axis] = x_dir;
-      } else if (axis == 1) {  // Y axis
-        int y_dir = 0;
-        if (value < -joystick_deadzone) {
-          // Below dead zone
-          y_dir = -1;
-        } else if(value > joystick_deadzone) {
-          // Above dead zone
-          y_dir =  1;
-        } else {
-          y_dir = 0;
-        }
-        joypad_axis_state[axis] = y_dir;
-      }
-    }
-
     // Check if keyboard events are correct.
     // For some reason, when running Solarus from a Qt application
     // (which is not recommended)
     // multiple SDL_KEYUP events are generated when a key remains pressed
     // (Qt/SDL conflict). This fixes most problems but not all of them.
-    else if (internal_event.type == SDL_KEYDOWN) {
+    if (internal_event.type == SDL_KEYDOWN) {
       SDL_Keycode key = internal_event.key.keysym.sym;
       if (!keys_pressed.insert(key).second) {
         // Already known as pressed: mark repeated.
@@ -297,6 +286,17 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
         // Already known as not pressed: mark repeated.
         internal_event.key.repeat = 1;
       }
+    }
+
+    // Track joypad button events for checking button combinations.
+    else if (internal_event.type == SDL_JOYBUTTONDOWN) {
+      jbuttons_pressed.insert(internal_event.jbutton.button);
+      if (jbuttons_pressed == quit_combo) {
+        simulate_window_closing();
+      }
+    }
+    else if (internal_event.type == SDL_JOYBUTTONUP) {
+      jbuttons_pressed.erase(internal_event.jbutton.button);
     }
 
     // Capture mouse movements outside the window
@@ -459,7 +459,7 @@ int InputEvent::get_joypad_axis_state(int axis) {
   int state = SDL_JoystickGetAxis(joystick, axis);
 
   int result;
-  if (std::abs(state) < 10000) {
+  if (std::abs(state) < joypad_deadzone) {
     result = 0;
   }
   else {
@@ -533,7 +533,7 @@ Point InputEvent::get_global_mouse_position() {
 
   SDL_GetMouseState(&x, &y);
 
-  return Video::window_to_quest_coordinates(Point(x, y));
+  return Video::output_to_quest_coordinates(Point(x, y));
 }
 
 /**
@@ -551,11 +551,11 @@ bool InputEvent::get_global_finger_position(int finger_id, Point& finger_xy) {
     finger = SDL_GetTouchFinger(SDL_GetTouchDevice(i), finger_id);
 
     if (finger != NULL) {
-      const Size window_size = Video::get_window_size();
-      const int x = finger->x * static_cast<float>(window_size.width);
-      const int y = finger->y * static_cast<float>(window_size.height);
+      const Size output_size = Video::get_output_size();
+      const int x = finger->x * static_cast<float>(output_size.width);
+      const int y = finger->y * static_cast<float>(output_size.height);
 
-      finger_xy = Video::window_to_quest_coordinates(Point(x, y));
+      finger_xy = Video::output_to_quest_coordinates(Point(x, y));
       return true;
     }
   }
@@ -892,6 +892,17 @@ void InputEvent::simulate_key_released(KeyboardKey key) {
   SDL_PushEvent(&event);
 }
 
+/**
+ * \brief Simulates a window closing event.
+ */
+void InputEvent::simulate_window_closing() {
+
+  SDL_Event event;
+  event.type = SDL_QUIT;
+
+  SDL_PushEvent(&event);
+}
+
 // joypad
 
 /**
@@ -922,13 +933,12 @@ void InputEvent::set_joypad_enabled(bool joypad_enabled) {
     if (joystick != nullptr) {
       SDL_JoystickClose(joystick);
       joystick = nullptr;
-      joypad_axis_state.clear();
+      jbuttons_pressed.clear();
     }
 
     if (joypad_enabled && SDL_NumJoysticks() > 0) {
         SDL_InitSubSystem(SDL_INIT_JOYSTICK);
         joystick = SDL_JoystickOpen(0);
-        joypad_axis_state.assign(SDL_JoystickNumAxes(joystick), 0);
     }
     else {
       SDL_JoystickEventState(SDL_IGNORE);
@@ -1021,7 +1031,7 @@ int InputEvent::get_joypad_axis_state() const {
 
   int result;
   int value = internal_event.jaxis.value;
-  if (std::abs(value) < 10000) {
+  if (std::abs(value) < joypad_deadzone) {
     result = 0;
   }
   else {
@@ -1217,7 +1227,7 @@ Point InputEvent::get_mouse_position() const {
 
   Debug::check_assertion(is_mouse_event(), "Event is not a mouse event");
 
-  return Video::window_to_quest_coordinates(
+  return Video::output_to_quest_coordinates(
       Point(internal_event.button.x, internal_event.button.y));
 }
 
@@ -1314,11 +1324,11 @@ Point InputEvent::get_finger_position() const {
 
   Debug::check_assertion(is_finger_event(), "Event is not a touch finger event");
 
-  const Size window_size = Video::get_window_size();
-  const int x = internal_event.tfinger.x * static_cast<float>(window_size.width);
-  const int y = internal_event.tfinger.y * static_cast<float>(window_size.height);
+  const Size output_size = Video::get_output_size();
+  const int x = internal_event.tfinger.x * static_cast<float>(output_size.width);
+  const int y = internal_event.tfinger.y * static_cast<float>(output_size.height);
 
-  return Video::window_to_quest_coordinates(Point(x, y));
+  return Video::output_to_quest_coordinates(Point(x, y));
 }
 
 /**
@@ -1330,11 +1340,11 @@ Point InputEvent::get_finger_distance() const {
 
   Debug::check_assertion(is_finger_event(), "Event is not a touch finger event");
 
-  const Size window_size = Video::get_window_size();
-  const int x = internal_event.tfinger.x * static_cast<float>(window_size.width);
-  const int y = internal_event.tfinger.y * static_cast<float>(window_size.height);
+  const Size output_size = Video::get_output_size();
+  const int x = internal_event.tfinger.x * static_cast<float>(output_size.width);
+  const int y = internal_event.tfinger.y * static_cast<float>(output_size.height);
 
-  return Video::window_to_quest_coordinates(Point(x, y));
+  return Video::output_to_quest_coordinates(Point(x, y));
 }
 
 /**

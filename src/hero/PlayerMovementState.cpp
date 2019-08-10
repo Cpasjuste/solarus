@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,12 +81,12 @@ std::shared_ptr<const PlayerMovement> Hero::PlayerMovementState::get_player_move
 void Hero::PlayerMovementState::start(const State* previous_state) {
   Hero& hero = get_entity();
 
-  HeroState::start(previous_state);
-
   player_movement = std::make_shared<PlayerMovement>(
       hero.get_walking_speed()
   );
   hero.set_movement(player_movement);
+
+  HeroState::start(previous_state);
 
   if (is_current_state()) { // yes, the state may have already changed
     get_player_movement()->compute_movement();

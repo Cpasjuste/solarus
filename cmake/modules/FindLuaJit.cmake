@@ -21,7 +21,7 @@ FIND_PATH(LUA_INCLUDE_DIR luajit.h
 )
 
 FIND_LIBRARY(LUA_LIBRARY
-  NAMES luajit-5.1
+  NAMES luajit-5.1 luajit-2.0 luajit-2.1
   HINTS
   $ENV{LUA_DIR}
   PATH_SUFFIXES lib64 lib
@@ -46,9 +46,9 @@ IF(LUA_LIBRARY)
 ENDIF(LUA_LIBRARY)
 
 IF(LUA_INCLUDE_DIR AND EXISTS "${LUA_INCLUDE_DIR}/luajit.h")
-  FILE(STRINGS "${LUA_INCLUDE_DIR}/luajit.h" lua_version_str REGEX "^#define[ \t]+LUA_RELEASE[ \t]+\"LuaJIT .+\"")
+  FILE(STRINGS "${LUA_INCLUDE_DIR}/luajit.h" lua_version_str REGEX "^#define[ \t]+LUAJIT_VERSION[ \t]+\"LuaJIT .+\"")
 
-  STRING(REGEX REPLACE "^#define[ \t]+LUA_RELEASE[ \t]+\"LuaJIT ([^\"]+)\".*" "\\1" LUA_VERSION_STRING "${lua_version_str}")
+  STRING(REGEX REPLACE "^#define[ \t]+LUAJIT_VERSION[ \t]+\"LuaJIT ([^\"]+)\".*" "\\1" LUA_VERSION_STRING "${lua_version_str}")
   UNSET(lua_version_str)
 ENDIF()
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -392,7 +392,7 @@ bool Entities::has_entity_with_prefix(const std::string& prefix) const {
  * \brief Returns all entities whose bounding box overlaps the given rectangle.
  * Entities are sorted according to their Z index on the map.
  * \param[in] rectangle A rectangle.
- * \param[out] result The entities in that rectangle, in arbitrary order.
+ * \param[out] result The entities in that rectangle.
  */
 void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, ConstEntityVector& result

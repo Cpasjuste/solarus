@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus Quest Editor is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,9 @@ QuestRunner::QuestRunner(QObject* parent) :
   QObject(parent),
   process(this),
   last_command_id(-1) {
+
+  // Set the process channel mode to merged (stdout + stderr)
+  process.setProcessChannelMode(QProcess::MergedChannels);
 
   // Connect to QProcess signals to know when the quest is running and finished.
   connect(&process, SIGNAL(started()),
@@ -87,6 +90,10 @@ QStringList QuestRunner::create_arguments(const QString& quest_path) const {
   // no-audio
   if (settings.value("no_audio", false).toBool()) {
     arguments << "-no-audio";
+  }
+
+  if (settings.value("force_software_rendering", false).toBool()) {
+    arguments << "-force-software-rendering";
   }
 
   // quest-size
@@ -181,14 +188,12 @@ void QuestRunner::standard_output_data_available() {
 
   // Read the UTF-8 data available.
   QStringList lines;
-  QByteArray line_utf8 = process.readLine();
-  while (!line_utf8.isEmpty()) {
-    QString line(line_utf8);
+  while (process.canReadLine()) {
+    QString line(process.readLine());
     line = line.trimmed();  // Remove the final '\n'.
     if (!line.isEmpty()) {
       lines << line;
     }
-    line_utf8 = process.readLine();
   }
 
   if (!lines.isEmpty()) {

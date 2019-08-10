@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1412,21 +1412,47 @@ std::vector<Entity::NamedSprite> Entity::get_named_sprites() const {
  * \brief Creates a sprite and adds it to this entity.
  * \param animation_set_id Id of the sprite's animation set to use.
  * \param sprite_name Name to identify the sprite or an empty string.
+ * \param order Index where to insert to sprite. \c -1 means last.
  * \return The sprite created.
  */
 SpritePtr Entity::create_sprite(
     const std::string& animation_set_id,
-    const std::string& sprite_name
+    const std::string& sprite_name,
+    int order
 ) {
+  if (order == -1) {
+    order = sprites.size();
+  }
   SpritePtr sprite = std::make_shared<Sprite>(animation_set_id);
 
   NamedSprite named_sprite;
   named_sprite.name = sprite_name;
   named_sprite.sprite = sprite;
   named_sprite.removed = false;
-  sprites.emplace_back(named_sprite);
+  sprites.insert(sprites.begin() + order, named_sprite);
   notify_bounding_box_changed();
   return sprite;
+}
+
+/**
+ * \brief Returns the index of a sprite in the list of sprites of this entity.
+ * \param sprite A sprite.
+ * \return Index of the sprite for this entity, or \c -1 if this entity has
+ * no such sprite.
+ */
+int Entity::get_sprite_order(Sprite& sprite) {
+
+  int i = 0;
+  for (NamedSprite& named_sprite: sprites) {
+    if (named_sprite.sprite.get() == &sprite) {
+      if (named_sprite.removed) {
+        continue;
+      }
+      return i;
+    }
+    ++i;
+  }
+  return -1;
 }
 
 /**
@@ -1766,6 +1792,7 @@ void Entity::stop_stream_action() {
 
   old_stream_actions.emplace_back(std::move(stream_action));
   stream_action = nullptr;
+  check_collision_with_detectors();
 }
 
 /**
@@ -1774,6 +1801,20 @@ void Entity::stop_stream_action() {
 void Entity::clear_old_stream_actions() {
 
   old_stream_actions.clear();
+}
+
+/**
+ * \brief Updates the stream action of this entity if any.
+ */
+void Entity::update_stream_action() {
+
+  if (has_stream_action()) {
+    get_stream_action()->update();
+    if (get_stream_action() != nullptr && !get_stream_action()->is_active()) {
+      stop_stream_action();
+    }
+  }
+  clear_old_stream_actions();
 }
 
 /**
@@ -2371,6 +2412,10 @@ void Entity::check_collision_with_detectors() {
     return;
   }
 
+  if (is_being_removed()) {
+    return;
+  }
+
   // Detect simple collisions.
   get_map().check_collision_with_detectors(*this);
 
@@ -2429,7 +2474,7 @@ void Entity::notify_movement_finished() {
  */
 void Entity::notify_movement_changed() {
 
-  if (are_movement_notifications_enabled()) {
+  if (are_movement_notifications_enabled() && get_movement()) {
     get_lua_context()->entity_on_movement_changed(*this, *get_movement());
   }
 }
@@ -2943,7 +2988,7 @@ bool Entity::is_enemy_obstacle(Enemy& /* enemy */) {
 /**
  * \brief Returns whether a jumper is currently considered as an obstacle by this entity.
  * \param jumper A jumper.
- * \param candidate_position Candidate position of this entity to test.
+ * \param candidate_position Candidate position of the entity to test.
  * \return \c true if the jumper is currently an obstacle for this entity at
  * this candidate position.
  */
@@ -2971,9 +3016,10 @@ bool Entity::is_destructible_obstacle(Destructible& /* destructible */) {
  * By default, this function returns \c true.
  *
  * \param separator A separator.
+ * \param candidate_position Candidate position of the entity to test.
  * \return \c true if the separator is currently an obstacle for this entity.
  */
-bool Entity::is_separator_obstacle(Separator& /* separator */) {
+bool Entity::is_separator_obstacle(Separator& /* separator */, const Rectangle& /* candidate_position */) {
 
   return true;
 }
@@ -3679,14 +3725,7 @@ void Entity::update() {
     movement->update();
   }
   clear_old_movements();
-
-  if (stream_action != nullptr) {
-    stream_action->update();
-    if (stream_action != nullptr && !get_stream_action()->is_active()) {
-      stop_stream_action();
-    }
-  }
-  clear_old_stream_actions();
+  update_stream_action();
 
   // Update the state if any.
   update_state();
@@ -3761,13 +3800,25 @@ void Entity::draw(Camera& camera) {
 /**
  * \brief Built-in implementation of drawing the entity on the map.
  *
- * By default, this function draws the entity's sprites (if any) and if
+ * By default, this function draws the entity's sprites.
+ * Lua scripts can replace this built-in draw with entity:set_draw_override().
+ *
+ * \param camera The camera where to draw.
+ */
+void Entity::built_in_draw(Camera& camera) {
+  draw_sprites(camera);
+}
+
+/**
+ * \brief Draws the sprites of this entity.
+ *
+ * This function draws the entity's sprites (if any) and if
  * at least one of them is in the visible part of the map.
  * Subclasses can reimplement this method to draw differently.
  *
- * Lua scripts can replace this built-in draw with entity:set_draw_override().
+ * \param camera The camera where to draw.
  */
-void Entity::built_in_draw(Camera& /* camera */) {
+void Entity::draw_sprites(Camera& /* camera */) {
 
   const Point& xy = get_displayed_xy();
   const Size& size = get_size();

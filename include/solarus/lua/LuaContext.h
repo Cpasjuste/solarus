@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ class LuaContext {
      */
     static void run_on_main(Callable&& func) {
       auto& c = LuaContext::get();
-      if(c.current_l == c.main_l) {
+      if (c.current_l == c.main_l) {
         func(c.current_l);
       } else {
         c.cross_state_callbacks.push(func);
@@ -227,7 +227,6 @@ class LuaContext {
       lua_context->set_current_state(previous);
       return result;
     }
-
 
     static void set_current_state(lua_State* l);
 
@@ -874,6 +873,8 @@ class LuaContext {
       game_api_set_value,
       game_api_get_starting_location,
       game_api_set_starting_location,
+      game_api_get_transition_style,
+      game_api_set_transition_style,
       game_api_get_life,
       game_api_set_life,
       game_api_add_life,
@@ -1270,6 +1271,12 @@ class LuaContext {
       state_api_set_pushing_delay,
       state_api_get_can_pick_treasure,
       state_api_set_can_pick_treasure,
+      state_api_get_can_use_teletransporter,
+      state_api_set_can_use_teletransporter,
+      state_api_get_can_use_switch,
+      state_api_set_can_use_switch,
+      state_api_get_can_use_stream,
+      state_api_set_can_use_stream,
       state_api_get_can_use_stairs,
       state_api_set_can_use_stairs,
       state_api_get_can_use_jumper,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,6 @@ class Hero::JumpingState: public HeroState {
     bool can_avoid_prickle() const override;
     bool can_avoid_teletransporter() const override;
     bool can_avoid_stream(const Stream& stream) const override;
-    bool can_avoid_sensor() const override;
     bool can_avoid_switch() const override;
     bool get_can_be_hurt(Entity* attacker) override;
     std::shared_ptr<CarriedObject> get_carried_object() const override;

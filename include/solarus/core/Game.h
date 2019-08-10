@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,6 +93,8 @@ class SOLARUS_API Game {
     Map& get_current_map();
     void set_current_map(const std::string& map_id, const std::string& destination_name,
         Transition::Style transition_style);
+    Transition::Style get_default_transition_style() const;
+    void set_default_transition_style(Transition::Style default_transition_style);
 
     // world
     bool get_crystal_state() const;
@@ -164,7 +166,7 @@ private:
         previous_map_surface;  /**< a copy of the previous map surface for transition effects that display two maps */
 
     Transition::Style
-        transition_style;      /**< the transition style between the current map and the next one */
+        current_transition_style; /**< The transition style between the current map and the next one. */
     std::unique_ptr<Transition>
         transition;            /**< the transition currently shown, or nullptr if no transition is playing */
 

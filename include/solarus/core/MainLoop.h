@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ class SOLARUS_API MainLoop {
     void draw();
     void update();
 
+    void setup_game_icon();
     void load_quest_properties();
     void initialize_lua_console();
     void quit_lua_console();

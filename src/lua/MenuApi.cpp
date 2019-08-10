@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,6 +69,12 @@ void LuaContext::add_menu(
 
   ScopedLuaRef context = LuaTools::create_ref(current_l,context_index);
   Debug::check_assertion(!context.is_empty(), "creating context with empty context");
+
+  if(std::count_if(menus.begin(), menus.end(),[&](const LuaMenuData& menu){
+                   return menu.ref == menu_ref;
+  })){
+    LuaTools::error(current_l, "Cannot start an already started menu");
+  }
 
   run_on_main([this, on_top, context, menu_ref](lua_State*) {
     if (on_top) {

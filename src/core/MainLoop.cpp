@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,11 @@
 #include "solarus/graphics/Color.h"
 #include "solarus/graphics/Surface.h"
 #include "solarus/graphics/Video.h"
+#include "solarus/graphics/quest_icon.h"
+
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
+
 #include <lua.hpp>
 #include <clocale>
 #include <sstream>
@@ -169,7 +172,11 @@ MainLoop::MainLoop(const Arguments& args):
   num_lua_commands_pushed(0),
   num_lua_commands_done(0) {
 
-  Logger::info(std::string("Solarus ") + SOLARUS_VERSION);
+#ifdef SOLARUS_GIT_REVISION
+  Logger::info("Solarus " SOLARUS_VERSION " (" SOLARUS_GIT_REVISION ")");
+#else
+  Logger::info("Solarus " SOLARUS_VERSION);
+#endif
 
   // Main loop settings.
   const std::string lag_arg = args.get_argument_value("-lag");
@@ -206,9 +213,14 @@ MainLoop::MainLoop(const Arguments& args):
   // Do this after the creation of the window, but before showing the window,
   // because Lua might change the video mode initially.
   lua_context = std::unique_ptr<LuaContext>(new LuaContext(*this));
-  //Video::show_window();
-  lua_context->initialize(args);
-  //Video::hide_window();
+
+  if(Video::get_renderer().needs_window_workaround()) {
+    Video::show_window();
+    lua_context->initialize(args);
+    Video::hide_window();
+  } else {
+    lua_context->initialize(args);
+  }
 
   // Set up the Lua console.
   const std::string& lua_console_arg = args.get_argument_value("-lua-console");
@@ -231,11 +243,23 @@ MainLoop::MainLoop(const Arguments& args):
   // Start loading resources in background.
   resource_provider.start_preloading_resources();
 
+  // Display the game icon as window icon (if any)
+  setup_game_icon();
+
   // Show the window.
   Video::show_window();
-#ifdef ANDROID
-  Video::set_fullscreen(true);
-#endif
+
+  // Set the fullscreen mode if requested.
+  const std::string& fullscreen_arg = args.get_argument_value("-fullscreen");
+  if (!fullscreen_arg.empty()) {
+    Video::set_fullscreen(fullscreen_arg == "yes");
+  }
+
+  // Set the mouse cursor visibility if requested.
+  const std::string& cursor_visible_arg = args.get_argument_value("-cursor-visible");
+  if (!cursor_visible_arg.empty()) {
+    Video::set_cursor_visible(cursor_visible_arg == "yes");
+  }
 }
 
 /**
@@ -502,6 +526,34 @@ void MainLoop::check_input() {
   }
 }
 
+void MainLoop::setup_game_icon() {
+  static const std::vector<std::string> file_names = {
+    "logos/icon_1024.png",
+    "logos/icon_512.png",
+    "logos/icon_256.png",
+    "logos/icon_128.png",
+    "logos/icon_64.png",
+    "logos/icon_48.png",
+    "logos/icon_32.png",
+    "logos/icon_24.png",
+    "logos/icon_16.png"
+  };
+
+  for(const auto& file : file_names) {
+    SDL_Surface_UniquePtr surface = Surface::create_sdl_surface_from_file(file);
+    if(surface) {
+      Video::set_window_icon(surface.get());
+      return;
+    }
+  }
+
+  //else try to use default icon
+  SDL_Surface_UniquePtr surface = Surface::create_sdl_surface_from_memory(quest_icon_data, quest_icon_data_len);
+  Debug::check_assertion(bool(surface), "Could not load built-in icon");
+
+  Video::set_window_icon(surface.get());
+}
+
 /**
  * \brief This function is called when there is an input event.
  *
@@ -570,7 +622,11 @@ void MainLoop::load_quest_properties() {
     if (!quest_version.empty()) {
       window_title += " " + quest_version;
     }
-    window_title += std::string(" - Solarus ") + SOLARUS_VERSION;
+#if defined(SOLARUS_GIT_REVISION) && !defined(NDEBUG)
+    window_title += " - Solarus " SOLARUS_VERSION " (" SOLARUS_GIT_REVISION ")";
+#else
+    window_title += " - Solarus " SOLARUS_VERSION;
+#endif
     Video::set_window_title(window_title);
   }
 

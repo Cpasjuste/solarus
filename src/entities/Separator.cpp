@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,10 +68,40 @@ bool Separator::is_vertical() const {
 }
 
 /**
- * \copydoc Entity::is_obstacle_for
+ * \brief Returns whether the given rectangle is crossing this separator.
+ *
+ * This is \c true if the rectangle overlaps both halves of the separator
+ * at the same time.
+ *
+ * \param candidate_position The rectangle to test.
+ * \return \c true if the rectangle is crossing this separator.
  */
-bool Separator::is_obstacle_for(Entity& other) {
-  return other.is_separator_obstacle(*this);
+bool Separator::is_crossed_by(const Rectangle& candidate_position) const {
+
+  const Point& center = get_center_point();
+  if (is_vertical()) {
+    if (candidate_position.get_x() + candidate_position.get_width() <= center.x) {
+      return false;
+    }
+    if (candidate_position.get_x() >= center.x) {
+      return false;
+    }
+  } else if (is_horizontal()) {
+    if (candidate_position.get_y() + candidate_position.get_height() <= center.y) {
+      return false;
+    }
+    if (candidate_position.get_y() >= center.y) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * \copydoc Entity::is_obstacle_for(Entity&, const Rectangle&)
+ */
+bool Separator::is_obstacle_for(Entity& other, const Rectangle& candidate_position) {
+  return other.is_separator_obstacle(*this, candidate_position);
 }
 
 /**

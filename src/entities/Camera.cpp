@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -278,6 +278,13 @@ void Camera::notify_size_changed() {
   if (surface == nullptr || get_size() != surface->get_size()) {
     create_surface();
   }
+}
+
+/**
+ * \copydoc Entity::is_separator_obstacle
+ */
+bool Camera::is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) {
+  return separator.is_crossed_by(candidate_position);
 }
 
 /**

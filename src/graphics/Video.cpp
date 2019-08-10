@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 #include "solarus/core/CurrentQuest.h"
 #include "solarus/core/Debug.h"
 #include "solarus/core/Logger.h"
+#include "solarus/core/PerfCounter.h"
 #include "solarus/core/QuestFiles.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/core/Size.h"
@@ -40,11 +41,6 @@
 #include <SDL.h>
 #include <SDL_render.h>
 #include <SDL_hints.h>
-#ifdef SOLARUS_HAVE_OPENGL
-#  include <SDL_opengl.h>
-#else
-#  include <SDL_opengles2.h>
-#endif
 
 namespace Solarus {
 
@@ -71,14 +67,15 @@ struct VideoContext {
   SurfacePtr screen_surface = nullptr;      /**< Strange surface representing the window */
   ShaderPtr  current_shader = nullptr;      /**< Current fullscreen effect */
 
-  std::string opengl_version;
-  std::string shading_language_version;
-  std::string opengl_vendor;
-  std::string opengl_renderer;
+  std::string opengl_version = "none";
+  std::string shading_language_version = "none";
+  std::string opengl_vendor = "none";
+  std::string opengl_renderer = "none";
 
   bool disable_window = false;              /**< Indicates that no window is displayed (used for unit tests). */
   bool fullscreen_window = false;           /**< True if the window is in fullscreen. */
   bool visible_cursor = true;               /**< True if the mouse cursor is visible. */
+  bool pc_render = false;                   /**< Whether rendering performance counter is used. */
 };
 
 VideoContext context;
@@ -86,22 +83,22 @@ VideoContext context;
 struct chain_end{};
 
 template<typename T = chain_end>
-RendererPtr renderer_chain(SDL_Window*) {
+RendererPtr renderer_chain(SDL_Window*, bool) {
   return nullptr;
 }
 
 template<typename T, typename ...Rest>
 typename std::enable_if<!std::is_same<T,chain_end>::value,RendererPtr>::type
-renderer_chain(SDL_Window* w) {
-  auto p = T::create(w);
+renderer_chain(SDL_Window* w, bool force_software) {
+  auto p = T::create(w, force_software);
   if(p) return p;
-  return renderer_chain<Rest...>(w);
+  return renderer_chain<Rest...>(w, force_software);
 }
 
 
 template<typename ...T>
-RendererPtr create_chain(SDL_Window* w) {
-  return renderer_chain<T...,chain_end>(w);
+RendererPtr create_chain(SDL_Window* w, bool force_software) {
+  return renderer_chain<T...,chain_end>(w, force_software);
 }
 
 
@@ -109,9 +106,15 @@ RendererPtr create_chain(SDL_Window* w) {
  * \brief Creates the window but does not show it.
  * \param args Command-line arguments.
  */
-void create_window() {
+void create_window(const Arguments& args) {
 
   Debug::check_assertion(context.main_window == nullptr, "Window already exists");
+
+  bool force_software = args.has_argument("-force-software-rendering");
+
+  if(force_software) {
+    Logger::info("Forcing software rendering : shaders will be unavailable");
+  }
 
   std::string title = std::string("Solarus ") + SOLARUS_VERSION;
   context.main_window = SDL_CreateWindow(
@@ -120,31 +123,30 @@ void create_window() {
         SDL_WINDOWPOS_CENTERED,
         context.geometry.wanted_quest_size.width,
         context.geometry.wanted_quest_size.height,
-        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
+        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | (force_software ? 0 : SDL_WINDOW_OPENGL)
         );
 
   Debug::check_assertion(context.main_window != nullptr,
                          std::string("Cannot create the window: ") + SDL_GetError());
 
-  context.renderer = create_chain<GlRenderer>(context.main_window);
+  context.renderer = create_chain<GlRenderer,SDLRenderer>(context.main_window, force_software);
 
   Debug::check_assertion(static_cast<bool>(context.renderer),
                          std::string("Cannot create the renderer: ") + SDL_GetError());
 
   Logger::info("Renderer: " + context.renderer->get_name());
 
-  context.opengl_version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-  context.shading_language_version = reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION));
-  context.opengl_vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-  context.opengl_renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+  if(not force_software) {
+    context.opengl_version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    context.shading_language_version = reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+    context.opengl_vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+    context.opengl_renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+  }
 
   Logger::info(std::string("OpenGL: ") + context.opengl_version);
   Logger::info(std::string("OpenGL vendor: ") + context.opengl_vendor);
   Logger::info(std::string("OpenGL renderer: ") + context.opengl_renderer);
   Logger::info(std::string("OpenGL shading language: ") + context.shading_language_version);
-
-
-  // TODO handle shaders !
 }
 
 /**
@@ -194,6 +196,7 @@ namespace Video {
  * This method should be called when the program starts.
  * Options recognized:
  *   -no-video
+ *   -perf-video-render=yes|no
  *   -quest-size=WIDTHxHEIGHT
  *
  * \param args Command-line arguments.
@@ -211,9 +214,10 @@ void initialize(const Arguments& args) {
 
 
 
-  // Check the -no-video and the -quest-size options.
+  // Check the -no-video, -perf-video-render and the -quest-size options.
   const std::string& quest_size_string = args.get_argument_value("-quest-size");
   context.disable_window = args.has_argument("-no-video");
+  context.pc_render = args.get_argument_value("-perf-video-render") == "yes";
 
   context.geometry.wanted_quest_size = {
     SOLARUS_DEFAULT_QUEST_WIDTH,
@@ -230,9 +234,9 @@ void initialize(const Arguments& args) {
   context.rgba_format = SDL_AllocFormat(SDL_PIXELFORMAT_ABGR8888);
 
   if (context.disable_window) {
-    context.renderer = SDLRenderer::create(nullptr); //Create window-less sdl renderer
+    context.renderer = SDLRenderer::create(nullptr, true); //Create window-less sdl renderer
   }else {
-    create_window();
+    create_window(args);
   }
 }
 
@@ -345,6 +349,9 @@ void hide_window() {
  * \param quest_surface The quest surface to render on the screen.
  */
 void render(const SurfacePtr& quest_surface) {
+  if (context.pc_render) {
+    PerfCounter::update("video-render");
+  }
 
   if (context.disable_window) {
     return;
@@ -507,17 +514,7 @@ void set_quest_size_range(
       || context.geometry.wanted_quest_size.height < min_size.height
       || context.geometry.wanted_quest_size.width > max_size.width
       || context.geometry.wanted_quest_size.height > max_size.height) {
-    std::ostringstream oss;
-    oss << "Cannot use quest size "
-        << context.geometry.wanted_quest_size.width << "x" << context.geometry.wanted_quest_size.height
-        << ": this quest only supports "
-        << min_size.width << "x" << min_size.height
-        << " to "
-        << max_size.width << "x" << max_size.height
-        << ". Using "
-        << normal_size.width << "x" << normal_size.height
-        << " instead.";
-    Debug::warning(oss.str());
+    // The wanted size is not in the range supported by this quest.
     context.geometry.quest_size = normal_size;
   }
   else {
@@ -526,6 +523,11 @@ void set_quest_size_range(
 
   // We know the quest size: we can initialize legacy video modes.
   initialize_software_video_modes();
+
+  // Initialize the screen surface with an initial window resized event.
+  if (!context.disable_window) {
+    on_window_resized(get_window_size());
+  }
 }
 
 /**
@@ -547,17 +549,23 @@ void set_fullscreen(bool fullscreen) {
     return;
   }
 
-  Uint32 fullscreen_flag;
-  if (fullscreen) {
-    fullscreen_flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
-    context.geometry.window_size = get_window_size();  // Store the window size before fullscreen.
-  }
-  else {
-    fullscreen_flag = 0;
-  }
-  context.fullscreen_window = fullscreen;
+  if (context.fullscreen_window != fullscreen) {
+    Uint32 fullscreen_flag;
+    if (fullscreen) {
+      fullscreen_flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+      context.geometry.window_size = get_window_size();  // Store the window size before fullscreen.
+    }
+    else {
+      fullscreen_flag = 0;
+    }
+    context.fullscreen_window = fullscreen;
 
-  SDL_SetWindowFullscreen(context.main_window, fullscreen_flag);
+    SDL_SetWindowFullscreen(context.main_window, fullscreen_flag);
+    if (not fullscreen && not context.geometry.window_size.is_flat()) {
+      // Do window resized event after coming back from fullscreen
+      on_window_resized(context.geometry.window_size);
+    }
+  }
 
   Logger::info(std::string("Fullscreen: ") + (fullscreen ? "yes" : "no"));
 }
@@ -629,6 +637,16 @@ std::string get_window_title() {
 void set_window_title(const std::string& window_title) {
 
   SDL_SetWindowTitle(context.main_window, window_title.c_str());
+}
+
+/**
+ * @brief set_window_icon
+ * @param icon, the surface containing the icon, ownership is not taken, surface can be freed after the call
+ */
+void set_window_icon(SDL_Surface* icon) {
+  if (context.main_window) {
+    SDL_SetWindowIcon(context.main_window, icon);
+  }
 }
 
 /**
@@ -790,7 +808,6 @@ const SoftwareVideoMode* get_video_mode_by_name(
  * \return The size of the window in pixels.
  */
 Size get_window_size() {
-
   Debug::check_assertion(context.main_window != nullptr, "No window");
 
   if (is_fullscreen()) {
@@ -928,33 +945,21 @@ Size get_output_size_no_bars() {
 }
 
 /**
- * \brief Gets the viewport of the renderer.
- *
- * The viewport is the logical drawing area of the renderer.
- * x and y indicate the possible letterboxing black bars.
- *
- * \return The viewport, in renderer logical coordinates (before window scaling).
- */
-Rectangle get_viewport() {
-  return get_letter_box(get_window_size());
-}
-
-/**
- * \brief Converts window coordinates to quest size coordinates.
- * \param window_xy A position relative to the window, not including
+ * \brief Converts renderer output coordinates to quest size coordinates.
+ * \param output_xy A position relative to the renderer output, not including
  * window decorations.
  * \return The position in quest size coordinate.
  */
-Point window_to_quest_coordinates(const Point& window_xy) {
+Point output_to_quest_coordinates(const Point& output_xy) {
 
-  Rectangle viewport = get_viewport();
+  Rectangle viewport = get_letter_box(get_output_size());
   Size qs = get_quest_size();
 
   float scale_x = viewport.get_width() / static_cast<float>(qs.width);
   float scale_y = viewport.get_height() / static_cast<float>(qs.height);
 
-  const int x = (window_xy.x - viewport.get_x())/scale_x;
-  const int y = (window_xy.y - viewport.get_y())/scale_y;
+  const int x = (output_xy.x - viewport.get_x())/scale_x;
+  const int y = (output_xy.y - viewport.get_y())/scale_y;
 
   Debug::check_assertion(!qs.is_flat(), "Quest size is not initialized");
   Debug::check_assertion(!viewport.is_flat(), "Viewport is not initialized");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,9 @@ void LuaContext::register_timer_module() {
   };
 
   const std::vector<luaL_Reg> metamethods = {
-      { "__gc", userdata_meta_gc }
+      { "__gc", userdata_meta_gc },
+      { "__newindex", userdata_meta_newindex_as_table },
+      { "__index", userdata_meta_index_as_table }
   };
 
   register_type(timer_module_name, functions, methods, metamethods);
@@ -308,7 +310,7 @@ void LuaContext::do_timer_callback(const TimerPtr& timer) {
   if (it != timers.end() &&
       !it->second.callback_ref.is_empty()) {
     ScopedLuaRef& callback_ref = it->second.callback_ref;
-    run_on_main([&](lua_State* l){ //Here l shadow previous l on purpose
+    run_on_main([&,timer](lua_State* l){ //Here l shadow previous l on purpose, capture timer by value to increase ref count
       if(callback_ref.is_empty()) {
         return; //Ref might be cleared meanwhile
       }
