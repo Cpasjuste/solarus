@@ -1,5 +1,16 @@
 __________________________
 
+Solarus 1.6.2 (2019-08-15)
+__________________________
+
+Engine changes
+--------------
+
+* Fix scrolling teletransporters with a square size (#1412).
+* Fix hero displayed above stairs walls.
+
+__________________________
+
 Solarus 1.6.1 (2019-08-10)
 __________________________
 
