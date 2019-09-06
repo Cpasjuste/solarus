@@ -53,7 +53,6 @@ Map::Map(const std::string& id):
   foreground_surface(nullptr),
   loaded(false),
   started(false),
-  destination_name(""),
   entities(nullptr),
   suspended(false) {
 
@@ -270,6 +269,10 @@ void Map::unload() {
   }
 }
 
+bool Map::has_heroes() const {
+  return entities->get_heroes().size() > 0;
+}
+
 /**
  * \brief Loads the map into a game.
  *
@@ -371,10 +374,10 @@ bool Map::is_game_running() const {
  * "_side0", "_side1", "_side2" or "_side3"
  * to place the hero on a side of the map.
  */
-void Map::set_destination(const std::string& destination_name) {
+/*void Map::set_destination(const std::string& destination_name) {
 
   this->destination_name = destination_name;
-}
+}*/
 
 /**
  * \brief Returns the destination point name set by the last call to
@@ -382,9 +385,9 @@ void Map::set_destination(const std::string& destination_name) {
  * \return The name of the destination point previously set,
  * possibly an empty string (meaning the default one).
  */
-const std::string& Map::get_destination_name() const {
+/*const std::string& Map::get_destination_name() const {
   return destination_name;
-}
+}*/
 
 /**
  * \brief Returns the destination point specified by the last call to
@@ -401,7 +404,7 @@ const std::string& Map::get_destination_name() const {
  *
  * \return The destination point previously set, or nullptr.
  */
-std::shared_ptr<Destination> Map::get_destination() {
+std::shared_ptr<Destination> Map::get_destination(const std::string& destination_name) {
 
   if (destination_name == "_same"
       || destination_name.substr(0,5) == "_side") {
@@ -444,7 +447,7 @@ std::shared_ptr<Destination> Map::get_destination() {
  * returns this side.
  * \return the destination side (0 to 3), or -1 if the destination point is not a side
  */
-int Map::get_destination_side() const {
+int Map::get_destination_side(const std::string& destination_name) const {
 
   if (destination_name.substr(0,5) == "_side") {
     int destination_side = destination_name[5] - '0';
@@ -476,8 +479,18 @@ void Map::set_suspended(bool suspended) {
  * \return \c true if the event was handled and should stop being propagated.
  */
 bool Map::notify_input(const InputEvent& event) {
-
+  //Check if map could swallow the input
   bool handled = get_lua_context().map_on_input(*this, event);
+
+  // Forward to heroes
+  if(!handled) {
+    for(const HeroPtr& hero : entities->get_heroes()) {
+      if(hero->notify_input(event)) {
+        handled = true;
+        break; //Only one hero can handle the input
+      }
+    }
+  }
   return handled;
 }
 
@@ -523,7 +536,7 @@ void Map::check_suspended() {
  */
 void Map::draw() {
 
-  if (!is_loaded()) {
+  if (!is_loaded() || !is_started()) {
     return;
   }
 
@@ -708,12 +721,12 @@ void Map::draw_visual(Drawable& drawable, int x, int y,
  * The map must be loaded.
  * The background music starts and the map script is initialized.
  */
-void Map::start() {
+void Map::start(const std::string& destination_name) {
 
   this->started = true;
 
   Music::play(music_id, true);
-  std::shared_ptr<Destination> destination = get_destination();
+  std::shared_ptr<Destination> destination = get_destination(destination_name);
   this->entities->notify_map_starting(*this, destination);
   get_lua_context().run_map(*this, destination);
   this->entities->notify_map_started(*this, destination);
@@ -745,7 +758,7 @@ bool Map::is_started() const {
  * \brief This function is called when the map is started and
  * the opening transition is finished.
  */
-void Map::notify_opening_transition_finished() {
+void Map::notify_opening_transition_finished(const std::string& destination_name) {
 
   const CameraPtr& camera = get_camera();
   if (camera != nullptr) {
@@ -754,8 +767,8 @@ void Map::notify_opening_transition_finished() {
   }
 
   check_suspended();
-  std::shared_ptr<Destination> destination = get_destination();
-  entities->notify_map_opening_transition_finishing(*this, destination);
+  std::shared_ptr<Destination> destination = get_destination(destination_name);
+  entities->notify_map_opening_transition_finishing(*this, destination_name);
   get_lua_context().map_on_opening_transition_finished(*this, destination);
   entities->notify_map_opening_transition_finished(*this, destination);
 }
@@ -1344,8 +1357,11 @@ void Map::check_collision_from_detector(Entity& detector) {
     return;
   }
 
-  // First check the hero.
-  detector.check_collision(get_entities().get_hero());
+  const Heroes& heroes = get_entities().get_heroes();
+  // First check the heroes.
+  for(const HeroPtr& hero : heroes) {
+    detector.check_collision(*hero);
+  }
 
   // Check each entity with this detector.
   Rectangle box = detector.get_extended_bounding_box(8);
@@ -1361,7 +1377,8 @@ void Map::check_collision_from_detector(Entity& detector) {
         !entity_nearby->is_suspended() &&
         !entity_nearby->is_being_removed() &&
         entity_nearby.get() != &detector &&
-        entity_nearby.get() != &get_entities().get_hero()
+        //entity_nearby.get() != &get_entities().get_hero()
+        std::find(heroes.begin(), heroes.end(), entity_nearby.get()) == heroes.end()
     ) {
       detector.check_collision(*entity_nearby);
     }

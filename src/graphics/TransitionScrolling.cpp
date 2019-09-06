@@ -77,10 +77,8 @@ void TransitionScrolling::start() {
   const Surface* previous_map_surface = get_previous_surface();
   Debug::check_assertion(previous_map_surface != nullptr, "Missing previous surface for scrolling");
 
-  const Map& map = get_game()->get_current_map();
-
   // get the scrolling direction
-  scrolling_direction = (map.get_destination_side() + 2) % 4;
+  scrolling_direction = (get_destination_side() + 2) % 4;
 
   const int scrolling_step = 5;
 

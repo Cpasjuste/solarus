@@ -298,7 +298,7 @@ void Entity::set_map(Map& map) {
   this->main_loop = &map.get_game().get_main_loop();
   this->map = &map;
   set_lua_context(&main_loop->get_lua_context());
-  if (&get_game().get_current_map() == &map) {
+  if (get_game().is_current_map(map)) {
     notify_tileset_changed();
   }
 
@@ -411,7 +411,7 @@ void Entity::notify_map_started(
  * \param destination Destination entity where the hero is placed or nullptr.
  */
 void Entity::notify_map_opening_transition_finishing(
-    Map& /* map */, const std::shared_ptr<Destination>& /* destination */) {
+    Map& /* map */, const std::string& /* destination_name */) {
 
   if (is_ground_observer()) {
     update_ground_below();
@@ -544,8 +544,16 @@ const Savegame& Entity::get_savegame() const {
  * \brief Returns the hero
  * \return The hero.
  */
-Hero& Entity::get_hero() {
-  return get_entities().get_hero();
+Hero& Entity::get_default_hero() {
+  return get_entities().get_default_hero();
+}
+
+/**
+ * @brief Returns the list of heroes on the map of this entity
+ * @return The heroes.
+ */
+const Heroes& Entity::get_heroes() const {
+  return get_entities().get_heroes();
 }
 
 /**

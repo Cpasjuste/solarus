@@ -18,6 +18,7 @@
 #define SOLARUS_CAMERA_PTR_H
 
 #include <memory>
+#include <vector>
 
 namespace Solarus {
 
@@ -27,6 +28,7 @@ class Camera;
  * \brief Alias for shared_ptr of Camera.
  */
 using CameraPtr = std::shared_ptr<Camera>;
+using Cameras = std::vector<CameraPtr>;
 
 }
 

@@ -94,7 +94,7 @@ class SOLARUS_API Map: public ExportableToLua {
     LuaContext& get_lua_context();
     virtual const std::string& get_lua_type_name() const override;
 
-    void notify_opening_transition_finished();
+    void notify_opening_transition_finished(const std::string &destination_name);
 
     // entities
     Entities& get_entities();
@@ -102,14 +102,15 @@ class SOLARUS_API Map: public ExportableToLua {
 
     // presence of the hero
     bool is_started() const;
-    void start();
+    void start(const std::string &destination_name);
     void leave();
+    bool has_heroes() const;
 
     // current destination point
-    void set_destination(const std::string& destination_name);
-    const std::string& get_destination_name() const;
-    std::shared_ptr<Destination> get_destination();
-    int get_destination_side() const;
+    //void set_destination(const std::string& destination_name);
+    //const std::string& get_destination_name() const;
+    std::shared_ptr<Destination> get_destination(const std::string &destination_name);
+    int get_destination_side(const std::string &destination_name) const;
 
     // collisions with obstacles (checked before a move)
     bool test_collision_with_border(int x, int y) const;
@@ -225,7 +226,7 @@ class SOLARUS_API Map: public ExportableToLua {
     // map state
     bool loaded;                  /**< Whether the loading phase is done. */
     bool started;                 /**< Whether this map is the current map. */
-    std::string destination_name; /**< Current destination point on the map,
+    /*std::string destination_name;*/ /**< Current destination point on the map,
                                    * or "_same" to keep the hero's coordinates,
                                    * or "_side0", "_side1", "_side2" or "_side3"
                                    * to place the hero on a side of the map,

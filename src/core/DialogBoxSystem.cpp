@@ -148,13 +148,13 @@ void DialogBoxSystem::open(
 
       // Determine the position.
       bool top = false;
-      const CameraPtr& camera = game.get_current_map().get_camera();
+      /*const CameraPtr& camera = game.get_current_map().get_camera();
       if (camera != nullptr) {
         const Rectangle& camera_position = camera->get_bounding_box();
         if (game.get_hero()->get_y() >= camera_position.get_y() + 130) {
           top = true;
         }
-      }
+      }*/ //TODO redo this for multiples heroes !!
 
       const Size& quest_size = Video::get_quest_size();
       int x = quest_size.width / 2 - 110;

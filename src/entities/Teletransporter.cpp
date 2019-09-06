@@ -338,7 +338,8 @@ void Teletransporter::transport_hero(Hero& hero) {
     Sound::play(sound_id);
   }
 
-  get_game().set_current_map(destination_map_id, name, transition_style);
+  HeroPtr hero_ptr = std::static_pointer_cast<Hero>(hero.shared_from_this());
+  get_game().set_current_map(hero_ptr, destination_map_id, name, transition_style);
   transporting_hero = false;
   hero.set_xy(hero_x, hero_y);
 }

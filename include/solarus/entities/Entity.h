@@ -20,6 +20,7 @@
 #include "solarus/core/Rectangle.h"
 #include "solarus/core/GameCommand.h"
 #include "solarus/core/Common.h"
+#include "solarus/entities/HeroPtr.h"
 #include "solarus/entities/EntityType.h"
 #include "solarus/entities/Ground.h"
 #include "solarus/entities/CollisionMode.h"
@@ -128,7 +129,8 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual void notify_created();
     virtual void notify_map_starting(Map& map, const std::shared_ptr<Destination>& destination);
     virtual void notify_map_started(Map& map, const std::shared_ptr<Destination>& destination);
-    virtual void notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination);
+    //virtual void notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination);
+    virtual void notify_map_opening_transition_finishing(Map& map, const std::string& destination_name);
     virtual void notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination);
     virtual void notify_map_finished();
     virtual void notify_tileset_changed();
@@ -401,7 +403,8 @@ class SOLARUS_API Entity: public ExportableToLua {
     GameCommands& get_commands();
     Savegame& get_savegame();
     const Savegame& get_savegame() const;
-    Hero& get_hero();
+    Hero& get_default_hero();
+    const Heroes& get_heroes() const;
 
     /**
      * \name State.

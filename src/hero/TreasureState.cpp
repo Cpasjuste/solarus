@@ -74,7 +74,7 @@ void Hero::TreasureState::start(const State* previous_state) {
   // Show a dialog (Lua does the job after this).
   ScopedLuaRef callback_ref = this->callback_ref;
   this->callback_ref.clear();
-  get_lua_context().notify_hero_brandish_treasure(treasure, callback_ref);
+  get_lua_context().notify_hero_brandish_treasure(get_entity(), treasure, callback_ref);
 }
 
 /**

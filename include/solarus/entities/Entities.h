@@ -91,7 +91,6 @@ class EntityZOrderComparator {
 };
 
 using EntityTree = Quadtree<EntityPtr, EntityZOrderComparator>;
-
 /**
  * \brief Manages the whole content of a map.
  *
@@ -104,17 +103,13 @@ class SOLARUS_API Entities {
 
   public:
 
-     /**
-     * A bunch of cameras
-     */
-    using Cameras = std::vector<CameraPtr>;
-
     // Creation and destruction.
     Entities(Game& game, Map& map);
     ~Entities();
 
     // Get entities.
-    Hero& get_hero();
+    Hero& get_default_hero();
+    const Heroes& get_heroes() const;
     const CameraPtr& get_camera() const;
     const Cameras& get_cameras() const;
     Ground get_tile_ground(int layer, int x, int y) const;
@@ -173,7 +168,7 @@ class SOLARUS_API Entities {
     // Map events.
     void notify_map_starting(Map& map, const std::shared_ptr<Destination>& destination);
     void notify_map_started(Map& map, const std::shared_ptr<Destination>& destination);
-    void notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination);
+    void notify_map_opening_transition_finishing(Map& map, const std::string &destination_name);
     void notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination);
     void notify_tileset_changed();
     void notify_map_finished();
@@ -241,10 +236,12 @@ class SOLARUS_API Entities {
         tiles_in_animated_regions;                  /**< For each layer, animated tiles and tiles overlapping them. */
 
     // dynamic entities
-    HeroPtr hero;                                   /**< The hero, also stored in Game because
+    /*HeroPtr hero;  */                                   /**< The hero, also stored in Game because
                                                      * it is kept when changing maps. */
-    CameraPtr camera;                               /**< The visible area of the map. */
-    Cameras cameras;                 /**< The visibles area of the map. */
+    std::vector<HeroPtr> heroes;
+
+    //CameraPtr camera;                               /**< The visible area of the map. */
+    Cameras cameras;                                /**< The visibles area of the map. */
 
     std::map<std::string, EntityPtr>
         named_entities;                             /**< Entities identified by a name. */
@@ -292,15 +289,14 @@ inline Ground Entities::get_tile_ground(int layer, int x, int y) const {
  * \return The camera, or nullptr if there is no camera.
  */
 inline const CameraPtr& Entities::get_camera() const {
-
-  return camera;
+  return cameras.front();
 }
 
 /**
  * \brief Returns the cameras of the map.
  * \return The cameras
  */
-inline const Entities::Cameras& Entities::get_cameras() const {
+inline const Cameras& Entities::get_cameras() const {
   return cameras;
 }
 

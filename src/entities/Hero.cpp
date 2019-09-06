@@ -557,11 +557,11 @@ void Hero::notify_map_started(Map& map, const std::shared_ptr<Destination>& dest
 /**
  * \copydoc Entity::notify_map_opening_transition_finishing
  */
-void Hero::notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination) {
+void Hero::notify_map_opening_transition_finishing(Map& map, const std::string &destination_name) {
 
-  Entity::notify_map_opening_transition_finishing(map, destination);
+  Entity::notify_map_opening_transition_finishing(map, destination_name);
 
-  int side = get_map().get_destination_side();
+  int side = get_map().get_destination_side(destination_name);
   if (side != -1) {
     // the hero was placed on the side of the map:
     // there was a scrolling between the previous map and this one
@@ -658,9 +658,9 @@ void Hero::place_on_map(Map& map) {
  * \param previous_map_location Position of the previous map in its world
  * (because the previous map is already destroyed).
  */
-void Hero::place_on_destination(Map& map, const Rectangle& previous_map_location) {
+void Hero::place_on_destination(Map& map, const Rectangle& previous_map_location, const std::string& destination_name) {
 
-  const std::string& destination_name = map.get_destination_name();
+  //const std::string& destination_name = map.get_destination_name();
 
   if (destination_name == "_same") {
 
@@ -689,7 +689,7 @@ void Hero::place_on_destination(Map& map, const Rectangle& previous_map_location
     check_position();  // To appear initially swimming, for example.
   }
   else {
-    int side = map.get_destination_side();
+    int side = map.get_destination_side(destination_name);
 
     if (side != -1) {
 
@@ -742,7 +742,7 @@ void Hero::place_on_destination(Map& map, const Rectangle& previous_map_location
 
       // Normal case: the location is specified by a destination point object.
 
-      const std::shared_ptr<Destination> destination = map.get_destination();
+      const std::shared_ptr<Destination> destination = map.get_destination(destination_name);
 
       if (destination == nullptr) {
         // This is embarrassing: there is no valid destination that we can use.

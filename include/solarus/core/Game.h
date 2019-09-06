@@ -24,6 +24,7 @@
 #include "solarus/core/GameCommands.h"
 #include "solarus/core/Point.h"
 #include "solarus/entities/HeroPtr.h"
+#include "solarus/core/MapPtr.h"
 #include "solarus/entities/NonAnimatedRegions.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include "solarus/graphics/Transition.h"
@@ -38,7 +39,6 @@ class GameCommands;
 class InputEvent;
 class LuaContext;
 class MainLoop;
-class Map;
 class ResourceProvider;
 class Savegame;
 
@@ -91,10 +91,16 @@ class SOLARUS_API Game {
     void simulate_command_released(GameCommand command);
 
     // map
+    Map& get_default_map();
     bool has_current_map() const;
-    Map& get_current_map();
-    void set_current_map(const std::string& map_id, const std::string& destination_name,
+    Map& get_current_map(const HeroPtr& hero);
+    void set_current_map(const HeroPtr& hero, const std::string& map_id, const std::string& destination_name,
         Transition::Style transition_style);
+    bool is_current_map(Map& map) const;
+    bool has_multiple_maps() const;
+
+    const MapPtr& prepare_map(const std::string& map_id);
+    void leave_map(const HeroPtr& hero, const MapPtr& map);
 
     // world
     bool get_crystal_state() const;
@@ -133,11 +139,22 @@ class SOLARUS_API Game {
 
 private:
 
+    struct HeroTeleportation{
+      MapPtr current_map;
+      MapPtr next_map;
+      std::string destination_name;
+      HeroPtr hero;
+      SurfacePtr previous_map_surface;
+      Transition::Style transition_style;
+      std::unique_ptr<Transition> transition;
+    };
+
     // main objects
     MainLoop& main_loop;       /**< the main loop object */
     std::shared_ptr<Savegame>
         savegame;              /**< the game data saved */
-    HeroPtr hero;              /**< The hero entity.  */
+    /*HeroPtr hero;*/              /**< The hero entity.  */
+    std::vector<HeroPtr> heroes;
 
     // current game state (elements currently shown)
     bool pause_allowed;        /**< indicates that the player is allowed to use the pause command */
@@ -150,25 +167,33 @@ private:
     bool restarting;           /**< true if the game will be restarted */
 
     // controls
-    std::unique_ptr<GameCommands>
+    std::unique_ptr<GameCommands> //TODO differentiates for each hero
         commands;              /**< this object receives the keyboard and joypad events */
     CommandsEffects
         commands_effects;      /**< current effect associated to the main game keys
                                 * (represented on the HUD by the action icon, the objects icons, etc.) */
 
     // map
-    std::shared_ptr<Map>
-        current_map;           /**< the map currently displayed */
-    std::shared_ptr<Map>
-        next_map;              /**< the map where the hero is going to; if not nullptr, it means that the hero
-                                * is changing from current_map to next_map */
-    SurfacePtr
-        previous_map_surface;  /**< a copy of the previous map surface for transition effects that display two maps */
+    /*std::shared_ptr<Map>
+        current_map; */           /**< the map currently displayed */
 
-    Transition::Style
-        transition_style;      /**< the transition style between the current map and the next one */
-    std::unique_ptr<Transition>
-        transition;            /**< the transition currently shown, or nullptr if no transition is playing */
+    std::vector<MapPtr>
+        current_maps;    /**< the maps currently simulated */
+
+    /*std::shared_ptr<Map>
+        next_map; */              /**< the map where the hero is going to; if not nullptr, it means that the hero
+                                * is changing from current_map to next_map */
+
+    std::vector<HeroTeleportation>
+        hero_teleportations;    /**< record current displacements of heroes between maps */
+
+    /*SurfacePtr
+        previous_map_surface;*/  /**< a copy of the previous map surface for transition effects that display two maps */
+
+    /*Transition::Style
+        transition_style;*/      /**< the transition style between the current map and the next one */
+    /*std::unique_ptr<Transition>
+        transition;*/            /**< the transition currently shown, or nullptr if no transition is playing */
 
     // world (i.e. the current set of maps)
     bool crystal_state;        /**< indicates that a crystal has been enabled (i.e. the orange blocks are raised) */
@@ -176,9 +201,9 @@ private:
     // update functions
     void update_tilesets();
     void update_commands_effects();
-    void update_transitions();
+    bool update_teleportation(HeroTeleportation &tp);
     void update_gameover_sequence();
-    void notify_map_changed();
+    void notify_map_changed(Map& map);
 
 };
 

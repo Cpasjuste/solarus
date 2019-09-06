@@ -160,7 +160,7 @@ int LuaContext::item_api_get_map(lua_State* l) {
 
     Game* game = item.get_game();
     if (game != nullptr) {
-      push_map(l, game->get_current_map());
+      push_map(l, game->get_default_map());
     }
     else {
       lua_pushnil(l);

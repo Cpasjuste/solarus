@@ -19,6 +19,7 @@
 #include "solarus/core/EquipmentItem.h"
 #include "solarus/core/Game.h"
 #include "solarus/core/Map.h"
+#include "solarus/entities/Hero.h"
 #include "solarus/core/Savegame.h"
 #include "solarus/core/Treasure.h"
 #include "solarus/graphics/Sprite.h"
@@ -183,7 +184,7 @@ void Treasure::give_to_player() const {
   // Notify the Lua item and the Lua map.
   LuaContext& lua_context = game->get_lua_context();
   lua_context.item_on_obtaining(item, *this);
-  lua_context.map_on_obtaining_treasure(game->get_current_map(), *this);
+  lua_context.map_on_obtaining_treasure(game->get_hero()->get_map(), *this);
 }
 
 /**

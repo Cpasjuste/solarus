@@ -165,7 +165,7 @@ class LuaContext {
     bool notify_input(const InputEvent& event);
     void notify_map_suspended(Map& map, bool suspended);
     void notify_shop_treasure_interaction(ShopTreasure& shop_treasure);
-    void notify_hero_brandish_treasure(
+    void notify_hero_brandish_treasure(Hero &hero,
         const Treasure& treasure,
         const ScopedLuaRef& callback_ref
     );

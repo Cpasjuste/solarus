@@ -2131,7 +2131,8 @@ int LuaContext::hero_api_teleport(lua_State* l) {
       LuaTools::arg_error(l, 2, std::string("No such map: '") + map_id + "'");
     }
 
-    hero.get_game().set_current_map(map_id, destination_name, transition_style);
+    HeroPtr hero_ptr = std::static_pointer_cast<Hero>(hero.shared_from_this());
+    hero.get_game().set_current_map(hero_ptr, map_id, destination_name, transition_style);
 
     return 0;
   });
@@ -2951,6 +2952,7 @@ int LuaContext::hero_api_get_state_object(lua_State* l) {
  * treasure's dialog finishes (possibly an empty ref).
  */
 void LuaContext::notify_hero_brandish_treasure(
+    Hero& hero,
     const Treasure& treasure,
     const ScopedLuaRef& callback_ref
 ) {
@@ -2965,14 +2967,15 @@ void LuaContext::notify_hero_brandish_treasure(
   lua_pushinteger(current_l, treasure.get_variant());
   push_string(current_l, treasure.get_savegame_variable());
   push_ref(current_l, callback_ref);
-  lua_pushcclosure(current_l, l_treasure_brandish_finished, 4);
+  push_hero(current_l, hero);
+  lua_pushcclosure(current_l, l_treasure_brandish_finished, 5);
   const ScopedLuaRef& treasure_callback_ref = create_ref();
 
   if (!CurrentQuest::dialog_exists(dialog_id)) {
     // No treasure dialog: keep brandishing the treasure for some delay
     // and then execute the callback.
     TimerPtr timer = std::make_shared<Timer>(3000);
-    push_map(current_l, game.get_current_map());
+    push_map(current_l, hero.get_map());
     add_timer(timer, -1, treasure_callback_ref);
     lua_pop(current_l, 1);
   }
@@ -2986,7 +2989,7 @@ void LuaContext::notify_hero_brandish_treasure(
  * \brief Callback function executed after the animation of brandishing
  * a treasure.
  *
- * Upvalues: item, variant, savegame variable, callback/nil.
+ * Upvalues: item, variant, savegame variable, callback/nil, hero
  *
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
@@ -3001,6 +3004,7 @@ int LuaContext::l_treasure_brandish_finished(lua_State* l) {
     int treasure_variant = LuaTools::check_int(l, lua_upvalueindex(2));
     const std::string& treasure_savegame_variable =
         LuaTools::check_string(l, lua_upvalueindex(3));
+    Hero& hero = *check_hero(l, lua_upvalueindex(5));
     lua_pushvalue(l, lua_upvalueindex(4));
 
     // Check upvalues. Any error here would be the fault of the C++ side
@@ -3012,7 +3016,6 @@ int LuaContext::l_treasure_brandish_finished(lua_State* l) {
         "Expected function or nil for treasure callback");
 
     Game& game = *item.get_game();
-    Hero& hero = *game.get_hero();
     const Treasure treasure(game, item.get_name(), treasure_variant, treasure_savegame_variable);
 
     // Notify the Lua item and the Lua map.
@@ -3021,7 +3024,7 @@ int LuaContext::l_treasure_brandish_finished(lua_State* l) {
       lua_context.call_function(0, 0, "treasure callback");
     }
     lua_context.item_on_obtained(item, treasure);
-    lua_context.map_on_obtained_treasure(game.get_current_map(), treasure);
+    lua_context.map_on_obtained_treasure(hero.get_map(), treasure);
 
     if (hero.is_brandishing_treasure()) {
       // The script may have changed the hero's state.

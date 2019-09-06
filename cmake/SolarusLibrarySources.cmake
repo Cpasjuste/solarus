@@ -34,6 +34,7 @@ target_sources(solarus
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/MainLoop.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/MapData.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Map.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/MapPtr.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/PerfCounter.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/PixelBits.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Point.h"

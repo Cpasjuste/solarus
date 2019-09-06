@@ -103,8 +103,6 @@ Entities::Entities(Game& game, Map& map):
   tiles_ground(),
   non_animated_regions(),
   tiles_in_animated_regions(),
-  hero(game.get_hero()),
-  camera(nullptr),
   named_entities(),
   all_entities(),
   quadtree(new EntityTree()),
@@ -181,11 +179,19 @@ void Entities::notify_entity_removed(Entity& entity) {
 }
 
 /**
- * \brief Returns the hero.
+ * \brief Returns the default hero.
  * \return The hero.
  */
-Hero& Entities::get_hero() {
-  return *hero;
+Hero& Entities::get_default_hero() {
+  return *heroes.front();
+}
+
+/**
+ * @brief Returns the heroes
+ * @return the heroes
+ */
+const Heroes &Entities::get_heroes() const {
+  return heroes;
 }
 
 /**
@@ -289,7 +295,9 @@ EntityVector Entities::get_entities_with_prefix(const std::string& prefix) {
         entities.push_back(entity);
       }
     }
-    entities.push_back(hero);
+    for(const HeroPtr& hero : heroes) {
+      entities.push_back(hero);
+    }
     return entities;
   }
 
@@ -618,8 +626,11 @@ void Entities::notify_map_starting(Map& map, const std::shared_ptr<Destination>&
     entity->notify_map_starting(map, destination);
     entity->notify_tileset_changed();
   }
-  hero->notify_map_starting(map, destination);
-  hero->notify_tileset_changed();
+
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_starting(map, destination);
+    hero->notify_tileset_changed();
+  }
 }
 
 /**
@@ -635,7 +646,9 @@ void Entities::notify_map_started(Map& map, const std::shared_ptr<Destination>& 
   for (const EntityPtr& entity: all_entities) {
     entity->notify_map_started(map, destination);
   }
-  hero->notify_map_started(map, destination);
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_started(map, destination);
+  }
 }
 
 /**
@@ -647,12 +660,14 @@ void Entities::notify_map_started(Map& map, const std::shared_ptr<Destination>& 
  * \param map The map.
  * \param destination Destination entity where the hero is placed or nullptr.
  */
-void Entities::notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination) {
+void Entities::notify_map_opening_transition_finishing(Map& map, const std::string& destination_name) {
 
   for (const EntityPtr& entity: all_entities) {
-    entity->notify_map_opening_transition_finishing(map, destination);
+    entity->notify_map_opening_transition_finishing(map, destination_name);
   }
-  hero->notify_map_opening_transition_finishing(map, destination);
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_opening_transition_finishing(map, destination_name);
+  }
 }
 
 /**
@@ -669,7 +684,9 @@ void Entities::notify_map_opening_transition_finished(Map& map, const std::share
   for (const EntityPtr& entity: all_entities) {
     entity->notify_map_opening_transition_finished(map, destination);
   }
-  hero->notify_map_opening_transition_finished(map, destination);
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_opening_transition_finished(map, destination);
+  }
 }
 
 /**
@@ -688,7 +705,10 @@ void Entities::notify_tileset_changed() {
   for (const EntityPtr& entity: all_entities) {
     entity->notify_tileset_changed();
   }
-  hero->notify_tileset_changed();
+
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_tileset_changed();
+  }
 }
 
 /**
@@ -700,7 +720,9 @@ void Entities::notify_map_finished() {
     entity->notify_map_finished();
     notify_entity_removed(*entity);
   }
-  hero->notify_map_finished();
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_finished();
+  }
 }
 
 /**
@@ -924,9 +946,6 @@ void Entities::add_entity(const EntityPtr& entity) {
         {
           //Debug::check_assertion(camera == nullptr, "Only one camera is supported"); //Not anymore
           CameraPtr new_camera = std::static_pointer_cast<Camera>(entity);
-          if(!camera) {
-            camera = new_camera;
-          }
           cameras.push_back(new_camera);
         }
         break;
@@ -1080,9 +1099,16 @@ void Entities::remove_marked_entities() {
     switch (type) {
 
       case EntityType::CAMERA:
-        camera = nullptr;
+        cameras.erase(std::remove(cameras.begin(),
+                                   cameras.end(),
+                                   std::static_pointer_cast<Camera>(entity)),
+                       cameras.end());
         break;
-
+      case EntityType::HERO:
+        heroes.erase(std::remove(heroes.begin(),
+                                 heroes.end(),
+                                 std::static_pointer_cast<Hero>(entity)),
+                     heroes.end());
       default:
       break;
     }
@@ -1115,7 +1141,9 @@ void Entities::remove_marked_entities() {
 void Entities::set_suspended(bool suspended) {
 
   // the hero first
-  hero->set_suspended(suspended);
+  for(const HeroPtr& hero : heroes) {
+    hero->set_suspended(suspended);
+  }
 
   // other entities
   for (const EntityPtr& entity: all_entities) {
@@ -1133,7 +1161,9 @@ void Entities::update() {
   Debug::check_assertion(map.is_started(), "The map is not started");
 
   // First update the hero.
-  hero->update();
+  for(const HeroPtr& hero : heroes) {
+    hero->update();
+  }
 
   // Update the dynamic entities.
   for (const EntityPtr& entity: all_entities) {

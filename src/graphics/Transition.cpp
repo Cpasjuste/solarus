@@ -39,6 +39,7 @@ Transition::Transition(Transition::Direction direction):
   game(nullptr),
   direction(direction),
   previous_surface(nullptr),
+  destination_side(-1),
   suspended(false),
   when_suspended(0) {
 
@@ -126,6 +127,24 @@ void Transition::set_previous_surface(Surface* previous_surface) {
       "Cannot show a previous surface with an closing transition effect");
 
   this->previous_surface = previous_surface;
+}
+
+/**
+ * @brief sets the side of the map to which we need to scroll
+ * @param side
+ */
+void Transition::set_destination_side(int side) {
+  destination_side = side;
+}
+
+/**
+ * @brief get side of the map to which this transition scrolls
+ * @return the side
+ */
+int Transition::get_destination_side() const {
+  Debug::check_assertion(destination_side != -1,
+                         "Transition : Destination side was not set");
+  return destination_side;
 }
 
 /**

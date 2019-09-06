@@ -1507,7 +1507,7 @@ int LuaContext::l_easy_index(lua_State* l) {
       }
 
       if (game->has_current_map()) {
-        Map& map = game->get_current_map();
+        Map& map = game->get_default_map(); //TODO : see if we can search many maps
         if (name == "map") {
           push_map(l, map);
           return 1;
@@ -1541,7 +1541,8 @@ int LuaContext::l_hero_teleport(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     lua_pushvalue(l, lua_upvalueindex(1));
-    Hero& hero = *check_hero(l, -1);
+    HeroPtr hero_ptr = check_hero(l, -1);
+    Hero& hero = *hero_ptr;
     lua_pop(l, 1);
     const std::string& map_id = LuaTools::check_string(l, 1);
     const std::string& destination_name = LuaTools::opt_string(l, 2, "");
@@ -1552,7 +1553,7 @@ int LuaContext::l_hero_teleport(lua_State* l) {
       LuaTools::arg_error(l, 2, std::string("No such map: '") + map_id + "'");
     }
 
-    hero.get_game().set_current_map(map_id, destination_name, transition_style);
+    hero.get_game().set_current_map(hero_ptr, map_id, destination_name, transition_style);
 
     return 0;
   });
