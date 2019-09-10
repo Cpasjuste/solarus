@@ -1378,7 +1378,7 @@ void Map::check_collision_from_detector(Entity& detector) {
         !entity_nearby->is_being_removed() &&
         entity_nearby.get() != &detector &&
         //entity_nearby.get() != &get_entities().get_hero()
-        std::find(heroes.begin(), heroes.end(), entity_nearby.get()) == heroes.end()
+        std::find(heroes.begin(), heroes.end(), entity_nearby) == heroes.end()
     ) {
       detector.check_collision(*entity_nearby);
     }
@@ -1407,8 +1407,11 @@ void Map::check_collision_from_detector(Entity& detector, Sprite& detector_sprit
     return;
   }
 
-  // First check the hero.
-  detector.check_collision(detector_sprite, get_entities().get_hero());
+  // First check the heroes.
+  const auto& heroes = get_entities().get_heroes();
+  for(const HeroPtr& hero : heroes) {
+    detector.check_collision(detector_sprite, *hero);
+  }
 
   // Check each entity with this detector.
   Rectangle box = detector.get_max_bounding_box();
@@ -1424,7 +1427,8 @@ void Map::check_collision_from_detector(Entity& detector, Sprite& detector_sprit
         !entity_nearby->is_suspended() &&
         !entity_nearby->is_being_removed() &&
         entity_nearby.get() != &detector &&
-        entity_nearby.get() != &get_entities().get_hero()
+        //entity_nearby.get() != &get_entities().get_hero()
+        std::find(heroes.begin(), heroes.end(), entity_nearby) == heroes.end()
     ) {
       detector.check_collision(detector_sprite, *entity_nearby);
     }

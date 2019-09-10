@@ -16,7 +16,7 @@
  */
 #include "solarus/audio/Sound.h"
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Commands.h"
 #include "solarus/core/Geometry.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/System.h"
@@ -85,7 +85,7 @@ void Hero::SwordTappingState::update() {
 
     const Point& facing_point = hero.get_facing_point();
 
-    if (!get_commands().is_command_pressed(GameCommand::ATTACK)
+    if (!get_commands().is_command_pressed(Command::ATTACK)
         || get_commands().get_wanted_direction8() != get_sprites().get_animation_direction8()
         || !get_map().test_collision_with_obstacles(hero.get_layer(), facing_point, hero)) {
       // the sword key has been released, the player has moved or the obstacle is gone

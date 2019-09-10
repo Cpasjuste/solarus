@@ -62,8 +62,8 @@ class Entity::State : public ExportableToLua {
     virtual void set_suspended(bool suspended);
     uint32_t get_when_suspended() const;
     virtual bool notify_input(const InputEvent& event);
-    virtual void notify_command_pressed(GameCommand command);
-    virtual void notify_command_released(GameCommand command);
+    virtual void notify_command_pressed(Command command);
+    virtual void notify_command_released(Command command);
     virtual void notify_action_command_pressed();
     virtual void notify_action_command_released();
     virtual void notify_attack_command_pressed();
@@ -190,8 +190,8 @@ class Entity::State : public ExportableToLua {
     Equipment& get_equipment();
     const Equipment& get_equipment() const;
     CommandsEffects& get_commands_effects();
-    GameCommands& get_commands();
-    const GameCommands& get_commands() const;
+    Commands& get_commands();
+    const Commands& get_commands() const;
     virtual Entity& get_entity();
     virtual const Entity& get_entity() const;
 

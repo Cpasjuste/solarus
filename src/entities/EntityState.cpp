@@ -190,7 +190,7 @@ CommandsEffects& Entity::State::get_commands_effects() {
  * \brief Returns the game commands.
  * \return The commands.
  */
-GameCommands& Entity::State::get_commands() {
+Commands& Entity::State::get_commands() {
   return get_game().get_commands();
 }
 
@@ -198,7 +198,7 @@ GameCommands& Entity::State::get_commands() {
  * \brief Returns the game commands.
  * \return The commands.
  */
-const GameCommands& Entity::State::get_commands() const {
+const Commands& Entity::State::get_commands() const {
   return get_game().get_commands();
 }
 
@@ -319,43 +319,43 @@ bool Entity::State::notify_input(const InputEvent& /* event */) {
  * is not suspended.
  * \param command The command pressed.
  */
-void Entity::State::notify_command_pressed(GameCommand command) {
+void Entity::State::notify_command_pressed(Command command) {
 
   switch (command) {
 
     // action key
-  case GameCommand::ACTION:
+  case Command::ACTION:
     notify_action_command_pressed();
     break;
 
     // sword key
-  case GameCommand::ATTACK:
+  case Command::ATTACK:
     notify_attack_command_pressed();
     break;
 
     // move the entity
-  case GameCommand::RIGHT:
+  case Command::RIGHT:
     notify_direction_command_pressed(0);
     break;
 
-  case GameCommand::UP:
+  case Command::UP:
     notify_direction_command_pressed(1);
     break;
 
-  case GameCommand::LEFT:
+  case Command::LEFT:
     notify_direction_command_pressed(2);
     break;
 
-  case GameCommand::DOWN:
+  case Command::DOWN:
     notify_direction_command_pressed(3);
     break;
 
     // use an equipment item
-  case GameCommand::ITEM_1:
+  case Command::ITEM_1:
     notify_item_command_pressed(1);
     break;
 
-  case GameCommand::ITEM_2:
+  case Command::ITEM_2:
     notify_item_command_pressed(2);
     break;
 
@@ -369,39 +369,39 @@ void Entity::State::notify_command_pressed(GameCommand command) {
  * not suspended.
  * \param command The command released.
  */
-void Entity::State::notify_command_released(GameCommand command) {
+void Entity::State::notify_command_released(Command command) {
 
   switch (command) {
 
-  case GameCommand::ACTION:
+  case Command::ACTION:
     notify_action_command_released();
     break;
 
-  case GameCommand::ATTACK:
+  case Command::ATTACK:
     notify_attack_command_released();
     break;
 
-  case GameCommand::RIGHT:
+  case Command::RIGHT:
     notify_direction_command_released(0);
     break;
 
-  case GameCommand::UP:
+  case Command::UP:
     notify_direction_command_released(1);
     break;
 
-  case GameCommand::LEFT:
+  case Command::LEFT:
     notify_direction_command_released(2);
     break;
 
-  case GameCommand::DOWN:
+  case Command::DOWN:
     notify_direction_command_released(3);
     break;
 
-  case GameCommand::ITEM_1:
+  case Command::ITEM_1:
     notify_item_command_released(0);
     break;
 
-  case GameCommand::ITEM_2:
+  case Command::ITEM_2:
     notify_item_command_released(1);
     break;
 

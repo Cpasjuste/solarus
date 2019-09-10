@@ -18,7 +18,7 @@
 #define SOLARUS_ENTITY_H
 
 #include "solarus/core/Rectangle.h"
-#include "solarus/core/GameCommand.h"
+#include "solarus/core/Command.h"
 #include "solarus/core/Common.h"
 #include "solarus/entities/HeroPtr.h"
 #include "solarus/entities/EntityType.h"
@@ -55,7 +55,7 @@ class EquipmentItem;
 class Explosion;
 class Fire;
 class Game;
-class GameCommands;
+class Commands;
 class Hero;
 class Jumper;
 class LuaContext;
@@ -117,8 +117,8 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual bool can_be_drawn() const;
     virtual bool is_drawn_at_its_position() const;
 
-    virtual void notify_command_pressed(GameCommand command);
-    virtual void notify_command_released(GameCommand command);
+    virtual void notify_command_pressed(Command command);
+    virtual void notify_command_released(Command command);
 
     // Adding to a map.
     bool is_initialized() const;
@@ -400,7 +400,7 @@ class SOLARUS_API Entity: public ExportableToLua {
     Equipment& get_equipment();
     const Equipment& get_equipment() const;
     CommandsEffects& get_commands_effects();
-    GameCommands& get_commands();
+    Commands& get_commands();
     Savegame& get_savegame();
     const Savegame& get_savegame() const;
     Hero& get_default_hero();

@@ -444,7 +444,7 @@ bool Hero::notify_input(const InputEvent& event) {
  * and the game is not suspended.
  * \param command The command pressed.
  */
-void Hero::notify_command_pressed(GameCommand command) {
+void Hero::notify_command_pressed(Command command) {
   get_state()->notify_command_pressed(command);
 }
 
@@ -453,7 +453,7 @@ void Hero::notify_command_pressed(GameCommand command) {
  * if the game is not suspended.
  * \param command The command released.
  */
-void Hero::notify_command_released(GameCommand command) {
+void Hero::notify_command_released(Command command) {
   get_state()->notify_command_released(command);
 }
 
@@ -2606,13 +2606,13 @@ void Hero::start_running() {
 
   // The running state may be triggered by the action command or an
   // item command.
-  GameCommand command;
+  Command command;
   if (is_free()) {
-    command = GameCommand::ACTION;
+    command = Command::ACTION;
   }
   else {
-    command = get_commands().is_command_pressed(GameCommand::ITEM_1) ?
-        GameCommand::ITEM_1 : GameCommand::ITEM_2;
+    command = get_commands().is_command_pressed(Command::ITEM_1) ?
+        Command::ITEM_1 : Command::ITEM_2;
   }
   set_state(std::make_shared<RunningState>(*this, command));
 }

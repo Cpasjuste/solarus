@@ -15,7 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Commands.h"
 #include "solarus/core/Geometry.h"
 #include "solarus/core/Map.h"
 #include "solarus/entities/Boomerang.h"

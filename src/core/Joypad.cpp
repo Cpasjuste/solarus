@@ -29,7 +29,7 @@ const EnumInfo<JoyPadAxis>::names_type EnumInfoTraits<JoyPadAxis>::names = {
   {JoyPadAxis::RIGHT_X, "right_x"},
   {JoyPadAxis::RIGHT_Y, "right_y"},
   {JoyPadAxis::TRIGGER_LEFT, "trigger_left"},
-  {JoyPadAxis::TRIGGER_RIGHT, "trigger_left"},
+  {JoyPadAxis::TRIGGER_RIGHT, "trigger_right"},
 };
 
 Joypad::Joypad(SDL_GameController *sdl_gc, SDL_Joystick *sdl_js) :

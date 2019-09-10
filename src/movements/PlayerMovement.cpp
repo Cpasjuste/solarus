@@ -16,7 +16,7 @@
  */
 #include "solarus/core/Debug.h"
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Commands.h"
 #include "solarus/core/Geometry.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/Stream.h"
@@ -70,7 +70,7 @@ void PlayerMovement::update() {
       stop();
     }
     // Check if the wanted direction has changed.
-    const GameCommands& commands = get_entity()->get_game().get_commands();
+    const Commands& commands = get_entity()->get_game().get_commands();
     int wanted_direction8 = commands.get_wanted_direction8();
     if (wanted_direction8 != direction8 && !is_suspended()) {
       direction8 = wanted_direction8;
@@ -114,7 +114,7 @@ void PlayerMovement::set_moving_speed(int moving_speed) {
 void PlayerMovement::set_wanted_direction() {
 
   if (get_entity() != nullptr && get_entity()->is_on_map()) {
-    GameCommands& commands = get_entity()->get_game().get_commands();
+    Commands& commands = get_entity()->get_game().get_commands();
     direction8 = commands.get_wanted_direction8();
   }
   else {

@@ -16,7 +16,7 @@
  */
 #include "solarus/core/Equipment.h"
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Commands.h"
 #include "solarus/entities/Enemy.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
@@ -81,7 +81,7 @@ void Hero::SwordSwingingState::update() {
     if (hero.get_movement() == nullptr) {
 
       // if the player is still pressing the sword key, start loading the sword
-      if (get_commands().is_command_pressed(GameCommand::ATTACK)
+      if (get_commands().is_command_pressed(Command::ATTACK)
           && !attacked) {
         hero.set_state(std::make_shared<SwordLoadingState>(hero, 1000));
       }

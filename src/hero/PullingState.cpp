@@ -15,7 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Commands.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/GrabbingState.h"
 #include "solarus/hero/HeroSprites.h"
@@ -76,7 +76,7 @@ void Hero::PullingState::update() {
     int opposite_direction8 = (get_sprites().get_animation_direction8() + 4) % 8;
 
     // stop pulling if the action key is released or if there is no more obstacle
-    if (!get_commands().is_command_pressed(GameCommand::ACTION)
+    if (!get_commands().is_command_pressed(Command::ACTION)
         || !hero.is_facing_obstacle()) {
       hero.set_state(std::make_shared<FreeState>(hero));
     }

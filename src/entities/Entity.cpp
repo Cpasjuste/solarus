@@ -265,7 +265,7 @@ bool Entity::can_be_drawn() const {
  * and the game is not suspended.
  * \param command The command pressed.
  */
-void Entity::notify_command_pressed(GameCommand /* game_command */) {
+void Entity::notify_command_pressed(Command /* game_command */) {
 }
 
 /**
@@ -273,7 +273,7 @@ void Entity::notify_command_pressed(GameCommand /* game_command */) {
  * if the game is not suspended.
  * \param command The command released.
  */
-void Entity::notify_command_released(GameCommand /* game_command */) {
+void Entity::notify_command_released(Command /* game_command */) {
 }
 
 /**
@@ -520,7 +520,7 @@ CommandsEffects& Entity::get_commands_effects() {
  * \brief Returns the game commands.
  * \return The commands.
  */
-GameCommands& Entity::get_commands() {
+Commands& Entity::get_commands() {
   return get_game().get_commands();
 }
 

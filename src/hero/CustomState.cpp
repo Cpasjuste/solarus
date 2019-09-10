@@ -352,14 +352,14 @@ bool CustomState::notify_input(const InputEvent& event) {
 /**
  * \copydoc Entity::State::notify_command_pressed
  */
-void CustomState::notify_command_pressed(GameCommand command) {
+void CustomState::notify_command_pressed(Command command) {
 
   // See if the state script handles the command.
   if (get_lua_context().state_on_command_pressed(*this, command)) {
     return;
   }
 
-  if (command == GameCommand::ACTION) {
+  if (command == Command::ACTION) {
     Hero& hero = get_entity();
     Entity* facing_entity = hero.get_facing_entity();
     bool facing_entity_interaction = false;
@@ -391,7 +391,7 @@ void CustomState::notify_command_pressed(GameCommand command) {
 /**
  * \copydoc Entity::State::notify_command_released
  */
-void CustomState::notify_command_released(GameCommand command) {
+void CustomState::notify_command_released(Command command) {
 
   // See if the state script handles the command.
   if (get_lua_context().state_on_command_released(*this, command)) {
@@ -506,7 +506,7 @@ int CustomState::get_wanted_movement_direction8() const {
     return -1;
   }
 
-  const GameCommands& commands = get_commands();
+  const Commands& commands = get_commands();
   return commands.get_wanted_direction8();
 }
 

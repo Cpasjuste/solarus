@@ -444,48 +444,23 @@ bool LuaContext::menu_on_input(
 }
 
 /**
- * \brief Calls the on_command_pressed() method of a Lua menu.
+ * \brief Calls the on_command_pressed/released() method of a Lua menu.
  * \param menu_ref A reference to the menu object.
  * \param command The game command just pressed.
  * \return \c true if the event was handled and should stop being propagated.
  */
-bool LuaContext::menu_on_command_pressed(
+bool LuaContext::menu_on_command(
     const ScopedLuaRef& menu_ref,
-    GameCommand command
+    const CommandEvent& command
 ) {
   push_ref(current_l, menu_ref);
 
   // Send the event to children menus first.
-  bool handled = menus_on_command_pressed(-1, command);
+  bool handled = menus_on_command(-1, command);
 
   if (!handled) {
     // Sent the event to this menu.
-    handled = on_command_pressed(command);
-  }
-
-  lua_pop(current_l, 1);
-
-  return handled;
-}
-
-/**
- * \brief Calls the on_command_released() method of a Lua menu.
- * \param menu_ref A reference to the menu object.
- * \param command The game command just released.
- * \return \c true if the event was handled and should stop being propagated.
- */
-bool LuaContext::menu_on_command_released(
-    const ScopedLuaRef& menu_ref,
-    GameCommand command
-) {
-  push_ref(current_l, menu_ref);
-
-  // Send the event to children menus first.
-  bool handled = menus_on_command_released(-1, command);
-
-  if (!handled) {
-    // Sent the event to this menu.
-    handled = on_command_released(command);
+    handled = on_command(command);
   }
 
   lua_pop(current_l, 1);
@@ -537,42 +512,13 @@ bool LuaContext::menus_on_input(int context_index, const InputEvent& event) {
   return handled;
 }
 
-/**
- * \brief Calls the on_command_pressed() method of the menus associated to a context.
- * \param context_index Index of an object with menus.
- * \param command The game command just pressed.
- * \return \c true if the event was handled and should stop being propagated.
- */
-bool LuaContext::menus_on_command_pressed(int context_index,
-    GameCommand command) {
-
+bool LuaContext::menus_on_command(int context_index, const CommandEvent& event) {
   bool handled = false;
   std::list<LuaMenuData>::reverse_iterator it;
   for (it = menus.rbegin(); it != menus.rend() && !handled; ++it) {
     const ScopedLuaRef& menu_ref = it->ref;
     if (it->context.equals(current_l,context_index)) {
-      handled = menu_on_command_pressed(menu_ref, command);
-    }
-  }
-
-  return handled;
-}
-
-/**
- * \brief Calls the on_command_released() method of the menus associated to a context.
- * \param context_index Index of an object with menus.
- * \param command The game command just released.
- * \return \c true if the event was handled and should stop being propagated.
- */
-bool LuaContext::menus_on_command_released(int context_index,
-    GameCommand command) {
-
-  bool handled = false;
-  std::list<LuaMenuData>::reverse_iterator it;
-  for (it = menus.rbegin(); it != menus.rend() && !handled; ++it) {
-    const ScopedLuaRef& menu_ref = it->ref;
-    if (it->context.equals(current_l,context_index)) {
-      handled = menu_on_command_released(menu_ref, command);
+      handled = menu_on_command(menu_ref, event);
     }
   }
 

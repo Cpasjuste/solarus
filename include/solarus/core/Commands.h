@@ -18,7 +18,7 @@
 #define SOLARUS_GAME_COMMANDS_H
 
 #include "solarus/core/Common.h"
-#include "solarus/core/GameCommand.h"
+#include "solarus/core/Command.h"
 #include "solarus/core/InputEvent.h"
 #include "solarus/lua/ScopedLuaRef.h"
 #include <map>
@@ -27,8 +27,9 @@
 
 namespace Solarus {
 
-class Game;
 class Savegame;
+class MainLoop;
+class Game;
 
 /**
  * \brief Stores the mapping between the in-game high-level commands
@@ -42,74 +43,75 @@ class Savegame;
  * The corresponding low-level input event can be a keyboard event or a
  * joypad event.
  */
-class GameCommands {
+class Commands : public ExportableToLua {
 
   public:
 
-    explicit GameCommands(Game& game);
+    explicit Commands(MainLoop& main_loop);
+    explicit Commands(MainLoop& main_loop, Game& game);
 
-    InputEvent::KeyboardKey get_keyboard_binding(GameCommand command) const;
-    void set_keyboard_binding(GameCommand command, InputEvent::KeyboardKey keyboard_key);
-    const std::string& get_joypad_binding(GameCommand command) const;
-    void set_joypad_binding(GameCommand command, const std::string& joypad_string);
+    InputEvent::KeyboardKey get_keyboard_binding(Command command) const;
+    void set_keyboard_binding(Command command, InputEvent::KeyboardKey keyboard_key);
+    const std::string& get_joypad_binding(Command command) const;
+    void set_joypad_binding(Command command, const std::string& joypad_string);
 
     void notify_input(const InputEvent& event);
-    bool is_command_pressed(GameCommand command) const;
+    bool is_command_pressed(Command command) const;
     int get_wanted_direction8() const;
 
-    void customize(GameCommand command, const ScopedLuaRef& callback_ref);
+    void customize(Command command, const ScopedLuaRef& callback_ref);
     bool is_customizing() const;
-    GameCommand get_command_to_customize() const;
+    Command get_command_to_customize() const;
 
     static bool is_joypad_string_valid(const std::string& joypad_string);
-    static const std::string& get_command_name(GameCommand command);
-    static GameCommand get_command_by_name(const std::string& command_name);
+    static const std::string& get_command_name(Command command);
+    static Command get_command_by_name(const std::string& command_name);
 
-    static const std::map<GameCommand, std::string> command_names;
+    static const std::map<Command, std::string> command_names;
 
     // High-level resulting commands.
-    void game_command_pressed(GameCommand command);
-    void game_command_released(GameCommand command);
+    void game_command_pressed(Command command);
+    void game_command_released(Command command);
+
+    const std::string& get_lua_type_name() const override;
 
   private:
-
-    Savegame& get_savegame();
-    const Savegame& get_savegame() const;
-
     // Keyboard mapping.
     void keyboard_key_pressed(InputEvent::KeyboardKey keyboard_key_pressed);
     void keyboard_key_released(InputEvent::KeyboardKey keyboard_key_released);
-    const std::string& get_keyboard_binding_savegame_variable(GameCommand command) const;
-    InputEvent::KeyboardKey get_saved_keyboard_binding(GameCommand command) const;
-    void set_saved_keyboard_binding(GameCommand command, InputEvent::KeyboardKey key);
-    GameCommand get_command_from_keyboard(InputEvent::KeyboardKey key) const;
+    const std::string& get_keyboard_binding_savegame_variable(Command command) const;
+    InputEvent::KeyboardKey get_saved_keyboard_binding(Command command, const Savegame &save) const;
+    void set_saved_keyboard_binding(Command command, InputEvent::KeyboardKey key, Savegame& save);
+    Command get_command_from_keyboard(InputEvent::KeyboardKey key) const;
 
     // Joypad mapping.
     void joypad_button_pressed(int button);
     void joypad_button_released(int button);
     void joypad_axis_moved(int axis, int direction);
     void joypad_hat_moved(int hat, int direction);
-    const std::string& get_joypad_binding_savegame_variable(GameCommand command) const;
-    std::string get_saved_joypad_binding(GameCommand command) const;
-    void set_saved_joypad_binding(GameCommand command, const std::string& joypad_string);
-    GameCommand get_command_from_joypad(const std::string& joypad_string) const;
+    const std::string& get_joypad_binding_savegame_variable(Command command) const;
+    std::string get_saved_joypad_binding(Command command, const Savegame& save) const;
+    void set_saved_joypad_binding(Command command, const std::string& joypad_string, Savegame& save);
+    Command get_command_from_joypad(const std::string& joypad_string) const;
+
+    void save(Savegame& savegame) const;
 
     void do_customization_callback();
 
-    Game& game;                          /**< The game we are controlling. */
-    std::map<InputEvent::KeyboardKey, GameCommand>
+    MainLoop& main_loop;                          /**< The game we are controlling. */
+    std::map<InputEvent::KeyboardKey, Command>
         keyboard_mapping;                /**< Associates each game command to the
                                           * keyboard key that triggers it. */
-    std::map<std::string, GameCommand>
+    std::map<std::string, Command>
         joypad_mapping;                  /**< Associates each game command to the
                                           * joypad action that triggers it. */
-    std::set<GameCommand>
+    std::set<Command>
         commands_pressed;                /**< Memorizes the state of each game command. */
 
     bool customizing;                    /**< Indicates that the next keyboard or
                                           * joypad event will be considered as the
                                           * new binding for a game command. */
-    GameCommand command_to_customize;    /**< The game command being customized
+    Command command_to_customize;    /**< The game command being customized
                                           * when customizing is true. */
     ScopedLuaRef customize_callback_ref; /**< Lua ref to a function to call
                                           * when the customization finishes. */

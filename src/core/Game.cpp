@@ -68,7 +68,7 @@ Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
   savegame->set_game(this);
 
   // initialize members
-  commands = std::unique_ptr<GameCommands>(new GameCommands(*this)); //TODO differentiate commands from hero to hero
+  commands = std::unique_ptr<Commands>(new Commands(main_loop, *this)); //TODO differentiate commands from hero to hero
 
   heroes.push_back(std::make_shared<Hero>(get_equipment()));
   get_hero()->start_free();
@@ -205,7 +205,7 @@ const HeroPtr& Game::get_hero() {
  * \brief Returns the game commands mapped to the keyboard and the joypad.
  * \return The game commands.
  */
-GameCommands& Game::get_commands() {
+Commands& Game::get_commands() {
   return *commands;
 }
 
@@ -213,7 +213,7 @@ GameCommands& Game::get_commands() {
  * \brief Returns the game commands mapped to the keyboard and the joypad.
  * \return The game commands.
  */
-const GameCommands& Game::get_commands() const {
+const Commands& Game::get_commands() const {
   return *commands;
 }
 
@@ -298,40 +298,41 @@ bool Game::notify_input(const InputEvent& event) {
   }
 
   // if none of the maps use the event, propagate to the commands
-  if(not handled) {
+  /*if(not handled) { //Commands do not live in the game anymore
     commands->notify_input(event);
-  }
+  }*/
 
-  return true;
+  return handled;
 }
 
 /**
- * \brief This function is called when a game command is pressed.
+ * \brief This function is called when a game commend event is raised.
  * \param command A game command.
  */
-void Game::notify_command_pressed(GameCommand command) {
+void Game::notify_command(const CommandEvent& command) {
 
+  bool is_pressed = command.type == CommandEvent::Type::PRESSED;
   // Is a built-in dialog box being shown?
-  if (is_dialog_enabled()) {
-    if (dialog_box.notify_command_pressed(command)) {
+  if (is_dialog_enabled() and is_pressed) {
+    if (dialog_box.notify_command_pressed(command.name)) {
       return;
     }
   }
 
   // See if the game script handles the command.
-  if (get_lua_context().game_on_command_pressed(*this, command)) {
+  if (get_lua_context().game_on_command(*this, command)) {
     return;
   }
 
   // See if the map scripts handled the command.
   for(const MapPtr& map : current_maps) {
-    if (get_lua_context().map_on_command_pressed(*map, command)) {
+    if (get_lua_context().map_on_command(*map, command)) {
       return;
     }
   }
 
   // Lua scripts did not override the command: do the built-in behavior.
-  if (command == GameCommand::PAUSE) {
+  if (command.name == Command::PAUSE and command.is_pressed()) {
     if (is_paused()) {
       if (can_unpause()) {
         set_paused(false);
@@ -348,37 +349,6 @@ void Game::notify_command_pressed(GameCommand command) {
     // When the game is not suspended, all other commands apply to the hero.
     for(const HeroPtr& hero : heroes) { //TODO dispatch commands correctly
       hero->notify_command_pressed(command);
-    }
-  }
-}
-
-/**
- * \brief This function is called when a game command is released.
- * \param command A game command.
- */
-void Game::notify_command_released(GameCommand command) {
-
-  bool handled = get_lua_context().game_on_command_released(*this, command);
-
-  if (!handled) {
-
-    // Check if maps swallow the commands
-    for(const MapPtr& map : current_maps) {
-      if (get_lua_context().map_on_command_released(*map, command)) {
-        handled = true;
-        break;
-      }
-    }
-
-    if (!handled) {
-      // The Lua script did not override the command: do the built-in behavior.
-
-      if (!is_suspended()) {
-        // When the game is not suspended, the command apply to the hero.
-        for(const HeroPtr& hero : heroes) { //TODO dispatch commands correctly
-          hero->notify_command_released(command);
-        }
-      }
     }
   }
 }
@@ -1121,7 +1091,7 @@ void Game::stop_game_over() {
  * \brief Simulates pressing a game command.
  * \param command The command to simulate.
  */
-void Game::simulate_command_pressed(GameCommand command){
+void Game::simulate_command_pressed(Command command){
   commands->game_command_pressed(command);
 }
 
@@ -1129,7 +1099,7 @@ void Game::simulate_command_pressed(GameCommand command){
  * \brief Simulates releasing a game command.
  * \param command The command to simulate.
  */
-void Game::simulate_command_released(GameCommand command){
+void Game::simulate_command_released(Command command){
   commands->game_command_released(command);
 }
 

@@ -21,7 +21,7 @@
 #include "solarus/core/CommandsEffects.h"
 #include "solarus/core/DialogBoxSystem.h"
 #include "solarus/core/GameCommand.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Commands.h"
 #include "solarus/core/Point.h"
 #include "solarus/entities/HeroPtr.h"
 #include "solarus/core/MapPtr.h"
@@ -35,7 +35,7 @@ namespace Solarus {
 
 class CommandsEffects;
 class Equipment;
-class GameCommands;
+class Commands;
 class InputEvent;
 class LuaContext;
 class MainLoop;
@@ -67,8 +67,8 @@ class SOLARUS_API Game {
     LuaContext& get_lua_context();
     ResourceProvider& get_resource_provider();
     const HeroPtr& get_hero();
-    GameCommands& get_commands();
-    const GameCommands& get_commands() const;
+    Commands& get_commands();
+    const Commands& get_commands() const;
     CommandsEffects& get_commands_effects();
     Savegame& get_savegame();
     const Savegame& get_savegame() const;
@@ -83,12 +83,12 @@ class SOLARUS_API Game {
     void notify_window_size_changed(const Size& size);
 
     // game controls
-    void notify_command_pressed(GameCommand command);
-    void notify_command_released(GameCommand command);
+    void notify_command(const CommandEvent& command);
+    //void notify_command_released(Command command);
 
     // simulate commands
-    void simulate_command_pressed(GameCommand command);
-    void simulate_command_released(GameCommand command);
+    void simulate_command_pressed(Command command);
+    void simulate_command_released(Command command);
 
     // map
     Map& get_default_map();
@@ -167,7 +167,7 @@ private:
     bool restarting;           /**< true if the game will be restarted */
 
     // controls
-    std::unique_ptr<GameCommands> //TODO differentiates for each hero
+    std::unique_ptr<Commands> //TODO differentiates for each hero
         commands;              /**< this object receives the keyboard and joypad events */
     CommandsEffects
         commands_effects;      /**< current effect associated to the main game keys

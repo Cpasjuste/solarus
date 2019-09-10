@@ -18,6 +18,7 @@
 #define SOLARUS_GAME_COMMAND_H
 
 #include "solarus/core/Common.h"
+#include "solarus/core/CommandsPtr.h"
 
 namespace Solarus {
 
@@ -26,7 +27,7 @@ namespace Solarus {
  *
  * These high-level commands can be mapped onto the keyboard and the joypad.
  */
-enum class GameCommand {
+enum class Command {
   NONE = -1,
   ACTION,
   ATTACK,
@@ -37,6 +38,47 @@ enum class GameCommand {
   UP,
   LEFT,
   DOWN
+};
+
+
+
+struct CommandEvent {
+  enum class Type{
+    PRESSED,
+    RELEASED
+  };
+
+  /**
+   * @brief tells if this is a press event
+   * @return
+   */
+  inline bool is_pressed() const {
+    return type == Type::PRESSED;
+  }
+
+  inline const char* event_name() const {
+    return is_pressed() ?
+          "on_command_pressed" :
+          "on_command_released";
+  }
+
+  static CommandEvent make_pressed(Command cmd, const CommandsPtr& emitter) {
+    return CommandEvent(Type::PRESSED, cmd, emitter);
+  }
+
+  static CommandEvent make_released(Command cmd, const CommandsPtr& emitter) {
+    return CommandEvent(Type::RELEASED, cmd, emitter);
+  }
+
+  CommandEvent(Type type, Command cmd, const CommandsPtr& emitter) :
+    type(type),
+    name(cmd),
+    emitter(emitter)
+  {}
+
+  Type type;
+  Command name;
+  CommandsPtr emitter;
 };
 
 }

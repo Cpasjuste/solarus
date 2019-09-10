@@ -2508,15 +2508,15 @@ bool LuaContext::map_on_input(Map& map, const InputEvent& event) {
  * \param command The command pressed.
  * \return \c true if the event was handled and should stop being propagated.
  */
-bool LuaContext::map_on_command_pressed(Map& map, GameCommand command) {
+bool LuaContext::map_on_command(Map& map, const CommandEvent& event) {
 
   bool handled = false;
   push_map(current_l, map);
-  if (userdata_has_field(map, "on_command_pressed")) {
-    handled = on_command_pressed(command);
+  if (userdata_has_field(map, event.event_name())) {
+    handled = on_command(event);
   }
   if (!handled) {
-    handled = menus_on_command_pressed(-1, command);
+    handled = menus_on_command(-1, event);
   }
   lua_pop(current_l, 1);
   return handled;
@@ -2532,7 +2532,7 @@ bool LuaContext::map_on_command_pressed(Map& map, GameCommand command) {
  * \param command The command released.
  * \return \c true if the event was handled and should stop being propagated.
  */
-bool LuaContext::map_on_command_released(Map& map, GameCommand command) {
+bool LuaContext::map_on_command_released(Map& map, Command command) {
 
   bool handled = false;
   push_map(current_l, map);

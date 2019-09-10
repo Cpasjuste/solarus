@@ -2163,37 +2163,17 @@ bool LuaContext::on_finger_moved(const InputEvent& event) {
 }
 
 /**
- * \brief Calls the on_command_pressed() method of the object on top of the stack.
- * \param command The game command just pressed.
+ * @brief Notify the object on top of the stack that a command event happended
+ * @param event the command event
+ * @return
  */
-bool LuaContext::on_command_pressed(GameCommand command) {
+bool LuaContext::on_command(const CommandEvent& event) {
   check_callback_thread();
   bool handled = false;
-  if (find_method("on_command_pressed")) {
-    push_string(current_l, GameCommands::get_command_name(command));
-    bool success = call_function(2, 1, "on_command_pressed");
-    if (!success) {
-      // Something was wrong in the script: don't propagate the command to other objects.
-      handled = true;
-    }
-    else {
-      handled = lua_toboolean(current_l, -1);
-      lua_pop(current_l, 1);
-    }
-  }
-  return handled;
-}
-
-/**
- * \brief Calls the on_command_released() method of the object on top of the stack.
- * \param command The game command just pressed.
- */
-bool LuaContext::on_command_released(GameCommand command) {
-  check_callback_thread();
-  bool handled = false;
-  if (find_method("on_command_released")) {
-    push_string(current_l, GameCommands::get_command_name(command));
-    bool success = call_function(2, 1, "on_command_released");
+  if (find_method(event.event_name())) {
+    push_string(current_l, Commands::get_command_name(event.name));
+    push_commands(current_l, *event.emitter); //Push emmiting commands as well
+    bool success = call_function(3, 1, event.event_name());
     if (!success) {
       // Something was wrong in the script: don't propagate the command to other objects.
       handled = true;

@@ -1661,7 +1661,7 @@ bool LuaContext::state_on_input(CustomState& state, const InputEvent& event) {
  * \param command The command pressed.
  * \return \c true if the event was handled and should stop being propagated.
  */
-bool LuaContext::state_on_command_pressed(CustomState& state, GameCommand command) {
+bool LuaContext::state_on_command_pressed(CustomState& state, Command command) {
 
   bool handled = false;
   push_state(current_l, state);
@@ -1685,7 +1685,7 @@ bool LuaContext::state_on_command_pressed(CustomState& state, GameCommand comman
  * \param command The command released.
  * \return \c true if the event was handled and should stop being propagated.
  */
-bool LuaContext::state_on_command_released(CustomState& state, GameCommand command) {
+bool LuaContext::state_on_command_released(CustomState& state, Command command) {
 
   bool handled = false;
   push_state(current_l, state);

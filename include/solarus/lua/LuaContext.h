@@ -21,7 +21,7 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Ability.h"
 #include "solarus/core/Debug.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Commands.h"
 #include "solarus/core/InputEvent.h"
 #include "solarus/core/TimerPtr.h"
 #include "solarus/entities/Camera.h"
@@ -126,6 +126,7 @@ class LuaContext {
     static const std::string video_module_name;
     static const std::string input_module_name;
     static const std::string joypad_module_name;
+    static const std::string commands_module_name;
     static const std::string file_module_name;
     static const std::string timer_module_name;
     static const std::string game_module_name;
@@ -163,6 +164,8 @@ class LuaContext {
     void exit();
     void update();
     bool notify_input(const InputEvent& event);
+
+
     void notify_map_suspended(Map& map, bool suspended);
     void notify_shop_treasure_interaction(ShopTreasure& shop_treasure);
     void notify_hero_brandish_treasure(Hero &hero,
@@ -370,19 +373,21 @@ class LuaContext {
     void menu_on_update(const ScopedLuaRef& menu_ref);
     void menu_on_draw(const ScopedLuaRef& menu_ref, const SurfacePtr& dst_surface);
     bool menu_on_input(const ScopedLuaRef& menu_ref, const InputEvent& event);
+    bool menu_on_command(const ScopedLuaRef& menu_ref, const CommandEvent& event);
     bool menu_on_command_pressed(
         const ScopedLuaRef& menu_ref,
-        GameCommand command
+        Command command
     );
     bool menu_on_command_released(
         const ScopedLuaRef& menu_ref,
-        GameCommand command
+        Command command
     );
     void menus_on_update(int context_index);
     void menus_on_draw(int context_index, const SurfacePtr& dst_surface);
     bool menus_on_input(int context_index, const InputEvent& event);
-    bool menus_on_command_pressed(int context_index, GameCommand command);
-    bool menus_on_command_released(int context_index, GameCommand command);
+    bool menus_on_command(int context_index, const CommandEvent& command);
+    //bool menus_on_command_pressed(int context_index, Command command);
+    //bool menus_on_command_released(int context_index, Command command);
 
     // Sprite events.
     void sprite_on_animation_finished(
@@ -441,8 +446,10 @@ class LuaContext {
     bool game_on_game_over_started(Game& game);
     void game_on_game_over_finished(Game& game);
     bool game_on_input(Game& game, const InputEvent& event);
-    bool game_on_command_pressed(Game& game, GameCommand command);
-    bool game_on_command_released(Game& game, GameCommand command);
+
+    bool game_on_command(Game& game, const CommandEvent& event);
+    bool game_on_command_pressed(Game& game, Command command);
+    bool game_on_command_released(Game& game, Command command);
 
     // Map events.
     void map_on_started(Map& map, const std::shared_ptr<Destination>& destination);
@@ -455,8 +462,7 @@ class LuaContext {
     void map_on_obtaining_treasure(Map& map, const Treasure& treasure);
     void map_on_obtained_treasure(Map& map, const Treasure& treasure);
     bool map_on_input(Map& map, const InputEvent& event);
-    bool map_on_command_pressed(Map& map, GameCommand command);
-    bool map_on_command_released(Map& map, GameCommand command);
+    bool map_on_command(Map& map, const CommandEvent& command);
 
     // Map entity events.
     void entity_on_update(Entity& entity);
@@ -552,8 +558,8 @@ class LuaContext {
         const EnemyReaction::Reaction& reaction
     );
     bool state_on_input(CustomState& state, const InputEvent& event);
-    bool state_on_command_pressed(CustomState& state, GameCommand command);
-    bool state_on_command_released(CustomState& state, GameCommand command);
+    bool state_on_command_pressed(CustomState& state, Command command);
+    bool state_on_command_released(CustomState& state, Command command);
 
     // Implementation of the API.
 
@@ -1370,6 +1376,7 @@ class LuaContext {
     void register_video_module();
     void register_input_module();
     void register_joypad_module();
+    void register_commands_module();
     void register_file_module();
     void register_timer_module();
     void register_item_module();
@@ -1430,6 +1437,7 @@ private:
     static void push_enemy(lua_State* current_l, Enemy& enemy);
     static void push_custom_entity(lua_State* current_l, CustomEntity& entity);
     static void push_joypad(lua_State* current_l, Joypad& joypad);
+    static void push_commands(lua_State* current_l, Commands& commands);
 
     // Getting objects from Lua.
     static bool is_main(lua_State* current_l, int index);
@@ -1521,6 +1529,8 @@ private:
     static std::shared_ptr<CustomEntity> check_custom_entity(lua_State* current_l, int index);
     static bool is_joypad(lua_State* current_l, int index);
     static std::shared_ptr<Joypad> check_joypad(lua_State* current_l, int index);
+    static bool is_commands(lua_State* current_l, int index);
+    static std::shared_ptr<Commands> check_commands(lua_State* current_l, int index);
 
     // Events.
     void check_callback_thread() const;
@@ -1539,6 +1549,7 @@ private:
     bool on_game_over_started();
     void on_game_over_finished();
     bool on_input(const InputEvent& event);
+    bool on_command(const CommandEvent& event);
     bool on_key_pressed(const InputEvent& event);
     bool on_key_released(const InputEvent& event);
     bool on_character_pressed(const InputEvent& event);
@@ -1551,8 +1562,6 @@ private:
     bool on_finger_pressed(const InputEvent& event);
     bool on_finger_released(const InputEvent& event);
     bool on_finger_moved(const InputEvent& event);
-    bool on_command_pressed(GameCommand command);
-    bool on_command_released(GameCommand command);
     void on_animation_finished(const std::string& animation);
     void on_animation_changed(const std::string& animation);
     void on_direction_changed(const std::string& animation, int direction);

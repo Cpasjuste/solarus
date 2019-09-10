@@ -170,7 +170,9 @@ MainLoop::MainLoop(const Arguments& args):
   lua_commands(),
   lua_commands_mutex(),
   num_lua_commands_pushed(0),
-  num_lua_commands_done(0) {
+  num_lua_commands_done(0),
+  commands_dispatcher(*this)
+{
 
 #ifdef SOLARUS_GIT_REVISION
   Logger::info("Solarus " SOLARUS_VERSION " (" SOLARUS_GIT_REVISION ")");
@@ -442,8 +444,7 @@ void MainLoop::run() {
     }
 
     // 3. Redraw the screen.
-    if (num_updates > 0) {
-      draw();
+    if (num_updates > 0) {      draw();
     }
 
     // 4. Sleep if we have time, to save CPU and GPU cycles.
@@ -589,6 +590,10 @@ void MainLoop::notify_input(const InputEvent& event) {
   if (!handled && game != nullptr) {
     game->notify_input(event);
   }
+}
+
+void MainLoop::notify_command(const CommandEvent& event) {
+
 }
 
 /**
