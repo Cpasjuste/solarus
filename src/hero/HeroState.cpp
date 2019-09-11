@@ -206,5 +206,29 @@ bool HeroState::is_jumper_obstacle(
   return true;
 }
 
+/**
+ * @brief Get the commands linked with the hero
+ * @return the commands
+ */
+const Commands& HeroState::get_commands() const {
+  return get_entity().get_commands();
+}
+
+/**
+ * @brief Gets the commands effects linked with the hero
+ * @return the command effects
+ */
+CommandsEffects& HeroState::get_commands_effects() {
+  return get_entity().get_commands_effects();
+}
+
+/**
+ * @brief Const version
+ * @return the commands effects
+ */
+const CommandsEffects& HeroState::get_commands_effects() const {
+  return get_entity().get_commands_effects();
+}
+
 }
 

@@ -21,6 +21,7 @@
 #include "solarus/core/Command.h"
 #include "solarus/core/InputEvent.h"
 #include "solarus/lua/ScopedLuaRef.h"
+#include "solarus/core/CommandsEffects.h"
 #include <map>
 #include <set>
 #include <string>
@@ -73,6 +74,9 @@ class Commands : public ExportableToLua {
     void game_command_pressed(Command command);
     void game_command_released(Command command);
 
+    const CommandsEffects& get_effects() const;
+    CommandsEffects& get_effects();
+
     const std::string& get_lua_type_name() const override;
 
   private:
@@ -111,8 +115,10 @@ class Commands : public ExportableToLua {
     bool customizing;                    /**< Indicates that the next keyboard or
                                           * joypad event will be considered as the
                                           * new binding for a game command. */
-    Command command_to_customize;    /**< The game command being customized
+    Command command_to_customize;       /**< The game command being customized
                                           * when customizing is true. */
+
+    CommandsEffects effects;             /**< Effect of each of those commands */
     ScopedLuaRef customize_callback_ref; /**< Lua ref to a function to call
                                           * when the customization finishes. */
 

@@ -49,7 +49,7 @@ class Sensor: public Entity {
 
   private:
 
-    bool activated_by_hero;      /**< true if the sensor is activated by the hero */
+    bool activated_by_heroes;      /**< true if the sensor is activated by the hero */
     bool notifying_script;       /**< true if the map script is currently being notified */
 };
 

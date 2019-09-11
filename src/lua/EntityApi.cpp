@@ -4506,7 +4506,7 @@ void LuaContext::push_shop_treasure(lua_State* l, ShopTreasure& shop_treasure) {
  *
  * \param shop_treasure A shop treasure.
  */
-void LuaContext::notify_shop_treasure_interaction(ShopTreasure& shop_treasure) {
+void LuaContext::notify_shop_treasure_interaction(ShopTreasure& shop_treasure, Hero& /*hero*/) {
 
   push_shop_treasure(current_l, shop_treasure);
   lua_pushcclosure(current_l, l_shop_treasure_description_dialog_finished, 1);
@@ -6022,8 +6022,8 @@ int LuaContext::enemy_api_hurt(lua_State* l) {
     Enemy& enemy = *check_enemy(l, 1);
     int life_points = LuaTools::check_int(l, 2);
 
-    if (enemy.is_in_normal_state() && !enemy.is_invulnerable()) {
-      Hero& hero = enemy.get_map().get_entities().get_hero();
+    if (enemy.is_in_normal_state() && !enemy.is_invulnerable()) { //TODO check if default hero is okay...
+      Hero& hero = enemy.get_default_hero();
       enemy.set_attack_consequence(EnemyAttack::SCRIPT, EnemyReaction::ReactionType::HURT, life_points);
       enemy.try_hurt(EnemyAttack::SCRIPT, hero, nullptr);
     }
@@ -6061,8 +6061,8 @@ int LuaContext::enemy_api_immobilize(lua_State* l) {
       return 0;
     }
 
-    if (enemy.is_in_normal_state() || enemy.is_immobilized()) {
-      Hero& hero = enemy.get_map().get_entities().get_hero();
+    if (enemy.is_in_normal_state() || enemy.is_immobilized()) { //TODO check if default hero is okay
+      Hero& hero = enemy.get_default_hero();
       enemy.set_attack_consequence(EnemyAttack::SCRIPT, EnemyReaction::ReactionType::IMMOBILIZED, 0);
       enemy.try_hurt(EnemyAttack::SCRIPT, hero, nullptr);
     }
@@ -6935,7 +6935,7 @@ void LuaContext::entity_on_movement_finished(Entity& entity) {
  * \param entity A map entity.
  * \return \c true if an interaction occurred.
  */
-bool LuaContext::entity_on_interaction(Entity& entity) {
+bool LuaContext::entity_on_interaction(Entity& entity, Hero& /*hero*/) {
 
   if (!userdata_has_field(entity, "on_interaction")) {
     return false;
@@ -7314,7 +7314,7 @@ void LuaContext::switch_on_left(Switch& sw) {
  *
  * \param sensor A sensor.
  */
-void LuaContext::sensor_on_activated(Sensor& sensor) {
+void LuaContext::sensor_on_activated(Sensor& sensor, Hero& /*hero*/) {
 
   if (!userdata_has_field(sensor, "on_activated")) {
     return;

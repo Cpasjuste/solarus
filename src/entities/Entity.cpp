@@ -261,19 +261,10 @@ bool Entity::can_be_drawn() const {
 }
 
 /**
- * \brief This function is called when a game command is pressed
- * and the game is not suspended.
- * \param command The command pressed.
+ * @brief Notify this entity that a command event happend
  */
-void Entity::notify_command_pressed(Command /* game_command */) {
-}
-
-/**
- * \brief This function is called when a game command is released
- * if the game is not suspended.
- * \param command The command released.
- */
-void Entity::notify_command_released(Command /* game_command */) {
+bool Entity::notify_command(const CommandEvent& /*event*/) {
+  return false;
 }
 
 /**
@@ -509,22 +500,6 @@ const Equipment& Entity::get_equipment() const {
 }
 
 /**
- * \brief Returns the keys effect manager.
- * \return the keys effect
- */
-CommandsEffects& Entity::get_commands_effects() {
-  return get_game().get_commands_effects();
-}
-
-/**
- * \brief Returns the game commands.
- * \return The commands.
- */
-Commands& Entity::get_commands() {
-  return get_game().get_commands();
-}
-
-/**
  * \brief Returns the savegame.
  * \return The savegame.
  */
@@ -587,8 +562,10 @@ void Entity::notify_being_removed() {
     update_ground_observers();
   }
 
-  if (get_hero().get_facing_entity() == this) {
-    get_hero().set_facing_entity(nullptr);
+  for(const HeroPtr& hero : get_heroes()) {
+    if (hero->get_facing_entity() == this) {
+      hero->set_facing_entity(nullptr);
+    }
   }
 }
 
@@ -3521,34 +3498,32 @@ void Entity::notify_attacked_enemy(
  *
  * \return \c true if an interaction happened.
  */
-bool Entity::notify_action_command_pressed() {
+bool Entity::notify_action_command_pressed(Hero& hero) {
 
   if (!can_be_lifted()) {
     return false;
   }
 
-  CommandsEffects::ActionKeyEffect effect = get_commands_effects().get_action_key_effect();
-  if (effect == CommandsEffects::ACTION_KEY_LIFT &&
-      get_hero().get_facing_entity() == this &&
-      get_hero().is_facing_point_in(get_bounding_box())) {
-
+  if(hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_LIFT &&
+     hero.get_facing_entity() == this &&
+     hero.is_facing_point_in(get_bounding_box())) {
     std::string sprite_id;
     if (has_sprite()) {
       sprite_id = get_sprite()->get_animation_set_id();
     }
     std::shared_ptr<CarriedObject> carried_object = std::make_shared<CarriedObject>(
-        get_hero(),
+        hero,
         *this,
         sprite_id,
         "stone",
         1,  // damage_on_enemies
         0   // explosion_date
     );
-    get_hero().start_lifting(carried_object);
+    hero.start_lifting(carried_object);
 
     Sound::play("lift");
     remove_from_map();
-    get_lua_context()->entity_on_lifting(*this, get_hero(), *carried_object);
+    get_lua_context()->entity_on_lifting(*this, hero, *carried_object);
     return true;
   }
 
@@ -3585,7 +3560,7 @@ bool Entity::notify_interaction_with_item(EquipmentItem& /* item */) {
  *
  * \return \c true if this entity was pushed or pulled successfully.
  */
-bool Entity::start_movement_by_hero() {
+bool Entity::start_movement_by_hero(Hero& /*hero*/) {
   return false;
 }
 

@@ -38,7 +38,7 @@ Sensor::Sensor(
     const Point& xy,
     const Size& size):
   Entity(name, 0, layer, xy, size),
-  activated_by_hero(false),
+  activated_by_heroes(false),
   notifying_script(false) {
 
   set_collision_modes(CollisionMode::COLLISION_CONTAINING | CollisionMode::COLLISION_OVERLAPPING);
@@ -100,15 +100,14 @@ void Sensor::notify_collision_with_explosion(Explosion& /* explosion */, Collisi
  *
  * \param hero the hero
  */
-void Sensor::activate(Hero& /* hero */) {
+void Sensor::activate(Hero& hero) {
 
-  if (!activated_by_hero) {
-
-    activated_by_hero = true;
-
+  if (!activated_by_heroes) {
+    activated_by_heroes = true;
     // Notify Lua.
     notifying_script = true;
-    get_lua_context()->sensor_on_activated(*this);
+
+    get_lua_context()->sensor_on_activated(*this, hero);
     notifying_script = false;
   }
   else {
@@ -127,10 +126,10 @@ void Sensor::update() {
 
   Entity::update();
 
-  if (activated_by_hero) {
+  if (activated_by_heroes) {
     // check whether the hero is still present
-    if (!test_collision_inside(get_hero())) {
-      activated_by_hero = false;
+    if (!any_hero([&](const HeroPtr& hero){return test_collision_inside(*hero);})) {
+      activated_by_heroes = false;
 
       // Notify Lua.
       notifying_script = true;

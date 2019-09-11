@@ -76,7 +76,7 @@ class Door: public Entity {
     void update() override;
     void built_in_draw(Camera& camera) override;
     std::string get_sword_tapping_sound() override;
-    bool notify_action_command_pressed() override;
+    bool notify_action_command_pressed(Hero& hero) override;
     void notify_collision(Entity& entity_overlapping, CollisionMode collision_mode) override;
     void notify_collision(Entity& entity, Sprite& this_sprite, Sprite& other_sprite) override;
     void notify_collision_with_explosion(Explosion& explosion, Sprite& sprite_overlapping) override;

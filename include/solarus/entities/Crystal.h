@@ -43,7 +43,7 @@ class Crystal: public Entity {
     virtual bool is_obstacle_for(Entity& other) override;
     virtual void notify_collision(Entity& entity_overlapping, CollisionMode collision_mode) override;
     virtual void notify_collision(Entity& other_entity, Sprite& this_sprite, Sprite& other_sprite) override;
-    virtual bool notify_action_command_pressed() override;
+    virtual bool notify_action_command_pressed(Hero& hero) override;
     void activate(Entity& entity_activating);
 
     virtual void update() override;

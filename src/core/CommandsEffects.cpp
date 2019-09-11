@@ -79,7 +79,7 @@ CommandsEffects::CommandsEffects():
  * \brief Returns the current effect of the action key.
  * \return the current effect of the action key
  */
-CommandsEffects::ActionKeyEffect CommandsEffects::get_action_key_effect() {
+CommandsEffects::ActionKeyEffect CommandsEffects::get_action_key_effect() const {
   return action_key_effect;
 }
 /**
@@ -94,7 +94,7 @@ void CommandsEffects::set_action_key_effect(CommandsEffects::ActionKeyEffect act
  * \brief Returns whether the action key is enabled.
  * \return true if the action key is enabled, false otherwise
  */
-bool CommandsEffects::is_action_key_enabled() {
+bool CommandsEffects::is_action_key_enabled() const {
   return action_key_enabled;
 }
 
@@ -146,7 +146,7 @@ bool CommandsEffects::is_action_key_acting_on_facing_entity() {
  * \brief Returns the current effect of the sword key.
  * \return the current effect of the sword key
  */
-CommandsEffects::AttackKeyEffect CommandsEffects::get_sword_key_effect() {
+CommandsEffects::AttackKeyEffect CommandsEffects::get_sword_key_effect() const {
   return sword_key_effect;
 }
 
@@ -162,7 +162,7 @@ void CommandsEffects::set_sword_key_effect(CommandsEffects::AttackKeyEffect swor
  * \brief Returns whether the sword key is enabled.
  * \return true if the sword key is enabled, false otherwise
  */
-bool CommandsEffects::is_sword_key_enabled() {
+bool CommandsEffects::is_sword_key_enabled() const {
   return sword_key_enabled;
 }
 
@@ -197,7 +197,7 @@ void CommandsEffects::restore_sword_key_effect() {
  * \brief Returns the current effect of the pause key.
  * \return the current effect of the pause key
  */
-CommandsEffects::PauseKeyEffect CommandsEffects::get_pause_key_effect() {
+CommandsEffects::PauseKeyEffect CommandsEffects::get_pause_key_effect() const {
   return pause_key_effect;
 }
 
@@ -213,7 +213,7 @@ void CommandsEffects::set_pause_key_effect(CommandsEffects::PauseKeyEffect pause
  * \brief Returns whether the pause key is enabled.
  * \return true if the pause key is enabled, false otherwise
  */
-bool CommandsEffects::is_pause_key_enabled() {
+bool CommandsEffects::is_pause_key_enabled() const {
   return pause_key_enabled;
 }
 
@@ -248,7 +248,7 @@ void CommandsEffects::restore_pause_key_effect() {
  * \brief Returns whether the two item keys are enabled.
  * \return true if the two item keys are enabled, false otherwise
  */
-bool CommandsEffects::are_item_keys_enabled() {
+bool CommandsEffects::are_item_keys_enabled() const {
   return item_keys_enabled;
 }
 

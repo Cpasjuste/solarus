@@ -94,9 +94,11 @@ void Chest::notify_enabled(bool enabled) {
 
   Entity::notify_enabled(enabled);
 
-  // Make sure the chest does not appear on the hero.
-  if (enabled && overlaps(get_hero())) {
-    get_hero().avoid_collision(*this, 3);
+  // Make sure the chest does not appear on the heroes
+  for(const HeroPtr& hero: get_heroes()) {
+    if (enabled && overlaps(*hero)) {
+      hero->avoid_collision(*this, 3);
+    }
   }
 }
 
@@ -398,13 +400,14 @@ void Chest::update() {
         ) {
           // No treasure and the script does not define any behavior:
           // unfreeze the hero.
-          get_hero().start_free();
+          opening_hero->start_free();
         }
         else {
           // Give the treasure to the player.
-          get_hero().start_treasure(treasure, ScopedLuaRef());
+          opening_hero->start_treasure(treasure, ScopedLuaRef());
         }
       }
+      opening_hero.reset();
     }
   }
 
@@ -414,11 +417,10 @@ void Chest::update() {
 /**
  * \copydoc Entity::notify_action_command_pressed
  */
-bool Chest::notify_action_command_pressed() {
-
+bool Chest::notify_action_command_pressed(Hero &hero) {
   if (is_enabled() &&
-      get_hero().is_free() &&
-      get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
+      hero.is_free() &&
+      hero.get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
   ) {
 
     if (can_open()) {
@@ -426,8 +428,9 @@ bool Chest::notify_action_command_pressed() {
       set_open(true);
       treasure_date = System::now() + 300;
 
-      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
-      get_hero().start_frozen();
+      hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
+      hero.start_frozen();
+      opening_hero = hero.shared_from_this_cast<Hero>();
     }
     else if (!get_cannot_open_dialog_id().empty()) {
       Sound::play("wrong");
@@ -437,7 +440,7 @@ bool Chest::notify_action_command_pressed() {
     return true;
   }
 
-  return Entity::notify_action_command_pressed();
+  return Entity::notify_action_command_pressed(hero);
 }
 
 /**

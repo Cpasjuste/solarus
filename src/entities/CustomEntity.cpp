@@ -1158,12 +1158,12 @@ void CustomEntity::notify_collision_with_enemy(
 /**
  * \copydoc Entity::notify_action_command_pressed
  */
-bool CustomEntity::notify_action_command_pressed() {
+bool CustomEntity::notify_action_command_pressed(Hero &hero) {
 
-  if (get_lua_context()->entity_on_interaction(*this)) {
+  if (get_lua_context()->entity_on_interaction(*this, hero)) {
     return true;
   }
-  return Entity::notify_action_command_pressed();
+  return Entity::notify_action_command_pressed(hero);
 }
 
 /**

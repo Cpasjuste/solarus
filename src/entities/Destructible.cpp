@@ -299,11 +299,11 @@ void Destructible::notify_collision_with_hero(Hero& hero, CollisionMode /* colli
       && !is_being_cut
       && !is_waiting_for_regeneration()
       && !is_regenerating
-      && get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
+      && hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
       && hero.is_free()) {
 
     if (!get_equipment().has_ability(Ability::LIFT, get_weight())) {
-      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LOOK);
+      hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LOOK);
     }
   }
 }
@@ -354,9 +354,9 @@ void Destructible::notify_collision(
 /**
  * \copydoc Entity::notify_action_command_pressed
  */
-bool Destructible::notify_action_command_pressed() {
+bool Destructible::notify_action_command_pressed(Hero &hero) {
 
-  CommandsEffects::ActionKeyEffect effect = get_commands_effects().get_action_key_effect();
+  CommandsEffects::ActionKeyEffect effect = hero.get_commands_effects().get_action_key_effect();
 
   if ((effect == CommandsEffects::ACTION_KEY_LIFT || effect == CommandsEffects::ACTION_KEY_LOOK)
       && get_weight() != -1
@@ -368,14 +368,14 @@ bool Destructible::notify_action_command_pressed() {
 
       uint32_t explosion_date = get_can_explode() ? System::now() + 6000 : 0;
       std::shared_ptr<CarriedObject> carried_object = std::make_shared<CarriedObject>(
-          get_hero(),
+          hero,
           *this,
           get_animation_set_id(),
           get_destruction_sound(),
           get_damage_on_enemies(),
           explosion_date
       );
-      get_hero().start_lifting(carried_object);
+      hero.start_lifting(carried_object);
 
       // Play the sound.
       Sound::play("lift");
@@ -393,12 +393,12 @@ bool Destructible::notify_action_command_pressed() {
       }
 
       // Notify Lua.
-      get_lua_context()->entity_on_lifting(*this, get_hero(), *carried_object);
+      get_lua_context()->entity_on_lifting(*this, hero, *carried_object);
     }
     else {
       // Cannot lift the object.
-      if (get_hero().can_grab()) {
-        get_hero().start_grabbing();
+      if (hero.can_grab()) {
+        hero.start_grabbing();
       }
       get_lua_context()->destructible_on_looked(*this);
     }
@@ -493,7 +493,9 @@ void Destructible::update() {
 
   else if (is_waiting_for_regeneration()
       && System::now() >= regeneration_date
-      && !overlaps(get_hero())) {
+      && !any_hero([&](const HeroPtr& hero){
+        return hero->overlaps(*this);
+      })) {
 
     if (sprite != nullptr) {
       sprite->set_current_animation("regenerating");

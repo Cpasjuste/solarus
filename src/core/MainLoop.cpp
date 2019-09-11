@@ -588,12 +588,18 @@ void MainLoop::notify_input(const InputEvent& event) {
   // Send the event to Lua and to the current screen.
   bool handled = lua_context->notify_input(event);
   if (!handled && game != nullptr) {
-    game->notify_input(event);
+    handled = game->notify_input(event);
+  }
+
+  if(!handled) {
+    commands_dispatcher.notify_input(event);
   }
 }
 
 void MainLoop::notify_command(const CommandEvent& event) {
-
+  if(game != nullptr) {
+    game->notify_command(event);
+  }
 }
 
 /**

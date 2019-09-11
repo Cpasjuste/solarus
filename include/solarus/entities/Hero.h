@@ -22,6 +22,8 @@
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/Ground.h"
 #include "solarus/hero/HeroSprites.h"
+#include "solarus/core/CommandsPtr.h"
+
 #include <memory>
 #include <string>
 
@@ -72,8 +74,7 @@ class Hero: public Entity {
     void built_in_draw(Camera& camera) override;
     void set_suspended(bool suspended) override;
     bool notify_input(const InputEvent& event);
-    void notify_command_pressed(Command command) override;
-    void notify_command_released(Command command) override;
+    bool notify_command(const CommandEvent& event) override;
 
     /**
      * \name Sprites.
@@ -310,6 +311,9 @@ class Hero: public Entity {
     void start_state_from_ground();
     void start_custom_state(const std::shared_ptr<CustomState>& custom_state);
 
+    const Commands& get_commands() const;
+    const CommandsEffects& get_commands_effects() const;
+    CommandsEffects& get_commands_effects();
   private:
 
     // state

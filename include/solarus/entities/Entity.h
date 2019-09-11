@@ -117,8 +117,10 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual bool can_be_drawn() const;
     virtual bool is_drawn_at_its_position() const;
 
-    virtual void notify_command_pressed(Command command);
-    virtual void notify_command_released(Command command);
+    virtual bool notify_command(const CommandEvent& event);
+
+    /*virtual void notify_command_pressed(Command command);
+    virtual void notify_command_released(Command command);*/
 
     // Adding to a map.
     bool is_initialized() const;
@@ -359,9 +361,9 @@ class SOLARUS_API Entity: public ExportableToLua {
     bool can_be_lifted() const;
     int get_weight() const;
     void set_weight(int weight);
-    virtual bool notify_action_command_pressed();
+    virtual bool notify_action_command_pressed(Hero &hero);
     virtual bool notify_interaction_with_item(EquipmentItem& item);
-    virtual bool start_movement_by_hero();
+    virtual bool start_movement_by_hero(Hero &);
     virtual void stop_movement_by_hero();
     virtual std::string get_sword_tapping_sound();
 
@@ -399,12 +401,64 @@ class SOLARUS_API Entity: public ExportableToLua {
     const Entities& get_entities() const;
     Equipment& get_equipment();
     const Equipment& get_equipment() const;
-    CommandsEffects& get_commands_effects();
-    Commands& get_commands();
+    /*CommandsEffects& get_commands_effects();
+    Commands& get_commands();*/
     Savegame& get_savegame();
     const Savegame& get_savegame() const;
     Hero& get_default_hero();
     const Heroes& get_heroes() const;
+
+    template<class F>
+    /**
+     * @brief find a hero on the map this entity belongs to
+     * @param pred predicate for eligible hero
+     * @return
+     */
+    inline std::pair<bool, Heroes::const_iterator> find_hero(const F& pred) const {
+      const auto& heroes = get_heroes();
+      auto it = std::find_if(heroes.begin(),
+                             heroes.end(),
+                             pred);
+      return {it != heroes.end(), it};
+    }
+
+    template<class F>
+    /**
+     * @brief like find hero but only checks for any
+     * @param pred
+     * @return
+     */
+    inline bool any_hero(const F& pred) const {
+      return find_hero(pred).first;
+    }
+
+    template<class F>
+    /**
+     * @brief
+     * @param pred
+     * @return
+     */
+    inline bool all_heroes(const F& pred) const {
+      return !any_hero([&](const HeroPtr& hero){return !pred(hero);});
+    }
+
+    template<class E>
+    /**
+     * @brief static casts this entity
+     * @return
+     */
+    inline E& as() {
+      return static_cast<E&>(*this);
+    }
+
+    template<class E>
+    /**
+     * @brief static casts this entity, const version
+     * @return
+     */
+    const E& as() const {
+      return static_cast<const E&>(*this);
+    }
 
     /**
      * \name State.

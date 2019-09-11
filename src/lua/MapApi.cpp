@@ -2523,30 +2523,6 @@ bool LuaContext::map_on_command(Map& map, const CommandEvent& event) {
 }
 
 /**
- * \brief Calls the on_command_released() method of a Lua map.
- *
- * Also notifies the menus of the game if the game itself does not handle the
- * event.
- *
- * \param map A map.
- * \param command The command released.
- * \return \c true if the event was handled and should stop being propagated.
- */
-bool LuaContext::map_on_command_released(Map& map, Command command) {
-
-  bool handled = false;
-  push_map(current_l, map);
-  if (userdata_has_field(map, "on_command_released")) {
-    handled = on_command_released(command);
-  }
-  if (!handled) {
-    handled = menus_on_command_released(-1, command);
-  }
-  lua_pop(current_l, 1);
-  return handled;
-}
-
-/**
  * \brief Calls the on_suspended() method of a Lua map.
  *
  * Does nothing if the method is not defined.

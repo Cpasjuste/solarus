@@ -178,8 +178,10 @@ void Door::set_open(bool door_open) {
     set_collision_modes(COLLISION_FACING | COLLISION_SPRITE);
 
     // ensure that we are not closing the door on the hero
-    if (is_on_map() && overlaps(get_hero())) {
-      get_hero().avoid_collision(*this, (get_direction() + 2) % 4);
+    for(const HeroPtr& hero : get_heroes()) {
+      if (is_on_map() && overlaps(*hero)) {
+        hero->avoid_collision(*this, (get_direction() + 2) % 4);
+      }
     }
   }
 
@@ -233,16 +235,16 @@ void Door::notify_collision(Entity& entity_overlapping, CollisionMode /* collisi
 
     Hero& hero = static_cast<Hero&>(entity_overlapping);
 
-    if (get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
+    if (hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
         && hero.is_free()) {
 
       if (can_open()) {
         // The action command opens the door.
-        get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_OPEN);
+        hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_OPEN);
       }
       else if (!get_cannot_open_dialog_id().empty()) {
         // The action command shows a dialog.
-        get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LOOK);
+        hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LOOK);
       }
     }
   }
@@ -514,7 +516,9 @@ void Door::update() {
   if (is_closed()
       && get_opening_method() == OpeningMethod::BY_EXPLOSION
       && get_equipment().has_ability(Ability::DETECT_WEAK_WALLS)
-      && Geometry::get_distance(get_center_point(), get_hero().get_center_point()) < 40
+      && any_hero([&](const HeroPtr& hero){
+        return Geometry::get_distance(get_center_point(), hero->get_center_point()) < 40;
+      })
       && !is_suspended()
       && System::now() >= next_hint_sound_date) {
     Sound::play("cane");
@@ -553,11 +557,11 @@ void Door::built_in_draw(Camera& camera) {
 /**
  * \copydoc Entity::notify_action_command_pressed
  */
-bool Door::notify_action_command_pressed() {
+bool Door::notify_action_command_pressed(Hero &hero) {
 
-  if (get_hero().is_free() &&
+  if (hero.is_free() &&
       is_closed() &&
-      get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
+      hero.get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
   ) {
 
     if (can_open()) {
@@ -574,7 +578,7 @@ bool Door::notify_action_command_pressed() {
 
       set_opening();
 
-      get_hero().check_position();
+      hero.check_position();
     }
     else if (!cannot_open_dialog_id.empty()) {
       Sound::play("wrong");
@@ -584,7 +588,7 @@ bool Door::notify_action_command_pressed() {
     return true;
   }
 
-  return Entity::notify_action_command_pressed();
+  return Entity::notify_action_command_pressed(hero);
 }
 
 /**

@@ -43,6 +43,10 @@ class HeroState: public Entity::State {
     bool is_raised_block_obstacle(CrystalBlock& raised_block) override;
     bool is_jumper_obstacle(Jumper& jumper, const Rectangle& candidate_position) override;
 
+    const Commands& get_commands() const;
+    CommandsEffects& get_commands_effects();
+    const CommandsEffects& get_commands_effects() const;
+
   protected:
 
     HeroState(Hero& hero, const std::string& state_name);

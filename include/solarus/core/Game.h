@@ -169,9 +169,7 @@ private:
     // controls
     std::unique_ptr<Commands> //TODO differentiates for each hero
         commands;              /**< this object receives the keyboard and joypad events */
-    CommandsEffects
-        commands_effects;      /**< current effect associated to the main game keys
-                                * (represented on the HUD by the action icon, the objects icons, etc.) */
+
 
     // map
     /*std::shared_ptr<Map>

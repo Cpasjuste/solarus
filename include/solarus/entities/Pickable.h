@@ -92,7 +92,7 @@ class Pickable: public Entity {
     void initialize_movement();
 
     // item
-    void try_give_item_to_player();
+    void try_give_item_to_player(Hero &hero);
     void set_blinking(bool blinking);
 
     void check_bad_ground();

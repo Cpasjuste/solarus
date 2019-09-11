@@ -227,7 +227,7 @@ void Npc::notify_collision(Entity& entity_overlapping, CollisionMode collision_m
 
     Hero& hero = static_cast<Hero&>(entity_overlapping);
 
-    CommandsEffects::ActionKeyEffect action_effect = get_commands_effects().get_action_key_effect();
+    CommandsEffects::ActionKeyEffect action_effect = hero.get_commands_effects().get_action_key_effect();
     if (action_effect == CommandsEffects::ACTION_KEY_NONE || action_effect == CommandsEffects::ACTION_KEY_LIFT) {
 
       if (hero.is_free()) {
@@ -236,7 +236,7 @@ void Npc::notify_collision(Entity& entity_overlapping, CollisionMode collision_m
             || hero.is_facing_direction4((get_direction() + 2) % 4)) {
 
           // show the appropriate action icon
-          get_commands_effects().set_action_key_effect(subtype == USUAL_NPC ?
+          hero.get_commands_effects().set_action_key_effect(subtype == USUAL_NPC ?
               CommandsEffects::ACTION_KEY_SPEAK : CommandsEffects::ACTION_KEY_LOOK);
         }
       }
@@ -257,19 +257,18 @@ void Npc::notify_collision(Entity& entity_overlapping, CollisionMode collision_m
 /**
  * \copydoc Entity::notify_action_command_pressed
  */
-bool Npc::notify_action_command_pressed() {
+bool Npc::notify_action_command_pressed(Hero& hero) {
 
-  Hero& hero = get_hero();
   if (hero.is_free() &&
-      get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
+      hero.get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
   ) {
-    CommandsEffects::ActionKeyEffect effect = get_commands_effects().get_action_key_effect();
+    CommandsEffects::ActionKeyEffect effect = hero.get_commands_effects().get_action_key_effect();
 
     SpritePtr sprite = get_sprite();
 
     // if this is a usual NPC, look towards the hero
     if (subtype == USUAL_NPC) {
-      int direction = (get_hero().get_animation_direction() + 2) % 4;
+      int direction = (hero.get_animation_direction() + 2) % 4;
       if (sprite != nullptr) {
         sprite->set_current_direction(direction);
       }
@@ -277,26 +276,26 @@ bool Npc::notify_action_command_pressed() {
 
     if (effect != CommandsEffects::ACTION_KEY_LIFT) {
       // start the normal behavior
-      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
+      hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
       if (behavior == BEHAVIOR_DIALOG) {
         get_game().start_dialog(dialog_to_show, ScopedLuaRef(), ScopedLuaRef());
       }
       else {
-        call_script_hero_interaction();
+        call_script_hero_interaction(hero);
       }
       return true;
     }
   }
-  return Entity::notify_action_command_pressed();
+  return Entity::notify_action_command_pressed(hero);
 }
 
 /**
  * \brief Notifies the appropriate script that the hero is interacting with this entity.
  */
-void Npc::call_script_hero_interaction() {
+void Npc::call_script_hero_interaction(Hero& hero) {
 
   if (behavior == BEHAVIOR_MAP_SCRIPT) {
-    get_lua_context()->entity_on_interaction(*this);
+    get_lua_context()->entity_on_interaction(*this, hero);
   }
   else {
     EquipmentItem& item = get_equipment().get_item(item_name);
@@ -355,11 +354,13 @@ void Npc::notify_position_changed() {
       }
     }
 
-    if (get_hero().get_facing_entity() == this &&
-        get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_SPEAK &&
-        !get_hero().is_facing_point_in(get_bounding_box())) {
+    for(const HeroPtr& hero : get_heroes()) {
+      if (hero->get_facing_entity() == this &&
+          hero->get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_SPEAK &&
+          !hero->is_facing_point_in(get_bounding_box())) {
 
-      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
+        hero->get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
+      }
     }
   }
 }

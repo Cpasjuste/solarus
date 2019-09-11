@@ -440,21 +440,19 @@ bool Hero::notify_input(const InputEvent& event) {
 }
 
 /**
- * \brief This function is called when a game command is pressed
- * and the game is not suspended.
- * \param command The command pressed.
+ * @copydoc Entity::notify_command
  */
-void Hero::notify_command_pressed(Command command) {
-  get_state()->notify_command_pressed(command);
-}
+bool Hero::notify_command(const CommandEvent& event) {
 
-/**
- * \brief This function is called when a game command is released
- * if the game is not suspended.
- * \param command The command released.
- */
-void Hero::notify_command_released(Command command) {
-  get_state()->notify_command_released(command);
+  //TODO filter events that does not are for this hero
+
+  if(event.is_pressed()) {
+    get_state()->notify_command_pressed(event.name);
+  } else {
+    get_state()->notify_command_released(event.name);
+  }
+
+  return true; // TODO verify this
 }
 
 /**

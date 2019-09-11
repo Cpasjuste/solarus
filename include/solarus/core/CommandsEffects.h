@@ -80,9 +80,9 @@ class CommandsEffects {
 
     // action key
 
-    ActionKeyEffect get_action_key_effect();
+    ActionKeyEffect get_action_key_effect() const;
     void set_action_key_effect(ActionKeyEffect action_key_effect);
-    bool is_action_key_enabled();
+    bool is_action_key_enabled() const;
     void set_action_key_enabled(bool enable);
     void save_action_key_effect();
     void restore_action_key_effect();
@@ -90,24 +90,24 @@ class CommandsEffects {
 
     // sword key
 
-    AttackKeyEffect get_sword_key_effect();
+    AttackKeyEffect get_sword_key_effect() const;
     void set_sword_key_effect(AttackKeyEffect sword_key_effect);
-    bool is_sword_key_enabled();
+    bool is_sword_key_enabled() const;
     void set_sword_key_enabled(bool enable);
     void save_sword_key_effect();
     void restore_sword_key_effect();
 
     // pause key
 
-    PauseKeyEffect get_pause_key_effect();
+    PauseKeyEffect get_pause_key_effect() const;
     void set_pause_key_effect(PauseKeyEffect pause_key_effect);
-    bool is_pause_key_enabled();
+    bool is_pause_key_enabled() const;
     void set_pause_key_enabled(bool enable);
     void save_pause_key_effect();
     void restore_pause_key_effect();
 
     // item keys
-    bool are_item_keys_enabled();
+    bool are_item_keys_enabled() const;
     void set_item_keys_enabled(bool enable);
 
     // all keys

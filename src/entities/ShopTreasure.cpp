@@ -170,13 +170,13 @@ void ShopTreasure::notify_collision(
 
   if (entity_overlapping.is_hero() && !get_game().is_suspended()) {
 
-    Hero& hero = static_cast<Hero&>(entity_overlapping);
+    Hero& hero = entity_overlapping.as<Hero>();
 
-    if (get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
+    if (hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
         && hero.is_free()) {
 
       // we show the 'look' icon
-      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LOOK);
+      hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LOOK);
     }
   }
 }
@@ -184,16 +184,16 @@ void ShopTreasure::notify_collision(
 /**
  * \copydoc Entity::notify_action_command_pressed
  */
-bool ShopTreasure::notify_action_command_pressed() {
+bool ShopTreasure::notify_action_command_pressed(Hero &hero) {
 
-  if (get_hero().is_free()
-      && get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_LOOK) {
+  if (hero.is_free()
+      && hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_LOOK) {
 
-    get_lua_context()->notify_shop_treasure_interaction(*this);
+    get_lua_context()->notify_shop_treasure_interaction(*this, hero);
     return true;
   }
 
-  return Entity::notify_action_command_pressed();
+  return Entity::notify_action_command_pressed(hero);
 }
 
 /**

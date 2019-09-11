@@ -70,6 +70,10 @@ struct CommandEvent {
     return CommandEvent(Type::RELEASED, cmd, emitter);
   }
 
+  inline bool is_from(const CommandsPtr& other) const {
+    return emitter == other;
+  }
+
   CommandEvent(Type type, Command cmd, const CommandsPtr& emitter) :
     type(type),
     name(cmd),

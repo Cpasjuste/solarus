@@ -56,7 +56,6 @@ Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
   suspended_by_script(false),
   started(false),
   restarting(false),
-  commands_effects(),
   //current_map(nullptr),
   //next_map(nullptr),
   //previous_map_surface(nullptr),
@@ -222,7 +221,7 @@ const Commands& Game::get_commands() const {
  * \return the current effect of the main keys
  */
 CommandsEffects& Game::get_commands_effects() {
-  return commands_effects;
+  return get_commands().get_effects();
 }
 
 /**
@@ -348,7 +347,7 @@ void Game::notify_command(const CommandEvent& command) {
   else if (!is_suspended()) {
     // When the game is not suspended, all other commands apply to the hero.
     for(const HeroPtr& hero : heroes) { //TODO dispatch commands correctly
-      hero->notify_command_pressed(command);
+      hero->notify_command(command);
     }
   }
 }
@@ -593,14 +592,14 @@ void Game::update_commands_effects() {
 
   // make sure the sword key is coherent with having a sword
   if (get_equipment().has_ability(Ability::SWORD)
-      && commands_effects.get_sword_key_effect() != CommandsEffects::ATTACK_KEY_SWORD) {
+      && get_commands_effects().get_sword_key_effect() != CommandsEffects::ATTACK_KEY_SWORD) {
 
-    commands_effects.set_sword_key_effect(CommandsEffects::ATTACK_KEY_SWORD);
+    get_commands_effects().set_sword_key_effect(CommandsEffects::ATTACK_KEY_SWORD);
   }
   else if (!get_equipment().has_ability(Ability::SWORD)
-      && commands_effects.get_sword_key_effect() == CommandsEffects::ATTACK_KEY_SWORD) {
+      && get_commands_effects().get_sword_key_effect() == CommandsEffects::ATTACK_KEY_SWORD) {
 
-    commands_effects.set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
+    get_commands_effects().set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
   }
 }
 
@@ -951,7 +950,7 @@ bool Game::is_pause_allowed() const {
 void Game::set_pause_allowed(bool pause_allowed) {
 
   this->pause_allowed = pause_allowed;
-  commands_effects.set_pause_key_enabled(pause_allowed);
+  get_commands_effects().set_pause_key_enabled(pause_allowed);
 }
 
 /**
@@ -964,18 +963,18 @@ void Game::set_paused(bool paused) {
 
     this->paused = paused;
     if (paused) {
-      commands_effects.save_action_key_effect();
-      commands_effects.set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
-      commands_effects.save_sword_key_effect();
-      commands_effects.set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
-      commands_effects.set_pause_key_effect(CommandsEffects::PAUSE_KEY_RETURN);
+      get_commands_effects().save_action_key_effect();
+      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
+      get_commands_effects().save_sword_key_effect();
+      get_commands_effects().set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
+      get_commands_effects().set_pause_key_effect(CommandsEffects::PAUSE_KEY_RETURN);
       get_lua_context().game_on_paused(*this);
     }
     else {
       get_lua_context().game_on_unpaused(*this);
-      commands_effects.restore_action_key_effect();
-      commands_effects.restore_sword_key_effect();
-      commands_effects.set_pause_key_effect(CommandsEffects::PAUSE_KEY_PAUSE);
+      get_commands_effects().restore_action_key_effect();
+      get_commands_effects().restore_sword_key_effect();
+      get_commands_effects().set_pause_key_effect(CommandsEffects::PAUSE_KEY_PAUSE);
     }
   }
 }

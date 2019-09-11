@@ -96,7 +96,7 @@ class Teletransporter;
 class TextSurface;
 class Timer;
 class Treasure;
-
+class Player;
 class Arguments;
 
 using EntityVector = std::vector<EntityPtr>;
@@ -127,6 +127,7 @@ class LuaContext {
     static const std::string input_module_name;
     static const std::string joypad_module_name;
     static const std::string commands_module_name;
+    static const std::string player_module_name;
     static const std::string file_module_name;
     static const std::string timer_module_name;
     static const std::string game_module_name;
@@ -167,7 +168,7 @@ class LuaContext {
 
 
     void notify_map_suspended(Map& map, bool suspended);
-    void notify_shop_treasure_interaction(ShopTreasure& shop_treasure);
+    void notify_shop_treasure_interaction(ShopTreasure& shop_treasure, Hero &hero);
     void notify_hero_brandish_treasure(Hero &hero,
         const Treasure& treasure,
         const ScopedLuaRef& callback_ref
@@ -478,7 +479,7 @@ class LuaContext {
     void entity_on_movement_started(Entity& entity, Movement& movement);
     void entity_on_movement_changed(Entity& entity, Movement& movement);
     void entity_on_movement_finished(Entity& entity);
-    bool entity_on_interaction(Entity& entity);
+    bool entity_on_interaction(Entity& entity, Hero &hero);
     bool entity_on_interaction_item(Entity& entity, EquipmentItem& item_used);
     void entity_on_state_changing(
         Entity& entity,
@@ -502,7 +503,7 @@ class LuaContext {
     void switch_on_activated(Switch& sw);
     void switch_on_inactivated(Switch& sw);
     void switch_on_left(Switch& sw);
-    void sensor_on_activated(Sensor& sensor);
+    void sensor_on_activated(Sensor& sensor, Hero &hero);
     void sensor_on_activated_repeat(Sensor& sensor);
     void sensor_on_left(Sensor& sensor);
     void sensor_on_collision_explosion(Sensor& sensor);
@@ -558,8 +559,7 @@ class LuaContext {
         const EnemyReaction::Reaction& reaction
     );
     bool state_on_input(CustomState& state, const InputEvent& event);
-    bool state_on_command_pressed(CustomState& state, Command command);
-    bool state_on_command_released(CustomState& state, Command command);
+    bool state_on_command(CustomState& state, const CommandEvent& command);
 
     // Implementation of the API.
 
@@ -1377,6 +1377,7 @@ class LuaContext {
     void register_input_module();
     void register_joypad_module();
     void register_commands_module();
+    void register_player_module();
     void register_file_module();
     void register_timer_module();
     void register_item_module();
@@ -1438,6 +1439,7 @@ private:
     static void push_custom_entity(lua_State* current_l, CustomEntity& entity);
     static void push_joypad(lua_State* current_l, Joypad& joypad);
     static void push_commands(lua_State* current_l, Commands& commands);
+    static void push_player(lua_State* current_l, Player& commands);
 
     // Getting objects from Lua.
     static bool is_main(lua_State* current_l, int index);
@@ -1531,6 +1533,8 @@ private:
     static std::shared_ptr<Joypad> check_joypad(lua_State* current_l, int index);
     static bool is_commands(lua_State* current_l, int index);
     static std::shared_ptr<Commands> check_commands(lua_State* current_l, int index);
+    static bool is_player(lua_State* current_l, int index);
+    static std::shared_ptr<Player> check_player(lua_State* current_l, int index);
 
     // Events.
     void check_callback_thread() const;

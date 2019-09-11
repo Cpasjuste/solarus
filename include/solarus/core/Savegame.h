@@ -36,7 +36,7 @@ class MainLoop;
  * This class provides read and write access to the saved data.
  */
 class SOLARUS_API Savegame: public ExportableToLua {
-
+  friend class Player;
   public:
 
     static const int SAVEGAME_VERSION;  /**< Version number of the savegame file format. */
@@ -94,7 +94,22 @@ class SOLARUS_API Savegame: public ExportableToLua {
     void save();
     const std::string& get_file_name() const;
 
-    // data
+
+
+    // unsaved data
+    MainLoop& get_main_loop();
+    LuaContext& get_lua_context();
+    const Equipment& get_equipment() const;
+    Equipment& get_equipment();
+    const Game* get_game() const;
+    Game* get_game();
+    void set_game(Game* game);
+    void notify_game_started();
+    void notify_game_finished();
+
+    virtual const std::string& get_lua_type_name() const override;
+
+    // data, private to allow only access via the player view
     bool is_string(const std::string& key) const;
     std::string get_string(const std::string& key) const;
     void set_string(const std::string& key, const std::string& value);
@@ -112,20 +127,9 @@ class SOLARUS_API Savegame: public ExportableToLua {
     void set_default_joypad_controls();
     void post_process_existing_savegame();
 
-    // unsaved data
-    MainLoop& get_main_loop();
-    LuaContext& get_lua_context();
-    const Equipment& get_equipment() const;
-    Equipment& get_equipment();
-    const Game* get_game() const;
-    Game* get_game();
-    void set_game(Game* game);
-    void notify_game_started();
-    void notify_game_finished();
-
-    virtual const std::string& get_lua_type_name() const override;
-
   private:
+
+
 
     struct SavedValue {
 

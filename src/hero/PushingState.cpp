@@ -101,7 +101,7 @@ void Hero::PushingState::update() {
           hero.try_snap_to_facing_entity();
         }
 
-        if (facing_entity->start_movement_by_hero()) {
+        if (facing_entity->start_movement_by_hero(hero)) {
 
           std::string path = "  ";
           path[0] = path[1] = '0' + pushing_direction4 * 2;

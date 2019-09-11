@@ -349,15 +349,21 @@ bool CustomState::notify_input(const InputEvent& event) {
   return get_lua_context().state_on_input(*this, event);
 }
 
+void CustomState::notify_command(const CommandEvent& event) {
+  if (get_lua_context().state_on_command(*this, event)) {
+    return;
+  }
+
+  Entity::State::notify_command(event);
+}
+
 /**
  * \copydoc Entity::State::notify_command_pressed
  */
 void CustomState::notify_command_pressed(Command command) {
 
   // See if the state script handles the command.
-  if (get_lua_context().state_on_command_pressed(*this, command)) {
-    return;
-  }
+
 
   if (command == Command::ACTION) {
     Hero& hero = get_entity();
@@ -369,7 +375,7 @@ void CustomState::notify_command_pressed(Command command) {
           get_commands_effects().is_action_key_acting_on_facing_entity()
       ) {
         // Action on the facing entity.
-        facing_entity_interaction = facing_entity->notify_action_command_pressed();
+        facing_entity_interaction = facing_entity->notify_action_command_pressed(hero);
       }
     }
 
@@ -386,19 +392,6 @@ void CustomState::notify_command_pressed(Command command) {
   }
 
   Entity::State::notify_command_pressed(command);
-}
-
-/**
- * \copydoc Entity::State::notify_command_released
- */
-void CustomState::notify_command_released(Command command) {
-
-  // See if the state script handles the command.
-  if (get_lua_context().state_on_command_released(*this, command)) {
-    return;
-  }
-
-  Entity::State::notify_command_released(command);
 }
 
 /**

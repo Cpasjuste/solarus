@@ -179,30 +179,6 @@ const Equipment& Entity::State::get_equipment() const {
 }
 
 /**
- * \brief Returns the keys effect manager.
- * \return the keys effect
- */
-CommandsEffects& Entity::State::get_commands_effects() {
-  return get_game().get_commands_effects();
-}
-
-/**
- * \brief Returns the game commands.
- * \return The commands.
- */
-Commands& Entity::State::get_commands() {
-  return get_game().get_commands();
-}
-
-/**
- * \brief Returns the game commands.
- * \return The commands.
- */
-const Commands& Entity::State::get_commands() const {
-  return get_game().get_commands();
-}
-
-/**
  * \brief Starts this state.
  *
  * This function is called automatically when this state becomes the active
@@ -312,6 +288,14 @@ uint32_t Entity::State::get_when_suspended() const {
  */
 bool Entity::State::notify_input(const InputEvent& /* event */) {
   return false;
+}
+
+void Entity::State::notify_command(const CommandEvent& event) {
+  if(event.is_pressed()) {
+    notify_command_released(event.name);
+  } else {
+    notify_command_released(event.name);
+  }
 }
 
 /**
