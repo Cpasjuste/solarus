@@ -56,21 +56,17 @@ Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
   suspended_by_script(false),
   started(false),
   restarting(false),
-  //current_map(nullptr),
-  //next_map(nullptr),
-  //previous_map_surface(nullptr),
-  //transition_style(Transition::Style::IMMEDIATE),
-  //transition(nullptr),
   crystal_state(false) {
 
   // notify objects
   savegame->set_game(this);
 
   // initialize members
-  commands = std::unique_ptr<Commands>(new Commands(main_loop, *this)); //TODO differentiate commands from hero to hero
+  commands = CommandsDispatcher::get().create_commands_from_game(*this); //TODO differentiate commands from hero to hero
 
   heroes.push_back(std::make_shared<Hero>(get_equipment()));
   get_hero()->start_free();
+  get_hero()->set_commands(commands);
   update_commands_effects();
 
   // Maybe we are restarting after a game-over sequence.
@@ -361,10 +357,13 @@ void Game::update() {
 
   // Update the transitions between maps.
   // Use the side effect of remove_if to elegantly remove the finished teleportations
-  std::remove_if(hero_teleportations.begin(), hero_teleportations.end(),
+  hero_teleportations.erase(
+        std::remove_if(hero_teleportations.begin(), hero_teleportations.end(),
                  [this](HeroTeleportation& ht){
-    return update_teleportation(ht);
-  });
+          return update_teleportation(ht);
+        }),
+        hero_teleportations.end()
+  );
 
   if (restarting || !started) {
     return;
@@ -543,7 +542,7 @@ bool Game::update_teleportation(Game::HeroTeleportation& tp) {
         next_map = nullptr;
       }
     }
-    else {
+    else { //The opening transition has finished
       current_map->notify_opening_transition_finished(tp.destination_name);
       previous_map_surface = nullptr;
       return true; // This teleportation is finished
@@ -577,7 +576,7 @@ bool Game::update_teleportation(Game::HeroTeleportation& tp) {
     }
   }
 
-  return false; //This transition is not yet finished
+  return transition == nullptr; //This transition is not yet finished
 }
 
 /**

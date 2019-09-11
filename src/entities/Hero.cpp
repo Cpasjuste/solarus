@@ -2936,5 +2936,37 @@ void Hero::start_custom_state(const std::shared_ptr<CustomState>& custom_state) 
   set_state(custom_state);
 }
 
+/**
+ * @brief Gets commands controlling this hero
+ * @return
+ */
+const Commands& Hero::get_commands() const {
+  return *commands;
+}
+
+/**
+ * @brief Get effects of the commands linked to this hero
+ * @return
+ */
+const CommandsEffects& Hero::get_commands_effects() const {
+  return commands->get_effects();
+}
+
+/**
+ * @brief Gets effect of the commands linked to this hero, const-version
+ * @return
+ */
+CommandsEffects& Hero::get_commands_effects() {
+  return commands->get_effects();
+}
+
+/**
+ * @brief Hero::set_commands
+ * @param commands
+ */
+void Hero::set_commands(const CommandsPtr& commands) {
+  this->commands = commands;
+}
+
 }
 

@@ -949,6 +949,12 @@ void Entities::add_entity(const EntityPtr& entity) {
           cameras.push_back(new_camera);
         }
         break;
+      case EntityType::HERO:
+      {
+        HeroPtr hero = std::static_pointer_cast<Hero>(entity);
+        heroes.push_back(hero);
+        break;
+      }
       case EntityType::DESTINATION:
         {
           std::shared_ptr<Destination> destination =

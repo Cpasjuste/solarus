@@ -858,6 +858,22 @@ Command Commands::get_command_by_name(
 }
 
 /**
+ * @brief Gets the effects of these commands, const version
+ * @return
+ */
+const CommandsEffects& Commands::get_effects() const {
+  return effects;
+}
+
+/**
+ * @brief Gets the effects of these commands, non-const version
+ * @return
+ */
+CommandsEffects& Commands::get_effects() {
+  return effects;
+}
+
+/**
  * \brief Returns the name identifying this type in Lua.
  * \return The name identifying this type in Lua.
  */

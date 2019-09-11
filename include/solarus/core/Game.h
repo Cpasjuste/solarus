@@ -167,7 +167,7 @@ private:
     bool restarting;           /**< true if the game will be restarted */
 
     // controls
-    std::unique_ptr<Commands> //TODO differentiates for each hero
+    CommandsPtr
         commands;              /**< this object receives the keyboard and joypad events */
 
 

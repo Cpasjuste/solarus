@@ -178,9 +178,11 @@ void Door::set_open(bool door_open) {
     set_collision_modes(COLLISION_FACING | COLLISION_SPRITE);
 
     // ensure that we are not closing the door on the hero
-    for(const HeroPtr& hero : get_heroes()) {
-      if (is_on_map() && overlaps(*hero)) {
-        hero->avoid_collision(*this, (get_direction() + 2) % 4);
+    if(is_on_map()) {
+      for(const HeroPtr& hero : get_heroes()) {
+        if (overlaps(*hero)) {
+          hero->avoid_collision(*this, (get_direction() + 2) % 4);
+        }
       }
     }
   }

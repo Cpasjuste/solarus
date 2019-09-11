@@ -314,6 +314,8 @@ class Hero: public Entity {
     const Commands& get_commands() const;
     const CommandsEffects& get_commands_effects() const;
     CommandsEffects& get_commands_effects();
+
+    void set_commands(const CommandsPtr& commands);
   private:
 
     // state
@@ -395,6 +397,8 @@ class Hero: public Entity {
     uint32_t next_ice_date;                /**< when recomputing the additional movement on ice */
     int ice_movement_direction8;           /**< wanted movement direction a while ago */
     Point ground_dxy;                      /**< additional movement with special ground (hole or ice) */
+
+    CommandsPtr commands;                   /**< Commands controlling this hero */
 
 };
 
