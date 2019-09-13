@@ -1641,14 +1641,14 @@ void LuaContext::game_on_draw(Game& game, const SurfacePtr& dst_surface) {
  * \param game A game.
  * \param map The new active map.
  */
-void LuaContext::game_on_map_changed(Game& game, Map& map) {
+void LuaContext::game_on_map_changed(Game& game, Map& map, Camera& camera) {
 
   if (!userdata_has_field(game.get_savegame(), "on_map_changed")) {
     return;
   }
 
   push_game(current_l, game.get_savegame());
-  on_map_changed(map);
+  on_map_changed(map, camera);
   lua_pop(current_l, 1);
 }
 

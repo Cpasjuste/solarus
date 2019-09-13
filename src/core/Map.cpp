@@ -269,8 +269,24 @@ void Map::unload() {
   }
 }
 
-bool Map::has_heroes() const {
-  return entities->get_heroes().size() > 0;
+/**
+ * @brief tells it this map still has cameras
+ * @return
+ */
+bool Map::has_cameras() const {
+  return get_entities().get_cameras().size() > 0;
+}
+
+/**
+ * @brief Gets the main hero of this map, or the main hero of the game is no hero is there
+ * @return
+ */
+Hero& Map::get_default_hero() {
+  if(not is_loaded()) {
+    return *get_game().get_hero();
+  } else {
+    return get_entities().get_default_hero();
+  }
 }
 
 /**
@@ -313,8 +329,9 @@ void Map::load(Game& game) {
   entities = std::unique_ptr<Entities>(new Entities(game, *this));
   entities->create_entities(data);
 
-  build_background_surface();
-  build_foreground_surface();
+  // TODO be smarter about this
+  /*build_background_surface();
+  build_foreground_surface();*/
 
   loaded = true;
 }
@@ -544,7 +561,7 @@ void Map::draw() {
     const SurfacePtr& camera_surface = camera->get_surface();
     // background
     camera->reset_view();
-    draw_background(camera_surface);
+    //draw_background(camera_surface);
 
     // draw all entities (including the hero)
     camera->apply_view();
@@ -552,7 +569,7 @@ void Map::draw() {
 
     // foreground
     camera->reset_view();
-    draw_foreground(camera_surface);
+    //draw_foreground(camera_surface);
 
     // Lua
     get_lua_context().map_on_draw(*this, camera_surface); //TODO check for coordinates problem
@@ -561,8 +578,7 @@ void Map::draw() {
 
 void Map::draw_cameras(const SurfacePtr& dst_surface) const {
   for(const CameraPtr& cam : entities->get_cameras()) {
-    const auto& cam_surf = cam->get_surface();
-    cam_surf->draw(dst_surface, cam->get_position_on_screen());
+    cam->draw(dst_surface);
   }
 }
 

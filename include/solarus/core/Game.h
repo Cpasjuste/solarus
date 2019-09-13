@@ -23,12 +23,14 @@
 #include "solarus/core/GameCommand.h"
 #include "solarus/core/Commands.h"
 #include "solarus/core/Point.h"
+#include "solarus/entities/CameraPtr.h"
 #include "solarus/entities/HeroPtr.h"
 #include "solarus/core/MapPtr.h"
 #include "solarus/entities/NonAnimatedRegions.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include "solarus/graphics/Transition.h"
 #include <memory>
+#include <functional>
 #include <string>
 
 namespace Solarus {
@@ -49,6 +51,7 @@ class Savegame;
  */
 class SOLARUS_API Game {
 
+    using MapChangeCallback = std::function<void(const MapPtr& previous, const MapPtr& next)>;
   public:
 
     // creation
@@ -94,13 +97,19 @@ class SOLARUS_API Game {
     Map& get_default_map();
     bool has_current_map() const;
     Map& get_current_map(const HeroPtr& hero);
-    void set_current_map(const HeroPtr& hero, const std::string& map_id, const std::string& destination_name,
+    void teleport_hero(const HeroPtr& hero, const std::string& map_id, const std::string& destination_name,
         Transition::Style transition_style);
+    void teleport_camera(const CameraPtr& camera,
+                         const std::string map_id,
+                         const std::string& destination_name,
+                         Transition::Style transition_style,
+                         const MapChangeCallback &on_map_prepare,
+                         const MapChangeCallback &on_map_change);
     bool is_current_map(Map& map) const;
     bool has_multiple_maps() const;
 
     const MapPtr& prepare_map(const std::string& map_id);
-    void leave_map(const HeroPtr& hero, const MapPtr& map);
+    void leave_map(const EntityPtr &leaving, const MapPtr& map);
 
     // world
     bool get_crystal_state() const;
@@ -136,17 +145,17 @@ class SOLARUS_API Game {
 
     // Suspend manually.
     void set_suspended_by_script(bool suspended);
-
 private:
-
-    struct HeroTeleportation{
+    struct CameraTeleportation{
       MapPtr current_map;
       MapPtr next_map;
       std::string destination_name;
-      HeroPtr hero;
-      SurfacePtr previous_map_surface;
+      CameraPtr camera;
       Transition::Style transition_style;
-      std::unique_ptr<Transition> transition;
+      MapChangeCallback on_map_prepare;
+      MapChangeCallback on_map_change;
+
+      bool is_finished() const;
     };
 
     // main objects
@@ -155,6 +164,7 @@ private:
         savegame;              /**< the game data saved */
     /*HeroPtr hero;*/              /**< The hero entity.  */
     std::vector<HeroPtr> heroes;
+    std::vector<CameraPtr> cameras;
 
     // current game state (elements currently shown)
     bool pause_allowed;        /**< indicates that the player is allowed to use the pause command */
@@ -176,14 +186,17 @@ private:
         current_map; */           /**< the map currently displayed */
 
     std::vector<MapPtr>
-        current_maps;    /**< the maps currently simulated */
+        current_maps;           /**< the maps currently simulated */
+
+    std::set<MapPtr>
+        maps_to_unload;        /**< Maps to unload at the next tick */
 
     /*std::shared_ptr<Map>
         next_map; */              /**< the map where the hero is going to; if not nullptr, it means that the hero
                                 * is changing from current_map to next_map */
 
-    std::vector<HeroTeleportation>
-        hero_teleportations;    /**< record current displacements of heroes between maps */
+    std::vector<CameraTeleportation>
+        cameras_teleportations;    /**< record current displacements of heroes between maps */
 
     /*SurfacePtr
         previous_map_surface;*/  /**< a copy of the previous map surface for transition effects that display two maps */
@@ -199,9 +212,10 @@ private:
     // update functions
     void update_tilesets();
     void update_commands_effects();
-    bool update_teleportation(HeroTeleportation &tp);
+    bool update_teleportation(CameraTeleportation &tp);
+    void teleportation_change_map(CameraTeleportation &tp);
     void update_gameover_sequence();
-    void notify_map_changed(Map& map);
+    void notify_map_changed(Map& map, Camera &camera);
 
 };
 

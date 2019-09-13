@@ -111,7 +111,7 @@ Transition::Direction Transition::get_direction() const {
  * that was played before this opening transition.
  * \return The previous surface or nullptr.
  */
-Surface* Transition::get_previous_surface() const {
+const SurfacePtr &Transition::get_previous_surface() const {
   return previous_surface;
 }
 
@@ -120,7 +120,7 @@ Surface* Transition::get_previous_surface() const {
  * that was played before this opening transition.
  * \param previous_surface The previous surface or nullptr.
  */
-void Transition::set_previous_surface(Surface* previous_surface) {
+void Transition::set_previous_surface(const SurfacePtr& previous_surface) {
 
   Debug::check_assertion(previous_surface == nullptr
       || get_direction() != Direction::CLOSING,

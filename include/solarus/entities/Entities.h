@@ -110,7 +110,7 @@ class SOLARUS_API Entities {
     // Get entities.
     Hero& get_default_hero();
     const Heroes& get_heroes() const;
-    const CameraPtr& get_camera() const;
+    const CameraPtr get_camera() const;
     const Cameras& get_cameras() const;
     Ground get_tile_ground(int layer, int x, int y) const;
     EntityVector get_entities();
@@ -288,8 +288,12 @@ inline Ground Entities::get_tile_ground(int layer, int x, int y) const {
  * \brief Returns the camera of the map.
  * \return The camera, or nullptr if there is no camera.
  */
-inline const CameraPtr& Entities::get_camera() const {
-  return cameras.front();
+inline const CameraPtr Entities::get_camera() const {
+  if(cameras.size()) {
+    return cameras.front();
+  } else {
+    return nullptr;
+  }
 }
 
 /**

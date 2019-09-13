@@ -81,7 +81,7 @@ class SOLARUS_API Map: public ExportableToLua {
     bool is_valid_layer(int layer) const;
 
     // camera
-    const CameraPtr& get_camera() const;
+    CameraPtr get_camera() const;
     void notify_window_size_changed(const Size& new_size);
 
     // loading
@@ -104,11 +104,11 @@ class SOLARUS_API Map: public ExportableToLua {
     bool is_started() const;
     void start(const std::string &destination_name);
     void leave();
-    bool has_heroes() const;
+    bool has_cameras() const;
+
+    Hero& get_default_hero();
 
     // current destination point
-    //void set_destination(const std::string& destination_name);
-    //const std::string& get_destination_name() const;
     std::shared_ptr<Destination> get_destination(const std::string &destination_name);
     int get_destination_side(const std::string &destination_name) const;
 
@@ -292,7 +292,7 @@ inline Entities& Map::get_entities() {
  * \brief Returns the camera of the map.
  * \return The camera, or nullptr if there is no camera.
  */
-inline const CameraPtr& Map::get_camera() const {
+inline CameraPtr Map::get_camera() const {
 
   return get_entities().get_camera();
 }

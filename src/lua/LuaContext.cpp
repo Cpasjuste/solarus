@@ -2673,11 +2673,12 @@ void LuaContext::on_moved() {
  * \brief Calls the on_map_changed() method of the object on top of the stack.
  * \param map The new active map.
  */
-void LuaContext::on_map_changed(Map& map) {
+void LuaContext::on_map_changed(Map& map, Camera& camera) {
   check_callback_thread();
   if (find_method("on_map_changed")) {
     push_map(current_l, map);
-    call_function(2, 0, "on_map_changed");
+    push_camera(current_l, camera);
+    call_function(3, 0, "on_map_changed");
   }
 }
 

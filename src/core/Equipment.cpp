@@ -78,12 +78,12 @@ void Equipment::notify_game_finished() {
  * \brief Notifies the equipment system has another map has just been started.
  * \param map the new current map
  */
-void Equipment::notify_map_changed(Map& map) {
+void Equipment::notify_map_changed(Map& map, Camera& camera) {
 
   // Notify the items.
   for (const auto& kvp: items) {
     EquipmentItem& item = *kvp.second;
-    item.notify_map_changed(map);
+    item.notify_map_changed(map, camera);
   }
 }
 

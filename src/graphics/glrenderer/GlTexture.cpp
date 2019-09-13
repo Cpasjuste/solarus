@@ -27,7 +27,7 @@ GlTexture::GlTexture(int width, int height, bool screen_tex)
 }
 
 GlTexture::GlTexture(SDL_Surface_UniquePtr a_surface)
-  : SurfaceImpl({a_surface->w, a_surface->w}),
+  : SurfaceImpl({a_surface->w, a_surface->h}),
     target(false),
     uv_transform(uv_view(a_surface->w,a_surface->h)),
     surface(std::move(a_surface)) {

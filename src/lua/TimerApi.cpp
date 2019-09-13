@@ -408,10 +408,7 @@ int LuaContext::timer_api_start(lua_State *l) {
 
       Game* game = lua_context.get_main_loop().get_game();
       if (game != nullptr && game->has_current_map()) {
-        Debug::check_assertion(!game->has_multiple_maps(),
-                               "Creating timer with default map context"
-                               " But there are multiple maps");
-        push_map(l, game->get_default_map());
+        push_map(l, game->get_default_map()); //TODO verify is default map is okay....
       }
       else {
         push_main(l);

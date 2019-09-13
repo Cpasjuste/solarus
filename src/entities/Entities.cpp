@@ -131,13 +131,6 @@ Entities::Entities(Game& game, Map& map):
   const int margin = 64;
   Rectangle quadtree_space(-margin, -margin, map.get_width() + 2 * margin, map.get_height() + 2 * margin);
   quadtree->initialize(quadtree_space);
-
-  // Create the camera.
-  std::shared_ptr<Camera> camera = std::make_shared<Camera>(map);
-  add_entity(camera);
-  const HeroPtr& hero = game.get_hero();
-  Debug::check_assertion(hero != nullptr, "Missing hero when initializing camera");
-  camera->start_tracking(hero);
 }
 
 /**
@@ -183,7 +176,11 @@ void Entities::notify_entity_removed(Entity& entity) {
  * \return The hero.
  */
 Hero& Entities::get_default_hero() {
-  return *heroes.front();
+  if(heroes.size()){
+    return *heroes.front();
+  } else {
+    return *game.get_hero();
+  }
 }
 
 /**
@@ -940,7 +937,7 @@ void Entities::add_entity(const EntityPtr& entity) {
     quadtree->add(entity, entity->get_max_bounding_box());
 
     // Update the specific entities lists.
-    switch (entity->get_type()) {
+    switch (type) {
 
       case EntityType::CAMERA:
         {
@@ -986,7 +983,7 @@ void Entities::add_entity(const EntityPtr& entity) {
     sets[layer].insert(entity);
 
     // Update the list of all entities.
-    if (type != EntityType::HERO) {
+    if (type != EntityType::HERO && type != EntityType::CAMERA) {
       all_entities.push_back(entity);
     }
   }
@@ -1046,6 +1043,33 @@ void Entities::remove_entity(Entity& entity) {
 
     // Tell the entity.
     entity.notify_being_removed();
+
+    //Manage removal from the special entities list
+    EntityType type = entity.get_type();
+    switch (type) {
+
+      case EntityType::CAMERA:
+        {
+          //Debug::check_assertion(camera == nullptr, "Only one camera is supported"); //Not anymore
+          CameraPtr camera = entity.shared_from_this_cast<Camera>();
+          cameras.erase(std::remove(cameras.begin(),
+                                    cameras.end(),
+                                    camera),
+                        cameras.end());
+        }
+        break;
+      case EntityType::HERO:
+      {
+        HeroPtr hero = entity.shared_from_this_cast<Hero>();
+        heroes.erase(std::remove(heroes.begin(),
+                                 heroes.end(),
+                                 hero),
+                      heroes.end());
+        break;
+      }
+      default:
+      break;
+    }
 
     // Remove the entity from the by name list
     // to allow users to create a new one with
@@ -1130,7 +1154,8 @@ void Entities::remove_marked_entities() {
     }
 
     // Destroy it.
-    notify_entity_removed(*entity);
+    //notify_entity_removed(*entity); //Already done when pushing in the remove list
+    //TODO this could break things expecting the event being raised two times
   }
   entities_to_remove.clear();
 }
@@ -1173,20 +1198,13 @@ void Entities::update() {
 
   // Update the dynamic entities.
   for (const EntityPtr& entity: all_entities) {
-
-    if (
-        !entity->is_being_removed() &&
-        entity->get_type() != EntityType::CAMERA  // The camera is updated after.
-    ) {
       entity->update();
-    }
   }
 
   // Update the cameras after everyone else.
   for(const auto& camera : cameras) {
     camera->update();
   }
-
 
   // Remove the entities that have to be removed now.
   remove_marked_entities();

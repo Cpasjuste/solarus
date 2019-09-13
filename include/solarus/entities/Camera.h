@@ -24,6 +24,7 @@
 #include "solarus/entities/EntityPtr.h"
 #include "solarus/core/Scale.h"
 #include "solarus/graphics/SurfacePtr.h"
+#include "solarus/graphics/Transition.h"
 #include <memory>
 
 namespace Solarus {
@@ -52,7 +53,7 @@ class Camera : public Entity {
 
     static constexpr EntityType ThisType = EntityType::CAMERA;
 
-    explicit Camera(Map& map, const std::string& name = "");
+    explicit Camera(const std::string& name);
 
     EntityType get_type() const override;
 
@@ -60,6 +61,7 @@ class Camera : public Entity {
     void set_suspended(bool suspended) override;
     void notify_movement_started() override;
     void notify_size_changed() override;
+    void notify_being_removed() override;
     bool is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) override;
 
     const SurfacePtr& get_surface() const;
@@ -96,11 +98,18 @@ class Camera : public Entity {
 
     void set_rotation(float rotation);
     float get_rotation() const;
+
+    void set_transition(std::unique_ptr<Transition> transition);
+    std::unique_ptr<Transition>& get_transition();
+
+    void draw(const SurfacePtr& dst_surface) const;
 private:
     void create_surface(const Size& size);
     void update_view(const Size& viewport_size);
 
     SurfacePtr surface;           /**< Surface where this camera draws its entities. */
+    std::unique_ptr<Transition>
+        transition;               /**< Ongoing transition */
     Point position_on_screen;     /**< Where to draw this camera on the screen. Used by Legacy LetterBoxing mode. */
     FRectangle viewport;          /**< Relative geometry of the camera on screen. Used by dynamic video modes. */
     Scale zoom;                   /**< Level of zoom of this camera compared to 1:1 cam. */

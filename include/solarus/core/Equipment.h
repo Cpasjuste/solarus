@@ -31,6 +31,7 @@ class EquipmentItem;
 class Game;
 class Map;
 class Savegame;
+class Camera;
 
 /**
  * \brief Represents the hero's equipment.
@@ -51,7 +52,7 @@ class SOLARUS_API Equipment {
     Game* get_game();
     void notify_game_started();
     void notify_game_finished();
-    void notify_map_changed(Map& map);
+    void notify_map_changed(Map& map, Camera &camera);
 
     void update();
     void set_suspended(bool suspended);

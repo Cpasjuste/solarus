@@ -125,6 +125,7 @@ class SOLARUS_API Entity: public ExportableToLua {
     // Adding to a map.
     bool is_initialized() const;
     bool is_on_map() const;
+    void place_on_map(Map& map);
     void set_map(Map& map);
     Map& get_map() const;
     virtual void notify_creating();

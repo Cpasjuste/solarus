@@ -1350,14 +1350,14 @@ int LuaContext::l_create_camera(lua_State* l) {
     EntityData& data = *(static_cast<EntityData*>(lua_touserdata(l, 2)));
 
     CameraPtr entity = std::make_shared<Camera>(
-        map,
         data.get_name()
     );
     entity->set_xy(data.get_xy());
     entity->set_layer(data.get_layer());
     entity->set_user_properties(data.get_user_properties());
     entity->set_enabled(data.is_enabled_at_start());
-    map.get_entities().add_entity(entity);
+    //map.get_entities().add_entity(entity);
+    entity->place_on_map(map);
     if (map.is_started()) {
       push_entity(l, *entity);
       return 1;
@@ -1553,7 +1553,7 @@ int LuaContext::l_hero_teleport(lua_State* l) {
       LuaTools::arg_error(l, 2, std::string("No such map: '") + map_id + "'");
     }
 
-    hero.get_game().set_current_map(hero_ptr, map_id, destination_name, transition_style);
+    hero.get_game().teleport_hero(hero_ptr, map_id, destination_name, transition_style);
 
     return 0;
   });
@@ -2337,7 +2337,8 @@ int LuaContext::map_api_get_hero(lua_State* l) {
     check_map_has_game(l, map);
 
     // Return the hero even if he is no longer on this map.
-    push_hero(l, *map.get_game().get_hero());
+    Hero& hero = map.get_default_hero();
+    push_hero(l, hero);
     return 1;
   });
 }

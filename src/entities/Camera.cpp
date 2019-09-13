@@ -225,15 +225,15 @@ ManualState::ManualState(Camera& camera) :
  * \brief Creates a camera.
  * \param map The map.
  */
-Camera::Camera(Map& map, const std::string &name):
-  Entity(name, 0, map.get_max_layer(), Point(0, 0), Video::get_quest_size()),
+Camera::Camera(const std::string &name):
+  Entity(name, 0, 0, Point(0, 0), Video::get_quest_size()),
   surface(nullptr),
   position_on_screen(0, 0),
   viewport(0.f, 0.f, 1.f, 1.f) {
 
 
   create_surface(get_size());
-  set_map(map);
+  //set_map(map);
   notify_window_size_changed(Video::get_window_size());
 }
 
@@ -726,6 +726,46 @@ void Camera::apply_view() {
   //TODO add rotation and zoom
   surface->get_view().reset(get_bounding_box());
   surface->get_view().zoom(zoom_corr);
+}
+
+/**
+ * @brief Sets the transition of this camera
+ * @param transition
+ */
+void Camera::set_transition(std::unique_ptr<Transition> transition) {
+  this->transition = std::move(transition);
+}
+
+/**
+ * @brief Gets the transition associated with this camera
+ * @return
+ */
+std::unique_ptr<Transition>& Camera::get_transition() {
+ return transition;
+}
+
+/**
+ * @copydoc Entity::notify_being_removed
+ */
+void Camera::notify_being_removed() {
+  Entity::notify_being_removed();
+}
+
+/**
+ * @brief Draw the content of this camera to a surface
+ * @param dst_surface a surface
+ */
+void Camera::draw(const SurfacePtr& dst_surface) const {
+  const auto& surf = get_surface();
+  if(transition){
+    surf->draw_with_transition(
+          Rectangle(surf->get_size()),
+          dst_surface,
+          get_position_on_screen(),
+          *transition);
+  } else {
+    surf->draw(dst_surface, get_position_on_screen());
+  }
 }
 
 }

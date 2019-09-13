@@ -20,7 +20,9 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Equipment.h"
 #include "solarus/lua/ExportableToLua.h"
+#include "solarus/core/PlayerPtr.h"
 #include <map>
+#include <vector>
 #include <string>
 
 struct lua_State;
@@ -144,6 +146,7 @@ class SOLARUS_API Savegame: public ExportableToLua {
     };
 
     std::map<std::string, SavedValue> saved_values;
+    std::vector<PlayerPtr> players;
 
     bool empty;
     std::string file_name;   /**< Savegame file name relative to the quest write directory. */

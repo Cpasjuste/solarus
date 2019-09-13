@@ -300,6 +300,36 @@ void Entity::set_map(Map& map) {
     // In this case, we are ready to finish the initialization right now.
     finish_initialization();
   }
+
+  being_removed = false; //Ensure this entity restarts after being removed from another map
+}
+
+/**
+ * \brief Puts the entity on a map.
+ *
+ * This function is called when the current map is changed.
+ * Does nothing if the hero is already on this map.
+ *
+ * \param map The map.
+ */
+void Entity::place_on_map(Map& map) {
+
+  if (is_on_map() &&
+      &get_map() == &map
+  ) {
+    // No change.
+    return;
+  }
+
+  // Add the entity to the map.
+  const EntityPtr& shared_entity = std::static_pointer_cast<Entity>(shared_from_this());
+  map.get_entities().add_entity(shared_entity);
+
+  get_state()->set_map(map);
+
+  Entity::set_map(map);
+
+  being_removed = false;
 }
 
 /**

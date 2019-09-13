@@ -46,7 +46,7 @@ TransitionScrolling::TransitionScrolling(Transition::Direction direction):
 Rectangle TransitionScrolling::get_previous_map_dst_position(
     int scrolling_direction) {
 
-  const Surface* previous_map_surface = get_previous_surface();
+  const SurfacePtr& previous_map_surface = get_previous_surface();
   Debug::check_assertion(previous_map_surface != nullptr, "Missing previous surface for scrolling");
   const Size& camera_size = previous_map_surface->get_size();
 
@@ -74,7 +74,7 @@ void TransitionScrolling::start() {
 
   const Game* game = get_game();
   Debug::check_assertion(game != nullptr, "Missing game for scrolling transition");
-  const Surface* previous_map_surface = get_previous_surface();
+  const SurfacePtr& previous_map_surface = get_previous_surface();
   Debug::check_assertion(previous_map_surface != nullptr, "Missing previous surface for scrolling");
 
   // get the scrolling direction
@@ -209,7 +209,7 @@ void TransitionScrolling::draw(Surface& dst_surface, const Surface &src_surface,
     return;
   }
 
-  Surface* previous_surface = get_previous_surface();
+  const SurfacePtr& previous_surface = get_previous_surface();
   Debug::check_assertion(previous_surface != nullptr,
       "No previous surface defined for scrolling");
 

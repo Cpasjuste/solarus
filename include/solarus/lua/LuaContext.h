@@ -233,7 +233,6 @@ class LuaContext {
       return result;
     }
 
-
     static void set_current_state(lua_State* l);
 
     // Calling Lua functions.
@@ -412,7 +411,7 @@ class LuaContext {
     void item_on_finished(EquipmentItem& item);
     void item_on_update(EquipmentItem& item);
     void item_on_suspended(EquipmentItem& item, bool suspended);
-    void item_on_map_changed(EquipmentItem& item, Map& map);
+    void item_on_map_changed(EquipmentItem& item, Map& map, Camera &camera);
     void item_on_pickable_created(EquipmentItem& item, Pickable& pickable);
     void item_on_obtaining(EquipmentItem& item, const Treasure& treasure);
     void item_on_obtained(EquipmentItem& item, const Treasure& treasure);
@@ -430,7 +429,7 @@ class LuaContext {
     void game_on_finished(Game& game);
     void game_on_update(Game& game);
     void game_on_draw(Game& game, const SurfacePtr& dst_surface);
-    void game_on_map_changed(Game& game, Map& map);
+    void game_on_map_changed(Game& game, Map& map, Solarus::Camera &camera);
     void game_on_world_changed(
         Game& game,
         const std::string& previous_world,
@@ -1605,7 +1604,7 @@ private:
     void on_closed();
     void on_moving();
     void on_moved();
-    void on_map_changed(Map& map);
+    void on_map_changed(Map& map, Solarus::Camera &camera);
     void on_world_changed(const std::string& previous_world, const std::string& new_world);
     void on_pickable_created(Pickable& pickable);
     void on_variant_changed(int variant);

@@ -2132,7 +2132,7 @@ int LuaContext::hero_api_teleport(lua_State* l) {
     }
 
     HeroPtr hero_ptr = std::static_pointer_cast<Hero>(hero.shared_from_this());
-    hero.get_game().set_current_map(hero_ptr, map_id, destination_name, transition_style);
+    hero.get_game().teleport_hero(hero_ptr, map_id, destination_name, transition_style);
 
     return 0;
   });

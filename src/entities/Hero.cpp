@@ -445,6 +445,9 @@ bool Hero::notify_input(const InputEvent& event) {
 bool Hero::notify_command(const CommandEvent& event) {
 
   //TODO filter events that does not are for this hero
+  if(!event.is_from(commands)) {
+    return false; //Don't handle events not destined to this hero
+  }
 
   if(event.is_pressed()) {
     get_state()->notify_command_pressed(event.name);
@@ -636,18 +639,12 @@ void Hero::place_on_map(Map& map) {
     return;
   }
 
-  // Add the hero to the map.
-  const HeroPtr& shared_hero = std::static_pointer_cast<Hero>(shared_from_this());
-  map.get_entities().add_entity(shared_hero);
-
   last_solid_ground_coords = { -1, -1 };
   last_solid_ground_layer = 0;
   reset_target_solid_ground_callback();
   get_hero_sprites().set_clipping_rectangle();
 
-  get_state()->set_map(map);
-
-  Entity::set_map(map);
+  Entity::place_on_map(map);
 }
 
 /**
@@ -2966,6 +2963,29 @@ CommandsEffects& Hero::get_commands_effects() {
  */
 void Hero::set_commands(const CommandsPtr& commands) {
   this->commands = commands;
+}
+
+/**
+ * @brief get_linked_camera
+ * @return
+ */
+const CameraPtr& Hero::get_linked_camera() const {
+  return linked_camera;
+}
+
+/**
+ * @brief Set the camera linked with this hero
+ * @param camera
+ */
+void Hero::set_linked_camera(const CameraPtr& camera) {
+  linked_camera = camera;
+}
+
+/**
+ * @copydoc Entity::notify_being_removed
+ */
+void Hero::notify_being_removed() {
+  Entity::notify_being_removed();
 }
 
 }

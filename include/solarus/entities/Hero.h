@@ -23,6 +23,7 @@
 #include "solarus/entities/Ground.h"
 #include "solarus/hero/HeroSprites.h"
 #include "solarus/core/CommandsPtr.h"
+#include "solarus/entities/CameraPtr.h"
 
 #include <memory>
 #include <string>
@@ -104,6 +105,8 @@ class Hero: public Entity {
     void notify_map_finished() override;
     void notify_tileset_changed() override;
     void place_on_destination(Map& map, const Rectangle& previous_map_location, const std::string &destination_name);
+
+    void notify_being_removed() override;
 
     /**
      * \name Position.
@@ -316,6 +319,9 @@ class Hero: public Entity {
     CommandsEffects& get_commands_effects();
 
     void set_commands(const CommandsPtr& commands);
+
+    const CameraPtr& get_linked_camera() const;
+    void set_linked_camera(const CameraPtr& camera);
   private:
 
     // state
@@ -399,6 +405,7 @@ class Hero: public Entity {
     Point ground_dxy;                      /**< additional movement with special ground (hole or ice) */
 
     CommandsPtr commands;                   /**< Commands controlling this hero */
+    CameraPtr linked_camera;               /**< Camera linked with this hero */
 
 };
 

@@ -64,7 +64,7 @@ class SOLARUS_API Transition : public DrawProxy {
 
     Game* get_game() const;
     Direction get_direction() const;
-    void set_previous_surface(Surface* previous_surface);
+    void set_previous_surface(const SurfacePtr &previous_surface);
     void set_destination_side(int side);
     virtual bool needs_previous_surface() const;
 
@@ -108,7 +108,7 @@ class SOLARUS_API Transition : public DrawProxy {
 
     explicit Transition(Direction direction);
 
-    Surface* get_previous_surface() const;
+    const SurfacePtr& get_previous_surface() const;
     int get_destination_side() const;
 
     uint32_t get_when_suspended() const;
@@ -123,7 +123,7 @@ class SOLARUS_API Transition : public DrawProxy {
 
     Game* game;                   /**< The current game if any (required by some kinds of transitions). */
     Direction direction;          /**< Direction of the transition (in or out). */
-    Surface* previous_surface;    /**< During an in transition, this is the surface that was displayed
+    SurfacePtr previous_surface;  /**< During an in transition, this is the surface that was displayed
                                     * when the out transition was played. */
     int destination_side;         /** The side of the map to which this transition scrolls */
     bool suspended;               /**< Indicates that the transition is currently paused. */

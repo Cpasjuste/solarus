@@ -877,14 +877,14 @@ void LuaContext::item_on_created(EquipmentItem& item) {
  * \param item An equipment item.
  * \param map A map.
  */
-void LuaContext::item_on_map_changed(EquipmentItem& item, Map& map) {
+void LuaContext::item_on_map_changed(EquipmentItem& item, Map& map, Camera& camera) {
 
   if (!userdata_has_field(item, "on_map_changed")) {
     return;
   }
-  run_on_main([this,&item,&map](lua_State* l){
+  run_on_main([this,&item,&map,&camera](lua_State* l){
     push_item(l, item);
-    on_map_changed(map);
+    on_map_changed(map, camera);
     lua_pop(l, 1);
   });
 }

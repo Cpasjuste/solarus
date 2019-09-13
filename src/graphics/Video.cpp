@@ -829,7 +829,12 @@ const SoftwareVideoMode* get_video_mode_by_name(
  * \return The size of the window in pixels.
  */
 Size get_window_size() {
-  Debug::check_assertion(context.main_window != nullptr, "No window");
+  //Debug::check_assertion(context.main_window != nullptr, "No window");
+
+  if(context.main_window) {
+    //No video, return quest size
+    Video::get_quest_size();
+  }
 
   if (is_fullscreen()) {
     // Returns the memorized window size.
