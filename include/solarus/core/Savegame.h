@@ -19,6 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/core/Equipment.h"
+#include "solarus/graphics/Transition.h"
 #include "solarus/lua/ExportableToLua.h"
 #include "solarus/core/PlayerPtr.h"
 #include <map>
@@ -108,6 +109,9 @@ class SOLARUS_API Savegame: public ExportableToLua {
     void set_game(Game* game);
     void notify_game_started();
     void notify_game_finished();
+    Transition::Style get_default_transition_style() const;
+    void set_default_transition_style(Transition::Style default_transition_style);
+
 
     virtual const std::string& get_lua_type_name() const override;
 
@@ -131,8 +135,6 @@ class SOLARUS_API Savegame: public ExportableToLua {
 
   private:
 
-
-
     struct SavedValue {
 
       enum {
@@ -149,10 +151,12 @@ class SOLARUS_API Savegame: public ExportableToLua {
     std::vector<PlayerPtr> players;
 
     bool empty;
-    std::string file_name;   /**< Savegame file name relative to the quest write directory. */
+    std::string file_name;         /**< Savegame file name relative to the quest write directory. */
     MainLoop& main_loop;
     Equipment equipment;
-    Game* game;              /**< nullptr if this savegame is not currently running */
+    Game* game;                    /**< nullptr if this savegame is not currently running */
+    Transition::Style
+        default_transition_style;  /**< Transition style to use by default. */
 
     void import_from_file();
     static int l_newindex(lua_State* l);

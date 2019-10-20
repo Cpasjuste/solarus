@@ -117,12 +117,6 @@ void HeroSprites::rebuild_equipment() {
     set_tunic_sprite_id(get_default_tunic_sprite_id());
   }
 
-  // The hero's shadow.
-  if (shadow_sprite == nullptr) {
-    shadow_sprite = hero.create_sprite("entities/shadow", "shadow");
-    shadow_sprite->set_current_animation("big");
-  }
-
   // The hero's sword.
   if (has_default_sword_sprite) {
     set_sword_sprite_id(get_default_sword_sprite_id());
@@ -137,8 +131,7 @@ void HeroSprites::rebuild_equipment() {
     // TODO make this sprite depend on the sword sprite: sword_sprite_id + "_stars"
     std::ostringstream oss;
     oss << "hero/sword_stars" << sword_number;
-    sword_stars_sprite = hero.create_sprite(oss.str(), "sword_stars");
-    sword_stars_sprite->stop_animation();
+    set_sword_stars_sprite_id(oss.str());
   }
 
   // The hero's shield.
@@ -147,7 +140,6 @@ void HeroSprites::rebuild_equipment() {
   }
 
   // The trail.
-  trail_sprite = hero.create_sprite("hero/trail", "trail");
   trail_sprite->stop_animation();
 
   // Restore the animation direction.
@@ -273,6 +265,55 @@ void HeroSprites::set_sword_sprite_id(const std::string& sprite_id) {
   }
 
   has_default_sword_sprite = (sprite_id == get_default_sword_sprite_id());
+}
+
+/**
+ * \brief Returns the animation set id used for the sword stars sprite.
+ * \return The sword stars sprite animation set id.
+ */
+const std::string& HeroSprites::get_sword_stars_sprite_id() const {
+
+  return sword_stars_sprite_id;
+}
+
+/**
+ * \brief Sets the animation set id to use for the sword stars sprite.
+ * \param sprite_id The sword stars sprite animation set id.
+ * An empty string means no sword stars sprite.
+ */
+void HeroSprites::set_sword_stars_sprite_id(const std::string& sprite_id) {
+
+  if (sprite_id == this->sword_stars_sprite_id) {
+    return;
+  }
+
+  this->sword_stars_sprite_id = sprite_id;
+
+  int order = -1;
+  std::string animation;
+  int direction = -1;
+  if (sword_stars_sprite != nullptr) {
+    // Delete the previous sprite, but save its animation and direction.
+    if (sword_stars_sprite->is_animation_started()) {
+      animation = sword_stars_sprite->get_current_animation();
+      direction = sword_stars_sprite->get_current_direction();
+    }
+    order = hero.get_sprite_order(*sword_stars_sprite);
+    hero.remove_sprite(*sword_stars_sprite);
+    sword_stars_sprite = nullptr;
+  }
+
+  if (!sprite_id.empty()) {
+    // There is a sword sprite specified.
+    sword_stars_sprite = hero.create_sprite(sprite_id, "sword_stars", order);
+    if (animation.empty()) {
+      sword_stars_sprite->stop_animation();
+    }
+    else {
+      sword_stars_sprite->set_current_animation(animation);
+      sword_stars_sprite->set_current_direction(direction);
+    }
+  }
 }
 
 /**
@@ -652,7 +693,9 @@ void HeroSprites::set_animation_direction(int direction) {
   Debug::check_assertion(direction >= 0 && direction < 4,
     "Invalid direction for set_animation_direction");
 
-  tunic_sprite->set_current_direction(direction);
+  if (tunic_sprite != nullptr) {
+    tunic_sprite->set_current_direction(direction);
+  }
 
   if (is_sword_visible()) {
     sword_sprite->set_current_direction(direction);
@@ -672,7 +715,16 @@ void HeroSprites::set_animation_direction(int direction) {
 
   if (lifted_item != nullptr) {
     const SpritePtr& sprite = lifted_item->get_sprite();
-    sprite->restart_animation();
+    if (sprite != nullptr) {
+      sprite->restart_animation();
+      if (direction < sprite->get_nb_directions()) {
+        sprite->set_current_direction(direction);
+      }
+    }
+    const SpritePtr& shadow_sprite = lifted_item->get_sprite("shadow");
+    if (shadow_sprite != nullptr && direction < shadow_sprite->get_nb_directions()) {
+      shadow_sprite->set_current_direction(direction);
+    }
   }
 }
 
@@ -767,6 +819,18 @@ void HeroSprites::update() {
     ground_sprite->update();
   }
 
+  if (hero.is_shadow_visible()) {
+    if (!shadow_sprite->is_animation_started()) {
+      shadow_sprite->set_current_animation("big");
+    }
+    shadow_sprite->set_xy(hero.get_xy() - hero.get_displayed_xy());
+    shadow_sprite->update();
+  } else {
+    if (shadow_sprite->is_animation_started()) {
+      shadow_sprite->stop_animation();
+    }
+  }
+
   // Blinking.
   if (is_blinking()
       && end_blink_date != 0
@@ -786,7 +850,8 @@ void HeroSprites::update() {
  * \param camera The camera where to draw.
  */
 void HeroSprites::draw_on_map(Camera& camera) {
-  hero.draw_sprites(camera);
+  hero.draw_sprites(camera, clipping_rectangle);
+
   if (lifted_item != nullptr) {
     lifted_item->draw(camera);
   }
@@ -842,12 +907,12 @@ void HeroSprites::notify_creating() {
   // Shadow, tunic, trail, ground, sword, sword stars, shield.
   hero.set_default_sprite_name("tunic");
   shadow_sprite = hero.create_sprite("entities/shadow", "shadow");
+  shadow_sprite->stop_animation();
   set_tunic_sprite_id(get_default_tunic_sprite_id());
   trail_sprite = hero.create_sprite("hero/trail", "trail");
   trail_sprite->stop_animation();
   create_ground(Ground::SHALLOW_WATER);
   ground_sprite->stop_animation();
-  shadow_sprite->set_current_animation("big");
   set_sword_sprite_id(get_default_sword_sprite_id());
   sword_stars_sprite = hero.create_sprite("hero/sword_stars1", "sword_stars");
   sword_stars_sprite->stop_animation();

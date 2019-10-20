@@ -1330,7 +1330,7 @@ void Hero::notify_ground_below_changed() {
   case Ground::SHALLOW_WATER:
     if (get_state()->is_affected_by_shallow_water()) {
       start_shallow_water();
-     }
+    }
     break;
 
   case Ground::GRASS:
@@ -2135,16 +2135,18 @@ bool Hero::is_striking_with_sword(Entity& entity) const {
 void Hero::try_snap_to_facing_entity() {
 
   Rectangle collision_box = get_bounding_box();
+  const Point& center = collision_box.get_center();
   const Entity* facing_entity = get_facing_entity();
+  const Point& facing_entity_center = facing_entity->get_center_point();
 
   if (get_animation_direction() % 2 == 0) {
-    if (abs(collision_box.get_y() - facing_entity->get_top_left_y()) <= 5) {
-      collision_box.set_y(facing_entity->get_top_left_y());
+    if (abs(center.y - facing_entity_center.y) <= 5) {
+      collision_box.set_center(center.x, facing_entity_center.y);
     }
   }
   else {
-    if (abs(collision_box.get_x() - facing_entity->get_top_left_x()) <= 5) {
-      collision_box.set_x(facing_entity->get_top_left_x());
+    if (abs(center.x - facing_entity_center.x) <= 5) {
+      collision_box.set_center(facing_entity_center.x, center.y);
     }
   }
 
@@ -2271,7 +2273,7 @@ void Hero::hurt(int damage) {
  */
 void Hero::start_grass() {
 
-  // display a special sprite below the hero
+  // Display a special sprite below the hero.
   sprites->create_ground(Ground::GRASS);
 
   uint32_t now = System::now();
@@ -2286,7 +2288,7 @@ void Hero::start_grass() {
  */
 void Hero::start_shallow_water() {
 
-  // display a special sprite below the hero
+  // Display a special sprite below the hero.
   sprites->create_ground(Ground::SHALLOW_WATER);
 
   uint32_t now = System::now();
@@ -2715,6 +2717,15 @@ bool Hero::can_grab() const {
 bool Hero::can_pull() const {
 
   return get_equipment().has_ability(Ability::PULL);
+}
+
+/**
+ * \brief Returns whether the hero can interact with the given NPC.
+ * \param npc A non-playing character.
+ * \return \c true if the hero can interact with this NPC.
+ */
+bool Hero::can_interact_with_npc(Npc& npc) {
+  return get_state()->get_can_interact_with_npc(npc);
 }
 
 /**

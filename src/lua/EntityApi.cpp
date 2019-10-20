@@ -2122,10 +2122,11 @@ int LuaContext::hero_api_teleport(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Hero& hero = *check_hero(l, 1);
+    Game& game = hero.get_game();
     const std::string& map_id = LuaTools::check_string(l, 2);
     const std::string& destination_name = LuaTools::opt_string(l, 3, "");
     Transition::Style transition_style = LuaTools::opt_enum<Transition::Style>(
-        l, 4, Transition::Style::FADE);
+        l, 4, game.get_default_transition_style());
 
     if (!CurrentQuest::resource_exists(ResourceType::MAP, map_id)) {
       LuaTools::arg_error(l, 2, std::string("No such map: '") + map_id + "'");
@@ -6698,7 +6699,7 @@ void LuaContext::entity_on_suspended(Entity& entity, bool suspended) {
   if (!userdata_has_field(entity, "on_suspended")) {
     return;
   }
-  run_on_main([this,&entity,suspended](lua_State* l){
+  run_on_main([this, &entity, suspended](lua_State* l){
     push_entity(l, entity);
     on_suspended(suspended);
     lua_pop(l, 1);
@@ -6717,7 +6718,7 @@ void LuaContext::entity_on_created(Entity& entity) {
   if (!userdata_has_field(entity, "on_created")) {
     return;
   }
-  run_on_main([this,&entity](lua_State* l){
+  run_on_main([this, &entity](lua_State* l){
     push_entity(l, entity);
     on_created();
     lua_pop(l, 1);
@@ -6732,7 +6733,7 @@ void LuaContext::entity_on_created(Entity& entity) {
  * \param entity A map entity.
  */
 void LuaContext::entity_on_removed(Entity& entity) {
-  run_on_main([this,&entity](lua_State* l){
+  run_on_main([this, &entity](lua_State* l){
     push_entity(l, entity);
     if (userdata_has_field(entity, "on_removed")) {
       on_removed();
@@ -6754,7 +6755,7 @@ void LuaContext::entity_on_enabled(Entity& entity) {
   if (!userdata_has_field(entity, "on_enabled")) {
     return;
   }
-  run_on_main([this,&entity](lua_State* l){
+  run_on_main([this, &entity](lua_State* l){
     push_entity(l, entity);
     on_enabled();
     lua_pop(l, 1);
@@ -6773,7 +6774,7 @@ void LuaContext::entity_on_disabled(Entity& entity) {
   if (!userdata_has_field(entity, "on_disabled")) {
     return;
   }
-  run_on_main([this,&entity](lua_State* l){
+  run_on_main([this, &entity](lua_State* l){
     push_entity(l, entity);
     on_disabled();
     lua_pop(l, 1);
@@ -6793,7 +6794,7 @@ void LuaContext::entity_on_pre_draw(Entity& entity, Camera& camera) {
   if (!userdata_has_field(entity, "on_pre_draw")) {
     return;
   }
-  run_on_main([this,&entity,&camera](lua_State* l){
+  run_on_main([this, &entity, &camera](lua_State* l){
     push_entity(l, entity);
     on_pre_draw(camera);
     lua_pop(l, 1);
@@ -6813,7 +6814,7 @@ void LuaContext::entity_on_post_draw(Entity& entity, Camera& camera) {
   if (!userdata_has_field(entity, "on_post_draw")) {
     return;
   }
-  run_on_main([this,&entity,&camera](lua_State* l){
+  run_on_main([this, &entity, &camera](lua_State* l){
     push_entity(l, entity);
     on_post_draw(camera);
     lua_pop(l, 1);
@@ -6835,7 +6836,7 @@ void LuaContext::entity_on_position_changed(
   if (!userdata_has_field(entity, "on_position_changed")) {
     return;
   }
-  run_on_main([this,&entity,xy,layer](lua_State* l){
+  run_on_main([this, &entity, xy, layer](lua_State* l){
     push_entity(l, entity);
     on_position_changed(xy, layer);
     lua_pop(l, 1);
@@ -6992,7 +6993,7 @@ void LuaContext::entity_on_state_changing(
   if (!userdata_has_field(entity, "on_state_changing")) {
     return;
   }
-  run_on_main([this,&entity,state_name,next_state_name](lua_State* l){
+  run_on_main([this, &entity, state_name, next_state_name](lua_State* l){
     push_entity(l, entity);
     on_state_changing(state_name, next_state_name);
     lua_pop(l, 1);
@@ -7013,7 +7014,7 @@ void LuaContext::entity_on_state_changed(
   if (!userdata_has_field(entity, "on_state_changed")) {
     return;
   }
- run_on_main([this,&entity,new_state_name](lua_State* l){
+ run_on_main([this, &entity, new_state_name](lua_State* l){
     push_entity(l, entity);
     on_state_changed(new_state_name);
     lua_pop(l, 1);
@@ -7039,7 +7040,7 @@ void LuaContext::entity_on_lifting(
   if (!userdata_has_field(entity, "on_lifting")) {
     return;
   }
-  run_on_main([this,&entity,&carrier,&carried_object](lua_State* l){
+  run_on_main([this, &entity, &carrier, &carried_object](lua_State* l){
     push_entity(l, entity);
     on_lifting(carrier, carried_object);
     lua_pop(l, 1);
@@ -7081,7 +7082,7 @@ void LuaContext::destination_on_activated(Destination& destination) {
   if (!userdata_has_field(destination, "on_activated")) {
     return;
   }
-  run_on_main([this,&destination](lua_State* l){
+  run_on_main([this, &destination](lua_State* l){
     push_entity(l, destination);
     on_activated();
     lua_pop(l, 1);
@@ -7100,7 +7101,7 @@ void LuaContext::teletransporter_on_activated(Teletransporter& teletransporter) 
   if (!userdata_has_field(teletransporter, "on_activated")) {
     return;
   }
-  run_on_main([this,&teletransporter](lua_State* l){
+  run_on_main([this, &teletransporter](lua_State* l){
     push_teletransporter(l, teletransporter);
     on_activated();
     lua_pop(l, 1);
@@ -7119,7 +7120,7 @@ void LuaContext::npc_on_collision_fire(Npc& npc) {
   if (!userdata_has_field(npc, "on_collision_fire")) {
     return;
   }
-  run_on_main([this,&npc](lua_State* l){
+  run_on_main([this, &npc](lua_State* l){
     push_npc(l, npc);
     on_collision_fire();
     lua_pop(l, 1);
@@ -7197,7 +7198,7 @@ void LuaContext::block_on_moving(Block& block) {
   if (!userdata_has_field(block, "on_moving")) {
     return;
   }
-  run_on_main([this,&block](lua_State* l){
+  run_on_main([this, &block](lua_State* l){
     push_block(l, block);
     on_moving();
     lua_pop(l, 1);
@@ -7216,7 +7217,7 @@ void LuaContext::block_on_moved(Block& block) {
   if (!userdata_has_field(block, "on_moved")) {
     return;
   }
-  run_on_main([this,&block](lua_State* l){
+  run_on_main([this, &block](lua_State* l){
     push_block(l, block);
     on_moved();
     lua_pop(l, 1);
@@ -7260,7 +7261,7 @@ void LuaContext::switch_on_activated(Switch& sw) {
     return;
   }
 
-  run_on_main([this,&sw](lua_State* l){
+  run_on_main([this, &sw](lua_State* l){
     push_switch(l, sw);
     on_activated();
     lua_pop(l, 1);
@@ -7280,7 +7281,7 @@ void LuaContext::switch_on_inactivated(Switch& sw) {
     return;
   }
 
-  run_on_main([this,&sw](lua_State* l){
+  run_on_main([this, &sw](lua_State* l){
     push_switch(l, sw);
     on_inactivated();
     lua_pop(l, 1);
@@ -7300,7 +7301,7 @@ void LuaContext::switch_on_left(Switch& sw) {
     return;
   }
 
-  run_on_main([this,&sw](lua_State* l){
+  run_on_main([this, &sw](lua_State* l){
     push_switch(l, sw);
     on_left();
     lua_pop(l, 1);
@@ -7320,7 +7321,7 @@ void LuaContext::sensor_on_activated(Sensor& sensor, Hero& /*hero*/) {
     return;
   }
 
-  run_on_main([this,&sensor](lua_State* l){
+  run_on_main([this, &sensor](lua_State* l){
     push_entity(l, sensor);
     on_activated();
     lua_pop(l, 1);
@@ -7339,7 +7340,7 @@ void LuaContext::sensor_on_activated_repeat(Sensor& sensor) {
   if (!userdata_has_field(sensor, "on_activated_repeat")) {
     return;
   }
-  run_on_main([this,&sensor](lua_State* l){
+  run_on_main([this, &sensor](lua_State* l){
     push_entity(l, sensor);
     on_activated_repeat();
     lua_pop(l, 1);
@@ -7355,7 +7356,7 @@ void LuaContext::sensor_on_left(Sensor& sensor) {
   if (!userdata_has_field(sensor, "on_left")) {
     return;
   }
-  run_on_main([this,&sensor](lua_State* l){
+  run_on_main([this, &sensor](lua_State* l){
     push_entity(l, sensor);
     on_left();
     lua_pop(l, 1);
@@ -7374,7 +7375,7 @@ void LuaContext::sensor_on_collision_explosion(Sensor& sensor) {
   if (!userdata_has_field(sensor, "on_collision_explosion")) {
     return;
   }
-  run_on_main([this,&sensor](lua_State* l){
+  run_on_main([this, &sensor](lua_State* l){
     push_entity(l, sensor);
     on_collision_explosion();
     lua_pop(l, 1);
@@ -7394,7 +7395,7 @@ void LuaContext::separator_on_activating(Separator& separator, int direction4) {
   if (!userdata_has_field(separator, "on_activating")) {
     return;
   }
-  run_on_main([this,&separator,direction4](lua_State* l){
+  run_on_main([this, &separator, direction4](lua_State* l){
     push_entity(l, separator);
     on_activating(direction4);
     lua_pop(l, 1);
@@ -7414,7 +7415,7 @@ void LuaContext::separator_on_activated(Separator& separator, int direction4) {
   if (!userdata_has_field(separator, "on_activated")) {
     return;
   }
-  run_on_main([this,&separator,direction4](lua_State* l){
+  run_on_main([this, &separator, direction4](lua_State* l){
     push_entity(l, separator);
     on_activated(direction4);
     lua_pop(l, 1);
@@ -7433,7 +7434,7 @@ void LuaContext::door_on_opened(Door& door) {
   if (!userdata_has_field(door, "on_opened")) {
     return;
   }
-  run_on_main([this,&door](lua_State* l){
+  run_on_main([this, &door](lua_State* l){
     push_door(l, door);
     on_opened();
     lua_pop(l, 1);
@@ -7452,7 +7453,7 @@ void LuaContext::door_on_closed(Door& door) {
   if (!userdata_has_field(door, "on_closed")) {
     return;
   }
-  run_on_main([this,&door](lua_State* l){
+  run_on_main([this, &door](lua_State* l){
     push_door(l, door);
     on_closed();
     lua_pop(l, 1);
@@ -7495,7 +7496,7 @@ void LuaContext::shop_treasure_on_bought(ShopTreasure& shop_treasure) {
     return;
   }
 
-  run_on_main([this,&shop_treasure](lua_State* l){
+  run_on_main([this, &shop_treasure](lua_State* l){
     push_shop_treasure(l, shop_treasure);
     on_bought();
     lua_pop(l, 1);
@@ -7514,7 +7515,7 @@ void LuaContext::destructible_on_looked(Destructible& destructible) {
   if (!userdata_has_field(destructible, "on_looked")) {
     return;
   }
-  run_on_main([this,&destructible](lua_State* l){
+  run_on_main([this, &destructible](lua_State* l){
     push_destructible(l, destructible);
     on_looked();
     lua_pop(l, 1);
@@ -7533,7 +7534,7 @@ void LuaContext::destructible_on_cut(Destructible& destructible) {
   if (!userdata_has_field(destructible, "on_cut")) {
     return;
   }
-  run_on_main([this,&destructible](lua_State* l){
+  run_on_main([this, &destructible](lua_State* l){
     push_destructible(l, destructible);
     on_cut();
     lua_pop(l, 1);
@@ -7552,7 +7553,7 @@ void LuaContext::destructible_on_exploded(Destructible& destructible) {
   if (!userdata_has_field(destructible, "on_exploded")) {
     return;
   }
-  run_on_main([this,&destructible](lua_State* l){
+  run_on_main([this, &destructible](lua_State* l){
     push_destructible(l, destructible);
     on_exploded();
     lua_pop(l, 1);
@@ -7572,7 +7573,7 @@ void LuaContext::destructible_on_regenerating(Destructible& destructible) {
     return;
   }
 
-  run_on_main([this,&destructible](lua_State* l){
+  run_on_main([this, &destructible](lua_State* l){
     push_destructible(l, destructible);
     on_regenerating();
     lua_pop(l, 1);
@@ -7587,7 +7588,7 @@ void LuaContext::destructible_on_regenerating(Destructible& destructible) {
  * \param enemy An enemy.
  */
 void LuaContext::enemy_on_restarted(Enemy& enemy) {
-  run_on_main([this,&enemy](lua_State* l){
+  run_on_main([this, &enemy](lua_State* l){
     push_enemy(l, enemy);
     remove_timers(-1);  // Stop timers associated to this enemy.
     if (userdata_has_field(enemy, "on_restarted")) {
@@ -7635,7 +7636,7 @@ void LuaContext::enemy_on_custom_attack_received(Enemy& enemy,
   if (!userdata_has_field(enemy, "on_custom_attack_received")) {
     return;
   }
-  run_on_main([&,attack,sprite](lua_State* l){
+  run_on_main([&, attack, sprite](lua_State* l){
     push_enemy(l, enemy);
     on_custom_attack_received(attack, sprite);
     lua_pop(l, 1);
@@ -7675,7 +7676,7 @@ bool LuaContext::enemy_on_hurt_by_sword(
  */
 void LuaContext::enemy_on_hurt(Enemy& enemy, EnemyAttack attack) {
 
-  run_on_main([this,&enemy,attack](lua_State* l){
+  run_on_main([this, &enemy, attack](lua_State* l){
     push_enemy(l, enemy);
     remove_timers(-1);  // Stop timers associated to this enemy.
     if (userdata_has_field(enemy, "on_hurt")) {
@@ -7693,7 +7694,7 @@ void LuaContext::enemy_on_hurt(Enemy& enemy, EnemyAttack attack) {
  * \param enemy An enemy.
  */
 void LuaContext::enemy_on_dying(Enemy& enemy) {
-  run_on_main([this,&enemy](lua_State* l){
+  run_on_main([this, &enemy](lua_State* l){
     push_enemy(l, enemy);
     remove_timers(-1);  // Stop timers associated to this enemy.
     if (userdata_has_field(enemy, "on_dying")) {
@@ -7715,7 +7716,7 @@ void LuaContext::enemy_on_dead(Enemy& enemy) {
   if (!userdata_has_field(enemy, "on_dead")) {
     return;
   }
-  run_on_main([this,&enemy](lua_State* l){
+  run_on_main([this, &enemy](lua_State* l){
     push_enemy(l, enemy);
     on_dead();
     lua_pop(l, 1);
@@ -7730,7 +7731,7 @@ void LuaContext::enemy_on_dead(Enemy& enemy) {
  * \param enemy An enemy.
  */
 void LuaContext::enemy_on_immobilized(Enemy& enemy) {
-  run_on_main([this,&enemy](lua_State* l){
+  run_on_main([this, &enemy](lua_State* l){
     push_enemy(l, enemy);
     remove_timers(-1);  // Stop timers associated to this enemy.
     if (userdata_has_field(enemy, "on_immobilized")) {

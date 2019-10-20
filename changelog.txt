@@ -1,56 +1,92 @@
-___________________________
+__________________________
 
-Solarus 1.6.1 (in progress)
-___________________________
+Solarus 1.6.3 (in progress)
+__________________________
 
 Engine changes
 --------------
 
+* Fix crash when removing the shadow of a carried object (#1423).
+* Fix custom states wrongly affected by ground speeds (#1416).
+* Fix talking to NPCs while swimming (#1043).
 
-* Add state:get/set_can_use_teletransporter/switch/stream (#1363).
+Solarus launcher GUI changes
+----------------------------
+
+* Add drag and drop functionality to add new quests (#1420).
+
+__________________________
+
+Solarus 1.6.2 (2019-08-15)
+__________________________
+
+Engine changes
+--------------
+
+* Fix scrolling teletransporters with a square size (#1412).
+* Fix hero displayed above stairs walls.
+
+__________________________
+
+Solarus 1.6.1 (2019-08-10)
+__________________________
+
+Engine changes
+--------------
+
 * Add `-force-software-rendering` switch to solarus-run (stdgregwar).
-* Add argument to set mouse cursor visibility on start (!1263).
-* Add option in CMake to support building with OpenGL ES (!1270).
-* Add option in CMake to disable logging errors to file (!1276).
-* Add simple performance counters to the engine (!1280).
-* Add argument to set fullscreen mode on start (!1281).
-* Add joypad buttons combo for quitting the engine (!1283).
-* Add option in CMake to control building of unit tests (!1288).
-* Add root build path to unit tests environment in Windows (!1291).
-* Add git revision information to build and main loop startup (!1292).
-* Add argument to set the joypad axis deadzone (!1293).
-* Add debug warning if a surface is larger than 2048 x 2048 (!1294).
+* Add argument to set mouse cursor visibility on start (#1263).
+* Add option in CMake to support building with OpenGL ES (#1270).
+* Add option in CMake to disable logging errors to file (#1276).
+* Add simple performance counters to the engine (#1280).
+* Add argument to set fullscreen mode on start (#1281).
+* Add joypad buttons combo for quitting the engine (#1283).
+* Add option in CMake to control building of unit tests (#1288).
+* Add root build path to unit tests environment in Windows (#1291).
+* Add git revision information to build and main loop startup (#1292).
+* Add argument to set the joypad axis deadzone (#1293).
+* Add debug warning if a surface is larger than 2048 x 2048 (#1294).
+* Add support of carried object sprites with multiple directions (#1392).
 * Fix reordering hero sprites (#1243).
-* Fix crash when starting a hero movement from hero:on_state_changed (#1354).
-* Fix crash when starting drowning on a map after falling into a
-teletransporter (#1353).
+* Fix crash when starting a hero movement from hero:on_state_changed() (#1354).
+* Fix crash when changing the hero state while pulling a block (#1371).
+* Fix crash when starting drowning after falling into a teletransporter (#1353).
 * Fix crash when stairs are disabled at map start with dynamic tiles (#1366).
+* Fix crash when a state finishes from a coroutine (#1374).
+* Fix action command lost after showing a dialog in the pause menu (#1408).
+* Fix hero being hurt while in spiral stairs (#1038).
+* Fix stairs not activating in a custom state with fixed direction (#1364).
 * Fix crash when pickable follow streams (#1361).
+* Fix camera movement stuck on separators (#1351).
+* Fix jumpers when the hero size is other than 16x16 (#1381).
+* Fix blocks when the hero size is other than 16x16 (#1383).
+* Fix blocks stuck on separators (#1356).
+* Fix entity:overlaps(...) crashing when given bad collision mode (#1041).
+* Fix straight movement progress reinitialized when setting speed/angle.
+* Fix sol.menu.start allowing to start one menu multiple times (#1044).
+* Fix GlRenderer for non-Android GLES 2.0 devices (#1267).
 * Fix OpenGL compatibility issues.
 * Fix FindOpengl complaining about GLVND vs GLX choice (#1320).
 * Fix incorrect mapping from window coords to quest coords (#1340).
-* Fix entity:overlaps(...) crashing when given bad collision mode (#1041).
-* Fix hero being hurt while in spiral stairs (#1038).
-* Fix stairs not activating in a custom state with fixed direction (#1364).
-* Fix camera movement stuck on separators (#1351).
-* Fix sol.menu.start allowing to start one menu multiple times (#1044).
-* Fix straight movement progress reinitialized when setting speed/angle.
-* Fix GlRenderer for non-Android GLES 2.0 devices (!1267).
-* Fix mouse and finger coordinates using renderer output size instead of
-window size (!1268).
-* Fix restoring to windowed mode from fullscreen (!1269).
-* Fix screen surface not being initialised in 640x480 video mode (!1273).
-* Fix initialisation of screen surface without video window (!1274).
-* Fix detection of LuaJIT version in CMake module (!1277).
-* Fix building with mingw-w64 in Linux (!1282).
-* Fix restoring from fullscreen mode in Windows (!1284).
-* Fix building GUI with mingw-w64 in Linux (!1285).
-* Fix running the unit tests from the build root folder (!1289).
-* Fix broken unit test that fails in Windows but not Linux (!1290).
+* Fix mouse and finger coordinates using a wrong window size (#1268).
+* Fix restoring to windowed mode from fullscreen (#1269).
+* Fix screen surface not being initialised in 640x480 video mode (#1273).
+* Fix initialisation of screen surface without video window (#1274).
+* Fix restoring from fullscreen mode in Windows (#1284).
+* Fix warning when the default quest size is not supported by the quest (#1376). 
+* Fix building with mingw-w64 in Linux (#1282).
+* Fix detection of LuaJIT version in CMake module (#1277).
+* Fix building GUI with mingw-w64 in Linux (#1285).
+* Fix running the unit tests from the build root folder (#1289).
+* Fix broken unit test that fails in Windows but not Linux (#1290).
 
 Lua API changes
 ---------------
 
+This release adds new features but does not introduce any incompatibility.
+
+* Add methods game:get/set_transition_style() (#1368).
+* Add methods state:get/set_can_use_teletransporter/switch/stream() (#1363).
 * Make surface, text_surface and timer userdata types indexable (#1394).
 
 __________________________

@@ -109,6 +109,7 @@ Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
     starting_destination_name = "";  // Default destination.
   }
 
+
   teleport_hero(get_hero(), starting_map_id, starting_destination_name, Transition::Style::FADE);
 }
 
@@ -713,6 +714,7 @@ void Game::teleport_hero(
       if(current_map and current_map != next_map) {
         leave_map(hero, current_map);
       }
+
       hero->place_on_destination(*next_map, previous_map_location, a_destination_name);
       hero->get_linked_camera()->start_tracking(hero); //TODO verify if necessary
     };
@@ -840,6 +842,10 @@ void Game::leave_map(const EntityPtr &leaving, const MapPtr& map) {
     maps_to_unload.insert(map);
   }
 
+
+  /*next_map->set_destination(destination_name);
+  this->current_transition_style = transition_style;
+*/
 }
 
 /**
@@ -852,6 +858,22 @@ void Game::notify_map_changed(Map &map, Camera& camera) {
 
   // Notify the equipment.
   get_equipment().notify_map_changed(map, camera);
+}
+
+/**
+ * \brief Returns the transition style to use by default.
+ * \return The default transition style.
+ */
+Transition::Style Game::get_default_transition_style() const {
+  return get_savegame().get_default_transition_style();
+}
+
+/**
+ * \param Sets the transition style to use by default.
+ * \param default_transition_style The default transition style.
+ */
+void Game::set_default_transition_style(Transition::Style default_transition_style) {
+  get_savegame().set_default_transition_style(default_transition_style);
 }
 
 /**

@@ -394,8 +394,9 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual void set_suspended(bool suspended);
     virtual void update();
     void draw(Camera& camera);
-    virtual void built_in_draw(Camera& surface);
-    void draw_sprites(Camera& surface);
+
+    virtual void built_in_draw(Camera& camera);
+    void draw_sprites(Camera& camera, const Rectangle& clipping_area = Rectangle());
 
     // Easy access to various game objects.
     Entities& get_entities();

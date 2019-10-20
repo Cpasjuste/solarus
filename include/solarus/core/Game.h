@@ -99,6 +99,7 @@ class SOLARUS_API Game {
     Map& get_current_map(const HeroPtr& hero);
     void teleport_hero(const HeroPtr& hero, const std::string& map_id, const std::string& destination_name,
         Transition::Style transition_style);
+
     void teleport_camera(const CameraPtr& camera,
                          const std::string map_id,
                          const std::string& destination_name,
@@ -110,6 +111,9 @@ class SOLARUS_API Game {
 
     const MapPtr& prepare_map(const std::string& map_id);
     void leave_map(const EntityPtr &leaving, const MapPtr& map);
+
+    Transition::Style get_default_transition_style() const;
+    void set_default_transition_style(Transition::Style default_transition_style);
 
     // world
     bool get_crystal_state() const;

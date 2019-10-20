@@ -176,10 +176,13 @@ class SOLARUS_API Map: public ExportableToLua {
     void check_suspended();
     void draw();
     void draw_cameras(const SurfacePtr& dst_surface) const;
+
+    void draw_visual(Drawable& drawable, const Point& xy,
+                     const Rectangle& clipping_area);
     void draw_visual(Drawable& drawable, const Point& xy);
     void draw_visual(Drawable& drawable, int x, int y);
     void draw_visual(Drawable& drawable, int x, int y,
-        const Rectangle& clipping_area);
+                     const Rectangle& clipping_area);
 
   private:
 

@@ -22,6 +22,7 @@
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMimeData>
 
 namespace SolarusGui {
 
@@ -35,9 +36,6 @@ MainWindow::MainWindow(QWidget* parent) :
 
   // Set up widgets.
   ui.setupUi(this);
-
-  // Title.
-  update_title();
 
   // Icon.
   const QStringList& icon_sizes = { "16", "24", "32", "48", "64", "128", "256" };
@@ -75,6 +73,8 @@ MainWindow::MainWindow(QWidget* parent) :
   ui.add_button->setDefaultAction(ui.action_add_quest);
   ui.remove_button->setDefaultAction(ui.action_remove_quest);
 
+  setAcceptDrops(true);
+
   // Make connections.
   connect(ui.quests_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
           this, SLOT(selected_quest_changed()));
@@ -110,16 +110,6 @@ void MainWindow::initialize_geometry_on_screen() {
 }
 
 /**
- * @brief Sets the title of the window.
- */
-void MainWindow::update_title() {
-
-  QString version = QApplication::applicationVersion();
-  QString title = tr("Solarus %1").arg(version);
-  setWindowTitle(title);
-}
-
-/**
  * @brief Sets up the menus of the main window.
  */
 void MainWindow::initialize_menus() {
@@ -137,6 +127,7 @@ void MainWindow::initialize_menus() {
 void MainWindow::update_menus() {
 
   update_fullscreen_action();
+  update_force_software_action();
 }
 
 /**
@@ -161,6 +152,42 @@ void MainWindow::update_force_software_action() {
 }
 
 /**
+ * @brief Add and select a quest if it exists and is not already known.
+ * @param quest_path Path to the quest to try to add.
+ */
+bool MainWindow::add_quest(QString quest_path) {
+
+  // Sanitize path: Quest is a folder with a data folder.
+  QString end0("data/quest.dat");
+  QString end1("data");
+  if (quest_path.endsWith(end0)) {
+    quest_path.chop(end0.size());
+  } else if (quest_path.endsWith(end1)) {
+    quest_path.chop(end1.size());
+  }
+
+  // Check if the quest is already in the list.
+  if (ui.quests_view->has_quest(quest_path)) {
+    ui.quests_view->select_quest(quest_path);
+    return false;
+  }
+
+  // Add to the quest list view.
+  if (!ui.quests_view->add_quest(quest_path)) {
+    return false;
+  }
+
+  // Remember the new quest list.
+  Settings settings;
+  settings.setValue("quests_paths", ui.quests_view->get_paths());
+
+  // Select the new quest.
+  ui.quests_view->select_quest(quest_path);
+
+  return true;
+}
+
+/**
  * @brief Receives a window close event.
  * @param event The event to handle.
  */
@@ -171,6 +198,36 @@ void MainWindow::closeEvent(QCloseEvent* event) {
   }
   else {
     event->ignore();
+  }
+}
+
+/**
+ * @brief Receives a drag enter event.
+ * @param event The event to handle.
+ */
+void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
+
+  if (event->mimeData()->hasUrls()) {
+    event->acceptProposedAction();
+  }
+}
+
+/**
+ * @brief Receives a drop event.
+ * @param event The event to handle.
+ */
+void MainWindow::dropEvent(QDropEvent* event) {
+
+  QMimeData const * mime = event->mimeData();
+  if (mime->hasUrls()) {
+    for (QUrl const & url : mime->urls()) {
+      // Local file actually can be a non-local file.
+      if (url.isLocalFile() && url.host().isEmpty()) {
+        if (add_quest(url.toLocalFile())) {
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -225,31 +282,9 @@ void MainWindow::on_action_add_quest_triggered() {
     return;
   }
 
-  //Sanitize path
-  QString end("data/quest.dat");
-  if(quest_path.endsWith(end)) {
-    //Quest is a folder with a quest.dat
-    quest_path.chop(end.size());
+  if (!add_quest(quest_path)) {
+    GuiTools::error_dialog(tr("No quest was found in this directory"));
   }
-
-  if (ui.quests_view->has_quest(quest_path)) {
-    // Quest already in the list.
-    ui.quests_view->select_quest(quest_path);
-    return;
-  }
-
-  // Add to the quest list view.
-  if (!ui.quests_view->add_quest(quest_path)) {
-    GuiTools::error_dialog("No quest was found in this directory");
-    return;
-  }
-
-  // Remember the quest list.
-  Settings settings;
-  settings.setValue("quests_paths", ui.quests_view->get_paths());
-
-  // Select it.
-  ui.quests_view->select_quest(quest_path);
 }
 
 /**

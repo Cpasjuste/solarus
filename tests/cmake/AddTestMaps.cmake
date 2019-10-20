@@ -90,6 +90,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1038_hero_hurt_in_stairs"
   "bugs/1041_crash_entity_overlaps"
   "bugs/1042_multiple_facing_entities_random_picked"
+  "bugs/1043_cannot_talk_to_npc_when_swimming"
   "bugs/1044_sol_menu_multiple_start"
   "bugs/1062_enemy_set_attack_consequence_callback"
   "bugs/1075_straight_movement_set_max_distance_tables"
@@ -136,9 +137,18 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1354_crash_start_movement"
   "bugs/1351_camera_stuck_on_separator"
   "bugs/1353_water_no_flippers"
+  "bugs/1356_block_on_separator"
   "bugs/1361_crash_pickable_on_stream"
   "bugs/1364_state_set_can_use_stairs_not_working"
   "bugs/1366_crash_disabled_stairs_on_dynamic_tile"
+  "bugs/1371_crash_pulling_block_on_switch"
+  "bugs/1381_jumpers_hero_16_8"
+  "bugs/1383_blocks_hero_16_8"
+  "bugs/1392_carried_object_directions"
+  "bugs/1416_state_set_affected_by_ground_speed"
+  "bugs/1418_state_set_can_be_hurt"
+  "bugs/1423_crash_carried_without_shadow"
+  "bugs/1428_movement_blocking"
 )
 
 # Test that should not fail when there are errors

@@ -3827,12 +3827,13 @@ void Entity::built_in_draw(Camera& camera) {
  *
  * This function draws the entity's sprites (if any) and if
  * at least one of them is in the visible part of the map.
- * Subclasses can reimplement this method to draw differently.
  *
  * \param camera The camera where to draw.
+ * \param clipping_area Rectangle of the map where the drawing will be
+ * restricted. A flat rectangle means no restriction.
  */
-void Entity::draw_sprites(Camera&  camera) {
 
+void Entity::draw_sprites(Camera& camera , const Rectangle& /*clipping_area*/) {
   const Point& xy = get_displayed_xy();
   const Size& size = get_size();
 
@@ -3847,7 +3848,7 @@ void Entity::draw_sprites(Camera&  camera) {
 
     if (!is_tiled()) {
       //get_map().draw_visual(sprite, xy);
-      sprite.draw(surface, xy);
+      sprite.draw(surface, xy); //, clipping_area); TODO!
     }
     else {
       // Repeat the sprite with tiling.
@@ -3860,7 +3861,7 @@ void Entity::draw_sprites(Camera&  camera) {
       for (int y = y1; y < y2; y += sprite_size.height) {
         for (int x = x1; x < x2; x += sprite_size.width) {
           //get_map().draw_visual(sprite, x, y);
-          sprite.draw(surface, {x,y});
+          sprite.draw(surface, {x,y}); //TODO clipping area !
         }
       }
     }
