@@ -405,7 +405,7 @@ class Hero: public Entity {
     int ice_movement_direction8;           /**< wanted movement direction a while ago */
     Point ground_dxy;                      /**< additional movement with special ground (hole or ice) */
 
-    CommandsPtr commands;                   /**< Commands controlling this hero */
+    CommandsPtr commands;                  /**< Commands controlling this hero */
     CameraPtr linked_camera;               /**< Camera linked with this hero */
 
 };

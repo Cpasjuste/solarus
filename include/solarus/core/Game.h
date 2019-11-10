@@ -159,6 +159,7 @@ private:
       MapChangeCallback on_map_prepare;
       MapChangeCallback on_map_change;
 
+      bool removed = false;
       bool is_finished() const;
     };
 
@@ -199,7 +200,7 @@ private:
         next_map; */              /**< the map where the hero is going to; if not nullptr, it means that the hero
                                 * is changing from current_map to next_map */
 
-    std::vector<CameraTeleportation>
+    std::list<CameraTeleportation>
         cameras_teleportations;    /**< record current displacements of heroes between maps */
 
     /*SurfacePtr

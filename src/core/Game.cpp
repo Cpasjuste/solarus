@@ -358,28 +358,29 @@ void Game::notify_command(const CommandEvent& command) {
  */
 void Game::update() {
 
+
+
   // Update the transitions between maps.
   // Use the side effect of remove_if to elegantly remove the finished teleportations
+  for(auto& ct : cameras_teleportations) {
+    ct.removed = update_teleportation(ct);
+  }
+
   cameras_teleportations.erase(
         std::remove_if(cameras_teleportations.begin(), cameras_teleportations.end(),
-                 [this](CameraTeleportation& ht){
-          return update_teleportation(ht);
+                 [](CameraTeleportation& ht){
+          return ht.removed;
         }),
         cameras_teleportations.end()
   );
 
-  if (restarting && cameras_teleportations.size() == 0) { //All transitions finished ! Restart !
+  if (restarting && cameras_teleportations.empty()) { //All transitions finished ! Restart !
     stop();
     MainLoop& main_loop = get_main_loop();
     main_loop.set_game(new Game(main_loop, savegame));
     this->savegame = nullptr;
     return;
   }
-
-  if(restarting or not started) {
-    return;
-  }
-
 
   //If we are not doing any teleportation
   if(cameras_teleportations.empty()) {
@@ -395,6 +396,11 @@ void Game::update() {
     }
     maps_to_unload.clear(); //Done removing maps
   }
+
+  if(restarting or not started) {
+    return;
+  }
+
   // Update the map.
   update_tilesets();
 
@@ -434,6 +440,10 @@ void Game::update_tilesets() {
  * \returns true if the transition has succeeded and needs to be removed
  */
 bool Game::update_teleportation(CameraTeleportation& tp) {
+  if(tp.removed) {
+    return true; //Set this tp to be really removed
+  }
+
   MapPtr& next_map = tp.next_map;
   const auto& camera = tp.camera;
   auto& transition = camera->get_transition();
@@ -646,7 +656,7 @@ void Game::teleport_hero(
         previous_world = current_map->get_world();
       }
 
-      bool world_changed = next_map != current_map &&
+      bool world_changed = current_map && next_map != current_map &&
           (!next_map->has_world() || next_map->get_world() != previous_world);
 
       if (world_changed) {
@@ -745,14 +755,16 @@ void Game::teleport_camera(const CameraPtr& camera,
                      const MapChangeCallback& on_map_change) {
 
   //Verify if there is already a teleportation for this camera
-  auto it = std::remove_if(cameras_teleportations.begin(),
+  auto it = std::find_if(cameras_teleportations.begin(),
                          cameras_teleportations.end(),
                          [&](const CameraTeleportation& ct){
     return ct.camera == camera;
   });
 
-  // Remove the old tp
-  cameras_teleportations.erase(it, cameras_teleportations.end());
+  // Set the old tp to be removed
+  if(it != cameras_teleportations.end()) {
+    it->removed = true;
+  }
 
   CameraTeleportation ct;
 
@@ -785,9 +797,9 @@ void Game::teleport_camera(const CameraPtr& camera,
   ct.camera->set_transition(std::move(transition));
 
   //Check if transition can already trigger the map change (when quick out transitions)
-  if(ct.camera->get_transition()->is_finished()) {
+  /*if(ct.camera->get_transition()->is_finished()) {
     teleportation_change_map(ct);
-  }
+  }*/
 
   // Add the teleportation details to the list of current teleportations
   cameras_teleportations.emplace_back(std::move(ct));
@@ -907,7 +919,7 @@ bool Game::is_paused() const {
  * \return true if there is a transition
  */
 bool Game::is_playing_transition() const {
-  return cameras_teleportations.size() > 0;
+  //return cameras_teleportations.size() > 0;
 
   return std::find_if(cameras_teleportations.begin(),
                       cameras_teleportations.end(),

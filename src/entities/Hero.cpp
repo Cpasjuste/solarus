@@ -444,16 +444,12 @@ bool Hero::notify_input(const InputEvent& event) {
  */
 bool Hero::notify_command(const CommandEvent& event) {
 
-  //TODO filter events that does not are for this hero
+  //TODO filter events that aren't for this hero
   if(!event.is_from(commands)) {
     return false; //Don't handle events not destined to this hero
   }
 
-  if(event.is_pressed()) {
-    get_state()->notify_command_pressed(event.name);
-  } else {
-    get_state()->notify_command_released(event.name);
-  }
+  get_state()->notify_command(event);
 
   return true; // TODO verify this
 }
@@ -2223,7 +2219,7 @@ void Hero::update_invincibility() {
  * \return \c true if the hero can be hurt.
  */
 bool Hero::can_be_hurt(Entity* attacker) const {
-  return !is_invincible() && get_state()->get_can_be_hurt(attacker);
+  return !is_invincible() && !delayed_teletransporter && get_state()->get_can_be_hurt(attacker);
 }
 
 /**

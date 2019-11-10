@@ -86,7 +86,7 @@ class EntityZOrderComparator {
       }
 
       // Same layer.
-      return first->get_z() < second->get_z();
+     return first->get_z() < second->get_z();
     }
 };
 
@@ -200,8 +200,6 @@ class SOLARUS_API Entities {
 
         ZOrderInfo();
 
-        void add(const EntityPtr& entity);
-        void remove(const EntityPtr& entity);
         void bring_to_front(const EntityPtr& entity);
         void bring_to_back(const EntityPtr& entity);
 

@@ -292,7 +292,7 @@ bool Entity::State::notify_input(const InputEvent& /* event */) {
 
 void Entity::State::notify_command(const CommandEvent& event) {
   if(event.is_pressed()) {
-    notify_command_released(event.name);
+    notify_command_pressed(event.name);
   } else {
     notify_command_released(event.name);
   }

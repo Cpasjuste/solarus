@@ -295,6 +295,9 @@ EntityVector Entities::get_entities_with_prefix(const std::string& prefix) {
     for(const HeroPtr& hero : heroes) {
       entities.push_back(hero);
     }
+    for(const CameraPtr& cam : cameras) {
+      entities.push_back(cam);
+    }
     return entities;
   }
 
@@ -936,6 +939,7 @@ void Entities::add_entity(const EntityPtr& entity) {
     // Update the quadtree.
     quadtree->add(entity, entity->get_max_bounding_box());
 
+
     // Update the specific entities lists.
     switch (type) {
 
@@ -972,7 +976,7 @@ void Entities::add_entity(const EntityPtr& entity) {
     }
 
     // Track the insertion order.
-    z_orders[layer].add(entity);
+    z_orders[layer].bring_to_front(entity);
 
     // Update the list of entities by type.
     auto it = entities_by_type.find(type);
@@ -1142,9 +1146,6 @@ void Entities::remove_marked_entities() {
       default:
       break;
     }
-
-    // Track the insertion order.
-    z_orders.at(layer).remove(entity);
 
     // Update the list of entities by type.
     const auto& it = entities_by_type.find(type);
@@ -1320,8 +1321,7 @@ void Entities::set_entity_layer(Entity& entity, int layer) {
     }
 
     // Track the insertion order.
-    z_orders.at(old_layer).remove(shared_entity);
-    z_orders.at(layer).add(shared_entity);
+    z_orders.at(layer).bring_to_front(shared_entity);
 
     // Update the list of entities by type and layer.
     const EntityType type = entity.get_type();
@@ -1391,36 +1391,13 @@ Entities::ZOrderInfo::ZOrderInfo() :
 }
 
 /**
- * \brief Inserts an entity at the end of the structure.
- *
- * Nothing happens if the entity was already present.
- */
-void Entities::ZOrderInfo::add(const EntityPtr& entity) {
-
-  ++max;
-  entity->set_z(max);
-}
-
-/**
- * \brief Removes an entity from the structure.
- *
- * Nothing happens if the entity was not present.
- */
-void Entities::ZOrderInfo::remove(const EntityPtr& entity) {
-
-  entity->set_z(0);
-  // Other Z values remain unchanged: removing an entity does not break the order.
-}
-
-/**
  * \brief Puts an entity above all others.
  *
  * It will then have a Z order greater than all other entities in the structure.
  */
 void Entities::ZOrderInfo::bring_to_front(const EntityPtr& entity) {
-
-  remove(entity);
-  add(entity);
+  ++max;
+  entity->set_z(max);
 }
 
 /**
@@ -1429,8 +1406,6 @@ void Entities::ZOrderInfo::bring_to_front(const EntityPtr& entity) {
  * It will then have a Z order lower than all other entities in the structure.
  */
 void Entities::ZOrderInfo::bring_to_back(const EntityPtr& entity) {
-
-  remove(entity);
   --min;
   entity->set_z(min);
 }
