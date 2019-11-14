@@ -1319,6 +1319,17 @@ class LuaContext {
       state_api_get_carried_object_action,
       state_api_set_carried_object_action,
 
+      // Commands API
+      commands_api_create,
+      commands_api_is_pressed,
+      commands_api_get_direction,
+      commands_api_set_binding,
+      commands_api_get_binding,
+      commands_api_capture_bindings,
+      commands_api_get_effect,
+      commands_api_simulate_pressed,
+      commands_api_simulate_released,
+
       // available to all userdata types
       userdata_meta_gc,
       userdata_meta_newindex_as_table,
@@ -1691,7 +1702,8 @@ private:
       l_create_bomb,
       l_create_explosion,
       l_create_fire,
-      l_create_camera;
+      l_create_camera,
+      l_create_hero;
 
     // Script data.
     lua_State* main_l;                 /**< The MAIN Lua state encapsulated. */

@@ -1,0 +1,35 @@
+properties{
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  min_layer = 0,
+  max_layer = 2,
+  tileset = "castle",
+}
+
+tile{
+  layer = 0,
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  pattern = "3",
+}
+
+destination{
+  name = "destination",
+  layer = 0,
+  x = 40,
+  y = 53,
+  direction = 1,
+}
+
+destination{
+  name = "alter_destination",
+  layer = 0,
+  x = 40,
+  y = 189,
+  direction = 1,
+}
+

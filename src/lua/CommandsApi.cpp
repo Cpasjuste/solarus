@@ -1,23 +1,38 @@
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
 
+#include "solarus/core/CommandsDispatcher.h"
+
 namespace Solarus {
 
 const std::string LuaContext::commands_module_name = "sol.commands";
 
 void LuaContext::register_commands_module() {
 
-  const std::vector<luaL_Reg> methods = {
-    //TODO
+  // Functions of sol.commands
+  const std::vector<luaL_Reg> functions = {
+    {"create", commands_api_create}
   };
 
+  // Methods of the commands type.
+  const std::vector<luaL_Reg> methods = {
+    { "is_pressed", commands_api_is_pressed},
+    { "get_direction", commands_api_get_direction},
+    { "set_binding", commands_api_set_binding},
+    { "get_binding", commands_api_get_binding},
+    { "capture_bindings", commands_api_capture_bindings},
+    { "simulate_pressed", commands_api_simulate_pressed},
+    { "simulate_released", commands_api_simulate_released}
+  };
+
+  // Metamethods of the commands type
   const std::vector<luaL_Reg> metamethods = {
       { "__gc", userdata_meta_gc },
       { "__newindex", userdata_meta_newindex_as_table },
       { "__index", userdata_meta_index_as_table },
   };
 
-  register_type(commands_module_name, {}, methods, metamethods);
+  register_type(commands_module_name, functions, methods, metamethods);
 }
 
 /**
@@ -51,106 +66,96 @@ std::shared_ptr<Commands> LuaContext::check_commands(lua_State* current_l, int i
   );
 }
 
-// Events
-/*
-bool LuaContext::on_joypad_axis_moved(Joypad& joypad, JoyPadAxis axis, double val) {
-  if(!userdata_has_field(joypad,"on_axis_moved")) {
-    return false;
-  }
+/**
+ * \brief Implementation of sol.commands.create().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_create(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+    CommandsPtr cmds = CommandsDispatcher::get().create_commands_from_default();
 
-  push_joypad(current_l, joypad);
-  bool handled = false;
-
-  if(find_method("on_axis_moved")) {
-    lua_pushstring(current_l,enum_to_name(axis).c_str());
-    lua_pushnumber(current_l, val);
-    bool success = call_function(3, 1, "on_axis_moved");
-
-    if (!success) {
-      // Something was wrong in the script: don't propagate the input to other objects.
-      handled = true;
-    }
-    else {
-      handled = lua_toboolean(current_l, -1);
-      lua_pop(current_l, 1);
-    }
-  }
-  lua_pop(current_l, 1);
-  return handled;
+    push_commands(l, *cmds);
+    return 1;
+  });
 }
 
-bool LuaContext::on_joypad_button_pressed(Joypad& joypad, JoyPadButton button) {
-  if(!userdata_has_field(joypad,"on_button_pressed")) {
-    return false;
-  }
+/**
+ * \brief Implementation of sol.commands.create().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_is_pressed(lua_State* l) {
+  return state_boundary_handle(l, [&]{
 
-  push_joypad(current_l, joypad);
-  bool handled = false;
-
-  if(find_method("on_button_pressed")) {
-    lua_pushstring(current_l, enum_to_name(button).c_str());
-    bool success = call_function(2, 1, "on_button_pressed");
-    if (!success) {
-      // Something was wrong in the script: don't propagate the input to other objects.
-      handled = true;
-    }
-    else {
-      handled = lua_toboolean(current_l, -1);
-      lua_pop(current_l, 1);
-    }
-  }
-  lua_pop(current_l, 1);
-  return handled;
+  });
 }
 
-bool LuaContext::on_joypad_button_released(Joypad& joypad, JoyPadButton button) {
-  if(!userdata_has_field(joypad,"on_button_released")) {
-    return false;
-  }
+/**
+ * \brief Implementation of sol.commands.create().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_get_direction(lua_State* l) {
+  return state_boundary_handle(l, [&]{
 
-  push_joypad(current_l, joypad);
-  bool handled = false;
-
-  if(find_method("on_button_released")) {
-    lua_pushstring(current_l, enum_to_name(button).c_str());
-
-    bool success = call_function(2, 1, "on_button_released");
-
-    if (!success) {
-      // Something was wrong in the script: don't propagate the input to other objects.
-      handled = true;
-    }
-    else {
-      handled = lua_toboolean(current_l, -1);
-      lua_pop(current_l, 1);
-    }
-  }
-  lua_pop(current_l, 1);
-  return handled;
+  });
 }
 
-bool LuaContext::on_joypad_removed(Joypad& joypad) {
-  if(!userdata_has_field(joypad,"on_removed")) {
-    return false;
-  }
-  push_joypad(current_l, joypad);
+/**
+ * \brief Implementation of sol.commands.create().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_set_binding(lua_State* l) {
+  return state_boundary_handle(l, [&]{
 
-  bool handled = false;
-  if(find_method("on_removed")) {
-    bool success = call_function(1, 1, "on_removed");
+  });
+}
 
-    if (!success) {
-      // Something was wrong in the script: don't propagate the input to other objects.
-      handled = true;
-    }
-    else {
-      handled = lua_toboolean(current_l, -1);
-      lua_pop(current_l, 1);
-    }
-  }
-  lua_pop(current_l, 1);
-  return handled;
-}*/
+/**
+ * \brief Implementation of sol.commands.create().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_get_binding(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+
+  });
+}
+
+/**
+ * \brief Implementation of sol.commands.create().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_capture_bindings(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+
+  });
+}
+
+/**
+ * \brief Implementation of sol.commands.create().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_simulate_pressed(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+
+  });
+}
+
+/**
+ * \brief Implementation of sol.commands.create().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_simulate_released(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+
+  });
+}
 
 } //Solarus
 

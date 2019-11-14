@@ -271,9 +271,8 @@ const std::map<EntityType, const EntityTypeDescription> entity_type_descriptions
         }
     },
     {
-        EntityType::CAMERA, {
-            { "width", OptionalFlag::OPTIONAL, FieldValue(-1)},
-            { "height", OptionalFlag::OPTIONAL, FieldValue(-1)}
+        EntityType::HERO, {
+            { "direction", OptionalFlag::OPTIONAL, FieldValue(-1)}
             // TODO add more usefull fields
         }
     }

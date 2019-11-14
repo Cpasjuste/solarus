@@ -1356,9 +1356,36 @@ int LuaContext::l_create_camera(lua_State* l) {
     entity->set_layer(data.get_layer());
     entity->set_user_properties(data.get_user_properties());
     entity->set_enabled(data.is_enabled_at_start());
-    //map.get_entities().add_entity(entity);
+
     entity->place_on_map(map);
     if (map.is_started()) {
+      push_entity(l, *entity);
+      return 1;
+    }
+    return 0;
+  });
+}
+
+int LuaContext::l_create_hero(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+    Map& map = *check_map(l, 1);
+    Game& game = map.get_game();
+
+    EntityData& data = *(static_cast<EntityData*>(lua_touserdata(l, 2)));
+
+    HeroPtr entity = std::make_shared<Hero>(
+      game.get_equipment() //Give hero the same equipement as anyone
+    );
+
+    entity->start_free();
+    entity->place_on_map(map);
+    entity->set_xy(data.get_xy());
+
+    entity->set_layer(data.get_layer());
+    entity->set_user_properties(data.get_user_properties());
+    entity->set_enabled(data.is_enabled_at_start());
+
+    if(map.is_started()) {
       push_entity(l, *entity);
       return 1;
     }
@@ -1417,7 +1444,7 @@ const std::map<EntityType, lua_CFunction> LuaContext::entity_creation_functions 
     { EntityType::SEPARATOR, LuaContext::l_create_separator },
     { EntityType::CUSTOM, LuaContext::l_create_custom_entity },
     { EntityType::EXPLOSION, LuaContext::l_create_explosion },
-    { EntityType::CAMERA, LuaContext::l_create_camera},
+    { EntityType::HERO, LuaContext::l_create_hero},
     { EntityType::BOMB, LuaContext::l_create_bomb },
     { EntityType::FIRE, LuaContext::l_create_fire },
 };

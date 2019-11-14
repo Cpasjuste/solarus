@@ -321,6 +321,8 @@ class Hero: public Entity {
 
     void set_commands(const CommandsPtr& commands);
 
+
+    void place_on_map(Map& map);
     const CameraPtr& get_linked_camera() const;
     void set_linked_camera(const CameraPtr& camera);
   private:
@@ -357,7 +359,6 @@ class Hero: public Entity {
                                      * including an instruction from the script */
 
     // position
-    void place_on_map(Map& map);
     void update_direction();
     void update_movement();
     void try_snap_to_facing_entity();
