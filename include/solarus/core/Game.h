@@ -216,7 +216,6 @@ private:
 
     // update functions
     void update_tilesets();
-    void update_commands_effects();
     bool update_teleportation(CameraTeleportation &tp);
     void teleportation_change_map(CameraTeleportation &tp);
     void update_gameover_sequence();

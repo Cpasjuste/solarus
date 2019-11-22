@@ -179,6 +179,7 @@ void Hero::set_suspended(bool suspended) {
  */
 void Hero::update() {
 
+
   update_invincibility();
   update_movement();
   update_direction();
@@ -192,6 +193,8 @@ void Hero::update() {
     check_collision_with_detectors();
     check_gameover();
   }
+
+  update_commands_effects();
 }
 
 /**
@@ -243,6 +246,29 @@ void Hero::update_movement() {
   // TODO clear_old_movements() is missing
 
   update_stream_action();
+}
+
+/**
+ * \brief Makes sure the keys effects are coherent with the hero's equipment and abilities.
+ */
+void Hero::update_commands_effects() {
+
+  // when the game is paused or a dialog box is shown, the sword key is not the usual one
+  if (get_game().is_paused() || get_game().is_dialog_enabled()) {
+    return; // if the game is interrupted for some other reason (e.g. a transition), let the normal sword icon
+  }
+
+  // make sure the sword key is coherent with having a sword
+  if (get_equipment().has_ability(Ability::SWORD)
+      && get_commands_effects().get_sword_key_effect() != CommandsEffects::ATTACK_KEY_SWORD) {
+
+    get_commands_effects().set_sword_key_effect(CommandsEffects::ATTACK_KEY_SWORD);
+  }
+  else if (!get_equipment().has_ability(Ability::SWORD)
+      && get_commands_effects().get_sword_key_effect() == CommandsEffects::ATTACK_KEY_SWORD) {
+
+    get_commands_effects().set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
+  }
 }
 
 /**
@@ -2604,7 +2630,7 @@ void Hero::start_running() {
     command = Command::ACTION;
   }
   else {
-    command = get_commands().is_command_pressed(Command::ITEM_1) ?
+    command = get_commands()->is_command_pressed(Command::ITEM_1) ?
         Command::ITEM_1 : Command::ITEM_2;
   }
   set_state(std::make_shared<RunningState>(*this, command));
@@ -2944,8 +2970,8 @@ void Hero::start_custom_state(const std::shared_ptr<CustomState>& custom_state) 
  * @brief Gets commands controlling this hero
  * @return
  */
-const Commands& Hero::get_commands() const {
-  return *commands;
+const CommandsPtr& Hero::get_commands() const {
+  return commands;
 }
 
 /**

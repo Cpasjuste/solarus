@@ -94,7 +94,9 @@ class SOLARUS_API Map: public ExportableToLua {
     LuaContext& get_lua_context();
     virtual const std::string& get_lua_type_name() const override;
 
+    //Events
     void notify_opening_transition_finished(const std::string &destination_name);
+    bool notify_command(const CommandEvent& command);
 
     // entities
     Entities& get_entities();

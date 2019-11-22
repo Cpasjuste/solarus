@@ -211,7 +211,7 @@ bool HeroState::is_jumper_obstacle(
  * @return the commands
  */
 const Commands& HeroState::get_commands() const {
-  return get_entity().get_commands();
+  return *get_entity().get_commands();
 }
 
 /**

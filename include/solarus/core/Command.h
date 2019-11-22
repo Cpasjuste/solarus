@@ -17,6 +17,7 @@
 #ifndef SOLARUS_GAME_COMMAND_H
 #define SOLARUS_GAME_COMMAND_H
 
+#include "solarus/core/EnumInfo.h"
 #include "solarus/core/Common.h"
 #include "solarus/core/CommandsPtr.h"
 
@@ -39,7 +40,6 @@ enum class Command {
   LEFT,
   DOWN
 };
-
 
 
 struct CommandEvent {
@@ -83,6 +83,12 @@ struct CommandEvent {
   Type type;
   Command name;
   CommandsPtr emitter;
+};
+
+template <>
+struct SOLARUS_API EnumInfoTraits<Command> {
+  static const std::string pretty_name;
+  static const EnumInfo<Command>::names_type names;
 };
 
 }

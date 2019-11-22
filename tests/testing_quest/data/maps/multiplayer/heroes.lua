@@ -9,6 +9,10 @@
 
 local map = ...
 local game = map:get_game()
+local hero = map:get_hero()
+
+local commands
+local alter_commands
 
 -- Event called at initialization time, as soon as this map is loaded.
 function map:on_started()
@@ -21,10 +25,18 @@ function map:on_started()
     y = y,
     layer = l,
   }
+  
+  commands = game:get_commands()
+  alter_commands = alter_hero:get_commands()
+  
+  game:set_ability('sword', 1)
+  hero:set_enabled(false)
 end
 
 -- Event called after the opening transition effect of the map,
 -- that is, when the player takes control of the hero.
 function map:on_opening_transition_finished()
-
+  sol.timer.start(100, function()
+    alter_commands:simulate_pressed('attack')
+  end)
 end

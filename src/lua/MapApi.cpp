@@ -1366,6 +1366,11 @@ int LuaContext::l_create_camera(lua_State* l) {
   });
 }
 
+/**
+ * @brief Creates a hero on the map
+ * @param  l The Lua context that is calling this function.
+ * @return Number of values to return to Lua.
+ */
 int LuaContext::l_create_hero(lua_State* l) {
   return state_boundary_handle(l, [&]{
     Map& map = *check_map(l, 1);
@@ -1377,6 +1382,8 @@ int LuaContext::l_create_hero(lua_State* l) {
       game.get_equipment() //Give hero the same equipement as anyone
     );
 
+    CommandsPtr cmds = CommandsDispatcher::get().create_commands_from_default();
+    entity->set_commands(cmds);
     entity->start_free();
     entity->place_on_map(map);
     entity->set_xy(data.get_xy());

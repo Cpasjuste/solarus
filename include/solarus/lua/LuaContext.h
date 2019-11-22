@@ -938,6 +938,7 @@ class LuaContext {
       game_api_capture_command_binding,
       game_api_simulate_command_pressed,
       game_api_simulate_command_released,
+      game_api_get_commands,
 
       // Equipment item API.
       item_api_get_name,
@@ -1113,6 +1114,8 @@ class LuaContext {
       hero_api_start_hurt,
       hero_api_start_state,
       hero_api_get_state_object,
+      hero_api_get_commands,
+      hero_api_set_commands,
       camera_api_get_position_on_screen,
       camera_api_set_position_on_screen,
       camera_api_get_state,

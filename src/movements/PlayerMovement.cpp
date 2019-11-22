@@ -29,11 +29,13 @@ namespace Solarus {
  * \brief Constructor.
  * \param moving_speed movement speed
  */
-PlayerMovement::PlayerMovement(int moving_speed):
+PlayerMovement::PlayerMovement(int moving_speed, const CommandsPtr &commands):
   StraightMovement(false, true),
   moving_speed(moving_speed),
   direction8(-1),
-  blocked_by_stream(false) {
+  blocked_by_stream(false),
+  commands(commands)
+{
 
 }
 
@@ -70,8 +72,7 @@ void PlayerMovement::update() {
       stop();
     }
     // Check if the wanted direction has changed.
-    const Commands& commands = get_entity()->get_game().get_commands();
-    int wanted_direction8 = commands.get_wanted_direction8();
+    int wanted_direction8 = commands->get_wanted_direction8();
     if (wanted_direction8 != direction8 && !is_suspended()) {
       direction8 = wanted_direction8;
       compute_movement();
@@ -112,14 +113,7 @@ void PlayerMovement::set_moving_speed(int moving_speed) {
  * and computes the corresponding movement.
  */
 void PlayerMovement::set_wanted_direction() {
-
-  if (get_entity() != nullptr && get_entity()->is_on_map()) {
-    Commands& commands = get_entity()->get_game().get_commands();
-    direction8 = commands.get_wanted_direction8();
-  }
-  else {
-    direction8 = -1;
-  }
+  direction8 = commands->get_wanted_direction8();
 }
 
 /**

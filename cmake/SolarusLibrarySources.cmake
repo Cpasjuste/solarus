@@ -255,6 +255,7 @@ target_sources(solarus
     "${CMAKE_CURRENT_SOURCE_DIR}/src/core/EquipmentItemUsage.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/core/FontResource.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/core/Commands.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core/Command.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/core/Game.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/core/Geometry.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/core/InputEvent.cpp"

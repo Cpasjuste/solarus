@@ -106,7 +106,8 @@ void LuaContext::register_game_module() {
       { "set_command_joypad_binding", game_api_set_command_joypad_binding },
       { "capture_command_binding", game_api_capture_command_binding },
       { "simulate_command_pressed", game_api_simulate_command_pressed },
-      { "simulate_command_released", game_api_simulate_command_released }
+      { "simulate_command_released", game_api_simulate_command_released },
+      { "get_commands", game_api_get_commands }
   };
 
   const std::vector<luaL_Reg> metamethods = {
@@ -1304,7 +1305,7 @@ int LuaContext::game_api_get_command_effect(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
 
     Game* game = savegame.get_game();
     if (game == nullptr) {
@@ -1398,7 +1399,7 @@ int LuaContext::game_api_get_command_keyboard_binding(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
 
     Commands& commands = savegame.get_game()->get_commands();
     InputEvent::KeyboardKey key = commands.get_keyboard_binding(command);
@@ -1424,7 +1425,7 @@ int LuaContext::game_api_set_command_keyboard_binding(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
     if (lua_gettop(l) <= 2) {
       LuaTools::type_error(l, 3, "string or nil");
     }
@@ -1452,7 +1453,7 @@ int LuaContext::game_api_get_command_joypad_binding(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
 
     Commands& commands = savegame.get_game()->get_commands();
     const std::string& joypad_string = commands.get_joypad_binding(command);
@@ -1477,7 +1478,7 @@ int LuaContext::game_api_set_command_joypad_binding(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
     if (lua_gettop(l) <= 2) {
       LuaTools::type_error(l, 3, "string or nil");
     }
@@ -1504,7 +1505,7 @@ int LuaContext::game_api_capture_command_binding(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
     const ScopedLuaRef& callback_ref = LuaTools::opt_function(l, 3);
 
     Commands& commands = savegame.get_game()->get_commands();
@@ -1524,7 +1525,7 @@ int LuaContext::game_api_is_command_pressed(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
 
     Commands& commands = savegame.get_game()->get_commands();
     lua_pushboolean(l, commands.is_command_pressed(command));
@@ -1570,7 +1571,7 @@ int LuaContext::game_api_simulate_command_pressed(lua_State* l){
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
 
     savegame.get_game()->simulate_command_pressed(command);
 
@@ -1588,11 +1589,29 @@ int LuaContext::game_api_simulate_command_released(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
     Command command = LuaTools::check_enum<Command>(
-        l, 2, Commands::command_names);
+        l, 2);
 
     savegame.get_game()->simulate_command_released(command);
 
     return 0;
+  });
+}
+
+/**
+ * \brief Implementation of game:get_commands().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::game_api_get_commands(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Savegame& savegame = *check_game(l, 1);
+
+    Commands& cmds = savegame.get_game()->get_commands();
+
+    push_commands(l, cmds);
+
+    return 1;
   });
 }
 

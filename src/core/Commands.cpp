@@ -27,22 +27,6 @@
 
 namespace Solarus {
 
-/**
- * \brief Lua name of each value of the Command enum.
- */
-const std::map<Command, std::string> Commands::command_names = {
-    { Command::NONE, "" },
-    { Command::ACTION, "action" },
-    { Command::ATTACK, "attack" },
-    { Command::ITEM_1, "item_1" },
-    { Command::ITEM_2, "item_2" },
-    { Command::PAUSE, "pause" },
-    { Command::RIGHT, "right" },
-    { Command::UP, "up" },
-    { Command::LEFT, "left" },
-    { Command::DOWN, "down" }
-};
-
 const std::string Commands::direction_names[4] = {
     "right",
     "up",
@@ -112,7 +96,7 @@ Commands::Commands(MainLoop& main_loop, Game& game):
 {
   const Savegame& save = game.get_savegame();
   // Load the commands from the savegame.
-  for (const auto& kvp : command_names) {
+  for (const auto& kvp : EnumInfoTraits<Command>::names) {
 
     Command command = kvp.first;
     if (command == Command::NONE) {
@@ -204,18 +188,18 @@ void Commands::notify_input(const InputEvent& event) {
 void Commands::keyboard_key_pressed(InputEvent::KeyboardKey keyboard_key_pressed) {
 
   // Retrieve the game command (if any) corresponding to this keyboard key.
-  const Command command_pressed = get_command_from_keyboard(keyboard_key_pressed);
+  const Command command = get_command_from_keyboard(keyboard_key_pressed);
 
   if (!customizing) {
     // If the key is mapped, notify the game.
-    if (command_pressed != Command::NONE) {
-      game_command_pressed(command_pressed);
+    if (command != Command::NONE) {
+      command_pressed(command);
     }
   }
   else {
     customizing = false;
 
-    if (command_pressed != command_to_customize) {
+    if (command != command_to_customize) {
       // Consider this keyboard key as the new mapping for the game command being customized.
       set_keyboard_binding(command_to_customize, keyboard_key_pressed);
       commands_pressed.insert(command_to_customize);
@@ -231,11 +215,11 @@ void Commands::keyboard_key_pressed(InputEvent::KeyboardKey keyboard_key_pressed
 void Commands::keyboard_key_released(InputEvent::KeyboardKey keyboard_key_released) {
 
   // Retrieve the game command (if any) corresponding to this keyboard key.
-  Command command_released = get_command_from_keyboard(keyboard_key_released);
+  Command command = get_command_from_keyboard(keyboard_key_released);
 
   // If the keyboard key is mapped, notify the game.
-  if (command_released != Command::NONE) {
-    game_command_released(command_released);
+  if (command != Command::NONE) {
+    command_released(command);
   }
 }
 
@@ -249,18 +233,18 @@ void Commands::joypad_button_pressed(int button) {
   std::ostringstream oss;
   oss << "button " << button;
   const std::string& joypad_string = oss.str();
-  Command command_pressed = get_command_from_joypad(joypad_string);
+  Command command = get_command_from_joypad(joypad_string);
 
   if (!customizing) {
     // If the joypad button is mapped, notify the game.
-    if (command_pressed != Command::NONE) {
-      game_command_pressed(command_pressed);
+    if (command != Command::NONE) {
+      command_pressed(command);
     }
   }
   else {
     customizing = false;
 
-    if (command_pressed != command_to_customize) {
+    if (command != command_to_customize) {
       // Consider this button as the new mapping for the game command being customized.
       set_joypad_binding(command_to_customize, joypad_string);
       commands_pressed.insert(command_to_customize);
@@ -279,11 +263,11 @@ void Commands::joypad_button_released(int button) {
   std::ostringstream oss;
   oss << "button " << button;
   const std::string& joypad_string = oss.str();
-  Command command_released = get_command_from_joypad(joypad_string);
+  Command command = get_command_from_joypad(joypad_string);
 
   // If the key is mapped, notify the game.
-  if (command_released != Command::NONE) {
-    game_command_released(command_released);
+  if (command != Command::NONE) {
+    command_released(command);
   }
 }
 
@@ -299,16 +283,16 @@ void Commands::joypad_axis_moved(int axis, int state) {
 
     std::ostringstream oss;
     oss << "axis " << axis << " +";
-    Command command_released = get_command_from_joypad(oss.str());
-    if (command_released != Command::NONE) {
-      game_command_released(command_released);
+    Command command = get_command_from_joypad(oss.str());
+    if (command != Command::NONE) {
+      command_released(command);
     }
 
     oss.str("");
     oss << "axis " << axis << " -";
-    command_released = get_command_from_joypad(oss.str());
-    if (command_released != Command::NONE) {
-      game_command_released(command_released);
+    command = get_command_from_joypad(oss.str());
+    if (command != Command::NONE) {
+      command_released(command);
     }
   }
   else {
@@ -322,23 +306,23 @@ void Commands::joypad_axis_moved(int axis, int state) {
     oss << "axis " << axis << ((state > 0) ? " -" : " +");
     const std::string& inverse_joypad_string = oss.str();
 
-    Command command_pressed = get_command_from_joypad(joypad_string);
+    Command command = get_command_from_joypad(joypad_string);
     Command inverse_command_pressed = get_command_from_joypad(inverse_joypad_string);
 
     if (!customizing) {
 
       // If the command is mapped, notify the game.
-      if (command_pressed != Command::NONE) {
+      if (command != Command::NONE) {
         if (is_command_pressed(inverse_command_pressed)) {
-          game_command_released(inverse_command_pressed);
+          command_released(inverse_command_pressed);
         }
-        game_command_pressed(command_pressed);
+        command_pressed(command);
       }
     }
     else {
       customizing = false;
 
-      if (command_pressed != command_to_customize) {
+      if (command != command_to_customize) {
         // Consider this axis movement as the new mapping for the game command being customized.
         set_joypad_binding(command_to_customize, joypad_string);
         commands_pressed.insert(command_to_customize);
@@ -362,10 +346,10 @@ void Commands::joypad_hat_moved(int hat, int value) {
 
       std::ostringstream oss;
       oss << "hat " << hat << ' ' << direction_names[i];
-      Command command_released = get_command_from_joypad(oss.str());
+      Command command = get_command_from_joypad(oss.str());
 
-      if (command_released != Command::NONE) {
-        game_command_released(command_released);
+      if (command != Command::NONE) {
+        command_released(command);
       }
     }
   }
@@ -454,23 +438,23 @@ void Commands::joypad_hat_moved(int hat, int value) {
       if (command_1 != Command::NONE) {
 
         if (is_command_pressed(inverse_command_1)) {
-          game_command_released(inverse_command_1);
+          command_released(inverse_command_1);
         }
-        game_command_pressed(command_1);
+        command_pressed(command_1);
       }
 
       if (direction_2 != -1) {
         if (is_command_pressed(inverse_command_2)) {
-          game_command_released(inverse_command_2);
+          command_released(inverse_command_2);
         }
-        game_command_pressed(command_2);
+        command_pressed(command_2);
       }
       else {
         if (is_command_pressed(command_2)) {
-          game_command_released(command_2);
+          command_released(command_2);
         }
         if (is_command_pressed(inverse_command_2)) {
-          game_command_released(inverse_command_2);
+          command_released(inverse_command_2);
         }
       }
     }
@@ -494,10 +478,10 @@ void Commands::joypad_hat_moved(int hat, int value) {
  *
  * \param command The game command pressed.
  */
-void Commands::game_command_pressed(Command command) {
+void Commands::command_pressed(Command command) {
 
   commands_pressed.insert(command);
-  main_loop.notify_command(CommandEvent::make_pressed(command, std::static_pointer_cast<Commands>(shared_from_this())));
+  main_loop.notify_command(CommandEvent::make_pressed(command, shared_from_this_cast<Commands>()));
 }
 
 /**
@@ -507,9 +491,9 @@ void Commands::game_command_pressed(Command command) {
  *
  * \param command The game command released.
  */
-void Commands::game_command_released(Command command) {
+void Commands::command_released(Command command) {
   commands_pressed.erase(command);
-  main_loop.notify_command(CommandEvent::make_released(command, std::static_pointer_cast<Commands>(shared_from_this())));
+  main_loop.notify_command(CommandEvent::make_released(command, shared_from_this_cast<Commands>()));
 }
 
 /**
@@ -838,7 +822,7 @@ bool Commands::is_joypad_string_valid(const std::string& /* joypad_string */) {
  */
 const std::string& Commands::get_command_name(Command command) {
 
-  return command_names.find(command)->second;
+  return EnumInfoTraits<Command>::names.find(command)->second;
 }
 
 /**
@@ -849,7 +833,7 @@ const std::string& Commands::get_command_name(Command command) {
 Command Commands::get_command_by_name(
     const std::string& command_name) {
 
-  for (const auto& kvp : command_names) {
+  for (const auto& kvp : EnumInfoTraits<Command>::names) {
     if (kvp.second == command_name) {
       return kvp.first;
     }

@@ -329,10 +329,6 @@ void Map::load(Game& game) {
   entities = std::unique_ptr<Entities>(new Entities(game, *this));
   entities->create_entities(data);
 
-  // TODO be smarter about this
-  /*build_background_surface();
-  build_foreground_surface();*/
-
   loaded = true;
 }
 
@@ -509,6 +505,19 @@ bool Map::notify_input(const InputEvent& event) {
     }
   }
   return handled;
+}
+
+bool Map::notify_command(const CommandEvent& command) {
+  if(get_lua_context().map_on_command(*this, command)) {
+    return true;
+  }
+
+  if(!is_suspended()) {
+    for(const HeroPtr& hero : entities->get_heroes()) { //TODO verify if hero commands must short circuit or not
+      hero->notify_command(command);
+    }
+  }
+  return false;
 }
 
 /**

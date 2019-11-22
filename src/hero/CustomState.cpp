@@ -539,7 +539,8 @@ void CustomState::start_player_movement() {
 
   Hero& hero = get_entity();
   player_movement = std::make_shared<PlayerMovement>(
-      hero.get_walking_speed()
+      hero.get_walking_speed(),
+      hero.get_commands()
   );
   hero.set_movement(player_movement);
 }

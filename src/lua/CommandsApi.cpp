@@ -81,79 +81,134 @@ int LuaContext::commands_api_create(lua_State* l) {
 }
 
 /**
- * \brief Implementation of sol.commands.create().
+ * \brief Implementation of command:is_pressed
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::commands_api_is_pressed(lua_State* l) {
   return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    Command cmd = LuaTools::check_enum<Command>(l, 2);
 
+    lua_pushboolean(l, cmds.is_command_pressed(cmd));
+    return 1;
   });
 }
 
 /**
- * \brief Implementation of sol.commands.create().
+ * \brief Implementation of command:get_direction
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::commands_api_get_direction(lua_State* l) {
   return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
 
+    int wanted_direction8 = cmds.get_wanted_direction8();
+    if (wanted_direction8 == -1) {
+      lua_pushnil(l);
+    }
+    else {
+      lua_pushinteger(l, wanted_direction8);
+    }
+
+    return 1;
   });
 }
 
 /**
- * \brief Implementation of sol.commands.create().
+ * \brief Implementation of command:set_binding
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::commands_api_set_binding(lua_State* l) {
   return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    Command cmd = LuaTools::check_enum<Command>(l, 2);
 
+    const std::string& key_name = LuaTools::opt_string(l, 3, "");
+
+    InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KeyboardKey::NONE);
+    if (!key_name.empty() && key == InputEvent::KeyboardKey::NONE) {
+      LuaTools::arg_error(l, 3,
+          std::string("Invalid keyboard key name: '") + key_name + "'");
+    }
+    cmds.set_keyboard_binding(cmd, key);
+
+    return 0;
   });
 }
 
 /**
- * \brief Implementation of sol.commands.create().
+ * \brief Implementation of commands:get_binding
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::commands_api_get_binding(lua_State* l) {
   return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    Command command = LuaTools::check_enum<Command>(
+        l, 2);
 
+    InputEvent::KeyboardKey key = cmds.get_keyboard_binding(command);
+    const std::string& key_name = enum_to_name(key);
+
+    if (key_name.empty()) {
+      lua_pushnil(l);
+    } else {
+      push_string(l, key_name);
+    }
+    return 1;
   });
 }
 
 /**
- * \brief Implementation of sol.commands.create().
+ * \brief Implementation of commands:capture_bindings
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::commands_api_capture_bindings(lua_State* l) {
   return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    Command command = LuaTools::check_enum<Command>(
+        l, 2);
+    const ScopedLuaRef& callback_ref = LuaTools::opt_function(l, 3);
 
+    cmds.customize(command, callback_ref);
+
+    return 0;
   });
 }
 
 /**
- * \brief Implementation of sol.commands.create().
+ * \brief Implementation of commands:simulated_pressed.
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::commands_api_simulate_pressed(lua_State* l) {
   return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    Command command = LuaTools::check_enum<Command>(
+        l, 2);
 
+    cmds.command_pressed(command);
+    return 0;
   });
 }
 
 /**
- * \brief Implementation of sol.commands.create().
+ * \brief Implementation of commands:simulate_released.
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
 int LuaContext::commands_api_simulate_released(lua_State* l) {
   return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    Command command = LuaTools::check_enum<Command>(
+        l, 2);
 
+    cmds.command_released(command);
+    return 0;
   });
 }
 

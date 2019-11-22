@@ -315,7 +315,7 @@ class Hero: public Entity {
     void start_state_from_ground();
     void start_custom_state(const std::shared_ptr<CustomState>& custom_state);
 
-    const Commands& get_commands() const;
+    const CommandsPtr &get_commands() const;
     const CommandsEffects& get_commands_effects() const;
     CommandsEffects& get_commands_effects();
 
@@ -373,6 +373,9 @@ class Hero: public Entity {
     // life
     void check_gameover();
     void update_invincibility();
+
+    // commands
+    void update_commands_effects();
 
     // state
     bool invincible;                       /**< Whether the hero is temporarily invincible. */

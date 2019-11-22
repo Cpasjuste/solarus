@@ -68,17 +68,14 @@ class Commands : public ExportableToLua {
     static const std::string& get_command_name(Command command);
     static Command get_command_by_name(const std::string& command_name);
 
-    static const std::map<Command, std::string> command_names;
-
     // High-level resulting commands.
-    void game_command_pressed(Command command);
-    void game_command_released(Command command);
+    void command_pressed(Command command);
+    void command_released(Command command);
 
     const CommandsEffects& get_effects() const;
     CommandsEffects& get_effects();
 
     const std::string& get_lua_type_name() const override;
-
   private:
     // Keyboard mapping.
     void keyboard_key_pressed(InputEvent::KeyboardKey keyboard_key_pressed);

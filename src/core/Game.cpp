@@ -71,7 +71,6 @@ Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
   default_hero->start_free();
   default_hero->set_commands(commands);
   default_hero->set_linked_camera(default_camera);
-  update_commands_effects();
 
   // Maybe we are restarting after a game-over sequence.
   if (get_equipment().get_life() <= 0) {
@@ -324,7 +323,7 @@ void Game::notify_command(const CommandEvent& command) {
 
   // See if the map scripts handled the command.
   for(const MapPtr& map : current_maps) {
-    if (get_lua_context().map_on_command(*map, command)) {
+    if(map->notify_command(command)) {
       return;
     }
   }
@@ -340,13 +339,6 @@ void Game::notify_command(const CommandEvent& command) {
       if (can_pause()) {
         set_paused(true);
       }
-    }
-  }
-
-  else if (!is_suspended()) {
-    // When the game is not suspended, all other commands apply to the hero.
-    for(const HeroPtr& hero : heroes) { //TODO dispatch commands correctly
-      hero->notify_command(command);
     }
   }
 }
@@ -414,8 +406,8 @@ void Game::update() {
   get_lua_context().game_on_update(*this);
 
   // Update the equipment and HUD.
-  get_equipment().update();
-  update_commands_effects();
+  get_equipment().update(); //TODO move equipement update were equipement is located
+  //update_commands_effects();
 }
 
 /**
@@ -529,29 +521,6 @@ void Game::teleportation_change_map(CameraTeleportation &tp) {
   }
 
   tp.on_map_change(current_map, next_map); //Call the on_map_changed after map start
-}
-
-/**
- * \brief Makes sure the keys effects are coherent with the hero's equipment and abilities.
- */
-void Game::update_commands_effects() {
-
-  // when the game is paused or a dialog box is shown, the sword key is not the usual one
-  if (is_paused() || is_dialog_enabled()) {
-    return; // if the game is interrupted for some other reason (e.g. a transition), let the normal sword icon
-  }
-
-  // make sure the sword key is coherent with having a sword
-  if (get_equipment().has_ability(Ability::SWORD)
-      && get_commands_effects().get_sword_key_effect() != CommandsEffects::ATTACK_KEY_SWORD) {
-
-    get_commands_effects().set_sword_key_effect(CommandsEffects::ATTACK_KEY_SWORD);
-  }
-  else if (!get_equipment().has_ability(Ability::SWORD)
-      && get_commands_effects().get_sword_key_effect() == CommandsEffects::ATTACK_KEY_SWORD) {
-
-    get_commands_effects().set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
-  }
 }
 
 /**
@@ -1189,7 +1158,7 @@ void Game::stop_game_over() {
  * \param command The command to simulate.
  */
 void Game::simulate_command_pressed(Command command){
-  commands->game_command_pressed(command);
+  commands->command_pressed(command);
 }
 
 /**
@@ -1197,7 +1166,7 @@ void Game::simulate_command_pressed(Command command){
  * \param command The command to simulate.
  */
 void Game::simulate_command_released(Command command){
-  commands->game_command_released(command);
+  commands->command_released(command);
 }
 
 bool Game::CameraTeleportation::is_finished() const {
