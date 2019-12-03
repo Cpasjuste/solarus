@@ -70,6 +70,7 @@
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
 #include "solarus/movements/StraightMovement.h"
+#include "solarus/core/Savegame.h"
 #include <lua.hpp>
 #include <algorithm>
 #include <sstream>
@@ -101,9 +102,11 @@ int l_solid_ground_callback(lua_State* l) {
 /**
  * \brief Creates a hero.
  * \param equipment the equipment (needed to build the sprites even outside a game)
+ * \param name name of this hero entity
+ * \param eq_prefix prefix for the equipement variables into the savegame
  */
-Hero::Hero(Equipment& equipment):
-  Entity("hero", 0, 0, Point(0, 0), Size(16, 16)),
+Hero::Hero(const EquipmentPtr &equipment, const std::string& name):
+  Entity(name, 0, 0, Point(0, 0), Size(16, 16)),
   invincible(false),
   end_invincible_date(0),
   normal_walking_speed(88),
@@ -115,7 +118,9 @@ Hero::Hero(Equipment& equipment):
   target_solid_ground_callback(),
   next_ground_date(0),
   next_ice_date(0),
-  ice_movement_direction8(0) {
+  ice_movement_direction8(0),
+  equipment(equipment)
+{
 
   // position
   set_origin(8, 13);
@@ -124,7 +129,7 @@ Hero::Hero(Equipment& equipment):
 
   // sprites
   set_drawn_in_y_order(true);
-  sprites = std::unique_ptr<HeroSprites>(new HeroSprites(*this, equipment));
+  sprites = std::unique_ptr<HeroSprites>(new HeroSprites(*this, get_equipment()));
 }
 
 /**
@@ -830,7 +835,7 @@ void Hero::notify_facing_entity_changed(Entity* facing_entity) {
 
   CommandsEffects& commands_effects = get_commands_effects();
   if (facing_entity != nullptr) {
-    if (facing_entity->can_be_lifted() &&
+    if (facing_entity->can_be_lifted(*this) &&
         is_free() &&
         commands_effects.get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE) {
       commands_effects.set_action_key_effect(CommandsEffects::ACTION_KEY_LIFT);
@@ -3019,6 +3024,22 @@ void Hero::set_linked_camera(const CameraPtr& camera) {
  */
 void Hero::notify_being_removed() {
   Entity::notify_being_removed();
+}
+
+/**
+ * \brief Returns the current equipment.
+ * \return The equipment.
+ */
+Equipment& Hero::get_equipment() {
+  return *equipment;
+}
+
+/**
+ * \brief Returns the current equipment.
+ * \return The equipment.
+ */
+const Equipment& Hero::get_equipment() const {
+  return *equipment;
 }
 
 }

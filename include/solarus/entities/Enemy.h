@@ -177,7 +177,7 @@ class Enemy: public Entity {
 
     // attack the hero
     void attack_hero(Hero& hero, Sprite* this_sprite);
-    void attack_stopped_by_hero_shield();
+    void attack_stopped_by_hero_shield(Hero &hero);
 
     // receive an attack
     void restart();

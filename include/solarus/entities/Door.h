@@ -95,7 +95,7 @@ class Door: public Entity {
     void set_cannot_open_dialog_id(const std::string& cannot_open_dialog_id);
 
     // State.
-    bool can_open() const;
+    bool can_open(Hero &hero) const;
     bool is_open() const;
     bool is_opening() const;
     bool is_closed() const;
@@ -122,7 +122,7 @@ class Door: public Entity {
     void set_opening();
     void set_closing();
     void update_dynamic_tiles();
-    void consume_opening_condition();
+    void consume_opening_condition(Hero &hero);
 
     // Properties.
     const std::string savegame_variable;          /**< Boolean variable that saves the door state. */

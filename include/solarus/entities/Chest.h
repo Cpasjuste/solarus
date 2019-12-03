@@ -59,7 +59,7 @@ class Chest: public Entity {
 
     bool is_open() const;
     void set_open(bool open);
-    bool can_open();
+    bool can_open(Hero &hero);
 
     OpeningMethod get_opening_method() const;
     void set_opening_method(OpeningMethod opening_method);

@@ -22,6 +22,7 @@
 #include "solarus/core/EquipmentItem.h"
 #include "solarus/core/Game.h"
 #include "solarus/core/MainLoop.h"
+#include "solarus/core/Savegame.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/ResourceProvider.h"
 #include "solarus/core/Timer.h"
@@ -1378,8 +1379,17 @@ int LuaContext::l_create_hero(lua_State* l) {
 
     EntityData& data = *(static_cast<EntityData*>(lua_touserdata(l, 2)));
 
+    //Create new volatile savegame (no file name) to hold hero equipement
+    SavegamePtr save = std::make_shared<Savegame>(game.get_savegame().get_main_loop(), "");
+    EquipmentPtr equipment = std::make_shared<Equipment>(save, ""); //TODO set prefix correctly
+
+    //Initialize the save and equipment in-place
+    save->initialize();
+    equipment->set_initial_values();
+    equipment->load_items();
+
     HeroPtr entity = std::make_shared<Hero>(
-      game.get_equipment() //Give hero the same equipement as anyone
+     equipment, data.get_name()
     );
 
     CommandsPtr cmds = CommandsDispatcher::get().create_commands_from_default();
@@ -1414,7 +1424,8 @@ int LuaContext::l_create_fire(lua_State* l) {
     EntityPtr entity = std::make_shared<Fire>(
         data.get_name(),
         entity_creation_check_layer(l, 1, data, map),
-        data.get_xy()
+        data.get_xy(),
+        map.get_default_hero().shared_from_this_cast<Hero>() //In doubt, default hero //TODO allow to specify throwing hero
     );
     entity->set_user_properties(data.get_user_properties());
     entity->set_enabled(data.is_enabled_at_start());

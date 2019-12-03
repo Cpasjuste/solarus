@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
@@ -24,6 +24,8 @@
 #include "solarus/hero/HeroSprites.h"
 #include "solarus/core/CommandsPtr.h"
 #include "solarus/entities/CameraPtr.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/SavegamePtr.h"
 
 #include <memory>
 #include <string>
@@ -32,8 +34,6 @@ namespace Solarus {
 
 class CustomState;
 class CarriedObject;
-class Equipment;
-class EquipmentItem;
 class EquipmentItemUsage;
 class HeroSprites;
 class HeroState;
@@ -56,7 +56,7 @@ class Hero: public Entity {
     /**
      * \name Creation and destruction.
      */
-    explicit Hero(Equipment& equipment);
+    explicit Hero(const EquipmentPtr &equipment, const std::string& name);
 
     /**
      * \name Features.
@@ -322,6 +322,9 @@ class Hero: public Entity {
     void set_commands(const CommandsPtr& commands);
 
 
+    Equipment& get_equipment();
+    const Equipment& get_equipment() const;
+
     void place_on_map(Map& map);
     const CameraPtr& get_linked_camera() const;
     void set_linked_camera(const CameraPtr& camera);
@@ -399,6 +402,7 @@ class Hero: public Entity {
     // ground
     Point last_solid_ground_coords;        /**< coordinates of the last hero position on a ground
                                             * where he can walk (e.g. before jumping or falling into a hole) */
+
     int last_solid_ground_layer;           /**< layer of the last hero position on a solid ground */
     ScopedLuaRef
         target_solid_ground_callback;      /**< Function that gives the position where the hero will go back if he falls
@@ -412,6 +416,7 @@ class Hero: public Entity {
     CommandsPtr commands;                  /**< Commands controlling this hero */
     CameraPtr linked_camera;               /**< Camera linked with this hero */
 
+    EquipmentPtr equipment;                /**< Equipement of this hero */
 };
 
 }

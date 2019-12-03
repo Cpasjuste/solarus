@@ -171,7 +171,7 @@ void Chest::set_open(bool open) {
  * \brief Returns whether the player is able to open this chest now.
  * \return \c true if this the player can open the chest.
  */
-bool Chest::can_open() {
+bool Chest::can_open(Hero& hero) {
 
   switch (get_opening_method()) {
 
@@ -210,7 +210,7 @@ bool Chest::can_open() {
       if (required_item_name.empty()) {
         return false;
       }
-      const EquipmentItem& item = get_equipment().get_item(required_item_name);
+      const EquipmentItem& item = hero.get_equipment().get_item(required_item_name);
       return item.is_saved()
         && item.get_variant() > 0
         && (!item.has_amount() || item.get_amount() > 0);
@@ -423,7 +423,7 @@ bool Chest::notify_action_command_pressed(Hero &hero) {
       hero.get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
   ) {
 
-    if (can_open()) {
+    if (can_open(hero)) {
       Sound::play("chest_open");
       set_open(true);
       treasure_date = System::now() + 300;

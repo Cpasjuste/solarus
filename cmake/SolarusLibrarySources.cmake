@@ -52,6 +52,7 @@ target_sources(solarus
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/ResourceType.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/SavegameConverterV1.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Savegame.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/SavegamePtr.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Scale.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Settings.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Size.h"

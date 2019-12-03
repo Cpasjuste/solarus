@@ -19,6 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/core/Ability.h"
+#include "solarus/core/SavegamePtr.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -29,8 +30,8 @@ namespace Solarus {
 
 class EquipmentItem;
 class Game;
-class Map;
 class Savegame;
+class Map;
 class Camera;
 
 /**
@@ -46,7 +47,10 @@ class SOLARUS_API Equipment {
   public:
 
     // creation and destruction
-    explicit Equipment(Savegame& savegame);
+    explicit Equipment(const SavegamePtr& savegame, const std::string& prefix);
+
+    // new equipement initialization
+    void set_initial_values();
 
     Savegame& get_savegame();
     Game* get_game();
@@ -102,10 +106,14 @@ class SOLARUS_API Equipment {
     int get_ability(Ability ability) const;
     void set_ability(Ability ability, int level);
     void notify_ability_used(Ability ability);
-
   private:
 
-    Savegame& savegame;                          /**< The savegame encapsulated by this equipment object. */
+    int get_integer(const std::string& key) const;
+    void set_integer(const std::string& key, int value);
+    std::string get_string(const std::string& key) const;
+    void set_string(const std::string& key, const std::string& value);
+
+    SavegamePtr savegame;                        /**< The savegame encapsulated by this equipment object. */ //TODO rename me
     bool suspended;                              /**< Indicates that the game is suspended. */
 
     // items
@@ -114,7 +122,10 @@ class SOLARUS_API Equipment {
 
     std::string get_ability_savegame_variable(Ability ability) const;
 
+    std::string prefix;                          /**< Prefix of this equipement item to access the savegame */
 };
+
+using EquipmentPtr = std::shared_ptr<Equipment>;
 
 }
 

@@ -26,9 +26,11 @@
 #include "solarus/entities/CameraPtr.h"
 #include "solarus/entities/HeroPtr.h"
 #include "solarus/core/MapPtr.h"
+#include "solarus/core/Map.h"
 #include "solarus/entities/NonAnimatedRegions.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include "solarus/graphics/Transition.h"
+#include "solarus/core/SavegamePtr.h"
 #include <memory>
 #include <functional>
 #include <string>
@@ -42,7 +44,6 @@ class InputEvent;
 class LuaContext;
 class MainLoop;
 class ResourceProvider;
-class Savegame;
 
 /**
  * \brief Represents the game currently running.
@@ -55,7 +56,7 @@ class SOLARUS_API Game {
   public:
 
     // creation
-    Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame);
+    Game(MainLoop& main_loop, const SavegamePtr &savegame);
 
     // no copy operations
     Game(const Game& game) = delete;
@@ -69,7 +70,7 @@ class SOLARUS_API Game {
     MainLoop& get_main_loop();
     LuaContext& get_lua_context();
     ResourceProvider& get_resource_provider();
-    const HeroPtr& get_hero();
+    const HeroPtr& get_hero() const;
     Commands& get_commands();
     const Commands& get_commands() const;
     CommandsEffects& get_commands_effects();
@@ -163,12 +164,20 @@ private:
       bool is_finished() const;
     };
 
+    template<typename F>
+    void for_each_hero(F&& action) {
+      for(const MapPtr& map : current_maps) {
+        for(const HeroPtr& hero : map->get_entities().get_heroes()) {
+          action(*hero);
+        }
+      }
+    }
+
     // main objects
     MainLoop& main_loop;       /**< the main loop object */
     std::shared_ptr<Savegame>
         savegame;              /**< the game data saved */
-    /*HeroPtr hero;*/              /**< The hero entity.  */
-    std::vector<HeroPtr> heroes;
+    HeroPtr default_hero;
     std::vector<CameraPtr> cameras;
 
     // current game state (elements currently shown)

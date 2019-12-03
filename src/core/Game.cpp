@@ -46,7 +46,7 @@ namespace Solarus {
  * \param main_loop The Solarus root object.
  * \param savegame The saved data of this game.
  */
-Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
+Game::Game(MainLoop& main_loop, const SavegamePtr& savegame):
   main_loop(main_loop),
   savegame(savegame),
   pause_allowed(true),
@@ -64,12 +64,12 @@ Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
   // initialize members
   commands = CommandsDispatcher::get().create_commands_from_game(*this); //TODO differentiate commands from hero to hero
 
-  HeroPtr default_hero = std::make_shared<Hero>(get_equipment());
-  heroes.push_back(default_hero);
+  default_hero = std::make_shared<Hero>(savegame->get_default_equipment(), "hero");
   CameraPtr default_camera = std::make_shared<Camera>("main_camera");
   cameras.push_back(default_camera);
-  default_hero->start_free();
+
   default_hero->set_commands(commands);
+  default_hero->start_free();
   default_hero->set_linked_camera(default_camera);
 
   // Maybe we are restarting after a game-over sequence.
@@ -124,7 +124,7 @@ void Game::start() {
   }
 
   started = true;
-  get_savegame().notify_game_started();
+  get_hero()->get_equipment().notify_game_started();
   get_lua_context().game_on_started(*this);
 }
 
@@ -139,12 +139,12 @@ void Game::stop() {
     return;
   }
 
-  //Notify heroes that they quit their maps
-  for(const HeroPtr& hero : heroes) {
-    if(hero->is_on_map()) {
-      hero->notify_being_removed();
+  for_each_hero([](Hero& hero){
+    if(hero.is_on_map()) {
+      hero.notify_being_removed();
     }
-  }
+    hero.get_equipment().notify_game_finished();
+  });
 
   // Unload each map
   for(const MapPtr& current_map : current_maps) {
@@ -157,7 +157,6 @@ void Game::stop() {
   }
 
   get_lua_context().game_on_finished(*this);
-  get_savegame().notify_game_finished();
   get_savegame().set_game(nullptr);
 
   Music::stop_playing();
@@ -193,9 +192,8 @@ ResourceProvider& Game::get_resource_provider() {
  * \brief Returns the hero.
  * \return the hero
  */
-const HeroPtr& Game::get_hero() {
-  Debug::check_assertion(heroes.size(), "There is no default hero left");
-  return heroes.front();
+const HeroPtr& Game::get_hero() const {
+  return default_hero;
 }
 
 /**
@@ -246,7 +244,7 @@ const Savegame& Game::get_savegame() const {
  * \return The equipment.
  */
 Equipment& Game::get_equipment() {
-  return get_savegame().get_equipment();
+  return get_hero()->get_equipment();
 }
 
 /**
@@ -257,7 +255,7 @@ Equipment& Game::get_equipment() {
  * \return The equipment.
  */
 const Equipment& Game::get_equipment() const {
-  return get_savegame().get_equipment();
+  return get_hero()->get_equipment();
 }
 
 /**
@@ -1146,9 +1144,9 @@ void Game::stop_game_over() {
     // The heroes gets back to life.
     for(const MapPtr& current_map : current_maps) {
       current_map->check_suspended();  // To unsuspend the heroes before making them blink.
-    }
-    for(const HeroPtr& hero : heroes) {
-      hero->notify_game_over_finished();
+      for(const HeroPtr& hero : current_map->get_entities().get_heroes()) {
+        hero->notify_game_over_finished();
+      }
     }
   }
 }

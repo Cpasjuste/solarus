@@ -17,7 +17,9 @@
 #include "solarus/audio/Sound.h"
 #include "solarus/core/Debug.h"
 #include "solarus/core/Equipment.h"
+#include "solarus/entities/Fire.h"
 #include "solarus/core/EquipmentItemUsage.h"
+#include "solarus/core/EquipmentItem.h"
 #include "solarus/core/Game.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/QuestFiles.h"
@@ -248,7 +250,8 @@ void Npc::notify_collision(Entity& entity_overlapping, CollisionMode collision_m
   else if (collision_mode == COLLISION_OVERLAPPING && entity_overlapping.get_type() == EntityType::FIRE) {
 
     if (behavior == BEHAVIOR_ITEM_SCRIPT) {
-      EquipmentItem& item = get_equipment().get_item(item_name);
+      Fire& fire = static_cast<Fire&>(entity_overlapping);
+      EquipmentItem& item = fire.get_author()->get_equipment().get_item(item_name);
       get_lua_context()->item_on_npc_collision_fire(item, *this);
     }
     else {
@@ -303,7 +306,7 @@ void Npc::call_script_hero_interaction(Hero& hero) {
     get_lua_context()->entity_on_interaction(*this, hero);
   }
   else {
-    EquipmentItem& item = get_equipment().get_item(item_name);
+    EquipmentItem& item = hero.get_equipment().get_item(item_name);
     get_lua_context()->item_on_npc_interaction(item, *this);
   }
 }
@@ -322,7 +325,7 @@ bool Npc::notify_interaction_with_item(EquipmentItem& item_used) {
 
   bool interaction_occured;
   if (behavior == BEHAVIOR_ITEM_SCRIPT) {
-    EquipmentItem& item_to_notify = get_equipment().get_item(item_name);
+    EquipmentItem& item_to_notify = item_used.get_equipment().get_item(item_name);
     interaction_occured = get_lua_context()->item_on_npc_interaction_item(
         item_to_notify, *this, item_used
     );

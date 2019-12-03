@@ -514,22 +514,6 @@ Entities& Entity::get_entities() {
 }
 
 /**
- * \brief Returns the current equipment.
- * \return The equipment.
- */
-Equipment& Entity::get_equipment() {
-  return get_game().get_equipment();
-}
-
-/**
- * \brief Returns the current equipment.
- * \return The equipment.
- */
-const Equipment& Entity::get_equipment() const {
-  return get_game().get_equipment();
-}
-
-/**
  * \brief Returns the savegame.
  * \return The savegame.
  */
@@ -1956,10 +1940,10 @@ void Entity::set_layer_independent_collisions(bool independent) {
 /**
  * \brief Returns whether the hero can lift this entity.
  */
-bool Entity::can_be_lifted() const {
+bool Entity::can_be_lifted(Hero& hero) const {
 
   return get_weight() >= 0 &&
-      get_equipment().has_ability(Ability::LIFT, get_weight());
+      hero.get_equipment().has_ability(Ability::LIFT, get_weight());
 }
 
 /**
@@ -3530,7 +3514,7 @@ void Entity::notify_attacked_enemy(
  */
 bool Entity::notify_action_command_pressed(Hero& hero) {
 
-  if (!can_be_lifted()) {
+  if (!can_be_lifted(hero)) {
     return false;
   }
 

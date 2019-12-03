@@ -240,7 +240,7 @@ void Door::notify_collision(Entity& entity_overlapping, CollisionMode /* collisi
     if (hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
         && hero.is_free()) {
 
-      if (can_open()) {
+      if (can_open(hero)) {
         // The action command opens the door.
         hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_OPEN);
       }
@@ -419,7 +419,7 @@ void Door::set_opening_condition_consumed(bool opening_condition_consumed) {
  * \return \c true if the hero can currently open the door by pressing the
  * action command.
  */
-bool Door::can_open() const {
+bool Door::can_open(Hero& hero) const {
 
   switch (get_opening_method()) {
 
@@ -458,7 +458,7 @@ bool Door::can_open() const {
       if (required_item_name.empty()) {
         return false;
       }
-      const EquipmentItem& item = get_equipment().get_item(required_item_name);
+      const EquipmentItem& item = hero.get_equipment().get_item(required_item_name);
       return item.is_saved()
         && item.get_variant() > 0
         && (!item.has_amount() || item.get_amount() > 0);
@@ -517,9 +517,8 @@ void Door::update() {
 
   if (is_closed()
       && get_opening_method() == OpeningMethod::BY_EXPLOSION
-      && get_equipment().has_ability(Ability::DETECT_WEAK_WALLS)
       && any_hero([&](const HeroPtr& hero){
-        return Geometry::get_distance(get_center_point(), hero->get_center_point()) < 40;
+        return Geometry::get_distance(get_center_point(), hero->get_center_point()) < 40  && hero->get_equipment().has_ability(Ability::DETECT_WEAK_WALLS);
       })
       && !is_suspended()
       && System::now() >= next_hint_sound_date) {
@@ -566,7 +565,7 @@ bool Door::notify_action_command_pressed(Hero &hero) {
       hero.get_commands_effects().get_action_key_effect() != CommandsEffects::ACTION_KEY_NONE
   ) {
 
-    if (can_open()) {
+    if (can_open(hero)) {
       Sound::play("door_unlocked");
       Sound::play("door_open");
 
@@ -575,7 +574,7 @@ bool Door::notify_action_command_pressed(Hero &hero) {
       }
 
       if (is_opening_condition_consumed()) {
-        consume_opening_condition();
+        consume_opening_condition(hero);
       }
 
       set_opening();
@@ -597,7 +596,7 @@ bool Door::notify_action_command_pressed(Hero &hero) {
  * \brief Consumes the savegame variable or the equipment item that was required
  * to open the door.
  */
-void Door::consume_opening_condition() {
+void Door::consume_opening_condition(Hero& hero) {
 
   switch (get_opening_method()) {
 
@@ -625,7 +624,7 @@ void Door::consume_opening_condition() {
     {
       // Remove the equipment item that was required.
       if (!opening_condition.empty()) {
-        EquipmentItem& item = get_equipment().get_item(opening_condition);
+        EquipmentItem& item = hero.get_equipment().get_item(opening_condition);
         if (item.is_saved() && item.get_variant() > 0) {
           if (item.has_amount()) {
             item.set_amount(item.get_amount() - 1);

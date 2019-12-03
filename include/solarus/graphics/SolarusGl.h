@@ -37,7 +37,7 @@ namespace Solarus { namespace Gl {
 #ifdef SOLARUS_GL_ES
         return true;
 #else
-        return GLAD_GL_ARB_framebuffer_object;
+        return (GLVersion.major >= 3) or GLAD_GL_ARB_framebuffer_object;
 #endif
     }
 

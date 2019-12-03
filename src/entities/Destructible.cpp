@@ -302,7 +302,7 @@ void Destructible::notify_collision_with_hero(Hero& hero, CollisionMode /* colli
       && hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE
       && hero.is_free()) {
 
-    if (!get_equipment().has_ability(Ability::LIFT, get_weight())) {
+    if (!hero.get_equipment().has_ability(Ability::LIFT, get_weight())) {
       hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_LOOK);
     }
   }
@@ -364,7 +364,7 @@ bool Destructible::notify_action_command_pressed(Hero &hero) {
       && !is_waiting_for_regeneration()
       && !is_regenerating) {
 
-    if (get_equipment().has_ability(Ability::LIFT, get_weight())) {
+    if (hero.get_equipment().has_ability(Ability::LIFT, get_weight())) {
 
       uint32_t explosion_date = get_can_explode() ? System::now() + 6000 : 0;
       std::shared_ptr<CarriedObject> carried_object = std::make_shared<CarriedObject>(

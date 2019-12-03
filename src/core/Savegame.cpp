@@ -87,7 +87,6 @@ Savegame::Savegame(MainLoop& main_loop, const std::string& file_name):
   empty(true),
   file_name(file_name),
   main_loop(main_loop),
-  equipment(*this),
   game(nullptr),
   default_transition_style(Transition::Style::FADE) {
 
@@ -105,6 +104,13 @@ Savegame::Savegame(MainLoop& main_loop, const std::string& file_name):
  */
 void Savegame::initialize() {
 
+  //This is a volatile savegame that is not meant to be saved
+  if(file_name.size() == 0) {
+    empty = true;
+    set_initial_values();
+    return;
+  }
+
   const std::string& quest_write_dir = QuestFiles::get_quest_write_dir();
   Debug::check_assertion(!quest_write_dir.empty(),
       "The quest write directory for savegames was not set in quest.dat");
@@ -114,13 +120,20 @@ void Savegame::initialize() {
     empty = true;
     set_initial_values();
   }
-  else {
+  else
+  {
     // A save already exists, let's load it.
     empty = false;
     import_from_file();
   }
 
-  get_equipment().load_items();
+  // This is a main savegame ! Lets inflate an equipement
+  opt_equipment = std::make_shared<Equipment>(shared_from_this_cast<Savegame>(), "");
+  opt_equipment->load_items();
+  if(empty) {
+    opt_equipment->set_initial_values();
+  }
+  //get_equipment().load_items(); //TODO load equipement elsewhere
 }
 
 /**
@@ -143,13 +156,7 @@ void Savegame::set_initial_values() {
   set_default_keyboard_controls();
   set_default_joypad_controls();
 
-  // Set the initial equipment.
-  equipment.set_max_life(1);
-  equipment.set_life(1);
-  equipment.set_ability(Ability::TUNIC, 1);  // Mandatory to have a valid hero sprite.
-  equipment.set_ability(Ability::PUSH, 1);
-  equipment.set_ability(Ability::GRAB, 1);
-  equipment.set_ability(Ability::PULL, 1);
+  //TODO equipement was initialized here
 }
 
 /**
@@ -360,21 +367,6 @@ LuaContext& Savegame::get_lua_context() {
 }
 
 /**
- * \brief Returns the player's equipment corresponding to this savegame.
- * \return The equipment.
- */
-const Equipment& Savegame::get_equipment() const {
-  return equipment;
-}
-
-/**
- * \overload Non-const version.
- */
-Equipment& Savegame::get_equipment() {
-  return equipment;
-}
-
-/**
  * \brief If this savegame is currently running in a game, return that game.
  * \return A game or nullptr.
  */
@@ -395,22 +387,6 @@ Game* Savegame::get_game() {
  */
 void Savegame::set_game(Game* game) {
   this->game = game;
-}
-
-/**
- * \brief Notifies this savegame that its game starts.
- */
-void Savegame::notify_game_started() {
-
-  equipment.notify_game_started();
-}
-
-/**
- * \brief Notifies this savegame that its game is finished.
- */
-void Savegame::notify_game_finished() {
-
-  equipment.notify_game_finished();
 }
 
 /**
@@ -618,6 +594,10 @@ void Savegame::unset(const std::string& key) {
       std::string("Savegame variable '") + key + "' is not a valid key");
 
   saved_values.erase(key);
+}
+
+const EquipmentPtr& Savegame::get_default_equipment() const {
+  return opt_equipment;
 }
 
 /**

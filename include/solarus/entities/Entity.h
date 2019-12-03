@@ -359,7 +359,7 @@ class SOLARUS_API Entity: public ExportableToLua {
         bool killed);
 
     // Interactions.
-    bool can_be_lifted() const;
+    bool can_be_lifted(Hero &hero) const;
     int get_weight() const;
     void set_weight(int weight);
     virtual bool notify_action_command_pressed(Hero &hero);
@@ -401,8 +401,8 @@ class SOLARUS_API Entity: public ExportableToLua {
     // Easy access to various game objects.
     Entities& get_entities();
     const Entities& get_entities() const;
-    Equipment& get_equipment();
-    const Equipment& get_equipment() const;
+    //Equipment& get_equipment();
+    //const Equipment& get_equipment() const;
     /*CommandsEffects& get_commands_effects();
     Commands& get_commands();*/
     Savegame& get_savegame();
@@ -432,6 +432,18 @@ class SOLARUS_API Entity: public ExportableToLua {
      */
     inline bool any_hero(const F& pred) const {
       return find_hero(pred).first;
+    }
+
+    template<class F>
+    /**
+     * @brief apply an action for each hero
+     * @param action an action to do
+     */
+    inline void for_each_hero(const F& action) const {
+      const auto& heroes = get_heroes();
+      for(const HeroPtr& hero : heroes) {
+        action(hero);
+      }
     }
 
     template<class F>

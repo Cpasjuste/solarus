@@ -791,7 +791,7 @@ int LuaContext::game_api_get_life(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
-    int life = savegame.get_equipment().get_life();
+    int life = savegame.get_default_equipment()->get_life();
     lua_pushinteger(l, life);
     return 1;
   });
@@ -808,7 +808,7 @@ int LuaContext::game_api_set_life(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     int life = LuaTools::check_int(l, 2);
 
-    savegame.get_equipment().set_life(life);
+    savegame.get_default_equipment()->set_life(life);
 
     return 0;
   });
@@ -829,7 +829,7 @@ int LuaContext::game_api_add_life(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid life value: must be positive or zero");
     }
 
-    savegame.get_equipment().add_life(life);
+    savegame.get_default_equipment()->add_life(life);
 
     return 0;
   });
@@ -850,7 +850,7 @@ int LuaContext::game_api_remove_life(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid life value: must be positive or zero");
     }
 
-    savegame.get_equipment().remove_life(life);
+    savegame.get_default_equipment()->remove_life(life);
 
     return 0;
   });
@@ -866,7 +866,7 @@ int LuaContext::game_api_get_max_life(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
-    int life = savegame.get_equipment().get_max_life();
+    int life = savegame.get_default_equipment()->get_max_life();
 
     lua_pushinteger(l, life);
     return 1;
@@ -888,7 +888,7 @@ int LuaContext::game_api_set_max_life(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid life value: max life must be strictly positive");
     }
 
-    savegame.get_equipment().set_max_life(life);
+    savegame.get_default_equipment()->set_max_life(life);
 
     return 0;
   });
@@ -909,8 +909,8 @@ int LuaContext::game_api_add_max_life(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid life value: must be positive or zero");
     }
 
-    Equipment& equipment = savegame.get_equipment();
-    equipment.set_max_life(equipment.get_max_life() + life);
+    const EquipmentPtr& equipment = savegame.get_default_equipment();
+    equipment->set_max_life(equipment->get_max_life() + life);
 
     return 0;
   });
@@ -926,7 +926,7 @@ int LuaContext::game_api_get_money(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
-    int money = savegame.get_equipment().get_money();
+    int money = savegame.get_default_equipment()->get_money();
 
     lua_pushinteger(l, money);
     return 1;
@@ -944,7 +944,7 @@ int LuaContext::game_api_set_money(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     int money = LuaTools::check_int(l, 2);
 
-    savegame.get_equipment().set_money(money);
+    savegame.get_default_equipment()->set_money(money);
 
     return 0;
   });
@@ -965,7 +965,7 @@ int LuaContext::game_api_add_money(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid money value: must be positive or zero");
     }
 
-    savegame.get_equipment().add_money(money);
+    savegame.get_default_equipment()->add_money(money);
 
     return 0;
   });
@@ -986,7 +986,7 @@ int LuaContext::game_api_remove_money(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid money value: must be positive or zero");
     }
 
-    savegame.get_equipment().remove_money(money);
+    savegame.get_default_equipment()->remove_money(money);
 
     return 0;
   });
@@ -1002,7 +1002,7 @@ int LuaContext::game_api_get_max_money(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
-    int money = savegame.get_equipment().get_max_money();
+    int money = savegame.get_default_equipment()->get_max_money();
 
     lua_pushinteger(l, money);
     return 1;
@@ -1024,7 +1024,7 @@ int LuaContext::game_api_set_max_money(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid money value: must be positive or zero");
     }
 
-    savegame.get_equipment().set_max_money(money);
+    savegame.get_default_equipment()->set_max_money(money);
 
     return 0;
   });
@@ -1040,7 +1040,7 @@ int LuaContext::game_api_get_magic(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
-    int magic = savegame.get_equipment().get_magic();
+    int magic = savegame.get_default_equipment()->get_magic();
 
     lua_pushinteger(l, magic);
     return 1;
@@ -1058,7 +1058,7 @@ int LuaContext::game_api_set_magic(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     int magic = LuaTools::check_int(l, 2);
 
-    savegame.get_equipment().set_magic(magic);
+    savegame.get_default_equipment()->set_magic(magic);
 
     return 0;
   });
@@ -1079,7 +1079,7 @@ int LuaContext::game_api_add_magic(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid magic points value: must be positive or zero");
     }
 
-    savegame.get_equipment().add_magic(magic);
+    savegame.get_default_equipment()->add_magic(magic);
 
     return 0;
   });
@@ -1100,7 +1100,7 @@ int LuaContext::game_api_remove_magic(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid magic points value: must be positive or zero");
     }
 
-    savegame.get_equipment().remove_magic(magic);
+    savegame.get_default_equipment()->remove_magic(magic);
 
     return 0;
   });
@@ -1116,7 +1116,7 @@ int LuaContext::game_api_get_max_magic(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
-    int magic = savegame.get_equipment().get_max_magic();
+    int magic = savegame.get_default_equipment()->get_max_magic();
 
     lua_pushinteger(l, magic);
     return 1;
@@ -1138,7 +1138,7 @@ int LuaContext::game_api_set_max_magic(lua_State* l) {
       LuaTools::arg_error(l, 2, "Invalid magic points value: must be positive or zero");
     }
 
-    savegame.get_equipment().set_max_magic(magic);
+    savegame.get_default_equipment()->set_max_magic(magic);
 
     return 0;
   });
@@ -1155,7 +1155,7 @@ int LuaContext::game_api_has_ability(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     Ability ability = LuaTools::check_enum<Ability>(l, 2);
 
-    bool has_ability = savegame.get_equipment().has_ability(ability);
+    bool has_ability = savegame.get_default_equipment()->has_ability(ability);
 
     lua_pushboolean(l, has_ability);
     return 1;
@@ -1173,7 +1173,7 @@ int LuaContext::game_api_get_ability(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     Ability ability = LuaTools::check_enum<Ability>(l, 2);
 
-    int ability_level = savegame.get_equipment().get_ability(ability);
+    int ability_level = savegame.get_default_equipment()->get_ability(ability);
 
     lua_pushinteger(l, ability_level);
     return 1;
@@ -1192,7 +1192,7 @@ int LuaContext::game_api_set_ability(lua_State* l) {
     Ability ability = LuaTools::check_enum<Ability>(l, 2);
     int level = LuaTools::check_int(l, 3);
 
-    savegame.get_equipment().set_ability(ability, level);
+    savegame.get_default_equipment()->set_ability(ability, level);
 
     return 0;
   });
@@ -1209,11 +1209,11 @@ int LuaContext::game_api_get_item(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     const std::string& item_name = LuaTools::check_string(l, 2);
 
-    if (!savegame.get_equipment().item_exists(item_name)) {
+    if (!savegame.get_default_equipment()->item_exists(item_name)) {
       LuaTools::error(l, std::string("No such item: '") + item_name + "'");
     }
 
-    push_item(l, savegame.get_equipment().get_item(item_name));
+    push_item(l, savegame.get_default_equipment()->get_item(item_name));
     return 1;
   });
 }
@@ -1229,16 +1229,16 @@ int LuaContext::game_api_has_item(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     const std::string& item_name = LuaTools::check_string(l, 2);
 
-    Equipment& equipment = savegame.get_equipment();
-    if (!equipment.item_exists(item_name)) {
+    const EquipmentPtr& equipment = savegame.get_default_equipment();
+    if (!equipment->item_exists(item_name)) {
       LuaTools::error(l, std::string("No such item: '") + item_name + "'");
     }
 
-    if (!equipment.get_item(item_name).is_saved()) {
+    if (!equipment->get_item(item_name).is_saved()) {
       LuaTools::error(l, std::string("Item '") + item_name + "' is not saved");
     }
 
-    lua_pushboolean(l, equipment.get_item(item_name).get_variant() > 0);
+    lua_pushboolean(l, equipment->get_item(item_name).get_variant() > 0);
     return 1;
   });
 }
@@ -1258,7 +1258,7 @@ int LuaContext::game_api_get_item_assigned(lua_State* l) {
       LuaTools::arg_error(l, 2, "The item slot should be 1 or 2");
     }
 
-    EquipmentItem* item = savegame.get_equipment().get_item_assigned(slot);
+    EquipmentItem* item = savegame.get_default_equipment()->get_item_assigned(slot);
 
     if (item == nullptr) {
       lua_pushnil(l);
@@ -1289,7 +1289,7 @@ int LuaContext::game_api_set_item_assigned(lua_State* l) {
       LuaTools::arg_error(l, 2, "The item slot should be 1 or 2");
     }
 
-    savegame.get_equipment().set_item_assigned(slot, item);
+    savegame.get_default_equipment()->set_item_assigned(slot, item);
 
     return 0;
   });

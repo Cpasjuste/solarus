@@ -234,8 +234,10 @@ void Pickable::notify_created() {
   notify_ground_below_changed();  // Necessary if on empty ground.
 
   // This entity and the map are now both ready. Notify the Lua item.
-  EquipmentItem& item = get_equipment().get_item(treasure.get_item_name());
-  item.notify_pickable_appeared(*this);
+  for_each_hero([&](const HeroPtr& hero) {
+    EquipmentItem& item = hero->get_equipment().get_item(treasure.get_item_name());
+    item.notify_pickable_appeared(*this);
+  });
 }
 
 /**

@@ -12,7 +12,7 @@ class Savegame;
 
 /**
  * @brief A player abstraction, allow prefixed access to the savegame
- * and does bookeeping of individual life money etc
+ * and does bookeeping of individual life money etc, (DEPRECATED, TOO COMPLEX)
  */
 class Player : public ExportableToLua
 {
