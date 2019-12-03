@@ -32,6 +32,7 @@ map{ id = "bugs/1171_sword_knowledge_on_ability_used", description = "#1171: Fix
 map{ id = "bugs/1175_dynamic_tile_set_get_tileset", description = "#1175: dynamic_tile:set/get_tileset()" }
 map{ id = "bugs/1179_enemy_on_restarted_called_twice", description = "#1179: enemy:on_restarted() is called twice" }
 map{ id = "bugs/1181_hurt_enemy_after_custom_attack", description = "#1181: enemy:hurt() does not work after a custom attack" }
+map{ id = "bugs/1186_shallow_water_speed", description = "#1186: Wrong hero speed when going from deep water to shallow water" }
 map{ id = "bugs/1193_entity_drawn_after_removed/map_1", description = "#1193: Entity still drawn after removed" }
 map{ id = "bugs/1193_entity_drawn_after_removed/map_2", description = "Destination map" }
 map{ id = "bugs/1195_enemy_dying_animation_never_finishes", description = "#1195: Enemy dying animation never finishes" }
@@ -74,6 +75,8 @@ map{ id = "bugs/1416_state_set_affected_by_ground_speed", description = "#1416: 
 map{ id = "bugs/1418_state_set_can_be_hurt", description = "#1418: state:set_can_be_hurt() not working with touching attack mode" }
 map{ id = "bugs/1423_crash_carried_without_shadow", description = "#1423: Crash when carrying an object without shadow sprite" }
 map{ id = "bugs/1428_movement_blocking", description = "#1428: straight movements blocking" }
+map{ id = "bugs/1436_thrown_object_shadow", description = "#1436: Unwanted shadow below thrown object " }
+map{ id = "bugs/1440_enemy_set_life_0_on_dying", description = "#1440: enemy:on_dying() not called when setting life to 0" }
 map{ id = "bugs/486_diagonal_dynamic_tiles", description = "#486: Wrong obstacles with diagonal dynamic tiles" }
 map{ id = "bugs/496_stream_speed_0", description = "#496: Allow streams to have a speed of zero" }
 map{ id = "bugs/526_get_entities_same_region", description = "#526: map:get_entities_in_same_region()" }
@@ -456,6 +459,8 @@ file{ path = "maps/bugs/1179_enemy_on_restarted_called_twice.dat", author = "Chr
 file{ path = "maps/bugs/1179_enemy_on_restarted_called_twice.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1181_hurt_enemy_after_custom_attack.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1181_hurt_enemy_after_custom_attack.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1186_shallow_water_speed.dat", author = "Christopho", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1186_shallow_water_speed.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1193_entity_drawn_after_removed/map_1.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1193_entity_drawn_after_removed/map_1.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1193_entity_drawn_after_removed/map_2.dat", author = "Christopho", license = "CC BY-SA 4.0" }
@@ -526,14 +531,24 @@ file{ path = "maps/bugs/1366_crash_disabled_stairs_on_dynamic_tile.dat", author 
 file{ path = "maps/bugs/1366_crash_disabled_stairs_on_dynamic_tile.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1371_crash_pulling_block_on_switch.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1371_crash_pulling_block_on_switch.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1381_jumpers_hero_16_8.dat", author = "Christopho", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1381_jumpers_hero_16_8.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1383_blocks_hero_16_8.dat", author = "Christopho", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1383_blocks_hero_16_8.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1392_carried_object_directions.dat", author = "Christopho", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1392_carried_object_directions.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1416_state_set_affected_by_ground_speed.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1416_state_set_affected_by_ground_speed.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1418_state_set_can_be_hurt.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1418_state_set_can_be_hurt.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1423_crash_carried_without_shadow.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1423_crash_carried_without_shadow.lua", author = "Christopho", license = "GPL v3" }
-file{ path = "maps/bugs/1428_movement_blocking.dat", author = "stdgregwar", }
-file{ path = "maps/bugs/1428_movement_blocking.lua", author = "stdgregwar", }
+file{ path = "maps/bugs/1428_movement_blocking.dat", author = "stdgregwar", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1428_movement_blocking.lua", author = "stdgregwar", license = "GPL v3" }
+file{ path = "maps/bugs/1436_thrown_object_shadow.dat", author = "Christopho", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1436_thrown_object_shadow.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1440_enemy_set_life_0_on_dying.dat", author = "Christopho", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1440_enemy_set_life_0_on_dying.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/496_stream_speed_0.dat", author = "Christopho", license = "CC BY-SA 4.0" }
