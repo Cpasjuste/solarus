@@ -121,6 +121,7 @@ Hero::Hero(const EquipmentPtr &equipment, const std::string& name):
   ice_movement_direction8(0),
   equipment(equipment)
 {
+  equipment->set_hero(this);
 
   // position
   set_origin(8, 13);

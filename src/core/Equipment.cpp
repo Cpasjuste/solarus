@@ -32,13 +32,15 @@ namespace Solarus {
 
 /**
  * \brief Constructor.
+ * \param hero Hero owning this equipment
  * \param savegame The savegame to encapsulate.
  * \param prefix A prefix added to keys modified by this equipement
  */
 Equipment::Equipment(const SavegamePtr &savegame, const std::string& prefix):
   savegame(savegame),
   suspended(true),
-  prefix(prefix)
+  prefix(prefix),
+  hero(nullptr)
 {
 
 }
@@ -631,13 +633,13 @@ void Equipment::set_ability(Ability ability, int level) {
 
   set_integer(get_ability_savegame_variable(ability), level);
 
-  Game* game = get_game();
-  if (game != nullptr) {
+  Hero* hero = get_hero();
+  if (hero != nullptr) {
     if (ability == Ability::TUNIC ||
         ability == Ability::SWORD ||
         ability == Ability::SHIELD) {
       // The hero's sprites may depend on these abilities.
-      game->get_hero()->rebuild_equipment();
+      hero->rebuild_equipment();
     }
   }
 }
@@ -691,6 +693,22 @@ std::string Equipment::get_string(const std::string& key) const {
  */
 void Equipment::set_string(const std::string& key, const std::string& value) {
   savegame->set_string(prefix+key, value);
+}
+
+/**
+ * @brief Sets the hero using this equipment
+ * @param hero
+ */
+void Equipment::set_hero(Hero *hero){
+  this->hero = hero;
+}
+
+/**
+ * @brief Gets the hero using this equipment
+ * @return
+ */
+Hero* Equipment::get_hero(){
+  return hero;
 }
 
 }

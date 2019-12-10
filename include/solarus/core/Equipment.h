@@ -32,6 +32,7 @@ class EquipmentItem;
 class Game;
 class Savegame;
 class Map;
+class Hero;
 class Camera;
 
 /**
@@ -43,6 +44,8 @@ class Camera;
  * (sword, money, items...) and to modify it.
  */
 class SOLARUS_API Equipment {
+
+    friend class Hero;
 
   public:
 
@@ -106,7 +109,10 @@ class SOLARUS_API Equipment {
     int get_ability(Ability ability) const;
     void set_ability(Ability ability, int level);
     void notify_ability_used(Ability ability);
+    Hero* get_hero();
   private:
+
+    void set_hero(Hero* hero);
 
     int get_integer(const std::string& key) const;
     void set_integer(const std::string& key, int value);
@@ -123,6 +129,8 @@ class SOLARUS_API Equipment {
     std::string get_ability_savegame_variable(Ability ability) const;
 
     std::string prefix;                          /**< Prefix of this equipement item to access the savegame */
+
+    Hero* hero;                                  /**< Hero owning this equipment. Optional */
 };
 
 using EquipmentPtr = std::shared_ptr<Equipment>;

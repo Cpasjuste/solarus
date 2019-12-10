@@ -28,6 +28,7 @@ function map:on_started()
   
   commands = game:get_commands()
   alter_commands = alter_hero:get_commands()
+  alter_hero:set_ability("sword", 1)
   
   game:set_ability('sword', 1)
   hero:set_enabled(false)
@@ -36,7 +37,7 @@ end
 -- Event called after the opening transition effect of the map,
 -- that is, when the player takes control of the hero.
 function map:on_opening_transition_finished()
-  sol.timer.start(100, function()
+  sol.timer.start(1000, function()
     alter_commands:simulate_pressed('attack')
   end)
 end

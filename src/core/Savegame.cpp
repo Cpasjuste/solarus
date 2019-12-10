@@ -155,8 +155,6 @@ void Savegame::set_initial_values() {
   // Set the initial controls.
   set_default_keyboard_controls();
   set_default_joypad_controls();
-
-  //TODO equipement was initialized here
 }
 
 /**
