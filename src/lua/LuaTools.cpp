@@ -237,8 +237,7 @@ void check_type(
     int expected_type
 ) {
   if (lua_type(l, arg_index) != expected_type) {
-    arg_error(l, arg_index, std::string(lua_typename(l, expected_type)) +
-        " expected, got " + get_type_name(l, arg_index));
+    type_error(l, arg_index, std::string(lua_typename(l, expected_type)));
   }
 }
 
@@ -254,6 +253,48 @@ void check_any(
   if (lua_type(l, arg_index) == LUA_TNONE) {
     arg_error(l, arg_index, "value expected");
   }
+}
+
+/**
+ * \brief Checks to see if a value may be used as a table key.
+ * \param l A Lua state.
+ * \param arg_index An acceptable index on the Lua stack.
+ */
+void check_key(
+    lua_State* l,
+    int arg_index
+) {
+  // Everything not mentioned here can be a key.
+  switch (lua_type(l, arg_index)) {
+  case LUA_TNONE:
+    arg_error(l, arg_index, "key expected");
+    break;
+  case LUA_TNIL:
+    arg_error(l, arg_index, "nil may not be a key");
+    break;
+  case LUA_TNUMBER:
+    if (std::isnan(lua_tonumber(l, arg_index))) {
+      arg_error(l, arg_index, "nan may not be a key");
+    }
+    break;
+  }
+}
+
+/**
+ * \brief Checks if the stack is a given side.
+ * \param l A Lua state.
+ * \param stack_size The required size of the stack.
+ */
+void check_top(
+    lua_State* l,
+    int stack_size
+) {
+    int top = lua_gettop(l);
+    if (stack_size < top) {
+        arg_error(l, stack_size + 1, "too many arguments provided");
+    } else if (top < stack_size) {
+        arg_error(l, top + 1, "not enough arguments provided");
+    }
 }
 
 /**

@@ -552,6 +552,47 @@ int LuaContext::main_api_get_game(lua_State* l) {
 }
 
 /**
+ * \brief Implementation of sol.main.rawget(), universial rawget.
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_rawget(lua_State* l) {
+
+  switch (lua_type(l, 1)) {
+  case LUA_TUSERDATA:
+    return userdata_meta_index_as_table(l);
+  case LUA_TTABLE:
+    LuaTools::check_key(l, 2);
+    LuaTools::check_top(l, 2);
+    lua_rawget(l, 1);
+    return 1;
+  default:
+    LuaTools::arg_error(l, 1, "table or userdata expected");
+  }
+}
+
+/**
+ * \brief Implementation of sol.main.rawset(), universial rawset.
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_rawset(lua_State* l) {
+
+  switch (lua_type(l, 1)) {
+  case LUA_TUSERDATA:
+    return userdata_meta_newindex_as_table(l);
+  case LUA_TTABLE:
+    LuaTools::check_key(l, 2);
+    LuaTools::check_any(l, 3);
+    LuaTools::check_top(l, 3);
+    lua_rawset(l, 1);
+    return 0;
+  default:
+    LuaTools::arg_error(l, 1, "table or userdata expected");
+  }
+}
+
+/**
  * \brief Calls sol.main.on_started() if it exists.
  *
  * This function is called when the engine requests Lua to show an

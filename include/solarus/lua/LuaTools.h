@@ -63,10 +63,12 @@ int exception_boundary_handle(
     Callable&& func
 );
 
+[[noreturn]]
 void error(
     lua_State* l,
     const std::string& message
 );
+[[noreturn]]
 void arg_error(
     lua_State* l,
     int arg_index,
@@ -85,6 +87,14 @@ void check_type(
 void check_any(
     lua_State* l,
     int arg_index
+);
+void check_key(
+    lua_State* l,
+    int arg_index
+);
+void check_top(
+    lua_State* l,
+    int stack_size
 );
 
 // int

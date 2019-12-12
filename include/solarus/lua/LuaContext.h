@@ -578,6 +578,8 @@ class LuaContext {
       main_api_get_metatable,
       main_api_get_os,
       main_api_get_game,
+      main_api_rawget,
+      main_api_rawset,
 
       // Audio API.
       audio_api_get_sound_volume,
