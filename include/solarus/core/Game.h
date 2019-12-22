@@ -109,6 +109,7 @@ class SOLARUS_API Game {
                          const MapChangeCallback &on_map_change);
     bool is_current_map(Map& map) const;
     bool has_multiple_maps() const;
+    bool is_map_loaded(const std::string& map_id) const;
 
     const MapPtr& prepare_map(const std::string& map_id);
     void leave_map(const EntityPtr &leaving, const MapPtr& map);

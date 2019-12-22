@@ -704,7 +704,25 @@ void Game::teleport_hero(
                     on_map_change);
   } else {
     //TODO verify that map is loaded and tp hero there
+    if(is_map_loaded(map_id)) {
+        MapPtr current_map = hero->get_map().shared_from_this_cast<Map>();
+
+        MapPtr next_map = prepare_map(map_id);
+        hero->place_on_destination(*next_map, current_map->get_location(), a_destination_name);
+    }
   }
+}
+
+/**
+ * @brief Tells if the map with this id is loaded
+ * @param map_id
+ * @return
+ */
+bool Game::is_map_loaded(const std::string& map_id) const {
+    auto it = std::find_if(current_maps.begin(), current_maps.end(), [&](const MapPtr& map) {
+        return map->get_id() == map_id && map->is_loaded();
+    });
+    return it != current_maps.end();
 }
 
 /**

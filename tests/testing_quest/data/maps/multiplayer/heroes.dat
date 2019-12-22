@@ -17,6 +17,15 @@ tile{
   pattern = "3",
 }
 
+tile{
+  layer = 0,
+  x = 80,
+  y = 168,
+  width = 48,
+  height = 32,
+  pattern = "26",
+}
+
 destination{
   name = "destination",
   layer = 0,
@@ -31,5 +40,32 @@ destination{
   x = 40,
   y = 189,
   direction = 1,
+}
+
+enemy{
+  name = "dummy",
+  layer = 0,
+  x = 72,
+  y = 189,
+  direction = 0,
+  breed = "test_enemy",
+}
+
+destination{
+  name = "dest_inner",
+  layer = 0,
+  x = 248,
+  y = 45,
+  direction = 1,
+}
+
+teletransporter{
+  layer = 0,
+  x = 96,
+  y = 176,
+  width = 16,
+  height = 16,
+  destination_map = "multiplayer/heroes",
+  destination = "dest_inner",
 }
 
