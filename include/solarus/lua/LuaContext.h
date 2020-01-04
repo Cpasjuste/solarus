@@ -1289,6 +1289,7 @@ class LuaContext {
       state_api_set_carried_object_action,
 
       // available to all userdata types
+      userdata_rawget_as_table,
       userdata_meta_gc,
       userdata_meta_newindex_as_table,
       userdata_meta_index_as_table,
