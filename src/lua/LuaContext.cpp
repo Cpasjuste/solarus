@@ -1399,7 +1399,7 @@ void LuaContext::userdata_close_lua() {
 int LuaContext::userdata_rawget_as_table(lua_State* l) {
 
   LuaTools::check_type(l, 1, LUA_TUSERDATA);
-  LuaTools::check_any(l, 2);
+  LuaTools::check_mintop(l, 2);
 
   const ExportableToLuaPtr& userdata =
     *(static_cast<ExportableToLuaPtr*>(lua_touserdata(l, 1)));
@@ -1449,8 +1449,7 @@ int LuaContext::userdata_rawget_as_table(lua_State* l) {
 int LuaContext::userdata_meta_newindex_as_table(lua_State* l) {
 
   LuaTools::check_type(l, 1, LUA_TUSERDATA);
-  LuaTools::check_any(l, 2);
-  LuaTools::check_any(l, 3);
+  LuaTools::check_mintop(l, 3);
 
   const ExportableToLuaPtr& userdata =
       *(static_cast<ExportableToLuaPtr*>(lua_touserdata(l, 1)));

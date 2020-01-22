@@ -569,6 +569,9 @@ int LuaContext::main_api_rawget(lua_State* l) {
     case LUA_TUSERDATA:
       return userdata_rawget_as_table(l);
     case LUA_TTABLE:
+      if (2 < LuaTools::check_mintop(l, 2)) {
+        lua_settop(l, 2);
+      }
       lua_rawget(l, 1);
       return 1;
     default:
@@ -589,6 +592,9 @@ int LuaContext::main_api_rawset(lua_State* l) {
     case LUA_TUSERDATA:
       return userdata_meta_newindex_as_table(l);
     case LUA_TTABLE:
+      if (3 < LuaTools::check_mintop(l, 3)) {
+        lua_settop(l, 3);
+      }
       lua_rawset(l, 1);
       return 0;
     default:
