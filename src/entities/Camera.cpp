@@ -46,6 +46,9 @@ public:
   void update() override;
   bool is_traversing_separator() const;
   void traverse_separator(Separator& separator);
+  void start(const State* previous) override;
+  bool belongs_to_camera(const Camera& camera) const;
+  void undo_hero_linking() const;
 
   const EntityPtr& get_tracked_entity() const;
 
@@ -59,7 +62,6 @@ private:
   int separator_scrolling_direction4;     /**< Direction when scrolling. */
   std::shared_ptr<Separator>
       separator_traversed;                /**< Separator currently being traversed or nullptr. */
-
 };
 
 /**
@@ -200,6 +202,48 @@ void TrackingState::traverse_separator(Separator& separator) {
 }
 
 /**
+ * @brief Undo the linking of this camera to the hero it was potentialy tracking
+ */
+void TrackingState::undo_hero_linking() const {
+    EntityPtr entity = get_tracked_entity();
+    if(entity->get_type() == EntityType::HERO) {
+        //Was tracking a hero, unregister this camera as linked-one
+        Hero& hero = entity->as<Hero>();
+        CameraPtr old_cam = hero.get_linked_camera();
+        if(old_cam and belongs_to_camera(*old_cam)){
+            hero.set_linked_camera(nullptr);
+        }
+    }
+}
+
+/**
+ * @brief Check if this tracking state is the one of a particular camera
+ * @param acamera camera to test
+ * @return true if camera belongs to this State
+ */
+bool TrackingState::belongs_to_camera(const Camera& acamera) const {
+    const Camera& cam = get_entity().as<Camera>();
+    return &cam == &acamera;
+}
+
+/**
+ * @brief Called when this states starts, unlink the hero from previous camera
+ * @param previous
+ */
+void TrackingState::start(const State* previous) {
+    Entity::State::start(previous);
+    if (previous && previous->get_name() == "tracking") {
+        static_cast<const TrackingState*>(previous)->undo_hero_linking();
+    }
+
+    EntityPtr entity = get_tracked_entity();
+    if(entity->get_type() == EntityType::HERO) {
+        entity->as<Hero>().set_linked_camera(get_entity().shared_from_this_cast<Camera>());
+    }
+}
+
+
+/**
  * \brief State of the camera when controlled by scripts.
  */
 class ManualState: public Entity::State {
@@ -207,6 +251,7 @@ class ManualState: public Entity::State {
 public:
 
   explicit ManualState(Camera& camera);
+  void start(const State* previous) override;
 
 };
 
@@ -217,6 +262,18 @@ public:
 ManualState::ManualState(Camera& camera) :
   Entity::State("manual") {
   set_entity(camera);
+}
+
+
+/**
+ * @brief Called when this states starts, unlink the hero from previous camera
+ * @param previous
+ */
+void ManualState::start(const State* previous) {
+    Entity::State::start(previous);
+    if (previous && previous->get_name() == "tracking") {
+        static_cast<const TrackingState*>(previous)->undo_hero_linking();
+    }
 }
 
 }  // Anonymous namespace.

@@ -325,7 +325,8 @@ void Entity::place_on_map(Map& map) {
   const EntityPtr& shared_entity = std::static_pointer_cast<Entity>(shared_from_this());
   map.get_entities().add_entity(shared_entity);
 
-  get_state()->set_map(map);
+  if(get_state())
+    get_state()->set_map(map);
 
   Entity::set_map(map);
 
@@ -432,7 +433,7 @@ void Entity::notify_map_started(
  * \param destination Destination entity where the hero is placed or nullptr.
  */
 void Entity::notify_map_opening_transition_finishing(
-    Map& /* map */, const std::string& /* destination_name */) {
+    Map& /* map */, const std::string& /* destination_name */, const HeroPtr& /*hero*/) {
 
   if (is_ground_observer()) {
     update_ground_below();
@@ -449,7 +450,7 @@ void Entity::notify_map_opening_transition_finishing(
  * \param destination Destination entity where the hero is placed or nullptr.
  */
 void Entity::notify_map_opening_transition_finished(
-    Map& /* map */, const std::shared_ptr<Destination>& /* destination */) {
+    Map& /* map */, const std::shared_ptr<Destination>& /* destination */, const HeroPtr& /*hero*/) {
 }
 
 /**

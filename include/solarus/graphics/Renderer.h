@@ -113,6 +113,12 @@ public:
   virtual void invalidate(const SurfaceImpl& surf) = 0;
 
   /**
+  * @brief Notifies the renderer a target setting has changed
+  * @param surf
+  */
+  virtual void notify_target_changed(const SurfaceImpl& surf) = 0;
+
+  /**
    * @brief bind a surface as opengl target
    * @param surf the surface to bind
    */

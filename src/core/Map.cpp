@@ -585,12 +585,6 @@ void Map::draw() {
   }
 }
 
-void Map::draw_cameras(const SurfacePtr& dst_surface) const {
-  for(const CameraPtr& cam : entities->get_cameras()) {
-    cam->draw(dst_surface);
-  }
-}
-
 /**
  * \brief Builds or rebuilds the surface corresponding to the background of
  * the tileset.
@@ -795,19 +789,19 @@ bool Map::is_started() const {
  * \brief This function is called when the map is started and
  * the opening transition is finished.
  */
-void Map::notify_opening_transition_finished(const std::string& destination_name) {
+void Map::notify_opening_transition_finished(const std::string& destination_name, const HeroPtr& opt_hero) {
 
-  const CameraPtr& camera = get_camera();
+  /*const CameraPtr& camera = get_camera();
   if (camera != nullptr) {
     const SurfacePtr& camera_surface = camera->get_surface();
     camera_surface->set_opacity(255); // because the transition effect may have changed the opacity
-  }
+  }*/
 
   check_suspended();
   std::shared_ptr<Destination> destination = get_destination(destination_name);
-  entities->notify_map_opening_transition_finishing(*this, destination_name);
+  entities->notify_map_opening_transition_finishing(*this, destination_name, opt_hero);
   get_lua_context().map_on_opening_transition_finished(*this, destination);
-  entities->notify_map_opening_transition_finished(*this, destination);
+  entities->notify_map_opening_transition_finished(*this, destination, opt_hero);
 }
 
 /**

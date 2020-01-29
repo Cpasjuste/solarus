@@ -276,7 +276,8 @@ void LuaContext::register_entity_module() {
       { "set_zoom", camera_api_set_zoom},
       { "get_zoom", camera_api_get_zoom},
       { "set_rotation", camera_api_set_rotation},
-      { "get_rotation", camera_api_get_rotation}
+      { "get_rotation", camera_api_get_rotation},
+      { "teleport", camera_api_teleport }
   };
   if (CurrentQuest::is_format_at_most({ 1, 5 })) {
     camera_methods.insert(camera_methods.end(), {
@@ -3844,6 +3845,31 @@ int LuaContext::camera_api_get_surface(lua_State* l) {
     return 1;
   });
 }
+
+/**
+ * \brief Implementation of camera:teleport().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_teleport(lua_State *l) {
+  return state_boundary_handle(l, [&] {
+    CameraPtr camera_ptr = check_camera(l, 1);
+    Camera& camera = *camera_ptr;
+    Game& game = camera.get_game();
+
+    std::string map_id = LuaTools::check_string(l, 2);
+    std::string destination_id = LuaTools::check_string(l, 3);
+    Transition::Style transition_style = LuaTools::opt_enum<Transition::Style>(
+        l, 4, game.get_default_transition_style());
+
+
+    game.teleport_camera(camera_ptr, map_id, destination_id, transition_style, nullptr);
+
+    return 0;
+  });
+}
+
+
 
 /**
  * \brief Returns whether a value is a userdata of type destination.
@@ -7606,14 +7632,14 @@ bool LuaContext::hero_on_taking_damage(Hero& hero, int damage) {
  *
  * \param destination A destination.
  */
-void LuaContext::destination_on_activated(Destination& destination) {
+void LuaContext::destination_on_activated(Destination& destination, Hero &hero) {
 
   if (!userdata_has_field(destination, "on_activated")) {
     return;
   }
-  run_on_main([this, &destination](lua_State* l){
+  run_on_main([this, &destination, &hero](lua_State* l){
     push_entity(l, destination);
-    on_activated();
+    on_activated(&hero);
     lua_pop(l, 1);
   });
 }
@@ -7625,14 +7651,14 @@ void LuaContext::destination_on_activated(Destination& destination) {
  *
  * \param teletransporter A teletransporter.
  */
-void LuaContext::teletransporter_on_activated(Teletransporter& teletransporter) {
+void LuaContext::teletransporter_on_activated(Teletransporter& teletransporter, Hero &hero) {
 
   if (!userdata_has_field(teletransporter, "on_activated")) {
     return;
   }
-  run_on_main([this, &teletransporter](lua_State* l){
+  run_on_main([this, &teletransporter, &hero](lua_State* l){
     push_teletransporter(l, teletransporter);
-    on_activated();
+    on_activated(&hero);
     lua_pop(l, 1);
   });
 }
@@ -7784,15 +7810,15 @@ bool LuaContext::chest_on_opened(Chest& chest, const Treasure& treasure) {
  *
  * \param sw A switch.
  */
-void LuaContext::switch_on_activated(Switch& sw) {
+void LuaContext::switch_on_activated(Switch& sw, Entity* opt_entity) {
 
   if (!userdata_has_field(sw, "on_activated")) {
     return;
   }
 
-  run_on_main([this, &sw](lua_State* l){
+  run_on_main([this, &sw, opt_entity](lua_State* l){
     push_switch(l, sw);
-    on_activated();
+    on_activated(opt_entity);
     lua_pop(l, 1);
   });
 }
@@ -7804,15 +7830,15 @@ void LuaContext::switch_on_activated(Switch& sw) {
  *
  * \param sw A switch.
  */
-void LuaContext::switch_on_inactivated(Switch& sw) {
+void LuaContext::switch_on_inactivated(Switch& sw, Entity* opt_entity) {
 
   if (!userdata_has_field(sw, "on_inactivated")) {
     return;
   }
 
-  run_on_main([this, &sw](lua_State* l){
+  run_on_main([this, &sw, opt_entity](lua_State* l){
     push_switch(l, sw);
-    on_inactivated();
+    on_inactivated(opt_entity);
     lua_pop(l, 1);
   });
 }
@@ -7824,15 +7850,15 @@ void LuaContext::switch_on_inactivated(Switch& sw) {
  *
  * \param sw A switch.
  */
-void LuaContext::switch_on_left(Switch& sw) {
+void LuaContext::switch_on_left(Switch& sw, Entity &entity) {
 
   if (!userdata_has_field(sw, "on_left")) {
     return;
   }
 
-  run_on_main([this, &sw](lua_State* l){
+  run_on_main([this, &sw, &entity](lua_State* l){
     push_switch(l, sw);
-    on_left();
+    on_left(&entity);
     lua_pop(l, 1);
   });
 }
@@ -7844,15 +7870,15 @@ void LuaContext::switch_on_left(Switch& sw) {
  *
  * \param sensor A sensor.
  */
-void LuaContext::sensor_on_activated(Sensor& sensor, Hero& /*hero*/) {
+void LuaContext::sensor_on_activated(Sensor& sensor, Hero& hero) {
 
   if (!userdata_has_field(sensor, "on_activated")) {
     return;
   }
 
-  run_on_main([this, &sensor](lua_State* l){
+  run_on_main([this, &sensor, &hero](lua_State* l){
     push_entity(l, sensor);
-    on_activated();
+    on_activated(&hero);
     lua_pop(l, 1);
   });
 }
@@ -7864,14 +7890,14 @@ void LuaContext::sensor_on_activated(Sensor& sensor, Hero& /*hero*/) {
  *
  * \param sensor A sensor.
  */
-void LuaContext::sensor_on_activated_repeat(Sensor& sensor) {
+void LuaContext::sensor_on_activated_repeat(Sensor& sensor, Entity& entity) {
 
   if (!userdata_has_field(sensor, "on_activated_repeat")) {
     return;
   }
-  run_on_main([this, &sensor](lua_State* l){
+  run_on_main([this, &sensor, &entity](lua_State* l){
     push_entity(l, sensor);
-    on_activated_repeat();
+    on_activated_repeat(entity);
     lua_pop(l, 1);
   });
 }
@@ -7887,7 +7913,7 @@ void LuaContext::sensor_on_left(Sensor& sensor) {
   }
   run_on_main([this, &sensor](lua_State* l){
     push_entity(l, sensor);
-    on_left();
+    on_left(nullptr);
     lua_pop(l, 1);
   });
 }

@@ -36,7 +36,6 @@ const EnumInfo<Transition::Style>::names_type EnumInfoTraits<Transition::Style>:
  * \param direction direction of the transition effect (in or out)
  */
 Transition::Transition(Transition::Direction direction):
-  game(nullptr),
   direction(direction),
   previous_surface(nullptr),
   destination_side(-1),
@@ -62,8 +61,7 @@ Transition::~Transition() {
  */
 Transition* Transition::create(
     Transition::Style style,
-    Transition::Direction direction,
-    Game* game) {
+    Transition::Direction direction) {
 
   Transition* transition = nullptr;
 
@@ -82,20 +80,7 @@ Transition* Transition::create(
     break;
   }
 
-  transition->game = game;
-
   return transition;
-}
-
-/**
- * \brief Returns the current game.
- *
- * Some transition effects need a game to run.
- *
- * \return The current game or nullptr.
- */
-Game* Transition::get_game() const {
-  return game;
 }
 
 /**

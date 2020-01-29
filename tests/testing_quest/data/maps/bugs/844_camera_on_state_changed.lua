@@ -17,6 +17,5 @@ function map:on_started()
 end
 
 function camera:on_state_changed(state)
-
   states[state] = true
 end

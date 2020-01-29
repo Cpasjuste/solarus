@@ -100,7 +100,7 @@ void View::set_viewport(const FRectangle& viewport) {
   this->viewport = viewport;
 }
 
-const FRectangle& View::get_viewport() {
+const FRectangle& View::get_viewport() const {
   return viewport;
 }
 

@@ -105,8 +105,10 @@ class SOLARUS_API Game {
                          const std::string map_id,
                          const std::string& destination_name,
                          Transition::Style transition_style,
-                         const MapChangeCallback &on_map_prepare,
-                         const MapChangeCallback &on_map_change);
+                         const HeroPtr& opt_hero);
+
+    CameraPtr create_camera(const std::string& id);
+
     bool is_current_map(Map& map) const;
     bool has_multiple_maps() const;
     bool is_map_loaded(const std::string& map_id) const;
@@ -158,8 +160,7 @@ private:
       std::string destination_name;
       CameraPtr camera;
       Transition::Style transition_style;
-      MapChangeCallback on_map_prepare;
-      MapChangeCallback on_map_change;
+      HeroPtr opt_hero;
 
       bool removed = false;
       bool is_finished() const;
@@ -173,6 +174,10 @@ private:
         }
       }
     }
+
+    void on_hero_map_change(const HeroPtr& hero, const CameraTeleportation &tp);
+
+    void on_hero_map_prepare(const HeroPtr& hero, const CameraTeleportation &tp);
 
     // main objects
     MainLoop& main_loop;       /**< the main loop object */

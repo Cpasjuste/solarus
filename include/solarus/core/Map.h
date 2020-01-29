@@ -95,7 +95,7 @@ class SOLARUS_API Map: public ExportableToLua {
     virtual const std::string& get_lua_type_name() const override;
 
     //Events
-    void notify_opening_transition_finished(const std::string &destination_name);
+    void notify_opening_transition_finished(const std::string &destination_name, const HeroPtr &opt_hero);
     bool notify_command(const CommandEvent& command);
 
     // entities
@@ -177,7 +177,6 @@ class SOLARUS_API Map: public ExportableToLua {
     bool is_suspended() const;
     void check_suspended();
     void draw();
-    void draw_cameras(const SurfacePtr& dst_surface) const;
 
     void draw_visual(Drawable& drawable, const Point& xy,
                      const Rectangle& clipping_area);

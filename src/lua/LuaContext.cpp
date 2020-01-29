@@ -2411,10 +2411,15 @@ void LuaContext::on_activating(int direction) {
 /**
  * \brief Calls the on_activated() method of the object on top of the stack.
  */
-void LuaContext::on_activated() {
+void LuaContext::on_activated(Entity *opt_entity) {
   check_callback_thread();
   if (find_method("on_activated")) {
-    call_function(1, 0, "on_activated");
+      if(opt_entity) {
+          push_entity(current_l, *opt_entity);
+      } else {
+          lua_pushnil(current_l);
+      }
+      call_function(2, 0, "on_activated");
   }
 }
 
@@ -2433,30 +2438,41 @@ void LuaContext::on_activated(int direction) {
 /**
  * \brief Calls the on_inactivated_repeat() method of the object on top of the stack.
  */
-void LuaContext::on_activated_repeat() {
+void LuaContext::on_activated_repeat(Entity& entity) {
   check_callback_thread();
   if (find_method("on_activated_repeat")) {
-    call_function(1, 0, "on_activated_repeat");
+    push_entity(current_l, entity);
+    call_function(2, 0, "on_activated_repeat");
   }
 }
 
 /**
  * \brief Calls the on_inactivated() method of the object on top of the stack.
  */
-void LuaContext::on_inactivated() {
+void LuaContext::on_inactivated(Entity* opt_entity) {
   check_callback_thread();
   if (find_method("on_inactivated")) {
-    call_function(1, 0, "on_inactivated");
+    if(opt_entity) {
+        push_entity(current_l, *opt_entity);
+    } else {
+        lua_pushnil(current_l);
+    }
+    call_function(2, 0, "on_inactivated");
   }
 }
 
 /**
  * \brief Calls the on_left() method of the object on top of the stack.
  */
-void LuaContext::on_left() {
+void LuaContext::on_left(Entity* opt_entity) {
   check_callback_thread();
   if (find_method("on_left")) {
-    call_function(1, 0, "on_left");
+      if(opt_entity) {
+          push_entity(current_l, *opt_entity);
+      } else {
+          lua_pushnil(current_l);
+      }
+    call_function(2, 0, "on_left");
   }
 }
 

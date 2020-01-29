@@ -660,13 +660,13 @@ void Entities::notify_map_started(Map& map, const std::shared_ptr<Destination>& 
  * \param map The map.
  * \param destination Destination entity where the hero is placed or nullptr.
  */
-void Entities::notify_map_opening_transition_finishing(Map& map, const std::string& destination_name) {
+void Entities::notify_map_opening_transition_finishing(Map& map, const std::string& destination_name, const HeroPtr& opt_hero) {
 
   for (const EntityPtr& entity: all_entities) {
-    entity->notify_map_opening_transition_finishing(map, destination_name);
+    entity->notify_map_opening_transition_finishing(map, destination_name, opt_hero);
   }
   for(const HeroPtr& hero : heroes) {
-    hero->notify_map_opening_transition_finishing(map, destination_name);
+    hero->notify_map_opening_transition_finishing(map, destination_name, opt_hero);
   }
 }
 
@@ -679,13 +679,13 @@ void Entities::notify_map_opening_transition_finishing(Map& map, const std::stri
  * \param map The map.
  * \param destination Destination entity where the hero is placed or nullptr.
  */
-void Entities::notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination) {
+void Entities::notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination, const HeroPtr& opt_hero) {
 
   for (const EntityPtr& entity: all_entities) {
-    entity->notify_map_opening_transition_finished(map, destination);
+    entity->notify_map_opening_transition_finished(map, destination, opt_hero);
   }
   for(const HeroPtr& hero : heroes) {
-    hero->notify_map_opening_transition_finished(map, destination);
+    hero->notify_map_opening_transition_finished(map, destination, opt_hero);
   }
 }
 

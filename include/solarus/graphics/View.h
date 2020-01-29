@@ -43,7 +43,7 @@ public:
   void set_transform(const glm::mat4& transform);
 
   void set_viewport(const FRectangle& viewport);
-  const FRectangle& get_viewport();
+  const FRectangle& get_viewport() const;
 private:
   inline void invalidate() {
     transform_dirty = true;

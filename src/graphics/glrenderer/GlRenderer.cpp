@@ -221,7 +221,7 @@ void GlRenderer::setup_viewport(GlTexture* target) {
   const auto& viewport = target->get_view().get_viewport();
 
   GLint x = viewport.left * target->get_width();
-  GLint y = (viewport.top) * target->get_height();
+  GLint y = viewport.top * target->get_height();
   GLsizei w = viewport.width * target->get_width();
   GLsizei h = viewport.height * target->get_height();
 
@@ -320,6 +320,18 @@ void GlRenderer::fill(SurfaceImpl& dst, const Color& color, const Rectangle& whe
                color,
                null_proxy
                ));
+}
+
+void GlRenderer::notify_target_changed(const SurfaceImpl& surf) {
+    const GlTexture* tex = &surf.as<GlTexture>();
+    if(tex == current_target) {
+        restart_batch();
+        current_target = nullptr; //Force update of the target properties
+    }
+
+    if(tex == current_texture) {
+        restart_batch();
+    }
 }
 
 void GlRenderer::invalidate(const SurfaceImpl& surf) {

@@ -107,7 +107,8 @@ void LuaContext::register_game_module() {
       { "capture_command_binding", game_api_capture_command_binding },
       { "simulate_command_pressed", game_api_simulate_command_pressed },
       { "simulate_command_released", game_api_simulate_command_released },
-      { "get_commands", game_api_get_commands }
+      { "get_commands", game_api_get_commands },
+      { "create_camera", game_api_create_camera }
   };
 
   const std::vector<luaL_Reg> metamethods = {
@@ -1610,6 +1611,34 @@ int LuaContext::game_api_get_commands(lua_State* l) {
     Commands& cmds = savegame.get_game()->get_commands();
 
     push_commands(l, cmds);
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of game:create_camera().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::game_api_create_camera(lua_State * l) {
+
+  return state_boundary_handle(l, [&] {
+    Savegame& savegame = *check_game(l, 1);
+
+    Game* game = savegame.get_game();
+    Debug::check_assertion(game, "Game is not started!");
+
+    std::string cam_id = LuaTools::check_string(l, 2);
+    std::string map_id = LuaTools::check_string(l, 3);
+    std::string destination_name = LuaTools::opt_string(l, 4, "");
+    Transition::Style transition_style = LuaTools::opt_enum<Transition::Style>(
+        l, 5, game->get_default_transition_style());
+
+    CameraPtr camera = game->create_camera(cam_id);
+
+    game->teleport_camera(camera, map_id, destination_name, transition_style, nullptr);
+    push_camera(l, *camera);
 
     return 1;
   });

@@ -10,6 +10,7 @@
 local map = ...
 local game = map:get_game()
 local hero = map:get_hero()
+local camera = map:get_camera()
 
 local commands
 local alter_commands
@@ -67,6 +68,10 @@ end
 -- Event called at initialization time, as soon as this map is loaded.
 function map:on_started()
 
+  if first_time then
+    return
+  end
+  
   -- You can initialize the movement and sprites of various
   -- map entities here.
   local x,y,l = alter_destination:get_position()
@@ -75,6 +80,8 @@ function map:on_started()
     y = y,
     layer = l,
   }
+  
+  alter_hero.is_alter = true
   
   commands = game:get_commands()
   alter_commands = alter_hero:get_commands()
@@ -87,11 +94,15 @@ function map:on_started()
 end
 
 
-
 -- Event called after the opening transition effect of the map,
 -- that is, when the player takes control of the hero.
 function map:on_opening_transition_finished()
-  map:get_camera():start_tracking(alter_hero)
+  --map:get_camera():start_tracking(alter_hero)
+  if first_time then
+    return
+  end
+  
+  first_time = true
   
   game:start_coroutine(function()
     wait(1000)
@@ -107,3 +118,52 @@ function map:on_opening_transition_finished()
   end)
 end
 
+function corner_sensor:on_activated(ahero)
+  if not ahero.is_alter then return end
+  
+  alter_commands = ahero:get_commands()
+  
+  alter_commands:simulate_released('right')
+  alter_commands:simulate_pressed('down')
+end
+
+local alter_camera
+function to_side_sensor:on_activated(ahero)
+  if ahero ~= alter_hero then
+    return
+  end
+  
+  if alter_camera then
+    return
+  end
+  
+  
+  -- Setup cameras for a vertical split-screen
+  alter_camera = game:create_camera("alter_camera", map:get_id())
+  
+  
+  alter_camera:set_size(320/2, 240)
+  alter_camera:set_position_on_screen(320/2, 0)
+  
+  --alter_camera:teleport(map:get_id())
+  alter_camera:start_tracking(alter_hero)
+  
+  camera:set_size(320/2, 240)
+  
+  alter_commands:simulate_pressed('right')
+  alter_commands:simulate_released('down')
+  
+  sol.timer.start(1000, function()
+    commands:simulate_pressed('left')
+  end)
+end
+
+function to_corner_tp:on_activated(ahero)
+  assert_equal(ahero, alter_hero)
+  
+  ahero:teleport(to_corner_tp:get_destination_map(), to_corner_tp:get_destination_name())
+end
+
+function dest_inner:on_activated(hero)
+  print("ALLO ?", hero)
+end

@@ -157,6 +157,10 @@ void SDLRenderer::fill(SurfaceImpl& dst, const Color& color, const Rectangle& wh
   sdst.surface_dirty = true;
 }
 
+void SDLRenderer::notify_target_changed(const SurfaceImpl& /*surf*/) {
+
+}
+
 void SDLRenderer::invalidate(const SurfaceImpl& surf) {
   const auto& ssurf = surf.as<SDLSurfaceImpl>();
 

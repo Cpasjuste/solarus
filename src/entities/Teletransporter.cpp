@@ -329,7 +329,7 @@ void Teletransporter::transport_hero(Hero& hero) {
 
   transporting_hero = true;
 
-  get_lua_context()->teletransporter_on_activated(*this);
+  get_lua_context()->teletransporter_on_activated(*this, hero);
 
   if (!is_enabled() || is_being_removed()) {
     // The teletransporter was just disabled: abort the teletransportation.
@@ -342,9 +342,15 @@ void Teletransporter::transport_hero(Hero& hero) {
   }
 
   HeroPtr hero_ptr = std::static_pointer_cast<Hero>(hero.shared_from_this());
-  get_game().teleport_hero(hero_ptr, destination_map_id, name, transition_style);
+
+  if(hero.get_linked_camera()) {
+    get_game().teleport_hero(hero_ptr, destination_map_id, name, transition_style);
+  }
+
   transporting_hero = false;
-  hero.set_xy(hero_x, hero_y);
+  if(is_on_map_side()) {
+    hero.set_xy(hero_x, hero_y);
+  }
 }
 
 }

@@ -490,8 +490,8 @@ class LuaContext {
         Entity& carrier,
         CarriedObject& carried_object);
     bool hero_on_taking_damage(Hero& hero, int damage);
-    void destination_on_activated(Destination& destination);
-    void teletransporter_on_activated(Teletransporter& teletransporter);
+    void destination_on_activated(Destination& destination, Hero& hero);
+    void teletransporter_on_activated(Teletransporter& teletransporter, Hero& hero);
     void npc_on_collision_fire(Npc& npc);
     void carried_object_on_lifted(CarriedObject& carried_object);
     void carried_object_on_thrown(CarriedObject& carried_object);
@@ -499,11 +499,11 @@ class LuaContext {
     bool chest_on_opened(Chest& chest, const Treasure& treasure);
     void block_on_moving(Block& block);
     void block_on_moved(Block& block);
-    void switch_on_activated(Switch& sw);
-    void switch_on_inactivated(Switch& sw);
-    void switch_on_left(Switch& sw);
+    void switch_on_activated(Switch& sw, Entity* opt_entity);
+    void switch_on_inactivated(Switch& s, Entity* opt_entity);
+    void switch_on_left(Switch& sw, Entity& entity);
     void sensor_on_activated(Sensor& sensor, Hero &hero);
-    void sensor_on_activated_repeat(Sensor& sensor);
+    void sensor_on_activated_repeat(Sensor& sensor, Entity &entity);
     void sensor_on_left(Sensor& sensor);
     void sensor_on_collision_explosion(Sensor& sensor);
     void separator_on_activating(Separator& separator, int direction4);
@@ -939,6 +939,7 @@ class LuaContext {
       game_api_simulate_command_pressed,
       game_api_simulate_command_released,
       game_api_get_commands,
+      game_api_create_camera,
 
       // Equipment item API.
       item_api_get_name,
@@ -1160,6 +1161,7 @@ class LuaContext {
       camera_api_get_zoom,
       camera_api_get_rotation,
       camera_api_set_rotation,
+      camera_api_teleport,
 
       destination_api_get_starting_location_mode,
       destination_api_set_starting_location_mode,
@@ -1628,11 +1630,11 @@ private:
     bool on_taking_damage(int damage);
     void on_activating();
     void on_activating(int direction4);
-    void on_activated();
+    void on_activated(Entity* opt_entity);
     void on_activated(int direction4);
-    void on_activated_repeat();
-    void on_inactivated();
-    void on_left();
+    void on_activated_repeat(Entity& entity);
+    void on_inactivated(Entity *opt_entity);
+    void on_left(Entity* opt_entity);
     bool on_interaction();
     bool on_interaction_item(EquipmentItem& item_used);
     void on_npc_interaction(Npc& npc);

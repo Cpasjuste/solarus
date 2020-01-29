@@ -449,6 +449,21 @@ View& Surface::get_view() {
   return internal_surface->get_view();
 }
 
+void Surface::set_viewport(const Rectangle& viewport) {
+    FRectangle vp(viewport.get_left() / (float)get_width(),
+                  viewport.get_top() / (float)get_height(),
+                  viewport.get_width() / (float)get_width(),
+                  viewport.get_height() / (float)get_height());
+    get_view().set_viewport(vp);
+    get_view().reset(Rectangle(viewport.get_size()));
+    Video::get_renderer().notify_target_changed(*internal_surface);
+}
+
+Rectangle Surface::get_viewport() const {
+    const FRectangle& vp = get_view().get_viewport();
+    return Rectangle(vp.left*get_width(), vp.top*get_height(), vp.width*get_width(), vp.height*get_height());
+}
+
 /**
  * \brief Returns the name identifying this type in Lua.
  * \return The name identifying this type in Lua.

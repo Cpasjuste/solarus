@@ -586,12 +586,12 @@ void Hero::notify_map_started(Map& map, const std::shared_ptr<Destination>& dest
 /**
  * \copydoc Entity::notify_map_opening_transition_finishing
  */
-void Hero::notify_map_opening_transition_finishing(Map& map, const std::string &destination_name) {
+void Hero::notify_map_opening_transition_finishing(Map& map, const std::string &destination_name, const HeroPtr &hero) {
 
-  Entity::notify_map_opening_transition_finishing(map, destination_name);
+  Entity::notify_map_opening_transition_finishing(map, destination_name, hero);
 
   int side = get_map().get_destination_side(destination_name);
-  if (side != -1) {
+  if (side != -1 && hero.get() == this) {
     // the hero was placed on the side of the map:
     // there was a scrolling between the previous map and this one
 
@@ -626,9 +626,9 @@ void Hero::notify_map_opening_transition_finishing(Map& map, const std::string &
 /**
  * \copydoc Entity::notify_map_opening_transition_finished
  */
-void Hero::notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination) {
+void Hero::notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination, const HeroPtr& hero) {
 
-  Entity::notify_map_opening_transition_finished(map, destination);
+  Entity::notify_map_opening_transition_finished(map, destination, hero);
   get_state()->notify_map_opening_transition_finished(map, destination);
 }
 
@@ -801,8 +801,8 @@ void Hero::place_on_destination(Map& map, const Rectangle& previous_map_location
         boomerang->remove_from_map();
       }
 
-      if (destination != nullptr) {
-        get_lua_context()->destination_on_activated(*destination);
+      if (destination != nullptr) { //TODO Verify if we can definatly remove this
+        get_lua_context()->destination_on_activated(*destination, *this);
       }
 
       const std::shared_ptr<const Stairs> stairs = get_stairs_overlapping();

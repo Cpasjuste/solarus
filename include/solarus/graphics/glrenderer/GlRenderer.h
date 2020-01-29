@@ -51,6 +51,7 @@ public:
   void draw(SurfaceImpl& dst, const SurfaceImpl& src, const DrawInfos& infos) override;
   void clear(SurfaceImpl& dst) override;
   void fill(SurfaceImpl& dst, const Color& color, const Rectangle& where, BlendMode mode = BlendMode::BLEND) override;
+  void notify_target_changed(const SurfaceImpl& surf) override;
   void invalidate(const SurfaceImpl& surf) override;
   std::string get_name() const override;
   void present(SDL_Window* window) override;
