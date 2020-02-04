@@ -154,7 +154,10 @@ void LuaContext::register_map_module() {
       { "get_entities_in_region", map_api_get_entities_in_region },
       { "get_hero", map_api_get_hero },
       { "set_entities_enabled", map_api_set_entities_enabled },
-      { "remove_entities", map_api_remove_entities }
+      { "remove_entities", map_api_remove_entities },
+      //1.7 features
+      { "get_cameras", map_api_get_cameras },
+      { "get_heroes", map_api_get_heroes }
   };
 
   const std::vector<luaL_Reg> metamethods = {
@@ -2247,7 +2250,7 @@ int LuaContext::map_api_get_entities(lua_State* l) {
     const EntityVector& entities =
         map.get_entities().get_entities_with_prefix_z_sorted(prefix);
 
-    push_entity_iterator(l, entities);
+    push_userdata_iterator(l, entities);
     return 1;
   });
 }
@@ -2301,7 +2304,7 @@ int LuaContext::map_api_get_entities_by_type(lua_State* l) {
     const EntityVector& entities =
         map.get_entities().get_entities_by_type_z_sorted(type);
 
-    push_entity_iterator(l, entities);
+    push_userdata_iterator(l, entities);
     return 1;
   });
 }
@@ -2325,7 +2328,7 @@ int LuaContext::map_api_get_entities_in_rectangle(lua_State* l) {
         Rectangle(x, y, width, height), entities
     );
 
-    push_entity_iterator(l, entities);
+    push_userdata_iterator(l, entities);
     return 1;
   });
 }
@@ -2367,7 +2370,7 @@ int LuaContext::map_api_get_entities_in_region(lua_State* l) {
       }
     }
 
-    push_entity_iterator(l, entities);
+    push_userdata_iterator(l, entities);
     return 1;
   });
 }
@@ -2445,6 +2448,40 @@ int LuaContext::map_api_create_entity(lua_State* l) {
     const EntityData& data = EntityData::check_entity_data(l, 2, type);
 
     get().create_map_entity_from_data(map, data);
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of map:get_cameras()
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::map_api_get_cameras(lua_State *l) {
+
+  return state_boundary_handle(l, [&] {
+
+    Map& map = *check_map(l, 1);
+
+    push_userdata_iterator(l, map.get_entities().get_cameras());
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of map:get_heroes()
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::map_api_get_heroes(lua_State *l) {
+
+  return state_boundary_handle(l, [&] {
+
+    Map& map = *check_map(l, 1);
+
+    push_userdata_iterator(l, map.get_entities().get_heroes());
 
     return 1;
   });

@@ -940,6 +940,9 @@ class LuaContext {
       game_api_simulate_command_released,
       game_api_get_commands,
       game_api_create_camera,
+      game_api_remove_camera,
+      game_api_get_cameras,
+      game_api_get_maps,
 
       // Equipment item API.
       item_api_get_name,
@@ -1014,6 +1017,8 @@ class LuaContext {
       map_api_set_entities_enabled,
       map_api_remove_entities,
       map_api_create_entity,  // Same function used for all entity types.
+      map_api_get_cameras,
+      map_api_get_heroes,
 
       // Map entity API.
       entity_api_get_type,
@@ -1462,7 +1467,47 @@ private:
     static void push_map(lua_State* current_l, Map& map);
     static void push_state(lua_State* current_l, CustomState& state);
     static void push_entity(lua_State* current_l, Entity& entity);
-    static void push_entity_iterator(lua_State* current_l, const EntityVector& entities);
+
+
+    template<typename Container>
+
+    /**
+     * @brief push a c++ collection of userdata as a table array on the stack
+     * @param l A lua context
+     * @param elements A collection of userdata, order is preserved
+     */
+    static void push_userdata_array(lua_State* l, const Container& elements) {
+        int i = 0;
+        lua_newtable(l);
+        for(const auto& element: elements) {
+          ++i;
+          lua_pushinteger(l, i);
+          push_userdata(l, *element);
+          lua_rawset(l, -3);
+        }
+    }
+
+    /**
+     * \brief Pushes a list of userdata element as an iterator onto the stack.
+     *
+     * The iterator is pushed onto the stack as one value of type function.
+     *
+     * \param l A Lua context.
+     * \param elements A list of userdata. The iterator preserves their order.
+     */
+    template<typename Container>
+    static void push_userdata_iterator(lua_State* l, const Container& elements)
+    {
+      // Create a Lua table with the list of entities, preserving their order.
+      push_userdata_array(l, elements);
+
+      lua_pushinteger(l, elements.size());
+      lua_pushinteger(l, 1);
+      // 3 upvalues: entities table, size, current index.
+
+      lua_pushcclosure(l, l_entity_iterator_next, 3);
+    }
+
     static void push_named_sprite_iterator(
         lua_State* current_l,
         const std::vector<Entity::NamedSprite>& sprites
@@ -1653,7 +1698,7 @@ private:
     void on_closed();
     void on_moving();
     void on_moved();
-    void on_map_changed(Map& map, Solarus::Camera &camera);
+    void on_map_changed(Map& map, Camera &camera);
     void on_world_changed(const std::string& previous_world, const std::string& new_world);
     void on_pickable_created(Pickable& pickable);
     void on_variant_changed(int variant);

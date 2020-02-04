@@ -17,6 +17,8 @@ list(APPEND LUA_TEST_MAPS
   "custom_state/pushing"
   "custom_state/reuse_state"
   "teletransportation_tests/main"
+  "multiplayer/heroes"
+  "multiplayer/cameras"
   "bugs/486_diagonal_dynamic_tiles"
   "bugs/496_stream_speed_0"
   "bugs/526_get_entities_same_region"

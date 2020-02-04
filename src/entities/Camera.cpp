@@ -96,15 +96,7 @@ void TrackingState::update() {
 
   Camera& camera = get_entity<Camera>();
   if (separator_next_scrolling_date == 0) {
-    // Normal case: not traversing a separator.
-
-    // First compute camera coordinates ignoring map limits and separators.
-    Rectangle next = camera.get_bounding_box();
-    next.set_center(tracked_entity->get_center_point());
-
-    // Then apply constraints of both separators and map limits.
-    camera.set_bounding_box(camera.apply_separators_and_map_bounds(next));
-    camera.notify_bounding_box_changed();
+    camera.track_position(tracked_entity->get_center_point());
   }
   else {
     // The tracked entity is currently traversing a separator.
@@ -789,6 +781,25 @@ std::unique_ptr<Transition>& Camera::get_transition() {
  */
 void Camera::notify_being_removed() {
   Entity::notify_being_removed();
+}
+
+/**
+ * @brief Displace this camera to track the given center point
+ *
+ * Map bounds are taken into account
+ *
+ * @param center
+ */
+void Camera::track_position(const Point& center) {
+    // Normal case: not traversing a separator.
+
+    // First compute camera coordinates ignoring map limits and separators.
+    Rectangle next = get_bounding_box();
+    next.set_center(center);
+
+    // Then apply constraints of both separators and map limits.
+    set_bounding_box(apply_separators_and_map_bounds(next));
+    notify_bounding_box_changed();
 }
 
 /**

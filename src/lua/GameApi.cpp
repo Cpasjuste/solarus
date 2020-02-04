@@ -107,8 +107,12 @@ void LuaContext::register_game_module() {
       { "capture_command_binding", game_api_capture_command_binding },
       { "simulate_command_pressed", game_api_simulate_command_pressed },
       { "simulate_command_released", game_api_simulate_command_released },
+      //1.7 methods
       { "get_commands", game_api_get_commands },
-      { "create_camera", game_api_create_camera }
+      { "create_camera", game_api_create_camera },
+      { "remove_camera", game_api_remove_camera },
+      { "get_cameras", game_api_get_cameras },
+      { "get_maps", game_api_get_maps }
   };
 
   const std::vector<luaL_Reg> metamethods = {
@@ -1639,6 +1643,67 @@ int LuaContext::game_api_create_camera(lua_State * l) {
 
     game->teleport_camera(camera, map_id, destination_name, transition_style, nullptr);
     push_camera(l, *camera);
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of game:remove_camera().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::game_api_remove_camera(lua_State * l) { //TODO
+
+  return state_boundary_handle(l, [&] {
+    Savegame& savegame = *check_game(l, 1);
+    CameraPtr camera = check_camera(l, 2);
+
+    Game* game = savegame.get_game();
+    Debug::check_assertion(game, "Game is not started!");
+
+    Transition::Style transition_style = LuaTools::opt_enum<Transition::Style>(
+        l, 3, game->get_default_transition_style());
+
+    game->remove_camera(camera, transition_style);
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of game:remove_camera().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::game_api_get_cameras(lua_State *l) { //TODO
+
+  return state_boundary_handle(l, [&] {
+    Savegame& savegame = *check_game(l, 1);
+
+    Game* game = savegame.get_game();
+    Debug::check_assertion(game, "Game is not started!");
+
+    push_userdata_iterator(l, game->get_cameras());
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of game:remove_camera().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::game_api_get_maps(lua_State * l) { //TODO
+
+  return state_boundary_handle(l, [&] {
+    Savegame& savegame = *check_game(l, 1);
+
+    Game* game = savegame.get_game();
+    Debug::check_assertion(game, "Game is not started!");
+
+    push_userdata_iterator(l, game->get_maps());
 
     return 1;
   });

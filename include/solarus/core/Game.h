@@ -108,6 +108,8 @@ class SOLARUS_API Game {
                          const HeroPtr& opt_hero);
 
     CameraPtr create_camera(const std::string& id);
+    void remove_camera(const CameraPtr& camera, Transition::Style transition_style);
+    const std::vector<CameraPtr> &get_cameras() const;
 
     bool is_current_map(Map& map) const;
     bool has_multiple_maps() const;
@@ -115,6 +117,7 @@ class SOLARUS_API Game {
 
     const MapPtr& prepare_map(const std::string& map_id);
     void leave_map(const EntityPtr &leaving, const MapPtr& map);
+    const std::vector<MapPtr>& get_maps() const;
 
     Transition::Style get_default_transition_style() const;
     void set_default_transition_style(Transition::Style default_transition_style);
@@ -155,14 +158,14 @@ class SOLARUS_API Game {
     void set_suspended_by_script(bool suspended);
 private:
     struct CameraTeleportation{
-      MapPtr current_map;
-      MapPtr next_map;
-      std::string destination_name;
-      CameraPtr camera;
-      Transition::Style transition_style;
-      HeroPtr opt_hero;
+      MapPtr current_map;                   /**< Map from which this teleportation is coming **/
+      MapPtr next_map;                      /**< Map to which this teleportation is going **/
+      std::string destination_name;         /**< Destination to which this teleportation is going **/
+      CameraPtr camera;                     /**< Camera undergoing the teleportation */
+      Transition::Style transition_style;   /**< Style of the teleportation transition */
+      HeroPtr opt_hero;                     /**< Optional hero concerned by this teleportation */
 
-      bool removed = false;
+      bool removed = false;                 /**< is this teleportation canceled ? */
       bool is_finished() const;
     };
 

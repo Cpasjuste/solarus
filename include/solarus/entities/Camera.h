@@ -103,6 +103,8 @@ class Camera : public Entity {
     std::unique_ptr<Transition>& get_transition();
 
     void draw(const SurfacePtr& dst_surface) const;
+
+    void track_position(const Point& center);
 private:
     void create_surface(const Size& size);
     void update_view(const Size& viewport_size);

@@ -447,7 +447,18 @@ bool Game::update_teleportation(CameraTeleportation& tp) {
     transition = nullptr;
 
     if (restarting) {
-      return true; //We are done closing let's restart !
+      return true; //We are done closing let's restart or kill the camera!
+    }
+    else if(next_map == nullptr) {
+        //Camera leave the map before dying...
+        leave_map(camera, tp.current_map);
+
+        //Transition to nowhere, camera is to be removed
+        cameras.erase(std::remove(
+                          cameras.begin(),
+                          cameras.end(),
+                          camera), cameras.end());
+        return true;
     }
     else if (transition_direction == Transition::Direction::CLOSING) {
       // The closing transition has just finished.
@@ -498,14 +509,19 @@ void Game::teleportation_change_map(CameraTeleportation &tp) {
     if(current_map) {
       leave_map(camera, current_map);
     }
-    //Set camera in manual by default
-    //camera->start_manual();
+
     //Go to the new map
     camera->place_on_map(*next_map);
   }
 
   if(tp.opt_hero) {
       on_hero_map_prepare(tp.opt_hero, tp);
+  } else {
+      EntityPtr destination = next_map->get_entities().find_entity(tp.destination_name);
+
+      if(destination) {
+        camera->track_position(destination->get_center_point());
+      }
   }
 
   notify_map_changed(*next_map, *camera);
@@ -761,7 +777,11 @@ void Game::teleport_camera(const CameraPtr& camera,
   }
 
   // prepare the next map
-  ct.next_map = prepare_map(map_id);
+  if(map_id.empty()) {
+    ct.next_map = nullptr;
+  } else {
+    ct.next_map = prepare_map(map_id);
+  }
 
   if (ct.current_map != nullptr) {
     ct.current_map->check_suspended();
@@ -779,10 +799,10 @@ void Game::teleport_camera(const CameraPtr& camera,
   transition->start();
   ct.camera->set_transition(std::move(transition));
 
-  //Check if transition can already trigger the map change (when quick out transitions)
-  /*if(ct.camera->get_transition()->is_finished()) {
-    teleportation_change_map(ct);
-  }*/
+  //Camera teleported without hero, stop tracking
+  if(!opt_hero) {
+      camera->start_manual();
+  }
 
   // Add the teleportation details to the list of current teleportations
   cameras_teleportations.emplace_back(std::move(ct));
@@ -797,6 +817,28 @@ CameraPtr Game::create_camera(const std::string& id) {
     CameraPtr camera = std::make_shared<Camera>(id);
     cameras.push_back(camera);
     return camera;
+}
+
+/**
+ * @brief remove a camera from the running game
+ *
+ * Removing a camera is equivalent to teleporting it to nowhere
+ *
+ * @param camera
+ * @param transition_style
+ */
+void Game::remove_camera(const CameraPtr& camera, Transition::Style transition_style)
+{
+    //Make it transition to nowhere
+    teleport_camera(camera, "", "", transition_style, nullptr);
+}
+
+/**
+ * @brief Get the living cameras of this game
+ * @return
+ */
+const std::vector<CameraPtr>& Game::get_cameras() const {
+    return cameras;
 }
 
 /**
@@ -837,6 +879,12 @@ const MapPtr& Game::prepare_map(const std::string& map_id) {
   return *emp_it;
 }
 
+
+/**
+ * @brief Remove an entity from a map and ensure the map is unloaded if necessary
+ * @param leaving the entity leaving the map
+ * @param map the map
+ */
 void Game::leave_map(const EntityPtr &leaving, const MapPtr& map) {
 
   //Remove the hero from the map
@@ -852,6 +900,14 @@ void Game::leave_map(const EntityPtr &leaving, const MapPtr& map) {
   /*next_map->set_destination(destination_name);
   this->current_transition_style = transition_style;
 */
+}
+
+/**
+ * @brief Get the maps running in this game
+ * @return a collection of maps
+ */
+const std::vector<MapPtr>& Game::get_maps() const {
+    return current_maps;
 }
 
 /**
