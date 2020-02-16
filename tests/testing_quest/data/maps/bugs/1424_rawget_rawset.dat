@@ -1,0 +1,58 @@
+properties{
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  min_layer = 0,
+  max_layer = 2,
+  tileset = "castle",
+}
+
+destination{
+  name = "destination",
+  layer = 0,
+  x = 24,
+  y = 221,
+  direction = 1,
+}
+
+dynamic_tile{
+  name = "tile1",
+  layer = 0,
+  x = 48,
+  y = 192,
+  width = 48,
+  height = 32,
+  pattern = "2",
+}
+
+dynamic_tile{
+  name = "tile2",
+  layer = 0,
+  x = 112,
+  y = 192,
+  width = 48,
+  height = 32,
+  pattern = "2",
+}
+
+teletransporter{
+  name = "tele1",
+  layer = 0,
+  x = 16,
+  y = 184,
+  width = 16,
+  height = 16,
+  destination_map = "bugs/1424_rawget_rawset",
+}
+
+teletransporter{
+  name = "tele2",
+  layer = 0,
+  x = 16,
+  y = 152,
+  width = 16,
+  height = 16,
+  destination_map = "bugs/1424_rawget_rawset",
+}
+
