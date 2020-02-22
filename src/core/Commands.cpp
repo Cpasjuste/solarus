@@ -227,12 +227,10 @@ void Commands::keyboard_key_released(InputEvent::KeyboardKey keyboard_key_releas
  * \brief This function is called when a joypad button is pressed.
  * \param button The button pressed.
  */
-void Commands::joypad_button_pressed(int button) {
+void Commands::joypad_button_pressed(JoyPadButton button) {
 
   // Retrieve the game command (if any) corresponding to this joypad button.
-  std::ostringstream oss;
-  oss << "button " << button;
-  const std::string& joypad_string = oss.str();
+  const std::string& joypad_string = enum_to_name(button);
   Command command = get_command_from_joypad(joypad_string);
 
   if (!customizing) {
@@ -257,12 +255,10 @@ void Commands::joypad_button_pressed(int button) {
  * \brief This function is called when a joypad button is released.
  * \param button The button released.
  */
-void Commands::joypad_button_released(int button) {
+void Commands::joypad_button_released(JoyPadButton button) {
 
   // Retrieve the game command (if any) corresponding to this joypad button.
-  std::ostringstream oss;
-  oss << "button " << button;
-  const std::string& joypad_string = oss.str();
+  const std::string& joypad_string = enum_to_name(button);
   Command command = get_command_from_joypad(joypad_string);
 
   // If the key is mapped, notify the game.
@@ -276,20 +272,20 @@ void Commands::joypad_button_released(int button) {
  * \param axis The axis moved.
  * \param state The new axis direction (-1: left or up, 0: centered, 1: right or down).
  */
-void Commands::joypad_axis_moved(int axis, int state) {
+void Commands::joypad_axis_moved(JoyPadAxis axis, double state) {
 
-  if (state == 0) {
+  if (std::abs(state) < 1e-5) {
     // Axis in centered position.
 
     std::ostringstream oss;
-    oss << "axis " << axis << " +";
+    oss << enum_to_name(axis) << " +";
     Command command = get_command_from_joypad(oss.str());
     if (command != Command::NONE) {
       command_released(command);
     }
 
     oss.str("");
-    oss << "axis " << axis << " -";
+    oss << enum_to_name(axis) << " -";
     command = get_command_from_joypad(oss.str());
     if (command != Command::NONE) {
       command_released(command);
@@ -299,11 +295,11 @@ void Commands::joypad_axis_moved(int axis, int state) {
     // Axis not centered.
 
     std::ostringstream oss;
-    oss << "axis " << axis << ((state > 0) ? " +" : " -");
+    oss << enum_to_name(axis) << ((state > 0) ? " +" : " -");
     const std::string& joypad_string = oss.str();
 
     oss.str("");
-    oss << "axis " << axis << ((state > 0) ? " -" : " +");
+    oss << enum_to_name(axis) << ((state > 0) ? " -" : " +");
     const std::string& inverse_joypad_string = oss.str();
 
     Command command = get_command_from_joypad(joypad_string);

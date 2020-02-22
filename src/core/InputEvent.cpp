@@ -616,10 +616,9 @@ bool InputEvent::is_keyboard_event() const {
  */
 bool InputEvent::is_joypad_event() const {
 
-  return internal_event.type == SDL_JOYAXISMOTION
-    || internal_event.type == SDL_JOYHATMOTION
-    || internal_event.type == SDL_JOYBUTTONDOWN
-    || internal_event.type == SDL_JOYBUTTONUP;
+  return internal_event.type == SDL_CONTROLLERAXISMOTION
+    || internal_event.type == SDL_CONTROLLERBUTTONUP
+    || internal_event.type == SDL_CONTROLLERBUTTONDOWN;
 }
 
 /**
@@ -966,7 +965,7 @@ void InputEvent::set_joypad_enabled(bool joypad_enabled) {
  */
 bool InputEvent::is_joypad_button_pressed() const {
 
-  return internal_event.type == SDL_JOYBUTTONDOWN;
+  return internal_event.type == SDL_CONTROLLERBUTTONDOWN;
 }
 
 /**
@@ -976,7 +975,7 @@ bool InputEvent::is_joypad_button_pressed() const {
  */
 bool InputEvent::is_joypad_button_released() const {
 
-  return internal_event.type == SDL_JOYBUTTONUP;
+  return internal_event.type == SDL_CONTROLLERBUTTONUP;
 }
 
 /**
@@ -987,13 +986,20 @@ bool InputEvent::is_joypad_button_released() const {
  *
  * \return the button number of this joypad button event
  */
-int InputEvent::get_joypad_button() const {
+JoyPadButton InputEvent::get_joypad_button() const {
 
   if (!is_joypad_button_pressed() && !is_joypad_button_released()) {
-    return -1;
+    return JoyPadButton::INVALID;
   }
 
-  return internal_event.jbutton.button;
+  return static_cast<JoyPadButton>(internal_event.cbutton.button);
+}
+
+JoypadPtr InputEvent::get_joypad() const {
+    if(!is_joypad_event()){
+        return nullptr;
+    }
+    return joypads.at(internal_event.cbutton.which);
 }
 
 /**
@@ -1003,7 +1009,7 @@ int InputEvent::get_joypad_button() const {
  */
 bool InputEvent::is_joypad_axis_moved() const {
 
-  return internal_event.type == SDL_JOYAXISMOTION;
+  return internal_event.type == SDL_CONTROLLERAXISMOTION;
 }
 
 /**
@@ -1015,13 +1021,13 @@ bool InputEvent::is_joypad_axis_moved() const {
  *
  * \return the axis index of this joypad axis event
  */
-int InputEvent::get_joypad_axis() const {
+JoyPadAxis InputEvent::get_joypad_axis() const {
 
   if (!is_joypad_axis_moved()) {
-    return -1;
+    return JoyPadAxis::INVALID;
   }
 
-  return internal_event.jaxis.axis;
+  return static_cast<JoyPadAxis>(internal_event.caxis.axis);
 }
 
 /**
@@ -1033,7 +1039,7 @@ int InputEvent::get_joypad_axis() const {
  * \return the new state of the axis moved during this joypad axis event:
  * -1 (left or up), 0 (centered) or 1 (right or down)
  */
-int InputEvent::get_joypad_axis_state() const {
+double InputEvent::get_joypad_axis_state() const {
 
   if (!is_joypad_axis_moved()) {
     return 0;
@@ -1072,8 +1078,8 @@ bool InputEvent::is_joypad_axis_centered() const {
  * \return true if this is a joypad hat event
  */
 bool InputEvent::is_joypad_hat_moved() const {
-
-  return internal_event.type == SDL_JOYHATMOTION;
+  return false; //LETS DEPRECATE THE HAT EVENTS
+  //return internal_event.type == SDL_JOYHATMOTION;
 }
 
 /**
@@ -1409,7 +1415,8 @@ int InputEvent::get_direction() const {
   }
   else if (is_joypad_axis_moved() && !is_joypad_axis_centered()) {
 
-    if (get_joypad_axis() % 2 == 0) {
+    auto axis = get_joypad_axis();
+    if (axis == JoyPadAxis::LEFT_X or axis == JoyPadAxis::RIGHT_X) {
       // we assume the axis is horizontal
       result = (get_joypad_axis_state() > 0) ? 0 : 4;
     }

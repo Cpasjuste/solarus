@@ -279,15 +279,16 @@ class InputEvent {
 
     bool is_joypad_button_pressed() const;
     bool is_joypad_button_released() const;
-    int get_joypad_button() const;
+    JoyPadButton get_joypad_button() const;
     bool is_joypad_axis_moved() const;
-    int get_joypad_axis() const;
-    int get_joypad_axis_state() const;
+    JoyPadAxis get_joypad_axis() const;
+    double get_joypad_axis_state() const;
     bool is_joypad_axis_centered() const;
     bool is_joypad_hat_moved() const;
     int get_joypad_hat() const;
     int get_joypad_hat_direction() const;
     bool is_joypad_hat_centered() const;
+    JoypadPtr get_joypad() const;
 
     // mouse
     bool is_mouse_button_pressed() const;

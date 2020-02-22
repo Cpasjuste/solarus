@@ -567,6 +567,9 @@ void Map::draw() {
   }
 
   for(const CameraPtr& camera : entities->get_cameras()) {
+      if(camera->is_being_removed()){
+          continue;
+      }
     const SurfacePtr& camera_surface = camera->get_surface();
     // background
     camera->reset_view();

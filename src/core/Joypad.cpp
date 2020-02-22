@@ -6,10 +6,10 @@ namespace Solarus {
 const std::string EnumInfoTraits<JoyPadAxis>::pretty_name = "joypad axis";
 const std::string EnumInfoTraits<JoyPadButton>::pretty_name = "joypad button";
 const EnumInfo<JoyPadButton>::names_type EnumInfoTraits<JoyPadButton>::names = {
-  {JoyPadButton::A, "A"},
-  {JoyPadButton::B, "B"},
-  {JoyPadButton::X, "X"},
-  {JoyPadButton::Y, "Y"},
+  {JoyPadButton::A, "a"},
+  {JoyPadButton::B, "b"},
+  {JoyPadButton::X, "x"},
+  {JoyPadButton::Y, "y"},
   {JoyPadButton::BACK, "back"},
   {JoyPadButton::GUIDE, "guide"},
   {JoyPadButton::START, "start"},

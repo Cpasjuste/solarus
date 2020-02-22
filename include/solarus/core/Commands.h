@@ -86,9 +86,9 @@ class Commands : public ExportableToLua {
     Command get_command_from_keyboard(InputEvent::KeyboardKey key) const;
 
     // Joypad mapping.
-    void joypad_button_pressed(int button);
-    void joypad_button_released(int button);
-    void joypad_axis_moved(int axis, int direction);
+    void joypad_button_pressed(JoyPadButton button);
+    void joypad_button_released(JoyPadButton button);
+    void joypad_axis_moved(JoyPadAxis axis, double direction);
     void joypad_hat_moved(int hat, int direction);
     const std::string& get_joypad_binding_savegame_variable(Command command) const;
     std::string get_saved_joypad_binding(Command command, const Savegame& save) const;

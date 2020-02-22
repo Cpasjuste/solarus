@@ -1890,10 +1890,11 @@ bool LuaContext::on_joypad_button_pressed(const InputEvent& event) {
   check_callback_thread();
   bool handled = false;
   if (find_method("on_joypad_button_pressed")) {
-    int button = event.get_joypad_button();
+    JoyPadButton button = event.get_joypad_button();
 
-    lua_pushinteger(current_l, button);
-    bool success = call_function(2, 1, "on_joypad_button_pressed");
+    push_string(current_l, enum_to_name(button));
+    push_joypad(current_l, *event.get_joypad());
+    bool success = call_function(3, 1, "on_joypad_button_pressed");
     if (!success) {
       // Something was wrong in the script: don't propagate the input to other objects.
       handled = true;
@@ -1916,10 +1917,11 @@ bool LuaContext::on_joypad_button_released(const InputEvent& event) {
   check_callback_thread();
   bool handled = false;
   if (find_method("on_joypad_button_released")) {
-    int button = event.get_joypad_button();
+    JoyPadButton button = event.get_joypad_button();
 
-    lua_pushinteger(current_l, button);
-    bool success = call_function(2, 1, "on_joypad_button_released");
+    push_string(current_l, enum_to_name(button));
+    push_joypad(current_l, *event.get_joypad());
+    bool success = call_function(3, 1, "on_joypad_button_released");
     if (!success) {
       // Something was wrong in the script: don't propagate the input to other objects.
       handled = true;
@@ -1942,12 +1944,13 @@ bool LuaContext::on_joypad_axis_moved(const InputEvent& event) {
   check_callback_thread();
   bool handled = false;
   if (find_method("on_joypad_axis_moved")) {
-    int axis = event.get_joypad_axis();
-    int state = event.get_joypad_axis_state();
+    JoyPadAxis axis = event.get_joypad_axis();
+    double state = event.get_joypad_axis_state();
 
-    lua_pushinteger(current_l, axis);
-    lua_pushinteger(current_l, state);
-    bool success = call_function(3, 1, "on_joypad_axis_moved");
+    push_string(current_l, enum_to_name(axis));
+    lua_pushnumber(current_l, state);
+    push_joypad(current_l, *event.get_joypad());
+    bool success = call_function(4, 1, "on_joypad_axis_moved");
     if (!success) {
       // Something was wrong in the script: don't propagate the input to other objects.
       handled = true;
@@ -1975,7 +1978,8 @@ bool LuaContext::on_joypad_hat_moved(const InputEvent& event) {
 
     lua_pushinteger(current_l, hat);
     lua_pushinteger(current_l, direction8);
-    bool success = call_function(3, 1, "on_joypad_hat_moved");
+    push_joypad(current_l, *event.get_joypad());
+    bool success = call_function(4, 1, "on_joypad_hat_moved");
     if (!success) {
       // Something was wrong in the script: don't propagate the input to other objects.
       handled = true;
