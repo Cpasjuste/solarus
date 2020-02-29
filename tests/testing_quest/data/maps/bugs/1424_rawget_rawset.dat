@@ -16,26 +16,6 @@ destination{
   direction = 1,
 }
 
-dynamic_tile{
-  name = "tile1",
-  layer = 0,
-  x = 48,
-  y = 192,
-  width = 48,
-  height = 32,
-  pattern = "2",
-}
-
-dynamic_tile{
-  name = "tile2",
-  layer = 0,
-  x = 112,
-  y = 192,
-  width = 48,
-  height = 32,
-  pattern = "2",
-}
-
 teletransporter{
   name = "tele1",
   layer = 0,
