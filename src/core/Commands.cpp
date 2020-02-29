@@ -69,23 +69,6 @@ Commands::Commands(MainLoop &main_loop):
   customizing(false),
   command_to_customize(Command::NONE),
   customize_callback_ref() {
-
-  // Load the commands from the savegame.
-  /*for (const auto& kvp : command_names) {
-
-    Command command = kvp.first;
-    if (command == Command::NONE) {
-      continue;
-    }
-
-    // Keyboard.
-    InputEvent::KeyboardKey keyboard_key = get_saved_keyboard_binding(command);
-    keyboard_mapping[keyboard_key] = command;
-
-    // Joypad.
-    const std::string& joypad_string = get_saved_joypad_binding(command);
-    joypad_mapping[joypad_string] = command;
-  }*/
 }
 
 Commands::Commands(MainLoop& main_loop, Game& game):
@@ -111,6 +94,10 @@ Commands::Commands(MainLoop& main_loop, Game& game):
     const std::string& joypad_string = get_saved_joypad_binding(command, save);
     joypad_mapping[joypad_string] = command;
   }
+}
+
+Commands::~Commands() {
+  CommandsDispatcher::get().remove_commands(shared_from_this_cast<Commands>());
 }
 
 /**

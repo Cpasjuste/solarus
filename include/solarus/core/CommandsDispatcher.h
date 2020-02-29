@@ -14,6 +14,7 @@ class Game;
  */
 class CommandsDispatcher
 {
+  friend class Commands;
 public:
   CommandsDispatcher(MainLoop& main);
   static CommandsDispatcher& get();
@@ -23,6 +24,10 @@ public:
 private:
   static CommandsDispatcher* instance;
   using WeakCommands = std::weak_ptr<Commands>;
+
+  void add_commands(const WeakCommands& cmds);
+  void remove_commands(const WeakCommands &cmds);
+
   std::vector<WeakCommands> commands;
   MainLoop& main_loop;
 };

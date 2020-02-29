@@ -76,6 +76,8 @@ class Commands : public ExportableToLua {
     CommandsEffects& get_effects();
 
     const std::string& get_lua_type_name() const override;
+
+    ~Commands();
   private:
     // Keyboard mapping.
     void keyboard_key_pressed(InputEvent::KeyboardKey keyboard_key_pressed);

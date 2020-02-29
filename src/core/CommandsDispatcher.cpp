@@ -25,11 +25,32 @@ void CommandsDispatcher::notify_input(const InputEvent& event) {
 }
 
 CommandsPtr CommandsDispatcher::create_commands_from_game(Game& game) {
-  return std::make_shared<Commands>(main_loop, game);
+  CommandsPtr commands =  std::make_shared<Commands>(main_loop, game);
+  add_commands(commands);
+  return commands;
 }
 
 CommandsPtr CommandsDispatcher::create_commands_from_default() {
-  return std::make_shared<Commands>(main_loop);
+  CommandsPtr commands = std::make_shared<Commands>(main_loop);
+  add_commands(commands);
+  return commands;
+}
+
+void CommandsDispatcher::add_commands(const WeakCommands& cmds) {
+  commands.push_back(cmds);
+}
+
+void CommandsDispatcher::remove_commands(const WeakCommands& cmds)
+{
+  commands.erase(
+        std::remove_if(
+          commands.begin(),
+          commands.end(),
+          [&](const WeakCommands& other){
+            return other.lock() == cmds.lock();
+          }),
+        commands.end()
+        );
 }
 
 }

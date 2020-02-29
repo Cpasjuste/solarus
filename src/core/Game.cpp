@@ -277,24 +277,11 @@ bool Game::notify_input(const InputEvent& event) {
 
   if(!handled) {
     for(const MapPtr& current_map : current_maps) {
-
       if (current_map != nullptr && current_map->is_loaded()) {
-        handled = current_map->notify_input(event);
-        if (!handled) {
-          // Built-in behavior:
-          // the GameCommands object will transform the low-level input event into
-          // a high-level game command event (i.e. a command_pressed event or
-          // a command_released event).
-          commands->notify_input(event);
-        }
+        handled |= current_map->notify_input(event);
       }
     }
   }
-
-  // if none of the maps use the event, propagate to the commands
-  /*if(not handled) { //Commands do not live in the game anymore
-    commands->notify_input(event);
-  }*/
 
   return handled;
 }
