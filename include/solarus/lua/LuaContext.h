@@ -1361,7 +1361,8 @@ class LuaContext {
       state_api_set_carried_object_action,
 
       // Commands API
-      commands_api_create,
+      commands_api_create_from_keyboard,
+      commands_api_create_from_joypad,
       commands_api_is_pressed,
       commands_api_get_direction,
       commands_api_set_binding,
@@ -1370,6 +1371,7 @@ class LuaContext {
       commands_api_get_effect,
       commands_api_simulate_pressed,
       commands_api_simulate_released,
+
 
       // available to all userdata types
       userdata_meta_gc,
@@ -1532,6 +1534,7 @@ private:
     static void push_custom_entity(lua_State* current_l, CustomEntity& entity);
     static void push_joypad(lua_State* current_l, Joypad& joypad);
     static void push_commands(lua_State* current_l, Commands& commands);
+    static void push_command(lua_State* current_l, const Command& command);
     static void push_player(lua_State* current_l, Player& commands);
 
     // Getting objects from Lua.
@@ -1628,6 +1631,7 @@ private:
     static std::shared_ptr<Commands> check_commands(lua_State* current_l, int index);
     static bool is_player(lua_State* current_l, int index);
     static std::shared_ptr<Player> check_player(lua_State* current_l, int index);
+    static Command check_command(lua_State* l, int index);
 
     // Events.
     void check_callback_thread() const;

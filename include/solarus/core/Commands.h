@@ -22,9 +22,11 @@
 #include "solarus/core/InputEvent.h"
 #include "solarus/lua/ScopedLuaRef.h"
 #include "solarus/core/CommandsEffects.h"
-#include <map>
+#include <unordered_map>
 #include <set>
 #include <string>
+#include <variant>
+#include <optional>
 
 namespace Solarus {
 
@@ -48,29 +50,87 @@ class Commands : public ExportableToLua {
 
   public:
 
+    /**
+     * @brief Represent an axis binding used as a key in joypad bindings
+     */
+    struct JoypadAxisBinding {
+        enum class Direction{
+            PLUS,
+            MINUS
+        };
+
+        JoyPadAxis axis;
+        Direction  direction;
+
+        /**
+         * @brief comparison operator being forwarded by std::variant
+         * @param ib
+         * @return
+         */
+        bool operator<(const JoypadAxisBinding& ib) const {
+            return std::tie(axis, direction) < std::tie(ib.axis, ib.direction);
+        }
+    };
+
+  private:
+    /**
+     * Private joypad binding variant
+     */
+    using _JoypadBinding = std::variant<JoyPadButton, JoypadAxisBinding>;
+  public:
+
+    /**
+     * @brief JoypadBinding variant with added methods and constructors
+     */
+    struct JoypadBinding : public _JoypadBinding {
+        explicit JoypadBinding(const std::string& str);
+        JoypadBinding(JoyPadAxis axis, double value);
+        JoypadBinding(JoyPadButton button);
+        std::string to_string() const;
+
+        using _JoypadBinding::operator=;
+
+        /**
+         * @brief mandatory comparison operator to allow type to be a key in std::map
+         * @param other
+         * @return
+         */
+        inline bool operator<(const JoypadBinding& other) const {
+            return static_cast<const _JoypadBinding&>(*this) < static_cast<const _JoypadBinding&>(other);
+        }
+    };
+
     explicit Commands(MainLoop& main_loop);
     explicit Commands(MainLoop& main_loop, Game& game);
 
     InputEvent::KeyboardKey get_keyboard_binding(Command command) const;
     void set_keyboard_binding(Command command, InputEvent::KeyboardKey keyboard_key);
-    const std::string& get_joypad_binding(Command command) const;
-    void set_joypad_binding(Command command, const std::string& joypad_string);
+    std::optional<JoypadBinding> get_joypad_binding(Command command) const;
+    void set_joypad_binding(Command command, const JoypadBinding& joypad_binding);
+
+    void set_joypad(const JoypadPtr& joypad);
+    const JoypadPtr& get_joypad();
+
+    void load_default_joypad_bindings();
+    void load_default_keyboard_bindings();
 
     void notify_input(const InputEvent& event);
     bool is_command_pressed(Command command) const;
     int get_wanted_direction8() const;
 
-    void customize(Command command, const ScopedLuaRef& callback_ref);
+    void customize(const Command& command, const ScopedLuaRef& callback_ref);
     bool is_customizing() const;
     Command get_command_to_customize() const;
 
     static bool is_joypad_string_valid(const std::string& joypad_string);
-    static const std::string& get_command_name(Command command);
+    static std::string get_command_name(const Command &command);
+    static std::string get_axis_name(const CommandAxis &command);
     static Command get_command_by_name(const std::string& command_name);
+    static Command get_axis_by_name(const std::string& axis_name);
 
     // High-level resulting commands.
-    void command_pressed(Command command);
-    void command_released(Command command);
+    void command_pressed(const Command& command);
+    void command_released(const Command& command);
 
     const CommandsEffects& get_effects() const;
     CommandsEffects& get_effects();
@@ -79,10 +139,12 @@ class Commands : public ExportableToLua {
 
     ~Commands();
   private:
+
+
     // Keyboard mapping.
     void keyboard_key_pressed(InputEvent::KeyboardKey keyboard_key_pressed);
     void keyboard_key_released(InputEvent::KeyboardKey keyboard_key_released);
-    const std::string& get_keyboard_binding_savegame_variable(Command command) const;
+    std::string get_keyboard_binding_savegame_variable(const Command &command) const;
     InputEvent::KeyboardKey get_saved_keyboard_binding(Command command, const Savegame &save) const;
     void set_saved_keyboard_binding(Command command, InputEvent::KeyboardKey key, Savegame& save);
     Command get_command_from_keyboard(InputEvent::KeyboardKey key) const;
@@ -92,10 +154,10 @@ class Commands : public ExportableToLua {
     void joypad_button_released(JoyPadButton button);
     void joypad_axis_moved(JoyPadAxis axis, double direction);
     void joypad_hat_moved(int hat, int direction);
-    const std::string& get_joypad_binding_savegame_variable(Command command) const;
-    std::string get_saved_joypad_binding(Command command, const Savegame& save) const;
-    void set_saved_joypad_binding(Command command, const std::string& joypad_string, Savegame& save);
-    Command get_command_from_joypad(const std::string& joypad_string) const;
+    std::string get_joypad_binding_savegame_variable(Command command) const;
+    JoypadBinding get_saved_joypad_binding(Command command, const Savegame& save) const;
+    void set_saved_joypad_binding(Command command, const JoypadBinding &joypad_binding, Savegame& save);
+    Command get_command_from_joypad(const JoypadBinding &joypad_binding) const;
 
     void save(Savegame& savegame) const;
 
@@ -105,7 +167,7 @@ class Commands : public ExportableToLua {
     std::map<InputEvent::KeyboardKey, Command>
         keyboard_mapping;                /**< Associates each game command to the
                                           * keyboard key that triggers it. */
-    std::map<std::string, Command>
+    std::map<JoypadBinding, Command>
         joypad_mapping;                  /**< Associates each game command to the
                                           * joypad action that triggers it. */
     std::set<Command>
@@ -132,9 +194,10 @@ class Commands : public ExportableToLua {
     static const std::string
         direction_names[4];              /**< English name of each arrow direction,
                                           * used to save a joypad action as a string. */
+
+    JoypadPtr joypad;                    /** optional joypad those commands are listening to */
 };
 
 }
-
 #endif
 

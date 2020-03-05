@@ -292,9 +292,9 @@ bool Entity::State::notify_input(const InputEvent& /* event */) {
 
 void Entity::State::notify_command(const CommandEvent& event) {
   if(event.is_pressed()) {
-    notify_command_pressed(event.name);
-  } else {
-    notify_command_released(event.name);
+    notify_command_pressed(event.get_command());
+  } else if(event.is_released()){
+    notify_command_released(event.get_command());
   }
 }
 
@@ -305,41 +305,41 @@ void Entity::State::notify_command(const CommandEvent& event) {
  */
 void Entity::State::notify_command_pressed(Command command) {
 
-  switch (command) {
+  switch (CommandEvent::command_to_id(command)) {
 
     // action key
-  case Command::ACTION:
+  case CommandId::ACTION:
     notify_action_command_pressed();
     break;
 
     // sword key
-  case Command::ATTACK:
+  case CommandId::ATTACK:
     notify_attack_command_pressed();
     break;
 
     // move the entity
-  case Command::RIGHT:
+  case CommandId::RIGHT:
     notify_direction_command_pressed(0);
     break;
 
-  case Command::UP:
+  case CommandId::UP:
     notify_direction_command_pressed(1);
     break;
 
-  case Command::LEFT:
+  case CommandId::LEFT:
     notify_direction_command_pressed(2);
     break;
 
-  case Command::DOWN:
+  case CommandId::DOWN:
     notify_direction_command_pressed(3);
     break;
 
     // use an equipment item
-  case Command::ITEM_1:
+  case CommandId::ITEM_1:
     notify_item_command_pressed(1);
     break;
 
-  case Command::ITEM_2:
+  case CommandId::ITEM_2:
     notify_item_command_pressed(2);
     break;
 
@@ -355,37 +355,37 @@ void Entity::State::notify_command_pressed(Command command) {
  */
 void Entity::State::notify_command_released(Command command) {
 
-  switch (command) {
+  switch (CommandEvent::command_to_id(command)) {
 
-  case Command::ACTION:
+  case CommandId::ACTION:
     notify_action_command_released();
     break;
 
-  case Command::ATTACK:
+  case CommandId::ATTACK:
     notify_attack_command_released();
     break;
 
-  case Command::RIGHT:
+  case CommandId::RIGHT:
     notify_direction_command_released(0);
     break;
 
-  case Command::UP:
+  case CommandId::UP:
     notify_direction_command_released(1);
     break;
 
-  case Command::LEFT:
+  case CommandId::LEFT:
     notify_direction_command_released(2);
     break;
 
-  case Command::DOWN:
+  case CommandId::DOWN:
     notify_direction_command_released(3);
     break;
 
-  case Command::ITEM_1:
+  case CommandId::ITEM_1:
     notify_item_command_released(0);
     break;
 
-  case Command::ITEM_2:
+  case CommandId::ITEM_2:
     notify_item_command_released(1);
     break;
 

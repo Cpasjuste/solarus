@@ -1309,70 +1309,69 @@ int LuaContext::game_api_get_command_effect(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
 
     Game* game = savegame.get_game();
-    if (game == nullptr) {
+    if (game == nullptr || std::holds_alternative<CustomCommandId>(command)) {
       lua_pushnil(l);
     }
     else {
 
       std::string effect_name;
-      switch (command) {
+      switch (CommandEvent::command_to_id(command)) {
 
-      case Command::ACTION:
+      case CommandId::ACTION:
       {
         CommandsEffects::ActionKeyEffect effect = game->get_commands_effects().get_action_key_effect();
         effect_name = enum_to_name(effect);
         break;
       }
 
-      case Command::ATTACK:
+      case CommandId::ATTACK:
       {
         CommandsEffects::AttackKeyEffect effect = game->get_commands_effects().get_sword_key_effect();
         effect_name = enum_to_name(effect);
         break;
       }
 
-      case Command::ITEM_1:
+      case CommandId::ITEM_1:
       {
         effect_name = game->is_suspended() ? "" : "use_item_1";
         break;
       }
 
-      case Command::ITEM_2:
+      case CommandId::ITEM_2:
       {
         effect_name = game->is_suspended() ? "" : "use_item_2";
         break;
       }
 
-      case Command::PAUSE:
+      case CommandId::PAUSE:
       {
         CommandsEffects::PauseKeyEffect effect = game->get_commands_effects().get_pause_key_effect();
         effect_name = enum_to_name(effect);
         break;
       }
 
-      case Command::RIGHT:
+      case CommandId::RIGHT:
       {
         effect_name = game->is_suspended() ? "" : "move_right";
         break;
       }
 
-      case Command::UP:
+      case CommandId::UP:
       {
         effect_name = game->is_suspended() ? "" : "move_up";
         break;
       }
 
-      case Command::LEFT:
+      case CommandId::LEFT:
       {
         effect_name = game->is_suspended() ? "" : "move_left";
         break;
       }
 
-      case Command::DOWN:
+      case CommandId::DOWN:
       {
         effect_name = game->is_suspended() ? "" : "move_down";
         break;
@@ -1403,8 +1402,7 @@ int LuaContext::game_api_get_command_keyboard_binding(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
 
     Commands& commands = savegame.get_game()->get_commands();
     InputEvent::KeyboardKey key = commands.get_keyboard_binding(command);
@@ -1429,8 +1427,7 @@ int LuaContext::game_api_set_command_keyboard_binding(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
     if (lua_gettop(l) <= 2) {
       LuaTools::type_error(l, 3, "string or nil");
     }
@@ -1457,17 +1454,15 @@ int LuaContext::game_api_get_command_joypad_binding(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
 
     Commands& commands = savegame.get_game()->get_commands();
-    const std::string& joypad_string = commands.get_joypad_binding(command);
-
-    if (joypad_string.empty()) {
+    auto binding = commands.get_joypad_binding(command);
+    if (!binding) {
       lua_pushnil(l);
     }
     else {
-      push_string(l, joypad_string);
+      push_string(l, binding->to_string());
     }
     return 1;
   });
@@ -1482,8 +1477,7 @@ int LuaContext::game_api_set_command_joypad_binding(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
     if (lua_gettop(l) <= 2) {
       LuaTools::type_error(l, 3, "string or nil");
     }
@@ -1494,7 +1488,7 @@ int LuaContext::game_api_set_command_joypad_binding(lua_State* l) {
           std::string("Invalid joypad string: '") + joypad_string + "'");
     }
     Commands& commands = savegame.get_game()->get_commands();
-    commands.set_joypad_binding(command, joypad_string);
+    commands.set_joypad_binding(command, Commands::JoypadBinding(joypad_string));
 
     return 0;
   });
@@ -1509,8 +1503,7 @@ int LuaContext::game_api_capture_command_binding(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
     const ScopedLuaRef& callback_ref = LuaTools::opt_function(l, 3);
 
     Commands& commands = savegame.get_game()->get_commands();
@@ -1529,8 +1522,7 @@ int LuaContext::game_api_is_command_pressed(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
 
     Commands& commands = savegame.get_game()->get_commands();
     lua_pushboolean(l, commands.is_command_pressed(command));
@@ -1575,8 +1567,7 @@ int LuaContext::game_api_simulate_command_pressed(lua_State* l){
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
 
     savegame.get_game()->simulate_command_pressed(command);
 
@@ -1593,8 +1584,7 @@ int LuaContext::game_api_simulate_command_released(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
-    Command command = LuaTools::check_enum<Command>(
-        l, 2);
+    Command command = check_command(l, 2);
 
     savegame.get_game()->simulate_command_released(command);
 

@@ -155,8 +155,8 @@ tile{
 
 destination{
   layer = 0,
-  x = 160,
-  y = 173,
+  x = 40,
+  y = 61,
   direction = 3,
 }
 
@@ -168,5 +168,13 @@ npc{
   direction = 3,
   subtype = 1,
   sprite = "citizens/old_man",
+}
+
+destination{
+  name = "alter_destination",
+  layer = 0,
+  x = 80,
+  y = 189,
+  direction = 1,
 }
 

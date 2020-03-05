@@ -81,7 +81,7 @@ void Hero::SwordSwingingState::update() {
     if (hero.get_movement() == nullptr) {
 
       // if the player is still pressing the sword key, start loading the sword
-      if (get_commands().is_command_pressed(Command::ATTACK)
+      if (get_commands().is_command_pressed(CommandId::ATTACK)
           && !attacked) {
         hero.set_state(std::make_shared<SwordLoadingState>(hero, 1000));
       }

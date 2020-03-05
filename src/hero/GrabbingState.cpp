@@ -58,7 +58,7 @@ void Hero::GrabbingState::update() {
 
   // Release the obstacle.
   Hero& hero = get_entity();
-  if (!get_commands().is_command_pressed(Command::ACTION)) {
+  if (!get_commands().is_command_pressed(CommandId::ACTION)) {
     hero.start_free();
     return;
   }

@@ -267,7 +267,7 @@ void DialogBoxSystem::show_more_lines() {
  * \return \c true if the command was handled (that is, if the dialog box
  * is active and is the built-in one).
  */
-bool DialogBoxSystem::notify_command_pressed(Command command) {
+bool DialogBoxSystem::notify_command_pressed(CommandId command) {
 
   if (!is_enabled()) {
     return false;
@@ -278,10 +278,10 @@ bool DialogBoxSystem::notify_command_pressed(Command command) {
     return false;
   }
 
-  if (command == Command::ACTION) {
+  if (command == CommandId::ACTION) {
     show_more_lines();
   }
-  else if (command == Command::UP || command == Command::DOWN) {
+  else if (command == CommandId::UP || command == CommandId::DOWN) {
     if (is_question && !has_more_lines()) {
       // Switch the selected answer.
       selected_first_answer = !selected_first_answer;

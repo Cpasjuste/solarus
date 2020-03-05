@@ -370,7 +370,7 @@ void CustomState::notify_command_pressed(Command command) {
   // See if the state script handles the command.
 
 
-  if (command == Command::ACTION) {
+  if (command == Command(CommandId::ACTION)) {
     Hero& hero = get_entity();
     Entity* facing_entity = hero.get_facing_entity();
     bool facing_entity_interaction = false;

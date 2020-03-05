@@ -79,7 +79,7 @@ void Hero::SwordLoadingState::update() {
     return;
   }
 
-  bool attack_pressed = get_commands().is_command_pressed(Command::ATTACK);
+  bool attack_pressed = get_commands().is_command_pressed(CommandId::ATTACK);
   uint32_t now = System::now();
 
   // detect when the sword is loaded (i.e. ready for a spin attack)

@@ -4,19 +4,28 @@
 
 local game_manager = require'scripts/game_manager'
 
-sol.video.set_geometry_mode('dynamic_absolute')
+--sol.video.set_geometry_mode('dynamic_absolute')
+
+local game
 
 local function joypad_listen(jpad)
   local i = jpad:get_name()
   print("registred callbacks for", i, "rumble" , jpad:has_rumble())
   function jpad:on_button_pressed(button)
       print(i,"pressed",button)
-      if button == 'A' then
+      if button == 'a' then
         jpad:rumble(1, 200)
+      end
+      
+      if button == 'right_shoulder' then
+        game:simulate_command_pressed('custom_cmd')
       end
   end
   function jpad:on_button_released(button)
     print(i,"released",button)
+    if button == 'right_shoulder' then
+        game:simulate_command_released('custom_cmd')
+      end
   end
   function jpad:on_axis_moved(axis, val)
     print(i,axis,val)
@@ -25,6 +34,7 @@ local function joypad_listen(jpad)
     print(i,"detached")
   end
 end
+
 
 -- This function is called when Solarus starts.
 function sol.main:on_started()
@@ -36,8 +46,16 @@ function sol.main:on_started()
     joypad_listen(jpad)
   end
   
-  local game = game_manager:create('foo.sav')
+  game = game_manager:create('foo.sav')
   game:start()
+  
+  function game:on_command_pressed(cmd)
+    print("command", cmd, "pressed")
+  end
+  
+  function game:on_command_released(cmd)
+    print("command", cmd, "released")
+  end
 end
 
 function sol.input:on_joypad_connected(joypad)

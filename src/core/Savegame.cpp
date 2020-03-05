@@ -192,15 +192,15 @@ void Savegame::set_default_keyboard_controls() {
  */
 void Savegame::set_default_joypad_controls() {
 
-  set_string(KEY_JOYPAD_ACTION, "button 0");
-  set_string(KEY_JOYPAD_ATTACK, "button 1");
-  set_string(KEY_JOYPAD_ITEM_1, "button 2");
-  set_string(KEY_JOYPAD_ITEM_2, "button 3");
-  set_string(KEY_JOYPAD_PAUSE, "button 4");
-  set_string(KEY_JOYPAD_RIGHT, "axis 0 +");
-  set_string(KEY_JOYPAD_UP, "axis 1 -");
-  set_string(KEY_JOYPAD_LEFT, "axis 0 -");
-  set_string(KEY_JOYPAD_DOWN, "axis 1 +");
+  set_string(KEY_JOYPAD_ACTION, "b");
+  set_string(KEY_JOYPAD_ATTACK, "a");
+  set_string(KEY_JOYPAD_ITEM_1, "x");
+  set_string(KEY_JOYPAD_ITEM_2, "y");
+  set_string(KEY_JOYPAD_PAUSE, "start");
+  set_string(KEY_JOYPAD_RIGHT,  "left_x +");
+  set_string(KEY_JOYPAD_UP, "left_y -");
+  set_string(KEY_JOYPAD_LEFT, "left_x -");
+  set_string(KEY_JOYPAD_DOWN, "left_y +");
 }
 
 /**

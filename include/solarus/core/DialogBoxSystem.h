@@ -54,7 +54,7 @@ class DialogBoxSystem {
         const ScopedLuaRef& callback_ref
     );
     void close(const ScopedLuaRef& status_ref);
-    bool notify_command_pressed(Command command);
+    bool notify_command_pressed(CommandId command);
     const std::string& get_dialog_id() const;
 
     void draw(const SurfacePtr& dst_surface);

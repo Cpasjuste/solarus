@@ -292,10 +292,10 @@ bool Game::notify_input(const InputEvent& event) {
  */
 void Game::notify_command(const CommandEvent& command) {
 
-  bool is_pressed = command.type == CommandEvent::Type::PRESSED;
+  bool is_pressed = command.is_pressed();
   // Is a built-in dialog box being shown?
   if (is_dialog_enabled() and is_pressed) {
-    if (dialog_box.notify_command_pressed(command.name)) {
+    if (dialog_box.notify_command_pressed(command.get_command_id())) {
       return;
     }
   }
@@ -313,7 +313,7 @@ void Game::notify_command(const CommandEvent& command) {
   }
 
   // Lua scripts did not override the command: do the built-in behavior.
-  if (command.name == Command::PAUSE and command.is_pressed()) {
+  if (is_pressed and command.get_command_id() == CommandId::PAUSE) {
     if (is_paused()) {
       if (can_unpause()) {
         set_paused(false);

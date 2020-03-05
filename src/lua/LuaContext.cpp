@@ -2177,9 +2177,14 @@ bool LuaContext::on_command(const CommandEvent& event) {
   check_callback_thread();
   bool handled = false;
   if (find_method(event.event_name())) {
-    push_string(current_l, Commands::get_command_name(event.name));
+    push_string(current_l, event.get_command_or_axis_name());
+
+    if(event.is_moved()) {
+        lua_pushnumber(current_l, event.get_axis_state());
+    }
+
     push_commands(current_l, *event.emitter); //Push emmiting commands as well
-    bool success = call_function(3, 1, event.event_name());
+    bool success = call_function(event.is_moved() ? 4 : 3, 1, event.event_name());
     if (!success) {
       // Something was wrong in the script: don't propagate the command to other objects.
       handled = true;

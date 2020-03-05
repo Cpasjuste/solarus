@@ -2632,11 +2632,11 @@ void Hero::start_running() {
   // item command.
   Command command;
   if (is_free()) {
-    command = Command::ACTION;
+    command = CommandId::ACTION;
   }
   else {
-    command = get_commands()->is_command_pressed(Command::ITEM_1) ?
-        Command::ITEM_1 : Command::ITEM_2;
+    command = get_commands()->is_command_pressed(CommandId::ITEM_1) ?
+        CommandId::ITEM_1 : CommandId::ITEM_2;
   }
   set_state(std::make_shared<RunningState>(*this, command));
 }

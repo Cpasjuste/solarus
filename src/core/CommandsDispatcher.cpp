@@ -30,24 +30,37 @@ CommandsPtr CommandsDispatcher::create_commands_from_game(Game& game) {
   return commands;
 }
 
-CommandsPtr CommandsDispatcher::create_commands_from_default() {
-  CommandsPtr commands = std::make_shared<Commands>(main_loop);
-  add_commands(commands);
-  return commands;
+CommandsPtr CommandsDispatcher::create_commands_from_keyboard() {
+    CommandsPtr commands = std::make_shared<Commands>(main_loop);
+    add_commands(commands);
+
+    commands->load_default_keyboard_bindings();
+
+    return commands;
+}
+
+CommandsPtr CommandsDispatcher::create_commands_from_joypad(const JoypadPtr& joypad) {
+    CommandsPtr commands = std::make_shared<Commands>(main_loop);
+    add_commands(commands);
+
+    commands->load_default_joypad_bindings();
+    commands->set_joypad(joypad);
+
+    return commands;
 }
 
 void CommandsDispatcher::add_commands(const WeakCommands& cmds) {
   commands.push_back(cmds);
 }
 
-void CommandsDispatcher::remove_commands(const WeakCommands& cmds)
+void CommandsDispatcher::remove_commands(const Commands* cmds)
 {
   commands.erase(
         std::remove_if(
           commands.begin(),
           commands.end(),
           [&](const WeakCommands& other){
-            return other.lock() == cmds.lock();
+            return other.lock().get() == cmds;
           }),
         commands.end()
         );
