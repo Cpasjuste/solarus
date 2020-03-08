@@ -1365,8 +1365,14 @@ class LuaContext {
       commands_api_create_from_joypad,
       commands_api_is_pressed,
       commands_api_get_direction,
-      commands_api_set_binding,
-      commands_api_get_binding,
+      commands_api_set_keyboard_binding,
+      commands_api_get_keyboard_binding,
+      commands_api_set_joypad_binding,
+      commands_api_get_joypad_binding,
+      commands_api_set_joypad_axis_binding,
+      commands_api_get_joypad_axis_binding,
+      commands_api_set_keyboard_axis_binding,
+      commands_api_get_keyboard_axis_binding,
       commands_api_capture_bindings,
       commands_api_get_effect,
       commands_api_simulate_pressed,
@@ -1535,6 +1541,7 @@ private:
     static void push_joypad(lua_State* current_l, Joypad& joypad);
     static void push_commands(lua_State* current_l, Commands& commands);
     static void push_command(lua_State* current_l, const Command& command);
+    static void push_command_axis(lua_State* current_l, const CommandAxis& command_axis);
     static void push_player(lua_State* current_l, Player& commands);
 
     // Getting objects from Lua.
@@ -1632,6 +1639,8 @@ private:
     static bool is_player(lua_State* current_l, int index);
     static std::shared_ptr<Player> check_player(lua_State* current_l, int index);
     static Command check_command(lua_State* l, int index);
+    static CommandAxis check_command_axis(lua_State* l, int index);
+
 
     // Events.
     void check_callback_thread() const;

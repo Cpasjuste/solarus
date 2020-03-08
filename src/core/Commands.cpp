@@ -28,36 +28,36 @@
 namespace Solarus {
 
 const std::string Commands::direction_names[4] = {
-    "right",
-    "up",
-    "left",
-    "down"
+  "right",
+  "up",
+  "left",
+  "down"
 };
 
 const uint16_t Commands::direction_masks[4] = {
-    0x0001,
-    0x0002,
-    0x0004,
-    0x0008
+  0x0001,
+  0x0002,
+  0x0004,
+  0x0008
 };
 
 const int Commands::masks_to_directions8[] = {
-    -1,  // none: stop
-     0,  // right
-     2,  // up
-     1,  // right + up
-     4,  // left
-    -1,  // left + right: stop
-     3,  // left + up
-    -1,  // left + right + up: stop
-     6,  // down
-     7,  // down + right
-    -1,  // down + up: stop
-    -1,  // down + right + up: stop
-     5,  // down + left
-    -1,  // down + left + right: stop
-    -1,  // down + left + up: stop
-    -1,  // down + left + right + up: stop
+  -1,  // none: stop
+  0,  // right
+  2,  // up
+  1,  // right + up
+  4,  // left
+  -1,  // left + right: stop
+  3,  // left + up
+  -1,  // left + right + up: stop
+  6,  // down
+  7,  // down + right
+  -1,  // down + up: stop
+  -1,  // down + right + up: stop
+  5,  // down + left
+  -1,  // down + left + right: stop
+  -1,  // down + left + up: stop
+  -1,  // down + left + right + up: stop
 };
 
 /**
@@ -154,19 +154,19 @@ void Commands::notify_input(const InputEvent& event) {
   else if (event.is_keyboard_key_released()) {
     keyboard_key_released(event.get_keyboard_key());
   } else if(event.is_joypad_event() && event.get_joypad() == joypad) {
-      //Only handle events of the selected joypad
-      if (event.is_joypad_button_released()) {
-        joypad_button_released(event.get_joypad_button());
-      }
-      else if (event.is_joypad_button_pressed()) {
-        joypad_button_pressed(event.get_joypad_button());
-      }
-      else if (event.is_joypad_axis_moved()) {
-        joypad_axis_moved(event.get_joypad_axis(), event.get_joypad_axis_state());
-      }
-      else if (event.is_joypad_hat_moved()) {
-        joypad_hat_moved(event.get_joypad_hat(), event.get_joypad_hat_direction());
-      }
+    //Only handle events of the selected joypad
+    if (event.is_joypad_button_released()) {
+      joypad_button_released(event.get_joypad_button());
+    }
+    else if (event.is_joypad_button_pressed()) {
+      joypad_button_pressed(event.get_joypad_button());
+    }
+    else if (event.is_joypad_axis_moved()) {
+      joypad_axis_moved(event.get_joypad_axis(), event.get_joypad_axis_state());
+    }
+    else if (event.is_joypad_hat_moved()) {
+      joypad_hat_moved(event.get_joypad_hat(), event.get_joypad_hat_direction());
+    }
   }
 }
 
@@ -308,7 +308,7 @@ void Commands::joypad_axis_moved(JoyPadAxis axis, double state) {
  */
 void Commands::joypad_hat_moved(int hat, int value) {
   //TODO remove completly
-    (void)hat; (void)value;
+  (void)hat; (void)value;
 }
 
 /**
@@ -343,7 +343,7 @@ void Commands::command_released(const Command &command) {
  * \return The keyboard key mapped to this game command, or InputEvent::KEY_GameCommand::NONE
  * if the command is not mapped to a keyboard key.
  */
-InputEvent::KeyboardKey Commands::get_keyboard_binding(Command command) const {
+InputEvent::KeyboardKey Commands::get_keyboard_binding(const Command &command) const {
 
   for (const auto& kvp: keyboard_mapping) {
 
@@ -365,7 +365,7 @@ InputEvent::KeyboardKey Commands::get_keyboard_binding(Command command) const {
  * \param key The keyboard key to map to this game command, or InputEvent::KEY_NONE
  * to unmap the command.
  */
-void Commands::set_keyboard_binding(Command command, InputEvent::KeyboardKey key) {
+void Commands::set_keyboard_binding(const Command &command, InputEvent::KeyboardKey key) {
 
   InputEvent::KeyboardKey previous_key = get_keyboard_binding(command);
   Command previous_command = get_command_from_keyboard(key);
@@ -383,7 +383,7 @@ void Commands::set_keyboard_binding(Command command, InputEvent::KeyboardKey key
   }
 
   if (key != InputEvent::KeyboardKey::NONE) {
-      keyboard_mapping[key] = command;
+    keyboard_mapping[key] = command;
   }
   //set_saved_keyboard_binding(command, key);
 }
@@ -395,7 +395,7 @@ void Commands::set_keyboard_binding(Command command, InputEvent::KeyboardKey key
  * \return The joypad action mapped to this game command, or an empty string if
  * this game command is not mapped to a joypad action.
  */
-std::optional<Commands::JoypadBinding> Commands::get_joypad_binding(Command command) const {
+std::optional<Commands::JoypadBinding> Commands::get_joypad_binding(const Command &command) const {
 
   for (const auto& kvp: joypad_mapping) {
 
@@ -416,7 +416,7 @@ std::optional<Commands::JoypadBinding> Commands::get_joypad_binding(Command comm
  * \param joypad_string A string describing the joypad action to map to this
  * game command, or an empty string to unmap the command.
  */
-void Commands::set_joypad_binding(Command command, const JoypadBinding& joypad_binding) {
+void Commands::set_joypad_binding(const Command &command, const JoypadBinding& joypad_binding) {
 
   std::optional<JoypadBinding> previous_joypad_binding = get_joypad_binding(command);
   Command previous_command = get_command_from_joypad(joypad_binding);
@@ -438,6 +438,29 @@ void Commands::set_joypad_binding(Command command, const JoypadBinding& joypad_b
   //set_saved_joypad_binding(command, joypad_string);
 }
 
+std::pair<InputEvent::KeyboardKey, InputEvent::KeyboardKey> Commands::get_keyboard_axis_binding(const CommandAxis& command_axis) const {
+  InputEvent::KeyboardKey plus, minus = InputEvent::KeyboardKey::NONE;
+  for(auto [key, binding] : keyboard_axis_mapping) {
+    if(binding.axis == command_axis) {
+      (binding.direction == AxisDirection::PLUS ? plus : minus) = key;
+    }
+  }
+  return {minus, plus};
+}
+
+void Commands::set_keyboard_axis_binding(const CommandAxis& command_axis, InputEvent::KeyboardKey minus, InputEvent::KeyboardKey plus) {
+  auto [pm,pp] = get_keyboard_axis_binding(command_axis);
+  //auto previous_command = get_command_ TODO
+}
+
+JoyPadAxis Commands::get_joypad_axis_binding(const CommandAxis& command_axis) const {
+
+}
+
+void Commands::set_joypad_axis_binding(const CommandAxis& command_axis, JoyPadAxis axis) {
+
+}
+
 /**
  * \brief Returns the name of the savegame variable that stores the keyboard
  * mapping of a game command.
@@ -449,22 +472,22 @@ std::string Commands::get_keyboard_binding_savegame_variable(
     const Command& command) const {
 
   static const std::map<CommandId, std::string> savegame_variables = {
-      { CommandId::NONE, "" },
-      { CommandId::ACTION, Savegame::KEY_KEYBOARD_ACTION },
-      { CommandId::ATTACK, Savegame::KEY_KEYBOARD_ATTACK },
-      { CommandId::ITEM_1, Savegame::KEY_KEYBOARD_ITEM_1 },
-      { CommandId::ITEM_2, Savegame::KEY_KEYBOARD_ITEM_2 },
-      { CommandId::PAUSE, Savegame::KEY_KEYBOARD_PAUSE },
-      { CommandId::RIGHT, Savegame::KEY_KEYBOARD_RIGHT },
-      { CommandId::UP, Savegame::KEY_KEYBOARD_UP },
-      { CommandId::LEFT, Savegame::KEY_KEYBOARD_LEFT },
-      { CommandId::DOWN, Savegame::KEY_KEYBOARD_DOWN }
+    { CommandId::NONE, "" },
+    { CommandId::ACTION, Savegame::KEY_KEYBOARD_ACTION },
+    { CommandId::ATTACK, Savegame::KEY_KEYBOARD_ATTACK },
+    { CommandId::ITEM_1, Savegame::KEY_KEYBOARD_ITEM_1 },
+    { CommandId::ITEM_2, Savegame::KEY_KEYBOARD_ITEM_2 },
+    { CommandId::PAUSE, Savegame::KEY_KEYBOARD_PAUSE },
+    { CommandId::RIGHT, Savegame::KEY_KEYBOARD_RIGHT },
+    { CommandId::UP, Savegame::KEY_KEYBOARD_UP },
+    { CommandId::LEFT, Savegame::KEY_KEYBOARD_LEFT },
+    { CommandId::DOWN, Savegame::KEY_KEYBOARD_DOWN }
   };
 
   if(std::holds_alternative<CommandId>(command)){
-      return savegame_variables.find(std::get<CommandId>(command))->second;
+    return savegame_variables.find(std::get<CommandId>(command))->second;
   } else if (std::holds_alternative<CustomCommandId>(command)){
-      return "_command_key_" + std::get<CustomCommandId>(command).id;
+    return "_command_key_" + std::get<CustomCommandId>(command).id;
   }
 
   return "";
@@ -485,22 +508,22 @@ std::string Commands::get_joypad_binding_savegame_variable(
     Command command) const {
 
   static const std::map<CommandId, std::string> savegame_variables = {
-      { CommandId::NONE, "" },
-      { CommandId::ACTION, Savegame::KEY_JOYPAD_ACTION },
-      { CommandId::ATTACK, Savegame::KEY_JOYPAD_ATTACK },
-      { CommandId::ITEM_1, Savegame::KEY_JOYPAD_ITEM_1 },
-      { CommandId::ITEM_2, Savegame::KEY_JOYPAD_ITEM_2 },
-      { CommandId::PAUSE, Savegame::KEY_JOYPAD_PAUSE },
-      { CommandId::RIGHT, Savegame::KEY_JOYPAD_RIGHT },
-      { CommandId::UP, Savegame::KEY_JOYPAD_UP },
-      { CommandId::LEFT, Savegame::KEY_JOYPAD_LEFT },
-      { CommandId::DOWN, Savegame::KEY_JOYPAD_DOWN }
+    { CommandId::NONE, "" },
+    { CommandId::ACTION, Savegame::KEY_JOYPAD_ACTION },
+    { CommandId::ATTACK, Savegame::KEY_JOYPAD_ATTACK },
+    { CommandId::ITEM_1, Savegame::KEY_JOYPAD_ITEM_1 },
+    { CommandId::ITEM_2, Savegame::KEY_JOYPAD_ITEM_2 },
+    { CommandId::PAUSE, Savegame::KEY_JOYPAD_PAUSE },
+    { CommandId::RIGHT, Savegame::KEY_JOYPAD_RIGHT },
+    { CommandId::UP, Savegame::KEY_JOYPAD_UP },
+    { CommandId::LEFT, Savegame::KEY_JOYPAD_LEFT },
+    { CommandId::DOWN, Savegame::KEY_JOYPAD_DOWN }
   };
 
   if(std::holds_alternative<CommandId>(command)){
-      return savegame_variables.find(std::get<CommandId>(command))->second;
+    return savegame_variables.find(std::get<CommandId>(command))->second;
   } else if (std::holds_alternative<CustomCommandId>(command)){
-      return "_command_joy_" + std::get<CustomCommandId>(command).id;
+    return "_command_joy_" + std::get<CustomCommandId>(command).id;
   }
 
   return "";
@@ -578,37 +601,45 @@ void Commands::set_saved_joypad_binding(Command command, const JoypadBinding &jo
 }
 
 void Commands::set_joypad(const JoypadPtr& joypad) {
-    this->joypad = joypad;
+  this->joypad = joypad;
 }
 
 const JoypadPtr& Commands::get_joypad() {
-    return joypad;
+  return joypad;
 }
 
 void Commands::load_default_joypad_bindings() {
-    joypad_mapping[JoypadBinding(JoyPadAxis::LEFT_X, 1.f)] = CommandId::RIGHT;
-    joypad_mapping[JoypadBinding(JoyPadAxis::LEFT_X, -1.f)] = CommandId::LEFT;
-    joypad_mapping[JoypadBinding(JoyPadAxis::LEFT_Y, 1.f)] = CommandId::DOWN;
-    joypad_mapping[JoypadBinding(JoyPadAxis::LEFT_Y, -1.f)] = CommandId::UP;
+  joypad_mapping[JoypadBinding(JoyPadAxis::LEFT_X, 1.f)] = CommandId::RIGHT;
+  joypad_mapping[JoypadBinding(JoyPadAxis::LEFT_X, -1.f)] = CommandId::LEFT;
+  joypad_mapping[JoypadBinding(JoyPadAxis::LEFT_Y, 1.f)] = CommandId::DOWN;
+  joypad_mapping[JoypadBinding(JoyPadAxis::LEFT_Y, -1.f)] = CommandId::UP;
 
-    joypad_mapping[JoypadBinding(JoyPadButton::A)] = CommandId::ATTACK;
-    joypad_mapping[JoypadBinding(JoyPadButton::X)] = CommandId::ITEM_1;
-    joypad_mapping[JoypadBinding(JoyPadButton::B)] = CommandId::ACTION;
-    joypad_mapping[JoypadBinding(JoyPadButton::Y)] = CommandId::ITEM_2;
-    joypad_mapping[JoypadBinding(JoyPadButton::START)] = CommandId::PAUSE;
+  joypad_mapping[JoypadBinding(JoyPadButton::A)] = CommandId::ATTACK;
+  joypad_mapping[JoypadBinding(JoyPadButton::X)] = CommandId::ITEM_1;
+  joypad_mapping[JoypadBinding(JoyPadButton::B)] = CommandId::ACTION;
+  joypad_mapping[JoypadBinding(JoyPadButton::Y)] = CommandId::ITEM_2;
+  joypad_mapping[JoypadBinding(JoyPadButton::START)] = CommandId::PAUSE;
+
+  joypad_axis_mapping[JoyPadAxis::LEFT_X] = CommandAxisBinding{CommandAxisId::X, AxisDirection::PLUS};
+  joypad_axis_mapping[JoyPadAxis::LEFT_Y] = CommandAxisBinding{CommandAxisId::Y, AxisDirection::PLUS};
 }
 
 void Commands::load_default_keyboard_bindings() {
-    keyboard_mapping[InputEvent::KeyboardKey::UP] = CommandId::UP;
-    keyboard_mapping[InputEvent::KeyboardKey::DOWN] = CommandId::DOWN;
-    keyboard_mapping[InputEvent::KeyboardKey::LEFT] = CommandId::LEFT;
-    keyboard_mapping[InputEvent::KeyboardKey::RIGHT] = CommandId::RIGHT;
+  keyboard_mapping[InputEvent::KeyboardKey::UP] = CommandId::UP;
+  keyboard_mapping[InputEvent::KeyboardKey::DOWN] = CommandId::DOWN;
+  keyboard_mapping[InputEvent::KeyboardKey::LEFT] = CommandId::LEFT;
+  keyboard_mapping[InputEvent::KeyboardKey::RIGHT] = CommandId::RIGHT;
 
-    keyboard_mapping[InputEvent::KeyboardKey::c] = CommandId::ATTACK;
-    keyboard_mapping[InputEvent::KeyboardKey::x] = CommandId::ITEM_1;
-    keyboard_mapping[InputEvent::KeyboardKey::SPACE] = CommandId::ACTION;
-    keyboard_mapping[InputEvent::KeyboardKey::v] = CommandId::ITEM_2;
-    keyboard_mapping[InputEvent::KeyboardKey::d] = CommandId::PAUSE;
+  keyboard_mapping[InputEvent::KeyboardKey::c] = CommandId::ATTACK;
+  keyboard_mapping[InputEvent::KeyboardKey::x] = CommandId::ITEM_1;
+  keyboard_mapping[InputEvent::KeyboardKey::SPACE] = CommandId::ACTION;
+  keyboard_mapping[InputEvent::KeyboardKey::v] = CommandId::ITEM_2;
+  keyboard_mapping[InputEvent::KeyboardKey::d] = CommandId::PAUSE;
+
+  keyboard_axis_mapping[InputEvent::KeyboardKey::UP] = CommandAxisBinding{CommandAxisId::Y, AxisDirection::MINUS};
+  keyboard_axis_mapping[InputEvent::KeyboardKey::DOWN] = CommandAxisBinding{CommandAxisId::Y, AxisDirection::PLUS};
+  keyboard_axis_mapping[InputEvent::KeyboardKey::LEFT] = CommandAxisBinding{CommandAxisId::X, AxisDirection::PLUS};
+  keyboard_axis_mapping[InputEvent::KeyboardKey::RIGHT] = CommandAxisBinding{CommandAxisId::X, AxisDirection::MINUS};
 }
 
 /**
@@ -643,8 +674,8 @@ Command Commands::get_command_from_joypad(
  * finishes, or an empty ref.
  */
 void Commands::customize(const Command &command,
-    const ScopedLuaRef& callback_ref
-) {
+                         const ScopedLuaRef& callback_ref
+                         ) {
   this->customizing = true;
   this->command_to_customize = command;
   this->customize_callback_ref = callback_ref;
@@ -666,7 +697,7 @@ bool Commands::is_customizing() const {
 Command Commands::get_command_to_customize() const {
 
   Debug::check_assertion(is_customizing(),
-      "The player is not customizing a command");
+                         "The player is not customizing a command");
   return command_to_customize;
 }
 
@@ -703,14 +734,14 @@ bool Commands::is_joypad_string_valid(const std::string& /* joypad_string */) {
  * \return The name of this command, or an empty string if the command is GameCommand::NONE.
  */
 std::string Commands::get_command_name(const Command& command) {
-    return std::visit(overloaded{
-        [](const CommandId& cid) {
-            return enum_to_name(cid);
-        },
-        [](const CustomCommandId& cid){
-            return cid.id;
-        }
-    }, command);
+  return std::visit(overloaded{
+                      [](const CommandId& cid) {
+                        return enum_to_name(cid);
+                      },
+                      [](const CustomCommandId& cid){
+                        return cid.id;
+                      }
+                    }, command);
 }
 
 /**
@@ -719,14 +750,14 @@ std::string Commands::get_command_name(const Command& command) {
  * \return The name of this command, or an empty string if the command is GameCommand::NONE.
  */
 std::string Commands::get_axis_name(const CommandAxis& command) {
-    return std::visit(overloaded{
-        [](const CommandAxisId& cid) {
-            return enum_to_name(cid);
-        },
-        [](const CustomCommandId& cid){
-            return cid.id;
-        }
-    }, command);
+  return std::visit(overloaded{
+                      [](const CommandAxisId& cid) {
+                        return enum_to_name(cid);
+                      },
+                      [](const CustomCommandId& cid){
+                        return cid.id;
+                      }
+                    }, command);
 }
 
 /**
@@ -735,16 +766,22 @@ std::string Commands::get_axis_name(const CommandAxis& command) {
  * \return The corresponding game command, or GameCommand::NONE if the name is invalid.
  */
 Command Commands::get_command_by_name(
-    const std::string& command_name) {
+  const std::string& command_name) {
 
-  for (const auto& kvp : EnumInfoTraits<CommandId>::names) {
-    if (kvp.second == command_name) {
-      return kvp.first;
-    }
-  }
+  CommandId id = name_to_enum<CommandId>(command_name, CommandId::NONE);
+  return id != CommandId::NONE ? Command(id) : CustomCommandId{command_name};
+}
 
-  return CustomCommandId{command_name};
-  //return CommandId::NONE;
+/**
+ * \brief Returns a game command axis given its Lua name.
+ * \param command_name Lua name of a game axis command.
+ * \return The corresponding game command, or GameCommand::NONE if the name is invalid.
+ */
+CommandAxis Commands::get_axis_by_name(
+  const std::string& command_name) {
+
+  CommandAxisId id = name_to_enum<CommandAxisId>(command_name, CommandAxisId::NONE);
+  return id != CommandAxisId::NONE ? CommandAxis(id) : CustomCommandId{command_name};
 }
 
 /**
@@ -771,40 +808,72 @@ const std::string& Commands::get_lua_type_name() const {
   return LuaContext::commands_module_name;
 }
 
+/**
+ * @brief Parses a joypad binding from a string
+ *
+ * If the string is not a valid joypad binding, an invalid binding is constructed
+ * and can be tested with `is_invalid`.
+ * @param str a binding string
+ */
 Commands::JoypadBinding::JoypadBinding(const std::string& str) {
-    //Unserialize the binding
-    size_t spos = str.find(' ');
-    if(spos != std::string::npos) {
-        //There is a space ! Its an axis binding
-        auto axis = name_to_enum<JoyPadAxis>(str.substr(0, spos));
-        auto sdir = str[spos+1];
-        auto dir = sdir == '+' ? JoypadAxisBinding::Direction::PLUS : JoypadAxisBinding::Direction::MINUS;
-        *this = JoypadAxisBinding{axis, dir};
-    } else {
-        //Probably a button
-        *this = name_to_enum<JoyPadButton>(str);
-    }
-}
-
-Commands::JoypadBinding::JoypadBinding(JoyPadAxis axis, double value) {
-    auto dir = value > 0.f ? JoypadAxisBinding::Direction::PLUS : JoypadAxisBinding::Direction::MINUS;
+  //Unserialize the binding
+  size_t spos = str.find(' ');
+  if(spos != std::string::npos) {
+    //There is a space ! Its an axis binding
+    auto axis = name_to_enum<JoyPadAxis>(str.substr(0, spos), JoyPadAxis::INVALID);
+    auto sdir = str[spos+1];
+    auto dir = sdir == '+' ? AxisDirection::PLUS : AxisDirection::MINUS;
     *this = JoypadAxisBinding{axis, dir};
+  } else {
+    //Probably a button
+    *this = name_to_enum<JoyPadButton>(str, JoyPadButton::INVALID);
+  }
 }
 
+/**
+ * @brief Constructs a binding from an axis and axis state
+ * @param axis axis
+ * @param value state
+ */
+Commands::JoypadBinding::JoypadBinding(JoyPadAxis axis, double value) {
+  auto dir = value > 0.f ? AxisDirection::PLUS : AxisDirection::MINUS;
+  *this = JoypadAxisBinding{axis, dir};
+}
+
+/**
+ * @brief Construct a joypad button binding
+ * @param button joypad button
+ */
 Commands::JoypadBinding::JoypadBinding(JoyPadButton button) {
-    *this = button;
+  *this = button;
 }
 
+/**
+ * @brief Serializes this binding into a string representation
+ * @return serialized string
+ */
 std::string Commands::JoypadBinding::to_string() const {
-    if(std::holds_alternative<JoyPadButton>(*this)){
-        auto b = std::get<JoyPadButton>(*this);
-        return enum_to_name(b);
-    } else if(std::holds_alternative<JoypadAxisBinding>(*this)){
-        auto axis = std::get<JoypadAxisBinding>(*this);
-        auto dir = axis.direction == JoypadAxisBinding::Direction::PLUS ? " +" : " -";
-        return enum_to_name(axis.axis) + dir;
-    }
-    return "";
+  return std::visit(overloaded{
+                      [](const JoyPadButton& bt){
+                        return enum_to_name(bt);
+                      },
+                      [](const JoypadAxisBinding& ab){
+                        auto dir = ab.direction == AxisDirection::PLUS ? " +" : " -";
+                        return enum_to_name(ab.axis) + dir;
+                      }
+                    },static_cast<const _JoypadBinding&>(*this));
+}
+
+bool Commands::JoypadBinding::is_invalid() const {
+  return std::visit(overloaded{
+                      [](const JoyPadButton& button){
+                        return button == JoyPadButton::INVALID;
+                      },
+                      [](const JoypadAxisBinding& ab) {
+                        return ab.axis == JoyPadAxis::INVALID;
+                      }
+                    },
+                    static_cast<const _JoypadBinding&>(*this));
 }
 
 }

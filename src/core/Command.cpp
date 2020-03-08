@@ -17,7 +17,7 @@ namespace Solarus {
     { CommandId::DOWN, "down" }
   };
 
-  const std::string EnumInfoTraits<CommandAxisId>::pretty_name = "command";
+  const std::string EnumInfoTraits<CommandAxisId>::pretty_name = "command axis";
 
   const EnumInfo<CommandAxisId>::names_type EnumInfoTraits<CommandAxisId>::names = {
     { CommandAxisId::NONE, "" },
