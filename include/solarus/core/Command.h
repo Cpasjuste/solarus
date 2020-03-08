@@ -146,7 +146,7 @@ struct CommandEvent {
         case 1:
             return "on_command_released";
         default:
-            return "on_command_moved";
+            return "on_command_axis_moved";
     }
   }
 

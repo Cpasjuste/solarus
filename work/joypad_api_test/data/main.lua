@@ -6,6 +6,8 @@ local game_manager = require'scripts/game_manager'
 
 --sol.video.set_geometry_mode('dynamic_absolute')
 
+print("patate ?")
+
 local game
 
 local function joypad_listen(jpad)
@@ -56,6 +58,12 @@ function sol.main:on_started()
   function game:on_command_released(cmd)
     print("command", cmd, "released")
   end
+  
+  function game:on_command_axis_moved(axis, state)
+    print("command axis", axis, "state", state)
+  end
+  
+  print("prout")
 end
 
 function sol.input:on_joypad_connected(joypad)

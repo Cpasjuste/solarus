@@ -18,14 +18,20 @@ void LuaContext::register_commands_module() {
   // Methods of the commands type.
   const std::vector<luaL_Reg> methods = {
     { "is_pressed", commands_api_is_pressed},
+    { "get_axis_state", commands_api_get_axis_state},
     { "get_direction", commands_api_get_direction},
     { "set_keyboard_binding", commands_api_set_keyboard_binding},
     { "get_keyboard_binding", commands_api_get_keyboard_binding},
     { "set_joypad_binding", commands_api_set_joypad_binding},
     { "get_joypad_binding", commands_api_get_joypad_binding},
+    { "get_keyboard_axis_binding", commands_api_get_keyboard_axis_binding},
+    { "set_keyboard_axis_binding", commands_api_set_keyboard_axis_binding},
+    { "set_joypad_axis_binding", commands_api_set_joypad_axis_binding},
+    { "get_joypad_axis_binding", commands_api_get_joypad_axis_binding},
     { "capture_bindings", commands_api_capture_bindings},
     { "simulate_pressed", commands_api_simulate_pressed},
-    { "simulate_released", commands_api_simulate_released}
+    { "simulate_released", commands_api_simulate_released},
+    { "simulate_axis_moved", commands_api_simulate_axis_moved}
   };
 
   // Metamethods of the commands type
@@ -110,6 +116,21 @@ int LuaContext::commands_api_is_pressed(lua_State* l) {
     Command cmd = check_command(l, 2);
 
     lua_pushboolean(l, cmds.is_command_pressed(cmd));
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of command:get_axis_state
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_get_axis_state(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    CommandAxis cmda = check_command_axis(l, 2);
+
+    lua_pushnumber(l, cmds.get_axis_state(cmda));
     return 1;
   });
 }
@@ -232,7 +253,7 @@ int LuaContext::commands_api_set_joypad_axis_binding(lua_State* l) {
 
     JoyPadAxis axis = LuaTools::check_enum<JoyPadAxis>(l, 3);
 
-    cmds.set
+    cmds.set_joypad_axis_binding(cmd, axis);
 
     return 0;
   });
@@ -246,12 +267,12 @@ int LuaContext::commands_api_set_joypad_axis_binding(lua_State* l) {
 int LuaContext::commands_api_get_joypad_axis_binding(lua_State* l) {
   return state_boundary_handle(l, [&]{
     Commands& cmds = *check_commands(l, 1);
-    Command command = check_command(l, 2);
+    CommandAxis command = check_command_axis(l, 2);
 
-    auto binding = cmds.get_joypad_binding(command);
+    auto binding = cmds.get_joypad_axis_binding(command);
 
-    if (binding) {
-      push_string(l, binding->to_string());
+    if(binding != JoyPadAxis::INVALID) {
+      push_string(l, enum_to_name(binding));
     } else {
       lua_pushnil(l);
     }
@@ -259,8 +280,52 @@ int LuaContext::commands_api_get_joypad_axis_binding(lua_State* l) {
   });
 }
 
-commands_api_set_keyboard_axis_binding,
-commands_api_get_keyboard_axis_binding,
+/**
+ * \brief Implementation of command:set_keyboard_axis_binding
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_set_keyboard_axis_binding(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    CommandAxis cmd = check_command_axis(l, 2);
+
+    InputEvent::KeyboardKey mkey = LuaTools::check_enum<InputEvent::KeyboardKey>(l, 3);
+    InputEvent::KeyboardKey pkey = LuaTools::check_enum<InputEvent::KeyboardKey>(l,4);
+
+    cmds.set_keyboard_axis_binding(cmd, mkey, pkey);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of commands:get_keyboard_axis_binding
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_get_keyboard_axis_binding(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    CommandAxis command = check_command_axis(l, 2);
+
+    auto [mkey, pkey] = cmds.get_keyboard_axis_binding(command);
+
+    if(mkey != InputEvent::KeyboardKey::NONE){
+      push_string(l, enum_to_name(mkey));
+    } else {
+      lua_pushnil(l);
+    }
+
+    if(pkey != InputEvent::KeyboardKey::NONE) {
+      push_string(l, enum_to_name(pkey));
+    } else {
+      lua_pushnil(l);
+    }
+
+    return 2;
+  });
+}
 
 /**
  * \brief Implementation of commands:capture_bindings
@@ -308,6 +373,24 @@ int LuaContext::commands_api_simulate_released(lua_State* l) {
     return 0;
   });
 }
+
+/**
+ * \brief Implementation of commands:simulate_axis_moved.
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_simulate_axis_moved(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+    Commands& cmds = *check_commands(l, 1);
+    CommandAxis command = check_command_axis(l, 2);
+    double state = LuaTools::check_number(l, 3);
+
+    cmds.command_axis_moved(command, state);
+    return 0;
+  });
+}
+
+
 
 /**
  * @brief Push a command, custom or not, on the lua stack

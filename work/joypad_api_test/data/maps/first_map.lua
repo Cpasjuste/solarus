@@ -10,6 +10,9 @@
 local map = ...
 local game = map:get_game()
 
+
+print("caca ?")
+
 -- Event called at initialization time, as soon as this map becomes is loaded.
 function map:on_started()
   -- get the first joypad
@@ -32,6 +35,11 @@ function map:on_started()
   
   -- override hero's commands with the joypad one
   alter_hero:set_commands(alter_commands)
+  
+  alter_commands:set_joypad_axis_binding('look_x', 'right_x')
+  alter_commands:set_keyboard_axis_binding('X', 'h', 'l')
+  alter_commands:simulate_axis_moved('test', 0.5)
+  print("test axis", alter_commands:get_axis_state('test'))
 end
 
 -- Event called after the opening transition effect of the map,

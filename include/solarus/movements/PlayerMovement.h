@@ -49,10 +49,12 @@ class PlayerMovement: public StraightMovement {
     void set_wanted_direction();
 
     int moving_speed;        /**< Speed of the entity when it is moving. */
-    int direction8;          /**< Current direction of the movement (0 to 7),
+    /*int direction8;         * Current direction of the movement (0 to 7),
                               * as defined by the directional commands
                               * currently pressed by the player (when the
                               * movement allows them) or -1. */
+    double intensity;        /**< Intensity of the polar coords given by the commands*/
+    double angle;            /**< Angle of the polar coords given by the commands*/
     bool blocked_by_stream;  /**< Whether on a blocking stream. */
 
     CommandsPtr commands;     /**< Commands controlling this player movement. */

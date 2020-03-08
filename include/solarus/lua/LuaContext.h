@@ -1364,6 +1364,7 @@ class LuaContext {
       commands_api_create_from_keyboard,
       commands_api_create_from_joypad,
       commands_api_is_pressed,
+      commands_api_get_axis_state,
       commands_api_get_direction,
       commands_api_set_keyboard_binding,
       commands_api_get_keyboard_binding,
@@ -1377,6 +1378,7 @@ class LuaContext {
       commands_api_get_effect,
       commands_api_simulate_pressed,
       commands_api_simulate_released,
+      commands_api_simulate_axis_moved,
 
 
       // available to all userdata types

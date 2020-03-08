@@ -44,7 +44,7 @@ std::map<SDL_JoystickID,
   JoypadPtr> InputEvent::joypads;
 // Default the axis states to centered
 
-int InputEvent::joypad_deadzone = 10000;
+int InputEvent::joypad_deadzone = 500;
 std::set<Uint8> InputEvent::jbuttons_pressed;
 std::set<Uint8> InputEvent::quit_combo;
 
@@ -1045,13 +1045,13 @@ double InputEvent::get_joypad_axis_state() const {
     return 0;
   }
 
-  int result;
-  int value = internal_event.jaxis.value;
+  double result;
+  int value = internal_event.caxis.value;
   if (std::abs(value) < joypad_deadzone) {
-    result = 0;
+    result = 0.0;
   }
   else {
-    result = (value > 0) ? 1 : -1;
+    result = value > 0 ? double(value) / 32767 : double(value) / 32768;
   }
 
   return result;
