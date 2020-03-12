@@ -8,6 +8,8 @@ local game_manager = require'scripts/game_manager'
 
 print("patate ?")
 
+sol.commands.set_analog_commands_enabled(true)
+
 local game
 
 local function joypad_listen(jpad)

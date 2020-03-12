@@ -27,6 +27,8 @@
 
 namespace Solarus {
 
+bool Commands::analog_commands_enabled = false;
+
 const std::string Commands::direction_names[4] = {
   "right",
   "up",
@@ -59,6 +61,7 @@ const int Commands::masks_to_directions8[] = {
   -1,  // down + left + up: stop
   -1,  // down + left + right + up: stop
 };
+
 
 /**
  * \brief Default binding Constructor.
@@ -136,27 +139,62 @@ double Commands::get_axis_state(const CommandAxis &axis) const {
  * or if the combination of directional command is not a valid direction.
  */
 int Commands::get_wanted_direction8() const {
-
   uint16_t direction_mask = 0x0000;
-  if (is_command_pressed(CommandId::RIGHT)) {
-    direction_mask |= direction_masks[0];
-  }
-  if (is_command_pressed(CommandId::UP)) {
-    direction_mask |= direction_masks[1];
-  }
-  if (is_command_pressed(CommandId::LEFT)) {
-    direction_mask |= direction_masks[2];
-  }
-  if (is_command_pressed(CommandId::DOWN)) {
-    direction_mask |= direction_masks[3];
+
+  if(are_analog_commands_enabled()) {
+    double x = get_axis_state(CommandAxisId::X);
+    double y = get_axis_state(CommandAxisId::Y);
+
+    if(x > 0) {
+      direction_mask |= direction_masks[0];
+    }
+    if (y < 0) {
+      direction_mask |= direction_masks[1];
+    }
+    if (x < 0) {
+      direction_mask |= direction_masks[2];
+    }
+    if (y > 0) {
+      direction_mask |= direction_masks[3];
+    }
+  } else {
+    if (is_command_pressed(CommandId::RIGHT)) {
+      direction_mask |= direction_masks[0];
+    }
+    if (is_command_pressed(CommandId::UP)) {
+      direction_mask |= direction_masks[1];
+    }
+    if (is_command_pressed(CommandId::LEFT)) {
+      direction_mask |= direction_masks[2];
+    }
+    if (is_command_pressed(CommandId::DOWN)) {
+      direction_mask |= direction_masks[3];
+    }
   }
 
   return masks_to_directions8[direction_mask];
 }
 
 std::pair<double, double> Commands::get_wanted_polar() const {
-  double x = get_axis_state(CommandAxisId::X);
-  double y = get_axis_state(CommandAxisId::Y);
+  double x = 0.0;
+  double y = 0.0;
+  if(are_analog_commands_enabled()) {
+    x = get_axis_state(CommandAxisId::X);
+    y = get_axis_state(CommandAxisId::Y);
+  } else {
+    if (is_command_pressed(CommandId::RIGHT)) {
+      x += 1.0;
+    }
+    if (is_command_pressed(CommandId::UP)) {
+      y -= 1.0;
+    }
+    if (is_command_pressed(CommandId::LEFT)) {
+      x -= 1.0;
+    }
+    if (is_command_pressed(CommandId::DOWN)) {
+      y += 1.0;
+    }
+  }
   double angle = atan2(-y, x);
   double norm = std::min(sqrt(x*x+y*y), 1.0); //Clamp the norm to 1
   return {norm, angle};
@@ -913,6 +951,14 @@ void Commands::set_joypad_axis_binding(const CommandAxis& command_axis, JoyPadAx
 
     CommandAxisId id = name_to_enum<CommandAxisId>(command_name, CommandAxisId::NONE);
     return id != CommandAxisId::NONE ? CommandAxis(id) : CustomCommandId{command_name};
+  }
+
+  void Commands::set_analog_commands_enabled(bool enabled) {
+    analog_commands_enabled = enabled;
+  }
+
+  bool Commands::are_analog_commands_enabled() {
+    return analog_commands_enabled;
   }
 
   /**

@@ -1363,6 +1363,8 @@ class LuaContext {
       // Commands API
       commands_api_create_from_keyboard,
       commands_api_create_from_joypad,
+      commands_api_set_analog_commands_enabled,
+      commands_api_are_analog_commands_enabled,
       commands_api_is_pressed,
       commands_api_get_axis_state,
       commands_api_get_direction,

@@ -12,7 +12,9 @@ void LuaContext::register_commands_module() {
   // Functions of sol.commands
   const std::vector<luaL_Reg> functions = {
     { "create_from_keyboard", commands_api_create_from_keyboard},
-    { "create_from_joypad", commands_api_create_from_joypad}
+    { "create_from_joypad", commands_api_create_from_joypad},
+    { "set_analog_commands_enabled", commands_api_set_analog_commands_enabled},
+    { "are_analog_commands_enabled", commands_api_are_analog_commands_enabled}
   };
 
   // Methods of the commands type.
@@ -101,6 +103,32 @@ int LuaContext::commands_api_create_from_joypad(lua_State* l) {
     CommandsPtr cmds = CommandsDispatcher::get().create_commands_from_joypad(joypad);
 
     push_commands(l, *cmds);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.commands.set_analog_commands_enabled().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_set_analog_commands_enabled(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+    bool enabled = LuaTools::check_boolean(l, 1);
+    Commands::set_analog_commands_enabled(enabled);
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of sol.commands.get_analog_commands_enabled().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::commands_api_are_analog_commands_enabled(lua_State* l) {
+  return state_boundary_handle(l, [&]{
+    bool enabled = Commands::are_analog_commands_enabled();
+    lua_pushboolean(l, enabled);
     return 1;
   });
 }

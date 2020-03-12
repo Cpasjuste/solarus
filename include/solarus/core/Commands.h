@@ -147,6 +147,9 @@ class Commands : public ExportableToLua {
     static Command get_command_by_name(const std::string& command_name);
     static CommandAxis get_axis_by_name(const std::string& axis_name);
 
+    static void set_analog_commands_enabled(bool enabled);
+    static bool are_analog_commands_enabled();
+
     // High-level resulting commands.
     void command_pressed(const Command& command);
     void command_released(const Command& command);
@@ -159,7 +162,7 @@ class Commands : public ExportableToLua {
 
     ~Commands();
   private:
-
+    static bool analog_commands_enabled;
 
     // Keyboard mapping.
     void keyboard_key_pressed(InputEvent::KeyboardKey keyboard_key_pressed);
