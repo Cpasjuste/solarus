@@ -20,7 +20,6 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/CommandsEffects.h"
 #include "solarus/core/DialogBoxSystem.h"
-#include "solarus/core/GameCommand.h"
 #include "solarus/core/Commands.h"
 #include "solarus/core/Point.h"
 #include "solarus/entities/CameraPtr.h"
