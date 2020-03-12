@@ -529,7 +529,7 @@ void Commands::set_joypad_binding(const Command &command, const JoypadBinding& j
  * @return two key for minus and plus moves
  */
 std::pair<InputEvent::KeyboardKey, InputEvent::KeyboardKey> Commands::get_keyboard_axis_binding(const CommandAxis& command_axis) const {
-  InputEvent::KeyboardKey plus, minus = InputEvent::KeyboardKey::NONE;
+  InputEvent::KeyboardKey plus = InputEvent::KeyboardKey::NONE, minus = InputEvent::KeyboardKey::NONE;
   for(const auto& [key, binding] : keyboard_axis_mapping) {
     if(binding.axis == command_axis) {
       (binding.direction == AxisDirection::PLUS ? plus : minus) = key;
