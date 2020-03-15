@@ -62,12 +62,12 @@ Game::Game(MainLoop& main_loop, const SavegamePtr& savegame):
   savegame->set_game(this);
 
   // initialize members
-  commands = CommandsDispatcher::get().create_commands_from_game(*this); //TODO differentiate commands from hero to hero
+  controls = CommandsDispatcher::get().create_commands_from_game(*this); //TODO differentiate commands from hero to hero
 
   default_hero = std::make_shared<Hero>(savegame->get_default_equipment(), "hero");
   CameraPtr default_camera = create_camera("main_camera");
 
-  default_hero->set_commands(commands);
+  default_hero->set_controls(controls);
   default_hero->start_free();
   default_hero->set_linked_camera(default_camera);
 
@@ -199,16 +199,16 @@ const HeroPtr& Game::get_hero() const {
  * \brief Returns the game commands mapped to the keyboard and the joypad.
  * \return The game commands.
  */
-Commands& Game::get_commands() {
-  return *commands;
+Controls& Game::get_controls() {
+  return *controls;
 }
 
 /**
  * \brief Returns the game commands mapped to the keyboard and the joypad.
  * \return The game commands.
  */
-const Commands& Game::get_commands() const {
-  return *commands;
+const Controls& Game::get_controls() const {
+  return *controls;
 }
 
 /**
@@ -216,7 +216,7 @@ const Commands& Game::get_commands() const {
  * \return the current effect of the main keys
  */
 CommandsEffects& Game::get_commands_effects() {
-  return get_commands().get_effects();
+  return get_controls().get_effects();
 }
 
 /**
@@ -290,30 +290,30 @@ bool Game::notify_input(const InputEvent& event) {
  * \brief This function is called when a game commend event is raised.
  * \param command A game command.
  */
-void Game::notify_command(const CommandEvent& command) {
+void Game::notify_control(const ControlEvent& event) {
 
-  bool is_pressed = command.is_pressed();
+  bool is_pressed = event.is_pressed();
   // Is a built-in dialog box being shown?
   if (is_dialog_enabled() and is_pressed) {
-    if (dialog_box.notify_command_pressed(command.get_command_id())) {
+    if (dialog_box.notify_command_pressed(event.get_command_id())) {
       return;
     }
   }
 
   // See if the game script handles the command.
-  if (get_lua_context().game_on_command(*this, command)) {
+  if (get_lua_context().game_on_control(*this, event)) {
     return;
   }
 
   // See if the map scripts handled the command.
   for(const MapPtr& map : current_maps) {
-    if(map->notify_command(command)) {
+    if(map->notify_control(event)) {
       return;
     }
   }
 
   // Lua scripts did not override the command: do the built-in behavior.
-  if (is_pressed and command.get_command_id() == CommandId::PAUSE) {
+  if (is_pressed and event.get_command_id() == CommandId::PAUSE) {
     if (is_paused()) {
       if (can_unpause()) {
         set_paused(false);
@@ -1225,7 +1225,7 @@ void Game::stop_game_over() {
  * \param command The command to simulate.
  */
 void Game::simulate_command_pressed(Command command){
-  commands->command_pressed(command);
+  controls->command_pressed(command);
 }
 
 /**
@@ -1233,7 +1233,7 @@ void Game::simulate_command_pressed(Command command){
  * \param command The command to simulate.
  */
 void Game::simulate_command_released(Command command){
-  commands->command_released(command);
+  controls->command_released(command);
 }
 
 bool Game::CameraTeleportation::is_finished() const {

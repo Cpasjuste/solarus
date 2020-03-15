@@ -96,7 +96,7 @@ class SOLARUS_API Map: public ExportableToLua {
 
     //Events
     void notify_opening_transition_finished(const std::string &destination_name, const HeroPtr &opt_hero);
-    bool notify_command(const CommandEvent& command);
+    bool notify_control(const ControlEvent& event);
 
     // entities
     Entities& get_entities();

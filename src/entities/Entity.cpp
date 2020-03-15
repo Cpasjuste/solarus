@@ -263,7 +263,7 @@ bool Entity::can_be_drawn() const {
 /**
  * @brief Notify this entity that a command event happend
  */
-bool Entity::notify_command(const CommandEvent& /*event*/) {
+bool Entity::notify_control(const ControlEvent& /*event*/) {
   return false;
 }
 

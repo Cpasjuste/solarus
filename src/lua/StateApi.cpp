@@ -1663,7 +1663,7 @@ bool LuaContext::state_on_input(CustomState& state, const InputEvent& event) {
  * \param command The command pressed.
  * \return \c true if the event was handled and should stop being propagated.
  */
-bool LuaContext::state_on_command(CustomState& state, const CommandEvent& event) {
+bool LuaContext::state_on_command(CustomState& state, const ControlEvent& event) {
 
   bool handled = false;
   push_state(current_l, state);

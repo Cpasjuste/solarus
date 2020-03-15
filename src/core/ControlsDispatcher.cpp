@@ -1,6 +1,6 @@
-#include "solarus/core/CommandsDispatcher.h"
+#include "solarus/core/ControlsDispatcher.h"
 
-#include "solarus/core/Commands.h"
+#include "solarus/core/Controls.h"
 
 namespace Solarus {
 
@@ -19,19 +19,19 @@ CommandsDispatcher& CommandsDispatcher::get() {
 
 void CommandsDispatcher::notify_input(const InputEvent& event) {
   for(const WeakCommands& wptr : commands) {
-    CommandsPtr ptr = wptr.lock();
+    ControlsPtr ptr = wptr.lock();
     ptr->notify_input(event);
   }
 }
 
-CommandsPtr CommandsDispatcher::create_commands_from_game(Game& game) {
-  CommandsPtr commands =  std::make_shared<Commands>(main_loop, game);
+ControlsPtr CommandsDispatcher::create_commands_from_game(Game& game) {
+  ControlsPtr commands =  std::make_shared<Controls>(main_loop, game);
   add_commands(commands);
   return commands;
 }
 
-CommandsPtr CommandsDispatcher::create_commands_from_keyboard() {
-    CommandsPtr commands = std::make_shared<Commands>(main_loop);
+ControlsPtr CommandsDispatcher::create_commands_from_keyboard() {
+    ControlsPtr commands = std::make_shared<Controls>(main_loop);
     add_commands(commands);
 
     commands->load_default_keyboard_bindings();
@@ -39,8 +39,8 @@ CommandsPtr CommandsDispatcher::create_commands_from_keyboard() {
     return commands;
 }
 
-CommandsPtr CommandsDispatcher::create_commands_from_joypad(const JoypadPtr& joypad) {
-    CommandsPtr commands = std::make_shared<Commands>(main_loop);
+ControlsPtr CommandsDispatcher::create_commands_from_joypad(const JoypadPtr& joypad) {
+    ControlsPtr commands = std::make_shared<Controls>(main_loop);
     add_commands(commands);
 
     commands->load_default_joypad_bindings();
@@ -53,7 +53,7 @@ void CommandsDispatcher::add_commands(const WeakCommands& cmds) {
   commands.push_back(cmds);
 }
 
-void CommandsDispatcher::remove_commands(const Commands* cmds)
+void CommandsDispatcher::remove_commands(const Controls* cmds)
 {
   commands.erase(
         std::remove_if(

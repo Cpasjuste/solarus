@@ -16,7 +16,7 @@
  */
 #include "solarus/core/Equipment.h"
 #include "solarus/core/Game.h"
-#include "solarus/core/Commands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/hero/GrabbingState.h"
 #include "solarus/hero/HeroSprites.h"
 

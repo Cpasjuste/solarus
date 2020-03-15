@@ -474,14 +474,14 @@ bool Hero::notify_input(const InputEvent& event) {
 /**
  * @copydoc Entity::notify_command
  */
-bool Hero::notify_command(const CommandEvent& event) {
+bool Hero::notify_control(const ControlEvent& event) {
 
   //TODO filter events that aren't for this hero
-  if(!event.is_from(commands)) {
+  if(!event.is_from(controls)) {
     return false; //Don't handle events not destined to this hero
   }
 
-  get_state()->notify_command(event);
+  get_state()->notify_control(event);
 
   return true; // TODO verify this
 }
@@ -2635,7 +2635,7 @@ void Hero::start_running() {
     command = CommandId::ACTION;
   }
   else {
-    command = get_commands()->is_command_pressed(CommandId::ITEM_1) ?
+    command = get_controls()->is_command_pressed(CommandId::ITEM_1) ?
         CommandId::ITEM_1 : CommandId::ITEM_2;
   }
   set_state(std::make_shared<RunningState>(*this, command));
@@ -2975,8 +2975,8 @@ void Hero::start_custom_state(const std::shared_ptr<CustomState>& custom_state) 
  * @brief Gets commands controlling this hero
  * @return
  */
-const CommandsPtr& Hero::get_commands() const {
-  return commands;
+const ControlsPtr& Hero::get_controls() const {
+  return controls;
 }
 
 /**
@@ -2984,7 +2984,7 @@ const CommandsPtr& Hero::get_commands() const {
  * @return
  */
 const CommandsEffects& Hero::get_commands_effects() const {
-  return commands->get_effects();
+  return controls->get_effects();
 }
 
 /**
@@ -2992,15 +2992,15 @@ const CommandsEffects& Hero::get_commands_effects() const {
  * @return
  */
 CommandsEffects& Hero::get_commands_effects() {
-  return commands->get_effects();
+  return controls->get_effects();
 }
 
 /**
  * @brief Hero::set_commands
  * @param commands
  */
-void Hero::set_commands(const CommandsPtr& commands) {
-  this->commands = commands;
+void Hero::set_controls(const ControlsPtr& controls) {
+  this->controls = controls;
 }
 
 /**

@@ -20,7 +20,7 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/CommandsEffects.h"
 #include "solarus/core/DialogBoxSystem.h"
-#include "solarus/core/Commands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/core/Point.h"
 #include "solarus/entities/CameraPtr.h"
 #include "solarus/entities/HeroPtr.h"
@@ -38,7 +38,7 @@ namespace Solarus {
 
 class CommandsEffects;
 class Equipment;
-class Commands;
+class Controls;
 class InputEvent;
 class LuaContext;
 class MainLoop;
@@ -70,8 +70,8 @@ class SOLARUS_API Game {
     LuaContext& get_lua_context();
     ResourceProvider& get_resource_provider();
     const HeroPtr& get_hero() const;
-    Commands& get_commands();
-    const Commands& get_commands() const;
+    Controls& get_controls();
+    const Controls& get_controls() const;
     CommandsEffects& get_commands_effects();
     Savegame& get_savegame();
     const Savegame& get_savegame() const;
@@ -86,7 +86,7 @@ class SOLARUS_API Game {
     void notify_window_size_changed(const Size& size);
 
     // game controls
-    void notify_command(const CommandEvent& command);
+    void notify_control(const ControlEvent& event);
     //void notify_command_released(Command command);
 
     // simulate commands
@@ -199,8 +199,8 @@ private:
     bool restarting;           /**< true if the game will be restarted */
 
     // controls
-    CommandsPtr
-        commands;              /**< this object receives the keyboard and joypad events */
+    ControlsPtr
+        controls;              /**< this object receives the keyboard and joypad events */
 
 
     // map

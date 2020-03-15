@@ -22,7 +22,7 @@
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/Ground.h"
 #include "solarus/hero/HeroSprites.h"
-#include "solarus/core/CommandsPtr.h"
+#include "solarus/core/ControlsPtr.h"
 #include "solarus/entities/CameraPtr.h"
 #include "solarus/core/Equipment.h"
 #include "solarus/core/SavegamePtr.h"
@@ -75,7 +75,7 @@ class Hero: public Entity {
     void built_in_draw(Camera& camera) override;
     void set_suspended(bool suspended) override;
     bool notify_input(const InputEvent& event);
-    bool notify_command(const CommandEvent& event) override;
+    bool notify_control(const ControlEvent& event) override;
 
     /**
      * \name Sprites.
@@ -315,11 +315,11 @@ class Hero: public Entity {
     void start_state_from_ground();
     void start_custom_state(const std::shared_ptr<CustomState>& custom_state);
 
-    const CommandsPtr &get_commands() const;
+    const ControlsPtr &get_controls() const;
     const CommandsEffects& get_commands_effects() const;
     CommandsEffects& get_commands_effects();
 
-    void set_commands(const CommandsPtr& commands);
+    void set_controls(const ControlsPtr& controls);
 
 
     Equipment& get_equipment();
@@ -413,7 +413,7 @@ class Hero: public Entity {
     int ice_movement_direction8;           /**< wanted movement direction a while ago */
     Point ground_dxy;                      /**< additional movement with special ground (hole or ice) */
 
-    CommandsPtr commands;                  /**< Commands controlling this hero */
+    ControlsPtr controls;                  /**< Controls controlling this hero */
     CameraPtr linked_camera;               /**< Camera linked with this hero */
 
     EquipmentPtr equipment;                /**< Equipement of this hero */

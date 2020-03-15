@@ -19,7 +19,7 @@ function map:on_started()
   local joypad = sol.input.get_joypads()[1]
   
   -- create default bindings from the joypad
-  local alter_commands = sol.commands.create_from_joypad(joypad)
+  local alter_commands = sol.controls.create_from_joypad(joypad)
   --local alter_commands = sol.commands.create_from_keyboard()
   
   --create an other hero on a destination

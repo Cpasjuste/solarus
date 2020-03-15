@@ -55,7 +55,7 @@ class EquipmentItem;
 class Explosion;
 class Fire;
 class Game;
-class Commands;
+class Controls;
 class Hero;
 class Jumper;
 class LuaContext;
@@ -117,7 +117,7 @@ class SOLARUS_API Entity: public ExportableToLua {
     virtual bool can_be_drawn() const;
     virtual bool is_drawn_at_its_position() const;
 
-    virtual bool notify_command(const CommandEvent& event);
+    virtual bool notify_control(const ControlEvent& event);
 
     /*virtual void notify_command_pressed(Command command);
     virtual void notify_command_released(Command command);*/

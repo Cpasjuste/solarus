@@ -83,8 +83,8 @@ function map:on_started()
   
   alter_hero.is_alter = true
   
-  commands = game:get_commands()
-  alter_commands = alter_hero:get_commands()
+  commands = game:get_controls()
+  alter_commands = alter_hero:get_controls()
   alter_hero:set_ability("sword", 1)
   
   game:set_ability('sword', 1)
@@ -121,7 +121,7 @@ end
 function corner_sensor:on_activated(ahero)
   if not ahero.is_alter then return end
   
-  alter_commands = ahero:get_commands()
+  alter_commands = ahero:get_controls()
   
   alter_commands:simulate_released('right')
   alter_commands:simulate_pressed('down')

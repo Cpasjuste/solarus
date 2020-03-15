@@ -46,7 +46,7 @@ class Game;
  * The corresponding low-level input event can be a keyboard event or a
  * joypad event.
  */
-class Commands : public ExportableToLua {
+class Controls : public ExportableToLua {
 
   public:
 
@@ -77,8 +77,8 @@ class Commands : public ExportableToLua {
     /**
      * @brief A command axis binding
      */
-    struct CommandAxisBinding{
-      CommandAxis axis = CommandAxisId::NONE;
+    struct ControlAxisBinding{
+      Axis axis = AxisId::NONE;
       AxisDirection direction = AxisDirection::PLUS;
     };
 
@@ -112,18 +112,18 @@ class Commands : public ExportableToLua {
         }
     };
 
-    explicit Commands(MainLoop& main_loop);
-    explicit Commands(MainLoop& main_loop, Game& game);
+    explicit Controls(MainLoop& main_loop);
+    explicit Controls(MainLoop& main_loop, Game& game);
 
     InputEvent::KeyboardKey get_keyboard_binding(const Command& command) const;
     void set_keyboard_binding(const Command& command, InputEvent::KeyboardKey keyboard_key);
     std::optional<JoypadBinding> get_joypad_binding(const Command& command) const;
     void set_joypad_binding(const Command& command, const JoypadBinding& joypad_binding);
 
-    std::pair<InputEvent::KeyboardKey, InputEvent::KeyboardKey> get_keyboard_axis_binding(const CommandAxis& command_axis) const;
-    void set_keyboard_axis_binding(const CommandAxis& command_axis, InputEvent::KeyboardKey minus, InputEvent::KeyboardKey plus);
-    JoyPadAxis get_joypad_axis_binding(const CommandAxis& command_axis) const;
-    void set_joypad_axis_binding(const CommandAxis& command_axis, JoyPadAxis axis);
+    std::pair<InputEvent::KeyboardKey, InputEvent::KeyboardKey> get_keyboard_axis_binding(const Axis& command_axis) const;
+    void set_keyboard_axis_binding(const Axis& command_axis, InputEvent::KeyboardKey minus, InputEvent::KeyboardKey plus);
+    JoyPadAxis get_joypad_axis_binding(const Axis& command_axis) const;
+    void set_joypad_axis_binding(const Axis& command_axis, JoyPadAxis axis);
 
     void set_joypad(const JoypadPtr& joypad);
     const JoypadPtr& get_joypad();
@@ -133,7 +133,7 @@ class Commands : public ExportableToLua {
 
     void notify_input(const InputEvent& event);
     bool is_command_pressed(const Command& command) const;
-    double get_axis_state(const CommandAxis& axis) const;
+    double get_axis_state(const Axis& axis) const;
     int get_wanted_direction8() const;
     std::pair<double, double> get_wanted_polar() const;
 
@@ -143,9 +143,9 @@ class Commands : public ExportableToLua {
 
     static bool is_joypad_string_valid(const std::string& joypad_string);
     static std::string get_command_name(const Command &command);
-    static std::string get_axis_name(const CommandAxis &command);
+    static std::string get_axis_name(const Axis &command);
     static Command get_command_by_name(const std::string& command_name);
-    static CommandAxis get_axis_by_name(const std::string& axis_name);
+    static Axis get_axis_by_name(const std::string& axis_name);
 
     static void set_analog_commands_enabled(bool enabled);
     static bool are_analog_commands_enabled();
@@ -153,14 +153,14 @@ class Commands : public ExportableToLua {
     // High-level resulting commands.
     void command_pressed(const Command& command);
     void command_released(const Command& command);
-    void command_axis_moved(const CommandAxis& axis, double state);
+    void command_axis_moved(const Axis& axis, double state);
 
     const CommandsEffects& get_effects() const;
     CommandsEffects& get_effects();
 
     const std::string& get_lua_type_name() const override;
 
-    ~Commands();
+    ~Controls();
   private:
     static bool analog_commands_enabled;
 
@@ -171,7 +171,7 @@ class Commands : public ExportableToLua {
     InputEvent::KeyboardKey get_saved_keyboard_binding(Command command, const Savegame &save) const;
     void set_saved_keyboard_binding(Command command, InputEvent::KeyboardKey key, Savegame& save);
     Command get_command_from_keyboard(InputEvent::KeyboardKey key) const;
-    CommandAxisBinding get_axis_from_keyboard(InputEvent::KeyboardKey key) const;
+    ControlAxisBinding get_axis_from_keyboard(InputEvent::KeyboardKey key) const;
 
     // Joypad mapping.
     void joypad_button_pressed(JoyPadButton button);
@@ -182,7 +182,7 @@ class Commands : public ExportableToLua {
     JoypadBinding get_saved_joypad_binding(Command command, const Savegame& save) const;
     void set_saved_joypad_binding(Command command, const JoypadBinding &joypad_binding, Savegame& save);
     Command get_command_from_joypad(const JoypadBinding &joypad_binding) const;
-    CommandAxisBinding get_axis_from_joypad(JoyPadAxis joypad_axis) const;
+    ControlAxisBinding get_axis_from_joypad(JoyPadAxis joypad_axis) const;
 
     void save(Savegame& savegame) const;
 
@@ -195,16 +195,16 @@ class Commands : public ExportableToLua {
     std::map<JoypadBinding, Command>
         joypad_mapping;                  /**< Associates each game command to the
                                           * joypad action that triggers it. */
-    std::map<JoyPadAxis, CommandAxisBinding>
+    std::map<JoyPadAxis, ControlAxisBinding>
         joypad_axis_mapping;             /**< Associates command axises to the joypad axis
                                           * that move it. */
-    std::map<InputEvent::KeyboardKey, CommandAxisBinding>
+    std::map<InputEvent::KeyboardKey, ControlAxisBinding>
         keyboard_axis_mapping;           /**< Associates command axises to the keyboad keys
                                           * that move it. */
     std::set<Command>
         commands_pressed;                /**< Memorizes the state of each game command. */
 
-    std::map<CommandAxis, double>
+    std::map<Axis, double>
         command_axes_state;              /**< Memorizes the state of each command axes */
 
     bool customizing;                    /**< Indicates that the next keyboard or

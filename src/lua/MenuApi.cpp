@@ -451,7 +451,7 @@ bool LuaContext::menu_on_input(
  */
 bool LuaContext::menu_on_command(
     const ScopedLuaRef& menu_ref,
-    const CommandEvent& command
+    const ControlEvent& command
 ) {
   push_ref(current_l, menu_ref);
 
@@ -512,7 +512,7 @@ bool LuaContext::menus_on_input(int context_index, const InputEvent& event) {
   return handled;
 }
 
-bool LuaContext::menus_on_command(int context_index, const CommandEvent& event) {
+bool LuaContext::menus_on_command(int context_index, const ControlEvent& event) {
   bool handled = false;
   std::list<LuaMenuData>::reverse_iterator it;
   for (it = menus.rbegin(); it != menus.rend() && !handled; ++it) {

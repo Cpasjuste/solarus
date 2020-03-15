@@ -290,7 +290,7 @@ bool Entity::State::notify_input(const InputEvent& /* event */) {
   return false;
 }
 
-void Entity::State::notify_command(const CommandEvent& event) {
+void Entity::State::notify_control(const ControlEvent& event) {
   if(event.is_pressed()) {
     notify_command_pressed(event.get_command());
   } else if(event.is_released()){
@@ -305,7 +305,7 @@ void Entity::State::notify_command(const CommandEvent& event) {
  */
 void Entity::State::notify_command_pressed(Command command) {
 
-  switch (CommandEvent::command_to_id(command)) {
+  switch (ControlEvent::command_to_id(command)) {
 
     // action key
   case CommandId::ACTION:
@@ -355,7 +355,7 @@ void Entity::State::notify_command_pressed(Command command) {
  */
 void Entity::State::notify_command_released(Command command) {
 
-  switch (CommandEvent::command_to_id(command)) {
+  switch (ControlEvent::command_to_id(command)) {
 
   case CommandId::ACTION:
     notify_action_command_released();

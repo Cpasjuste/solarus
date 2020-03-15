@@ -62,7 +62,7 @@ class Entity::State : public ExportableToLua {
     virtual void set_suspended(bool suspended);
     uint32_t get_when_suspended() const;
     virtual bool notify_input(const InputEvent& event);
-    virtual void notify_command(const CommandEvent& event);
+    virtual void notify_control(const ControlEvent& event);
     virtual void notify_command_pressed(Command command);
     virtual void notify_command_released(Command command);
     virtual void notify_action_command_pressed();

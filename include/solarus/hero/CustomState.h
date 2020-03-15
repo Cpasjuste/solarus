@@ -54,7 +54,7 @@ class CustomState: public HeroState {
     void update() override;
     void set_suspended(bool suspended) override;
     bool notify_input(const InputEvent& event) override;
-    void notify_command(const CommandEvent& event) override;
+    void notify_control(const ControlEvent& event) override;
     void notify_command_pressed(Command command) override;
     void draw_on_map(Camera& camera) override;
 

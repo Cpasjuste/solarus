@@ -30,7 +30,7 @@ local function make_snake_sensor(togo)
     local dirs = {right=true, left=true}
 
     local dir = dirnames[hero:get_direction()]
-    local cmds = hero:get_commands()
+    local cmds = hero:get_controls()
 
     if dirs[dir] then
       hero.last_dir = dir

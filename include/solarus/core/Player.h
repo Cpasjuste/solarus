@@ -1,6 +1,6 @@
 #pragma once
 
-#include "solarus/core/CommandsPtr.h"
+#include "solarus/core/ControlsPtr.h"
 #include "solarus/lua/ExportableToLua.h"
 #include "solarus/core/CommandsEffects.h"
 
@@ -46,7 +46,7 @@ private:
   Game& game;
   Savegame& save;
   std::string id;
-  CommandsPtr commands;
+  ControlsPtr commands;
   CommandsEffects
       commands_effects;      /**< current effect associated to the main game keys
                               * (represented on the HUD by the action icon, the objects icons, etc.) */

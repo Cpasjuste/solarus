@@ -1083,7 +1083,7 @@ void LuaContext::register_modules() {
   register_language_module();
   register_state_module();
   register_joypad_module();
-  register_commands_module();
+  register_controls_module();
   register_player_module();
 
   Debug::check_assertion(lua_gettop(current_l) == 0,
@@ -2173,7 +2173,7 @@ bool LuaContext::on_finger_moved(const InputEvent& event) {
  * @param event the command event
  * @return
  */
-bool LuaContext::on_command(const CommandEvent& event) {
+bool LuaContext::on_command(const ControlEvent& event) {
   check_callback_thread();
   bool handled = false;
   if (find_method(event.event_name())) {
@@ -2183,7 +2183,7 @@ bool LuaContext::on_command(const CommandEvent& event) {
         lua_pushnumber(current_l, event.get_axis_state());
     }
 
-    push_commands(current_l, *event.emitter); //Push emmiting commands as well
+    push_controls(current_l, *event.emitter); //Push emmiting commands as well
     bool success = call_function(event.is_moved() ? 4 : 3, 1, event.event_name());
     if (!success) {
       // Something was wrong in the script: don't propagate the command to other objects.

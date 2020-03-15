@@ -354,12 +354,12 @@ bool CustomState::notify_input(const InputEvent& event) {
   return get_lua_context().state_on_input(*this, event);
 }
 
-void CustomState::notify_command(const CommandEvent& event) {
+void CustomState::notify_control(const ControlEvent& event) {
   if (get_lua_context().state_on_command(*this, event)) {
     return;
   }
 
-  Entity::State::notify_command(event);
+  Entity::State::notify_control(event);
 }
 
 /**
@@ -504,7 +504,7 @@ int CustomState::get_wanted_movement_direction8() const {
     return -1;
   }
 
-  const Commands& commands = get_commands();
+  const Controls& commands = get_commands();
   return commands.get_wanted_direction8();
 }
 
@@ -540,7 +540,7 @@ void CustomState::start_player_movement() {
   Hero& hero = get_entity();
   player_movement = std::make_shared<PlayerMovement>(
       hero.get_walking_speed(),
-      hero.get_commands()
+      hero.get_controls()
   );
   hero.set_movement(player_movement);
 }

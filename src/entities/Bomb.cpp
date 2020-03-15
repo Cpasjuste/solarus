@@ -18,7 +18,7 @@
 #include "solarus/core/CommandsEffects.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/System.h"
-#include "solarus/core/Commands.h"
+#include "solarus/core/Controls.h"
 
 #include "solarus/entities/Bomb.h"
 #include "solarus/entities/CarriedObject.h"

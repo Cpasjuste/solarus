@@ -1395,8 +1395,8 @@ int LuaContext::l_create_hero(lua_State* l) {
      equipment, data.get_name()
     );
 
-    CommandsPtr cmds = CommandsDispatcher::get().create_commands_from_keyboard();
-    entity->set_commands(cmds);
+    ControlsPtr cmds = CommandsDispatcher::get().create_commands_from_keyboard();
+    entity->set_controls(cmds);
     entity->start_free();
     entity->place_on_map(map);
     entity->set_xy(data.get_xy());
@@ -2594,7 +2594,7 @@ bool LuaContext::map_on_input(Map& map, const InputEvent& event) {
  * \param command The command pressed.
  * \return \c true if the event was handled and should stop being propagated.
  */
-bool LuaContext::map_on_command(Map& map, const CommandEvent& event) {
+bool LuaContext::map_on_control(Map& map, const ControlEvent& event) {
 
   bool handled = false;
   push_map(current_l, map);

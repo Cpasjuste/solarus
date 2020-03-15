@@ -108,7 +108,7 @@ void LuaContext::register_game_module() {
       { "simulate_command_pressed", game_api_simulate_command_pressed },
       { "simulate_command_released", game_api_simulate_command_released },
       //1.7 methods
-      { "get_commands", game_api_get_commands },
+      { "get_controls", game_api_get_controls },
       { "create_camera", game_api_create_camera },
       { "remove_camera", game_api_remove_camera },
       { "get_cameras", game_api_get_cameras },
@@ -1312,13 +1312,13 @@ int LuaContext::game_api_get_command_effect(lua_State* l) {
     Command command = check_command(l, 2);
 
     Game* game = savegame.get_game();
-    if (game == nullptr || std::holds_alternative<CustomCommandId>(command)) {
+    if (game == nullptr || std::holds_alternative<CustomId>(command)) {
       lua_pushnil(l);
     }
     else {
 
       std::string effect_name;
-      switch (CommandEvent::command_to_id(command)) {
+      switch (ControlEvent::command_to_id(command)) {
 
       case CommandId::ACTION:
       {
@@ -1404,7 +1404,7 @@ int LuaContext::game_api_get_command_keyboard_binding(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     Command command = check_command(l, 2);
 
-    Commands& commands = savegame.get_game()->get_commands();
+    Controls& commands = savegame.get_game()->get_controls();
     InputEvent::KeyboardKey key = commands.get_keyboard_binding(command);
     const std::string& key_name = enum_to_name(key);
 
@@ -1433,7 +1433,7 @@ int LuaContext::game_api_set_command_keyboard_binding(lua_State* l) {
     }
     const std::string& key_name = LuaTools::opt_string(l, 3, "");
 
-    Commands& commands = savegame.get_game()->get_commands();
+    Controls& commands = savegame.get_game()->get_controls();
     InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KeyboardKey::NONE);
     if (!key_name.empty() && key == InputEvent::KeyboardKey::NONE) {
       LuaTools::arg_error(l, 3,
@@ -1456,7 +1456,7 @@ int LuaContext::game_api_get_command_joypad_binding(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     Command command = check_command(l, 2);
 
-    Commands& commands = savegame.get_game()->get_commands();
+    Controls& commands = savegame.get_game()->get_controls();
     auto binding = commands.get_joypad_binding(command);
     if (!binding) {
       lua_pushnil(l);
@@ -1483,12 +1483,12 @@ int LuaContext::game_api_set_command_joypad_binding(lua_State* l) {
     }
     const std::string& joypad_string = LuaTools::opt_string(l, 3, "");
 
-    if (!joypad_string.empty() && !Commands::is_joypad_string_valid(joypad_string)) {
+    if (!joypad_string.empty() && !Controls::is_joypad_string_valid(joypad_string)) {
       LuaTools::arg_error(l, 3,
           std::string("Invalid joypad string: '") + joypad_string + "'");
     }
-    Commands& commands = savegame.get_game()->get_commands();
-    commands.set_joypad_binding(command, Commands::JoypadBinding(joypad_string));
+    Controls& commands = savegame.get_game()->get_controls();
+    commands.set_joypad_binding(command, Controls::JoypadBinding(joypad_string));
 
     return 0;
   });
@@ -1506,7 +1506,7 @@ int LuaContext::game_api_capture_command_binding(lua_State* l) {
     Command command = check_command(l, 2);
     const ScopedLuaRef& callback_ref = LuaTools::opt_function(l, 3);
 
-    Commands& commands = savegame.get_game()->get_commands();
+    Controls& commands = savegame.get_game()->get_controls();
     commands.customize(command, callback_ref);
 
     return 0;
@@ -1524,7 +1524,7 @@ int LuaContext::game_api_is_command_pressed(lua_State* l) {
     Savegame& savegame = *check_game(l, 1);
     Command command = check_command(l, 2);
 
-    Commands& commands = savegame.get_game()->get_commands();
+    Controls& commands = savegame.get_game()->get_controls();
     lua_pushboolean(l, commands.is_command_pressed(command));
 
     return 1;
@@ -1545,7 +1545,7 @@ int LuaContext::game_api_get_commands_direction(lua_State* l) {
       return 0;
     }
 
-    Commands& commands = savegame.get_game()->get_commands();
+    Controls& commands = savegame.get_game()->get_controls();
     int wanted_direction8 = commands.get_wanted_direction8();
     if (wanted_direction8 == -1) {
       lua_pushnil(l);
@@ -1593,18 +1593,18 @@ int LuaContext::game_api_simulate_command_released(lua_State* l) {
 }
 
 /**
- * \brief Implementation of game:get_commands().
+ * \brief Implementation of game:get_controls().
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
-int LuaContext::game_api_get_commands(lua_State* l) {
+int LuaContext::game_api_get_controls(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
-    Commands& cmds = savegame.get_game()->get_commands();
+    Controls& cmds = savegame.get_game()->get_controls();
 
-    push_commands(l, cmds);
+    push_controls(l, cmds);
 
     return 1;
   });
@@ -1969,7 +1969,7 @@ bool LuaContext::game_on_input(Game& game, const InputEvent& event) {
   return handled;
 }
 
-bool LuaContext::game_on_command(Game& game, const CommandEvent& event) {
+bool LuaContext::game_on_control(Game& game, const ControlEvent& event) {
   bool handled = false;
   push_game(current_l, game.get_savegame());
   if (userdata_has_field(game.get_savegame(), event.event_name())) {

@@ -507,14 +507,14 @@ bool Map::notify_input(const InputEvent& event) {
   return handled;
 }
 
-bool Map::notify_command(const CommandEvent& command) {
-  if(get_lua_context().map_on_command(*this, command)) {
+bool Map::notify_control(const ControlEvent& event) {
+  if(get_lua_context().map_on_control(*this, event)) {
     return true;
   }
 
   if(!is_suspended()) {
     for(const HeroPtr& hero : entities->get_heroes()) { //TODO verify if hero commands must short circuit or not
-      hero->notify_command(command);
+      hero->notify_control(event);
     }
   }
   return false;

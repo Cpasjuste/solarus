@@ -16,7 +16,7 @@
  */
 #include "solarus/core/Debug.h"
 #include "solarus/core/Game.h"
-#include "solarus/core/Commands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/core/Geometry.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/Stream.h"
@@ -29,14 +29,14 @@ namespace Solarus {
  * \brief Constructor.
  * \param moving_speed movement speed
  */
-PlayerMovement::PlayerMovement(int moving_speed, const CommandsPtr &commands):
+PlayerMovement::PlayerMovement(int moving_speed, const ControlsPtr &controls):
   StraightMovement(false, true),
   moving_speed(moving_speed),
   //direction8(-1),
   intensity(0.0),
   angle(0.0),
   blocked_by_stream(false),
-  commands(commands)
+  controls(controls)
 {
 
 }
@@ -74,7 +74,7 @@ void PlayerMovement::update() {
       stop();
     }
     // Check if the wanted direction has changed.
-    auto [norm, ang] = commands->get_wanted_polar();
+    auto [norm, ang] = controls->get_wanted_polar();
     if (std::tie(norm, ang) != std::tie(intensity, angle) && !is_suspended()) {
       intensity = norm;
       angle = ang;
@@ -120,7 +120,7 @@ void PlayerMovement::set_moving_speed(int moving_speed) {
  */
 void PlayerMovement::set_wanted_direction() {
   //direction8 = commands->get_wanted_direction8();
-  auto [intensity, angle] = commands->get_wanted_polar();
+  auto [intensity, angle] = controls->get_wanted_polar();
   this->intensity = intensity;
   this->angle = angle;
 }

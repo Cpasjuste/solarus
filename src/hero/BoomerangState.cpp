@@ -15,7 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/core/Game.h"
-#include "solarus/core/Commands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/core/Geometry.h"
 #include "solarus/core/Map.h"
 #include "solarus/entities/Boomerang.h"
@@ -66,7 +66,7 @@ void Hero::BoomerangState::start(const State* previous_state) {
   }
   else {
     get_sprites().set_animation_boomerang(tunic_preparing_animation);
-    this->direction_pressed8 = get_entity().get_commands()->get_wanted_direction8();
+    this->direction_pressed8 = get_entity().get_controls()->get_wanted_direction8();
   }
 }
 
@@ -82,7 +82,7 @@ void Hero::BoomerangState::update() {
 
     if (direction_pressed8 == -1) {
       // the player can press the diagonal arrows before or after the boomerang key
-      direction_pressed8 = hero.get_commands()->get_wanted_direction8();
+      direction_pressed8 = hero.get_controls()->get_wanted_direction8();
     }
 
     int boomerang_direction8;

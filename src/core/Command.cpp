@@ -1,5 +1,5 @@
 #include "solarus/core/Command.h"
-#include "solarus/core/Commands.h"
+#include "solarus/core/Controls.h"
 
 namespace Solarus {
   const std::string EnumInfoTraits<CommandId>::pretty_name = "command";
@@ -17,25 +17,25 @@ namespace Solarus {
     { CommandId::DOWN, "down" }
   };
 
-  const std::string EnumInfoTraits<CommandAxisId>::pretty_name = "command axis";
+  const std::string EnumInfoTraits<AxisId>::pretty_name = "command axis";
 
-  const EnumInfo<CommandAxisId>::names_type EnumInfoTraits<CommandAxisId>::names = {
-    { CommandAxisId::NONE, "" },
-    { CommandAxisId::X, "X"},
-    { CommandAxisId::Y, "Y"},
+  const EnumInfo<AxisId>::names_type EnumInfoTraits<AxisId>::names = {
+    { AxisId::NONE, "" },
+    { AxisId::X, "X"},
+    { AxisId::Y, "Y"},
   };
 
 
-  std::string CommandEvent::get_command_or_axis_name() const {
+  std::string ControlEvent::get_command_or_axis_name() const {
       return std::visit(overloaded{
                 [&](const CommandPressed& cp) {
-                    return Commands::get_command_name(cp.command);
+                    return Controls::get_command_name(cp.command);
                 },
                 [&](const CommandReleased& cp) {
-                    return Commands::get_command_name(cp.command);
+                    return Controls::get_command_name(cp.command);
                 },
-                [&](const CommandAxisMoved& am) {
-                    return Commands::get_axis_name(am.axis);
+                [&](const AxisMoved& am) {
+                    return Controls::get_axis_name(am.axis);
                 }
             }, data);
   }

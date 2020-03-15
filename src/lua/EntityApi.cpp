@@ -213,8 +213,8 @@ void LuaContext::register_entity_module() {
       { "start_hurt", hero_api_start_hurt },
       { "get_state", entity_api_get_state },
       { "get_state_object", hero_api_get_state_object },
-      { "get_commands", hero_api_get_commands },
-      { "set_commands", hero_api_set_commands }
+      { "get_controls", hero_api_get_controls },
+      { "set_controls", hero_api_set_controls }
   };
   if (CurrentQuest::is_format_at_least({ 1, 6 })) {
     hero_methods.insert(hero_methods.end(), {
@@ -2956,15 +2956,15 @@ int LuaContext::hero_api_get_state_object(lua_State* l) {
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
-int LuaContext::hero_api_get_commands(lua_State* l) {
+int LuaContext::hero_api_get_controls(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     const Hero& hero = *check_hero(l, 1);
 
-    const CommandsPtr& cmds = hero.get_commands();
+    const ControlsPtr& cmds = hero.get_controls();
 
     if(cmds) {
-      push_commands(l, *cmds);
+      push_controls(l, *cmds);
     } else {
       lua_pushnil(l);
     }
@@ -2977,13 +2977,13 @@ int LuaContext::hero_api_get_commands(lua_State* l) {
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
-int LuaContext::hero_api_set_commands(lua_State* l) {
+int LuaContext::hero_api_set_controls(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Hero& hero = *check_hero(l, 1);
-    Commands& cmds = *check_commands(l, 2);
+    Controls& cmds = *check_controls(l, 2);
 
-    hero.set_commands(cmds.shared_from_this_cast<Commands>());
+    hero.set_controls(cmds.shared_from_this_cast<Controls>());
 
     return 0;
   });

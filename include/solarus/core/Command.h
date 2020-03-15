@@ -19,7 +19,7 @@
 
 #include "solarus/core/EnumInfo.h"
 #include "solarus/core/Common.h"
-#include "solarus/core/CommandsPtr.h"
+#include "solarus/core/ControlsPtr.h"
 
 #include <variant>
 
@@ -46,31 +46,31 @@ enum class CommandId {
 /**
  * @brief Struct holding custom command name
  */
-struct CustomCommandId{
+struct CustomId{
     std::string id;
 
-    inline bool operator!=(const CustomCommandId& other) const {
+    inline bool operator!=(const CustomId& other) const {
         return id != other.id;
     }
 
-    inline bool operator==(const CustomCommandId& other) const {
+    inline bool operator==(const CustomId& other) const {
         return id == other.id;
     }
 
-    inline bool operator<(const CustomCommandId& other) const {
+    inline bool operator<(const CustomId& other) const {
         return id < other.id;
     }
 };
 
-using Command = std::variant<CommandId, CustomCommandId>;
+using Command = std::variant<CommandId, CustomId>;
 
-enum class CommandAxisId{
+enum class AxisId{
     NONE = -1,
     X,
     Y
 };
 
-using CommandAxis = std::variant<CommandAxisId, CustomCommandId>;
+using Axis = std::variant<AxisId, CustomId>;
 
 struct CommandButton{
     Command command;
@@ -79,16 +79,16 @@ struct CommandButton{
 struct CommandPressed : public CommandButton {};
 struct CommandReleased : public CommandButton {};
 
-struct CommandAxisMoved{
-    CommandAxis axis;
+struct AxisMoved{
+    Axis axis;
     double state;
 };
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-struct CommandEvent {
-  using Data = std::variant<CommandPressed, CommandReleased, CommandAxisMoved>;
+struct ControlEvent {
+  using Data = std::variant<CommandPressed, CommandReleased, AxisMoved>;
   /**
    * @brief tells if this is a press event
    * @return
@@ -102,7 +102,7 @@ struct CommandEvent {
   }
 
   inline bool is_moved() const {
-      return std::holds_alternative<CommandAxisMoved>(data);
+      return std::holds_alternative<AxisMoved>(data);
   }
 
   static CommandId command_to_id(const Command& cmd) {
@@ -110,7 +110,7 @@ struct CommandEvent {
             [&](const CommandId& id) {
                 return id;
             },
-            [&](const CustomCommandId&) {
+            [&](const CustomId&) {
                 return CommandId::NONE;
             }
         }, cmd);
@@ -121,7 +121,7 @@ struct CommandEvent {
                 [&](const CommandButton& cp) {
                     return cp.command;
                 },
-                [&](const CommandAxisMoved&) {
+                [&](const AxisMoved&) {
                     return Command(CommandId::NONE);
                 }
             }, data);
@@ -146,7 +146,7 @@ struct CommandEvent {
         case 1:
             return "on_command_released";
         default:
-            return "on_command_axis_moved";
+            return "on_axis_moved";
     }
   }
 
@@ -157,35 +157,35 @@ struct CommandEvent {
             [](auto) {
                 return 0.0;
             },
-            [](const CommandAxisMoved& am) {
+            [](const AxisMoved& am) {
                 return am.state;
             }
         }, data);
   }
 
-  static CommandEvent make_pressed(const Command& cmd, const CommandsPtr& emitter) {
-      return CommandEvent(CommandPressed{cmd}, emitter);
+  static ControlEvent make_pressed(const Command& cmd, const ControlsPtr& emitter) {
+      return ControlEvent(CommandPressed{cmd}, emitter);
   }
 
-  static CommandEvent make_released(const Command& cmd, const CommandsPtr& emitter) {
-      return CommandEvent(CommandReleased{cmd}, emitter);
+  static ControlEvent make_released(const Command& cmd, const ControlsPtr& emitter) {
+      return ControlEvent(CommandReleased{cmd}, emitter);
   }
 
-  static CommandEvent make_moved(const CommandAxis& axis, double state, const CommandsPtr& emitter) {
-      return CommandEvent(CommandAxisMoved{axis, state}, emitter);
+  static ControlEvent make_moved(const Axis& axis, double state, const ControlsPtr& emitter) {
+      return ControlEvent(AxisMoved{axis, state}, emitter);
   }
 
-  inline bool is_from(const CommandsPtr& other) const {
+  inline bool is_from(const ControlsPtr& other) const {
     return emitter == other;
   }
 
-  CommandEvent(const Data& data, const CommandsPtr& emitter) :
+  ControlEvent(const Data& data, const ControlsPtr& emitter) :
       data(data),
       emitter(emitter)
   {}
 
   Data data;
-  CommandsPtr emitter;
+  ControlsPtr emitter;
 };
 
 template <>
@@ -195,9 +195,9 @@ struct SOLARUS_API EnumInfoTraits<CommandId> {
 };
 
 template <>
-struct SOLARUS_API EnumInfoTraits<CommandAxisId> {
+struct SOLARUS_API EnumInfoTraits<AxisId> {
   static const std::string pretty_name;
-  static const EnumInfo<CommandAxisId>::names_type names;
+  static const EnumInfo<AxisId>::names_type names;
 };
 
 }

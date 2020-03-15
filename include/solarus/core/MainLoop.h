@@ -19,7 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/core/ResourceProvider.h"
-#include "solarus/core/CommandsDispatcher.h"
+#include "solarus/core/ControlsDispatcher.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include <atomic>
 #include <memory>
@@ -58,7 +58,7 @@ class SOLARUS_API MainLoop {
     ResourceProvider& get_resource_provider();
     int push_lua_command(const std::string& command);
 
-    void notify_command(const CommandEvent& event);
+    void notify_command(const ControlEvent& event);
 
     LuaContext& get_lua_context();
 
