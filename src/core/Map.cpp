@@ -49,7 +49,6 @@ Map::Map(const std::string& id):
   max_layer(0),
   tileset(nullptr),
   floor(MapData::NO_FLOOR),
-  background_surface(nullptr),
   foreground_surface(nullptr),
   loaded(false),
   started(false),
@@ -90,7 +89,6 @@ void Map::set_tileset(const std::string& tileset_id) {
   tileset = &resource_provider.get_tileset(tileset_id);
   get_entities().notify_tileset_changed();
   this->tileset_id = tileset_id;
-  build_background_surface();
 }
 
 /**
@@ -261,7 +259,6 @@ void Map::unload() {
 
   if (is_loaded()) {
     tileset = nullptr;
-    background_surface = nullptr;
     foreground_surface = nullptr;
     entities = nullptr;
 
@@ -297,11 +294,6 @@ Hero& Map::get_default_hero() {
  * \param game the game
  */
 void Map::load(Game& game) {
-
-  background_surface = Surface::create(
-      Video::get_quest_size()
-  );
-
   // Read the map data file.
   MapData data;
   const std::string& file_name = std::string("maps/") + get_id() + ".dat";
@@ -567,13 +559,13 @@ void Map::draw() {
   }
 
   for(const CameraPtr& camera : entities->get_cameras()) {
-      if(camera->is_being_removed()){
-          continue;
-      }
+    if(camera->is_being_removed()){
+        continue;
+    }
     const SurfacePtr& camera_surface = camera->get_surface();
     // background
     camera->reset_view();
-    //draw_background(camera_surface);
+    draw_background(camera_surface);
 
     // draw all entities (including the hero)
     camera->apply_view();
@@ -589,23 +581,11 @@ void Map::draw() {
 }
 
 /**
- * \brief Builds or rebuilds the surface corresponding to the background of
- * the tileset.
- */
-void Map::build_background_surface() {
-
-  if (tileset != nullptr) {
-    background_surface->clear();
-    background_surface->fill_with_color(tileset->get_background_color());
-  }
-}
-
-/**
  * \brief Draws the background of the map.
  * \param dst_surface The surface where to draw.
  */
 void Map::draw_background(const SurfacePtr& dst_surface) {
-  background_surface->draw(dst_surface);
+  dst_surface->fill_with_color(tileset->get_background_color());
 }
 
 /**

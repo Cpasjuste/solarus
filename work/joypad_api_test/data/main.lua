@@ -4,7 +4,7 @@
 
 local game_manager = require'scripts/game_manager'
 
---sol.video.set_geometry_mode('dynamic_absolute')
+sol.video.set_geometry_mode('dynamic_quest_size')
 
 print("patate ?")
 
@@ -16,7 +16,7 @@ local function joypad_listen(jpad)
   local i = jpad:get_name()
   print("registred callbacks for", i, "rumble" , jpad:has_rumble())
   function jpad:on_button_pressed(button)
-      print(i,"pressed",button)
+      --print(i,"pressed",button)
       if button == 'a' then
         jpad:rumble(1, 200)
       end
@@ -26,13 +26,13 @@ local function joypad_listen(jpad)
       end
   end
   function jpad:on_button_released(button)
-    print(i,"released",button)
+    --print(i,"released",button)
     if button == 'right_shoulder' then
         game:simulate_command_released('custom_cmd')
-      end
+    end
   end
   function jpad:on_axis_moved(axis, val)
-    print(i,axis,val)
+    --print(i,axis,val)
   end
   function jpad:on_removed()
     print(i,"detached")
@@ -53,15 +53,15 @@ function sol.main:on_started()
   game = game_manager:create('foo.sav')
   game:start()
   
-  function game:on_command_pressed(cmd)
+  function game:on_command_pressed_(cmd)
     print("command", cmd, "pressed")
   end
   
-  function game:on_command_released(cmd)
+  function game:on_command_released_(cmd)
     print("command", cmd, "released")
   end
   
-  function game:on_axis_moved(axis, state)
+  function game:on_axis_moved_(axis, state)
     print("command axis", axis, "state", state)
   end
   

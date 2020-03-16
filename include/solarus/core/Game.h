@@ -203,30 +203,15 @@ private:
         controls;              /**< this object receives the keyboard and joypad events */
 
 
-    // map
-    /*std::shared_ptr<Map>
-        current_map; */           /**< the map currently displayed */
-
+    // maps
     std::vector<MapPtr>
         current_maps;           /**< the maps currently simulated */
 
     std::set<MapPtr>
         maps_to_unload;        /**< Maps to unload at the next tick */
 
-    /*std::shared_ptr<Map>
-        next_map; */              /**< the map where the hero is going to; if not nullptr, it means that the hero
-                                * is changing from current_map to next_map */
-
     std::list<CameraTeleportation>
         cameras_teleportations;    /**< record current displacements of heroes between maps */
-
-    /*SurfacePtr
-        previous_map_surface;*/  /**< a copy of the previous map surface for transition effects that display two maps */
-
-    /*Transition::Style
-        transition_style;*/      /**< the transition style between the current map and the next one */
-    /*std::unique_ptr<Transition>
-        transition;*/            /**< the transition currently shown, or nullptr if no transition is playing */
 
     // world (i.e. the current set of maps)
     bool crystal_state;        /**< indicates that a crystal has been enabled (i.e. the orange blocks are raised) */

@@ -280,7 +280,6 @@ Camera::Camera(const std::string &name):
   position_on_screen(0, 0),
   viewport(0.f, 0.f, 1.f, 1.f) {
 
-
   create_surface(get_size());
   //set_map(map);
   notify_window_size_changed(Video::get_window_size());
@@ -626,7 +625,7 @@ void Camera::update_view(const Size& viewport_size) {
     //Compute wanted size
     float cw = quest_size.width;
     float ch = quest_size.width/wratio;
-    if(qratio > wratio) {
+    if(qratio < wratio) {
       ch = quest_size.height;
       cw = quest_size.height*wratio;
     }
@@ -641,6 +640,8 @@ void Camera::update_view(const Size& viewport_size) {
     zoom_corr.x = icw/cw;
     zoom_corr.y = ich/ch;
 
+    position_offset = {(cw*0.5f-icw/2), (ch*0.5f-ich/2)};
+
     set_size(Size(icw, ich));
     break;
   }
@@ -654,6 +655,8 @@ void Camera::update_view(const Size& viewport_size) {
 
     zoom_corr.x = icw/cw;
     zoom_corr.y = ich/ch;
+
+
 
     set_size({icw, ich});
     break;
@@ -757,7 +760,12 @@ void Camera::reset_view() {
 void Camera::apply_view() {
   //TODO add rotation and zoom
   surface->get_view().reset(get_bounding_box());
+
+
+  surface->get_view().move(position_offset);
   surface->get_view().zoom(zoom_corr);
+  //Just move the view enough to compensate for the rounding
+  surface->get_view().rotate(rotation);
 }
 
 /**

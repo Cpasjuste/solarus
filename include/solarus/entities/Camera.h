@@ -116,7 +116,8 @@ private:
     FRectangle viewport;          /**< Relative geometry of the camera on screen. Used by dynamic video modes. */
     Scale zoom;                   /**< Level of zoom of this camera compared to 1:1 cam. */
     Scale zoom_corr;              /**< Correction factor for the zoom, to compensate integer rounding of the camera size */
-    float rotation;               /**< Rotation of this camera */
+    float rotation = 0.f;         /**< Rotation of this camera */
+    glm::vec2 position_offset;    /**< Small offset in position to compensate for discretization after zoom */
 };
 
 }

@@ -188,7 +188,6 @@ class SOLARUS_API Map: public ExportableToLua {
   private:
 
     void set_suspended(bool suspended);
-    void build_background_surface();
     void build_foreground_surface();
     void draw_background(const SurfacePtr& dst_surface);
     void draw_foreground(const SurfacePtr& dst_surface);
@@ -221,20 +220,12 @@ class SOLARUS_API Map: public ExportableToLua {
                                    * indicate the map size in pixel, and the x and y field indicate the position.
                                    * This is used to correctly scroll between adjacent maps. */
 
-    // Quest screen
-    SurfacePtr
-        background_surface;       /**< A surface filled with the background color of the tileset. */
     SurfacePtr
         foreground_surface;       /**< A surface with black bars when the map is smaller than the screen. */
 
     // map state
     bool loaded;                  /**< Whether the loading phase is done. */
     bool started;                 /**< Whether this map is the current map. */
-    /*std::string destination_name;*/ /**< Current destination point on the map,
-                                   * or "_same" to keep the hero's coordinates,
-                                   * or "_side0", "_side1", "_side2" or "_side3"
-                                   * to place the hero on a side of the map,
-                                   * or an empty string to use the one saved. */
 
     std::unique_ptr<Entities>
         entities;                 /**< The entities on the map. */

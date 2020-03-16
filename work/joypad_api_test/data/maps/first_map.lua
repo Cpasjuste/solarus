@@ -40,6 +40,15 @@ function map:on_started()
   alter_commands:set_keyboard_axis_binding('X', 'h', 'l')
   alter_commands:simulate_axis_moved('test', 0.5)
   print("test axis", alter_commands:get_axis_state('test'))
+  
+  map:get_camera():start_tracking(alter_hero)
+end
+
+function map:on_update()
+  local rot = math.sin(sol.main.get_elapsed_time()*0.001)*0.3
+  local zoom = 1+math.cos(sol.main.get_elapsed_time()*0.001)*0.3
+  map:get_camera():set_rotation(rot)
+  map:get_camera():set_zoom(zoom, zoom)
 end
 
 -- Event called after the opening transition effect of the map,
