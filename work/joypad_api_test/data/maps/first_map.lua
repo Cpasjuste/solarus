@@ -34,7 +34,7 @@ function map:on_started()
   alter_hero:set_ability("sword", 1)
   
   -- override hero's commands with the joypad one
-  alter_hero:set_commands(alter_commands)
+  alter_hero:set_controls(alter_commands)
   
   alter_commands:set_joypad_axis_binding('look_x', 'right_x')
   alter_commands:set_keyboard_axis_binding('X', 'h', 'l')

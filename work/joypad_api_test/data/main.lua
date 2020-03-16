@@ -61,7 +61,7 @@ function sol.main:on_started()
     print("command", cmd, "released")
   end
   
-  function game:on_command_axis_moved(axis, state)
+  function game:on_axis_moved(axis, state)
     print("command axis", axis, "state", state)
   end
   
