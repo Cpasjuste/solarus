@@ -21,7 +21,6 @@
 #include "solarus/core/Equipment.h"
 #include "solarus/graphics/Transition.h"
 #include "solarus/lua/ExportableToLua.h"
-#include "solarus/core/PlayerPtr.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -39,7 +38,6 @@ class MainLoop;
  * This class provides read and write access to the saved data.
  */
 class SOLARUS_API Savegame: public ExportableToLua {
-  friend class Player;
   public:
 
     static const int SAVEGAME_VERSION;  /**< Version number of the savegame file format. */

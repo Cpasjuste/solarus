@@ -1442,7 +1442,6 @@ class LuaContext {
     void register_input_module();
     void register_joypad_module();
     void register_controls_module();
-    void register_player_module();
     void register_file_module();
     void register_timer_module();
     void register_item_module();

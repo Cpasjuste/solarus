@@ -1084,7 +1084,6 @@ void LuaContext::register_modules() {
   register_state_module();
   register_joypad_module();
   register_controls_module();
-  register_player_module();
 
   Debug::check_assertion(lua_gettop(current_l) == 0,
       "Lua stack is not empty after modules initialization");
