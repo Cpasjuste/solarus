@@ -10,18 +10,28 @@ properties{
 
 tile{
   layer = 0,
-  x = 0,
+  x = -8,
   y = 0,
-  width = 320,
+  width = 416,
   height = 240,
   pattern = "3",
+}
+
+custom_entity{
+  name = "dummy",
+  layer = 0,
+  x = 120,
+  y = 85,
+  width = 16,
+  height = 16,
+  direction = 0,
 }
 
 destination{
   name = "destination",
   layer = 0,
-  x = 24,
+  x = 40,
   y = 29,
-  direction = 3,
+  direction = 1,
 }
 
