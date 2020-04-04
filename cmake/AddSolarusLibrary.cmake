@@ -27,13 +27,14 @@ target_link_libraries(solarus
     "${VORBIS_LIBRARY}"
     "${VORBISFILE_LIBRARY}"
     "${OGG_LIBRARY}"
-    "${MODPLUG_LIBRARY}"
+    "${MODPLUG_LIBRARIES}"
 )
 
 # Set the public/private compiler options required by "solarus"
 target_compile_options(solarus
   PUBLIC
     "${SDL2_CFLAGS_OTHER}"
+    "${MODPLUG_DEFINITIONS}"
 )
 
 # Set the build properties for "solarus"
