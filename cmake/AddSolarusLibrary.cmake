@@ -26,7 +26,7 @@ target_link_libraries(solarus
     "${PHYSFS_LIBRARY}"
     "${VORBIS_LIBRARY}"
     "${VORBISFILE_LIBRARY}"
-    "${OGG_LIBRARY}"
+    "${OGG_LIBRARIES}"
     "${MODPLUG_LIBRARIES}"
 )
 
@@ -34,6 +34,7 @@ target_link_libraries(solarus
 target_compile_options(solarus
   PUBLIC
     "${SDL2_CFLAGS_OTHER}"
+    "${OGG_DEFINITIONS}"
     "${MODPLUG_DEFINITIONS}"
 )
 

@@ -18,7 +18,7 @@ include_directories(SYSTEM
     "${SDL2_IMAGE_INCLUDE_DIR}"
     "${OPENAL_INCLUDE_DIR}"
     "${VORBISFILE_INCLUDE_DIR}"
-    "${OGG_INCLUDE_DIR}"
+    "${OGG_INCLUDE_DIRS}"
     "${LUA_INCLUDE_DIR}"
     "${PHYSFS_INCLUDE_DIR}"
 )
