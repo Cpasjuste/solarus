@@ -34,6 +34,7 @@ target_link_libraries(solarus
 target_compile_options(solarus
   PUBLIC
     "${SDL2_CFLAGS_OTHER}"
+    "${GLM_DEFINITIONS}"
     "${LUA_DEFINITIONS}"
     "${VORBIS_DEFINITIONS}"
     "${VORBISFILE_DEFINITIONS}"
