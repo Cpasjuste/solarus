@@ -20,7 +20,7 @@ include_directories(SYSTEM
     "${VORBIS_INCLUDE_DIRS}"
     "${VORBISFILE_INCLUDE_DIRS}"
     "${OGG_INCLUDE_DIRS}"
-    "${LUA_INCLUDE_DIR}"
+    "${LUA_INCLUDE_DIRS}"
     "${PHYSFS_INCLUDE_DIR}"
 )
 

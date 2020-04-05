@@ -21,7 +21,7 @@ target_link_libraries(solarus
     "${SDL2_TTF_LIBRARY}"
     "${OPENGL_LIBRARY}"
     "${OPENAL_LIBRARY}"
-    "${LUA_LIBRARY}"
+    "${LUA_LIBRARIES}"
     "${DL_LIBRARY}"
     "${PHYSFS_LIBRARY}"
     "${VORBIS_LIBRARIES}"
@@ -34,6 +34,7 @@ target_link_libraries(solarus
 target_compile_options(solarus
   PUBLIC
     "${SDL2_CFLAGS_OTHER}"
+    "${LUA_DEFINITIONS}"
     "${VORBIS_DEFINITIONS}"
     "${VORBISFILE_DEFINITIONS}"
     "${OGG_DEFINITIONS}"
