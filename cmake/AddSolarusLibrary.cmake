@@ -16,7 +16,7 @@ endif()
 # Declare the public/private libraries that "solarus" depends on
 target_link_libraries(solarus
   PUBLIC
-    "${SDL2_LIBRARY}"
+    "${SDL2_LIBRARIES}"
     "${SDL2_IMAGE_LIBRARY}"
     "${SDL2_TTF_LIBRARY}"
     "${OPENGL_LIBRARY}"
@@ -33,7 +33,6 @@ target_link_libraries(solarus
 # Set the public/private compiler options required by "solarus"
 target_compile_options(solarus
   PUBLIC
-    "${SDL2_CFLAGS_OTHER}"
     "${GLM_DEFINITIONS}"
     "${LUA_DEFINITIONS}"
     "${VORBIS_DEFINITIONS}"
