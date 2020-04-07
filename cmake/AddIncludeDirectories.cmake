@@ -22,7 +22,7 @@ include_directories(SYSTEM
     "${VORBISFILE_INCLUDE_DIRS}"
     "${OGG_INCLUDE_DIRS}"
     "${LUA_INCLUDE_DIRS}"
-    "${PHYSFS_INCLUDE_DIR}"
+    "${PHYSFS_INCLUDE_DIRS}"
 )
 
 if (OPENGL_INCLUDE_DIR)
