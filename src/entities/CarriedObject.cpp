@@ -282,7 +282,9 @@ void CarriedObject::break_item() {
     set_y(get_y() - item_height);
   }
 
-  get_movement()->stop();
+  if (get_movement() != nullptr) {
+    get_movement()->stop();
+  }
   shadow_sprite->stop_animation();
 
   if (!can_explode()) {
@@ -317,7 +319,9 @@ void CarriedObject::break_item() {
  */
 void CarriedObject::break_item_on_ground() {
 
-  get_movement()->stop();
+  if (get_movement() != nullptr) {
+    get_movement()->stop();
+  }
 
   Ground ground = get_ground_below();
   switch (ground) {
@@ -411,8 +415,9 @@ void CarriedObject::update() {
     return;
   }
 
+  std::shared_ptr<Movement> movement = get_movement();
   // when the hero finishes lifting the item, start carrying it
-  if (is_lifting && get_movement()->is_finished()) {
+  if (is_lifting && movement != nullptr && movement->is_finished()) {
     is_lifting = false;
 
     // make the item follow the hero
@@ -463,7 +468,7 @@ void CarriedObject::update() {
       }
       break_one_layer_above = false;
     }
-    else if (get_movement()->is_stopped() || y_increment >= 7) {
+    else if ((movement != nullptr && movement->is_stopped()) || y_increment >= 7) {
       // Interrupt the movement.
       break_item_on_ground();
     }
@@ -473,6 +478,7 @@ void CarriedObject::update() {
         next_down_date += 40;
         item_height -= y_increment;
         y_increment++;
+        main_sprite->set_xy({ 0, -item_height });
       }
     }
   }
@@ -486,24 +492,6 @@ void CarriedObject::notify_obstacle_reached() {
 
   if (is_throwing && !is_broken()) {
     break_item();
-  }
-}
-
-/**
- * \copydoc Entity::built_in_draw
- *
- * This is a redefinition to draw the shadow independently of the movement.
- */
-void CarriedObject::built_in_draw(Camera& camera) {
-
-  if (!is_throwing) {
-    // Draw the sprite normally.
-    Entity::built_in_draw(camera);
-  }
-  else {
-    // When the item is being thrown, draw the shadow and the item separately.
-    get_map().draw_visual(*shadow_sprite, get_xy());
-    get_map().draw_visual(*main_sprite, get_x(), get_y() - item_height);
   }
 }
 

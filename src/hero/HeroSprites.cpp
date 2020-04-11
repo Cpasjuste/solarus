@@ -693,7 +693,9 @@ void HeroSprites::set_animation_direction(int direction) {
   Debug::check_assertion(direction >= 0 && direction < 4,
     "Invalid direction for set_animation_direction");
 
-  tunic_sprite->set_current_direction(direction);
+  if (tunic_sprite != nullptr) {
+    tunic_sprite->set_current_direction(direction);
+  }
 
   if (is_sword_visible()) {
     sword_sprite->set_current_direction(direction);
@@ -713,12 +715,14 @@ void HeroSprites::set_animation_direction(int direction) {
 
   if (lifted_item != nullptr) {
     const SpritePtr& sprite = lifted_item->get_sprite();
-    sprite->restart_animation();
-    if (direction < sprite->get_nb_directions()) {
-      sprite->set_current_direction(direction);
+    if (sprite != nullptr) {
+      sprite->restart_animation();
+      if (direction < sprite->get_nb_directions()) {
+        sprite->set_current_direction(direction);
+      }
     }
     const SpritePtr& shadow_sprite = lifted_item->get_sprite("shadow");
-    if (direction < shadow_sprite->get_nb_directions()) {
+    if (shadow_sprite != nullptr && direction < shadow_sprite->get_nb_directions()) {
       shadow_sprite->set_current_direction(direction);
     }
   }
@@ -779,53 +783,22 @@ void HeroSprites::restore_animation_direction() {
  */
 void HeroSprites::update() {
 
-  // Hero sprites are all updated here, Entity::update() is overridden for the hero.
-
-  // Keep the current sprites here in case they change from a script during the operation.
-  SpritePtr tunic_sprite = this->tunic_sprite;
-  SpritePtr sword_sprite = this->sword_sprite;
-
-  // Update the frames.
-  tunic_sprite->update();
-
-  if (is_sword_visible()) {
-    sword_sprite->update();
-    sword_sprite->set_current_frame(tunic_sprite->get_current_frame());
-    hero.check_collision_with_detectors(*sword_sprite);
-  }
-  hero.check_collision_with_detectors(*tunic_sprite);
-
-  if (is_sword_stars_visible()) {
-    // The stars are not synchronized with the other sprites.
-    sword_stars_sprite->update();
-  }
-
-  if (is_shield_visible()) {
-    shield_sprite->update();
-    if (walking) {
-      shield_sprite->set_current_frame(tunic_sprite->get_current_frame());
-    }
-  }
-
-  if (is_trail_visible()) {
-    trail_sprite->update();
-  }
-
-  if (is_ground_visible()) {
-    ground_sprite->update();
-  }
-
   if (hero.is_shadow_visible()) {
     if (!shadow_sprite->is_animation_started()) {
       shadow_sprite->set_current_animation("big");
     }
     shadow_sprite->set_xy(hero.get_xy() - hero.get_displayed_xy());
-    shadow_sprite->update();
   } else {
     if (shadow_sprite->is_animation_started()) {
       shadow_sprite->stop_animation();
     }
   }
+
+  if (ground_sprite != nullptr && !hero.is_ground_visible()) {
+    destroy_ground();
+  }
+
+  hero.update_sprites();
 
   // Blinking.
   if (is_blinking()
@@ -866,26 +839,7 @@ void HeroSprites::draw_on_map() {
  */
 void HeroSprites::set_suspended(bool suspended) {
 
-  if (tunic_sprite != nullptr) {
-    tunic_sprite->set_suspended(suspended);
-  }
-
-  if (equipment.has_ability(Ability::SWORD) && sword_sprite != nullptr) {
-    sword_sprite->set_suspended(suspended);
-    sword_stars_sprite->set_suspended(suspended);
-  }
-
-  if (equipment.has_ability(Ability::SHIELD) && shield_sprite != nullptr) {
-    shield_sprite->set_suspended(suspended);
-  }
-
-  if (trail_sprite != nullptr) {
-    trail_sprite->set_suspended(suspended);
-  }
-
-  if (is_ground_visible()) {
-    ground_sprite->set_suspended(suspended);
-  }
+  hero.set_sprites_suspended(suspended);
 
   // Timer.
   uint32_t now = System::now();
@@ -1411,6 +1365,9 @@ void HeroSprites::set_animation_prepare_running() {
 
   set_animation_walking_normal();
   trail_sprite->set_current_animation("running");
+  if (tunic_sprite->get_current_direction() < trail_sprite->get_nb_directions()) {
+    trail_sprite->set_current_direction(tunic_sprite->get_current_direction());
+  }
 }
 
 /**
@@ -1421,6 +1378,9 @@ void HeroSprites::set_animation_running() {
   set_animation_walking_sword_loading();
   stop_displaying_sword_stars();
   trail_sprite->set_current_animation("running");
+  if (tunic_sprite->get_current_direction() < trail_sprite->get_nb_directions()) {
+    trail_sprite->set_current_direction(tunic_sprite->get_current_direction());
+  }
 }
 
 /**

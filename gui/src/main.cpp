@@ -29,6 +29,9 @@
 #include <QTextStream>
 #include <QTranslator>
 #include <iostream>
+
+// SDLmain is required in some platforms, i.e. Windows, for proper initialization.
+// For instance, in Windows, SDLmain encodes argv in main() using UTF-8 by default.
 #include <SDL.h>
 
 namespace SolarusGui {
@@ -62,19 +65,31 @@ int run_gui(int argc, char* argv[]) {
 
   // Set up the application.
   QApplication application(argc, argv);
-  application.setApplicationName("solarus");
+  application.setApplicationName("solarus-launcher");
+  application.setApplicationDisplayName("Solarus Launcher");
   application.setApplicationVersion(SOLARUS_VERSION);
   application.setOrganizationName("solarus");
 
-  // Set up the translations.
+  // Get current system locale.
+  const QLocale locale = QLocale::system();
+
+  // Set up Qt translations.
   QTranslator qt_translator;
-  qt_translator.load("qt_" + QLocale::system().name(),
+  qt_translator.load(locale, "qt", "_",
                      QLibraryInfo::location(QLibraryInfo::TranslationsPath));
   application.installTranslator(&qt_translator);
 
-  QTranslator translator;
-  translator.load("solarus_" + QLocale::system().name());
-  application.installTranslator(&translator);
+  // Set up application translations.
+  QTranslator app_translator;
+  for (const QString& searchPath : std::vector<QString>{
+           QApplication::applicationDirPath(),
+           QApplication::applicationDirPath() + "/translations",
+           SOLARUS_GUI_TRANSLATIONS_DIR}) {
+    if (app_translator.load(locale, "solarus", "_", searchPath)) {
+      break;
+    }
+  }
+  application.installTranslator(&app_translator);
 
   MainWindow window(nullptr);
   window.initialize_geometry_on_screen();

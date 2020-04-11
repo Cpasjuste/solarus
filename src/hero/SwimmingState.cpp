@@ -56,8 +56,6 @@ void Hero::SwimmingState::stop(const State* next_state) {
 
   PlayerMovementState::stop(next_state);
 
-  Hero& hero = get_entity();
-  hero.set_walking_speed(hero.get_normal_walking_speed());
   get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
 }
 
@@ -126,7 +124,23 @@ void Hero::SwimmingState::set_animation_walking() {
  * \brief Notifies this state that the action command was just pressed.
  */
 void Hero::SwimmingState::notify_action_command_pressed() {
-  try_swim_faster();
+
+  Hero& hero = get_entity();
+  Entity* facing_entity = hero.get_facing_entity();
+  bool facing_entity_interaction = false;
+  if (facing_entity != nullptr) {
+    if (get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_NONE ||
+        get_commands_effects().is_action_key_acting_on_facing_entity()
+    ) {
+      // Action on the facing entity.
+      facing_entity_interaction = facing_entity->notify_action_command_pressed();
+    }
+  }
+
+  if (!facing_entity_interaction) {
+    // The event was not handled by the facing entity.
+    try_swim_faster();
+  }
 }
 /**
  * \brief Notifies this state that the attack command was just pressed.
@@ -180,6 +194,13 @@ bool Hero::SwimmingState::is_stairs_obstacle(Stairs& /* stairs */) {
  * \return true if the hero can pick that treasure in this state.
  */
 bool Hero::SwimmingState::get_can_pick_treasure(EquipmentItem& /* item */) const {
+  return true;
+}
+
+/**
+ * \copydoc Entity::State::get_can_interact_with_npc
+ */
+bool Hero::SwimmingState::get_can_interact_with_npc(Npc& /* npc */) const {
   return true;
 }
 

@@ -90,7 +90,7 @@ MessageCallback( GLenum source,
 
 GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
   sdl_gl_context(sdl_ctx),
-  screen_fbo{0,glm::mat4()}
+  screen_fbo{0,glm::mat4(1.f)}
 {
 
   Debug::check_assertion(!instance,"Creating two GL renderer");
@@ -594,7 +594,6 @@ void GlRenderer::create_vbo(size_t num_sprites) {
     Gl::GenVertexArrays(1,&vao); //TODO for android ifndef this
     Gl::BindVertexArray(vao);
   }
-
 
   glGenBuffers(1,&ibo);
 

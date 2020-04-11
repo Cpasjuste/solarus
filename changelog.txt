@@ -1,5 +1,39 @@
 __________________________
 
+Solarus 1.6.3 (2020-04-11)
+__________________________
+
+Engine changes
+--------------
+
+* Fix macOS port not working since 1.6.1 due to OpenGL.
+* Fix shaders compilation in some OpenGL ES 3.0 platforms (#1437).
+* Fix UTF-8 quest path encoding handling (#1429).
+* Fix UTF-8 file names in Lua Open File API for Windows (#1413).
+* Fix memory usage when visiting very large maps (#1395).
+* Fix crash when removing the shadow of a carried object (#1423).
+* Fix crash when stopping the movement of a thrown object (#1452).
+* Fix carried object shadow still displayed after removing it (#1436).
+* Fix animating hero sprites dynamically created (#1348).
+* Fix hero speed when going from deep water to shallow water (#1186).
+* Fix trail sprite not taking the hero's direction (#1464).
+* Fix ground sprite still displayed while jumping (#1458).
+* Fix custom states wrongly affected by ground speeds (#1416).
+* Fix custom states not activating side teletransporters (#1448).
+* Fix streams continuing to act when the layer has changed.
+* Fix enemy:on_dying() not called when setting enemies life to zero (#1440).
+* Fix talking to NPCs while swimming (#1043).
+* Fix creating dynamic sprite with tileset anims (#1461).
+
+
+Solarus launcher GUI changes
+----------------------------
+
+* Fix UTF-8 quest path encoding handling (#1429).
+* Add drag and drop functionality to add new quests (#1420).
+
+__________________________
+
 Solarus 1.6.2 (2019-08-15)
 __________________________
 

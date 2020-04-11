@@ -44,16 +44,22 @@ class StraightMovement: public Movement {
     double get_x_speed() const;
     double get_y_speed() const;
     double get_speed() const;
+    void set_dim_speed(uint32_t& delay,
+                       uint32_t& next_move_date,
+                       double &current_speed,
+                       int& move,
+                       double target_speed,
+                       double keep_factor);
     void set_x_speed(double x_speed, double keep_factor = 0);
     void set_y_speed(double y_speed, double keep_factor = 0);
     void set_speed(double speed);
-    double get_angle() const;
+    double get_angle() const override;
     void set_angle(double angle);
     int get_max_distance() const;
     void set_max_distance(int max_distance);
     bool is_smooth() const;
     void set_smooth(bool smooth);
-    virtual int get_displayed_direction4() const override;
+    int get_displayed_direction4() const override;
 
     // movement
     virtual bool is_started() const override;
@@ -61,12 +67,11 @@ class StraightMovement: public Movement {
     void set_finished();
     virtual void stop() override;
 
-    virtual const std::string& get_lua_type_name() const override;
+    const std::string& get_lua_type_name() const override;
 
   protected:
 
-    void set_next_move_date_x(uint32_t next_move_date_x);
-    void set_next_move_date_y(uint32_t next_move_date_y);
+    void set_next_move_date(uint32_t& current_next_move_date, uint32_t next_move_date);
 
     void update_smooth_xy();
     void update_smooth_x();

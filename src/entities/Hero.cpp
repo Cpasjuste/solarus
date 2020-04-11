@@ -20,6 +20,7 @@
 #include "solarus/core/Equipment.h"
 #include "solarus/core/EquipmentItem.h"
 #include "solarus/core/Game.h"
+#include "solarus/core/Geometry.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/System.h"
 #include "solarus/entities/Block.h"
@@ -1066,8 +1067,9 @@ int Hero::get_real_movement_direction8() {
  * If he is making a diagonal move, this function considers that he is moving
  * towards both directions.
  *
- * \param direction4 one of the four main directions (0 to 3)
- * \return true if the hero is moving in that direction, even if he is actually doing a diagonal move
+ * \param direction4 One of the four main directions (0 to 3).
+ * \return \c true if the hero is moving in that direction,
+ * even if he is actually doing a diagonal move.
  */
 bool Hero::is_moving_towards(int direction4) const {
 
@@ -1275,11 +1277,11 @@ void Hero::notify_ground_below_changed() {
 
   Entity::notify_ground_below_changed();
 
+  sprites->destroy_ground();
+
   switch (get_ground_below()) {
 
   case Ground::TRAVERSABLE:
-    // Traversable ground: remove any special sprite displayed under the hero.
-    sprites->destroy_ground();
     set_walking_speed(normal_walking_speed);
     break;
 
@@ -1335,7 +1337,7 @@ void Hero::notify_ground_below_changed() {
   case Ground::SHALLOW_WATER:
     if (get_state()->is_affected_by_shallow_water()) {
       start_shallow_water();
-     }
+    }
     break;
 
   case Ground::GRASS:
@@ -2278,7 +2280,7 @@ void Hero::hurt(int damage) {
  */
 void Hero::start_grass() {
 
-  // display a special sprite below the hero
+  // Display a special sprite below the hero.
   sprites->create_ground(Ground::GRASS);
 
   uint32_t now = System::now();
@@ -2293,7 +2295,7 @@ void Hero::start_grass() {
  */
 void Hero::start_shallow_water() {
 
-  // display a special sprite below the hero
+  // Display a special sprite below the hero.
   sprites->create_ground(Ground::SHALLOW_WATER);
 
   uint32_t now = System::now();
@@ -2361,15 +2363,14 @@ void Hero::start_hole() {
     next_ground_date = System::now();
 
     // Don't calculate the attraction direction based on the wanted movement
-    // because the wanted movement may be different from the real one
+    // because the wanted movement may be different from the real one.
 
     if (last_solid_ground_coords.x == -1 ||
         (last_solid_ground_coords == get_xy())) {
-      // fall immediately because the hero was not moving but directly placed on the hole
+      // Fall immediately because the hero was not moving but directly placed on the hole.
       set_state(std::make_shared<FallingState>(*this));
     }
     else {
-
       ground_dxy = { 0, 0 };
 
       if (get_x() > last_solid_ground_coords.x) {
@@ -2722,6 +2723,15 @@ bool Hero::can_grab() const {
 bool Hero::can_pull() const {
 
   return get_equipment().has_ability(Ability::PULL);
+}
+
+/**
+ * \brief Returns whether the hero can interact with the given NPC.
+ * \param npc A non-playing character.
+ * \return \c true if the hero can interact with this NPC.
+ */
+bool Hero::can_interact_with_npc(Npc& npc) {
+  return get_state()->get_can_interact_with_npc(npc);
 }
 
 /**
