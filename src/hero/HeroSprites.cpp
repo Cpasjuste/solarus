@@ -794,6 +794,10 @@ void HeroSprites::update() {
     }
   }
 
+  if (ground_sprite != nullptr && !hero.is_ground_visible()) {
+    destroy_ground();
+  }
+
   hero.update_sprites();
 
   // Blinking.
@@ -1357,6 +1361,9 @@ void HeroSprites::set_animation_prepare_running() {
 
   set_animation_walking_normal();
   trail_sprite->set_current_animation("running");
+  if (tunic_sprite->get_current_direction() < trail_sprite->get_nb_directions()) {
+    trail_sprite->set_current_direction(tunic_sprite->get_current_direction());
+  }
 }
 
 /**
@@ -1367,6 +1374,9 @@ void HeroSprites::set_animation_running() {
   set_animation_walking_sword_loading();
   stop_displaying_sword_stars();
   trail_sprite->set_current_animation("running");
+  if (tunic_sprite->get_current_direction() < trail_sprite->get_nb_directions()) {
+    trail_sprite->set_current_direction(tunic_sprite->get_current_direction());
+  }
 }
 
 /**

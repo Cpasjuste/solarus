@@ -12,27 +12,18 @@ tile{
   layer = 0,
   x = 0,
   y = 0,
-  width = 48,
-  height = 48,
-  pattern = "4",
-}
-
-tile{
-  layer = 0,
-  x = 0,
-  y = 48,
   width = 320,
-  height = 192,
+  height = 240,
   pattern = "2",
 }
 
 tile{
   layer = 0,
-  x = 48,
+  x = 0,
   y = 0,
-  width = 272,
+  width = 112,
   height = 48,
-  pattern = "32",
+  pattern = "44",
 }
 
 destination{
@@ -40,6 +31,24 @@ destination{
   layer = 0,
   x = 24,
   y = 29,
-  direction = 1,
+  direction = 0,
+}
+
+sensor{
+  name = "sensor",
+  layer = 0,
+  x = 40,
+  y = 29,
+  width = 16,
+  height = 16,
+}
+
+sensor{
+  name = "sensor_2",
+  layer = 0,
+  x = 88,
+  y = 29,
+  width = 16,
+  height = 16,
 }
 
