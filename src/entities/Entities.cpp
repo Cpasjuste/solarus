@@ -1207,7 +1207,7 @@ void Entities::update() {
     camera->update();
   }
 
-  entities_to_draw.clear();  // Invalidate entities to draw.
+  //entities_to_draw.clear();  // Invalidate entities to draw.
   for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
     non_animated_regions[layer]->update();
   }

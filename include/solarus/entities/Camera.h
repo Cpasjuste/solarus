@@ -117,7 +117,8 @@ private:
     Scale zoom;                   /**< Level of zoom of this camera compared to 1:1 cam. */
     Scale zoom_corr;              /**< Correction factor for the zoom, to compensate integer rounding of the camera size */
     float rotation = 0.f;         /**< Rotation of this camera */
-    glm::vec2 position_offset;    /**< Small offset in position to compensate for discretization after zoom */
+    glm::vec2 position_offset
+    = {0.f,0.f};    /**< Small offset in position to compensate for discretization after zoom */
 };
 
 }

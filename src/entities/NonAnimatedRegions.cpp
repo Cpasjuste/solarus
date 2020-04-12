@@ -164,30 +164,32 @@ void NonAnimatedRegions::update() {
     return;
   }
 
-  std::vector<int> indexes_to_clear;
-  const CameraPtr& camera = map.get_camera();
-  if (camera == nullptr) {
-    return;
-  }
+  // Store votes for evictions of the cameras
+  std::unordered_map<int,int> indexes_to_clear;
 
-  const Size& cell_size = non_animated_tiles.get_cell_size();
-  const Rectangle& camera_position = camera->get_bounding_box();
-  const int row1 = camera_position.get_y() / cell_size.height;
-  const int row2 = (camera_position.get_y() + camera_position.get_height()) / cell_size.height;
-  const int column1 = camera_position.get_x() / cell_size.width;
-  const int column2 = (camera_position.get_x() + camera_position.get_width()) / cell_size.width;
-
-  for (const auto& kvp : optimized_tiles_surfaces) {
-    const int cell_index = kvp.first;
+  for (const auto& [cell_index, surface] : optimized_tiles_surfaces) {
     const int row = cell_index / non_animated_tiles.get_num_columns();
     const int column = cell_index % non_animated_tiles.get_num_columns();
-    if (column < column1 || column > column2 || row < row1 || row > row2) {
-      indexes_to_clear.push_back(cell_index);
+
+    for(const auto& camera : map.get_entities().get_cameras()) {
+      const Size& cell_size = non_animated_tiles.get_cell_size();
+      const Rectangle& camera_position = camera->get_bounding_box();
+      const int row1 = camera_position.get_y() / cell_size.height;
+      const int row2 = (camera_position.get_y() + camera_position.get_height()) / cell_size.height;
+      const int column1 = camera_position.get_x() / cell_size.width;
+      const int column2 = (camera_position.get_x() + camera_position.get_width()) / cell_size.width;
+
+      if (column < column1 || column > column2 || row < row1 || row > row2) {
+        indexes_to_clear[cell_index]++;
+      }
     }
   }
 
-  for (int cell_index : indexes_to_clear) {
-    optimized_tiles_surfaces.erase(cell_index);
+  int num_cameras = map.get_entities().get_cameras().size();
+  for (auto [cell_index, vote] : indexes_to_clear) {
+    if(vote >= num_cameras) {
+      optimized_tiles_surfaces.erase(cell_index);
+    }
   }
 }
 
