@@ -1,26 +1,18 @@
-__________________________
+# Changelog
 
-Solarus 1.6.5 (in progress)
-__________________________
+## Solarus 1.6.5 (in progress)
 
-Engine changes
---------------
+### Engine changes
 
 * Fix a possible crash when starting a timer on a removed entity (#1469).
-__________________________
 
-Solarus 1.6.4 (2020-04-12)
-__________________________
+## Solarus 1.6.4 (2020-04-12)
 
 No change in the engine package.
 
-__________________________
+## Solarus 1.6.3 (2020-04-11)
 
-Solarus 1.6.3 (2020-04-11)
-__________________________
-
-Engine changes
---------------
+### Engine changes
 
 * Fix macOS port not working since 1.6.1 due to OpenGL.
 * Fix shaders compilation in some OpenGL ES 3.0 platforms (#1437).
@@ -41,31 +33,21 @@ Engine changes
 * Fix talking to NPCs while swimming (#1043).
 * Fix creating dynamic sprite with tileset anims (#1461).
 
-
-Solarus launcher GUI changes
-----------------------------
+### Solarus launcher GUI changes
 
 * Fix UTF-8 quest path encoding handling (#1429).
 * Add drag and drop functionality to add new quests (#1420).
 
-__________________________
+## Solarus 1.6.2 (2019-08-15)
 
-Solarus 1.6.2 (2019-08-15)
-__________________________
-
-Engine changes
---------------
+### Engine changes
 
 * Fix scrolling teletransporters with a square size (#1412).
 * Fix hero displayed above stairs walls.
 
-__________________________
+## Solarus 1.6.1 (2019-08-10)
 
-Solarus 1.6.1 (2019-08-10)
-__________________________
-
-Engine changes
---------------
+### Engine changes
 
 * Add `-force-software-rendering` switch to solarus-run (stdgregwar).
 * Add argument to set mouse cursor visibility on start (#1263).
@@ -106,15 +88,14 @@ Engine changes
 * Fix screen surface not being initialised in 640x480 video mode (#1273).
 * Fix initialisation of screen surface without video window (#1274).
 * Fix restoring from fullscreen mode in Windows (#1284).
-* Fix warning when the default quest size is not supported by the quest (#1376). 
+* Fix warning when the default quest size is not supported by the quest (#1376).
 * Fix building with mingw-w64 in Linux (#1282).
 * Fix detection of LuaJIT version in CMake module (#1277).
 * Fix building GUI with mingw-w64 in Linux (#1285).
 * Fix running the unit tests from the build root folder (#1289).
 * Fix broken unit test that fails in Windows but not Linux (#1290).
 
-Lua API changes
----------------
+### Lua API changes
 
 This release adds new features but does not introduce any incompatibility.
 
@@ -122,13 +103,9 @@ This release adds new features but does not introduce any incompatibility.
 * Add methods state:get/set_can_use_teletransporter/switch/stream() (#1363).
 * Make surface, text_surface and timer userdata types indexable (#1394).
 
-__________________________
+## Solarus 1.6.0 (2018-12-22)
 
-Solarus 1.6.0 (2018-12-22)
-__________________________
-
-Engine changes
---------------
+### Engine changes
 
 * Solarus 1.5 quests are still supported by Solarus 1.6.
 * Add support of OpenGL shaders (#394) by stdgregwar, Vlag and Christopho.
@@ -183,21 +160,19 @@ Engine changes
 * CLI can accept an archive's path as argument.
 * Replaced SDL renderer by a custom GL backend, by stdgregwar.
 
-Solarus launcher GUI changes
-----------------------------
+### Solarus launcher GUI changes
 
 * Show the path and the compatibility format of each quest (#1129).
 * Lua console: provide variables game, map, entities and tp function.
 * Clear the console when a quest is started.
 * FileDialog now expects a file, either quest.dat or an archive (.solarus, .zip)
 
-Lua API changes
----------------
+### Lua API changes
 
 This release adds new features and deprecates a few ones
 but does not introduce any incompatibility.
 
-New features:
+#### New features
 
 * Add a shader API.
 * Add a custom hero state API.
@@ -272,15 +247,14 @@ New features:
 * Add methods get/set_color_modulation() by stdgregwar.
 * Add function sol.text_surface.get_predicted_size() by stdgregwar.
 
-Deprecated functions:
+#### Deprecated functions
 
 * Built-in video mode functions: use shaders instead.
 * Property maximum_moves of map:create_block(): use max_moves instead.
 * block:get/set_maximum_moves(): use get/set_max_moves() instead.
 * Angles in degrees in circle movement: use functions with radians instead.
 
-Data files format changes
--------------------------
+### Data files format changes
 
 * Maps: add support of custom properties for entities (#1094).
 * Maps: add property enabled_at_start to all entities (#1101).
@@ -293,23 +267,16 @@ Data files format changes
 * Tilesets: add support of custom frame number and delay (#683).
 * Make the tileset entities image optional (#884).
 
-___________________________
-
-Solarus 1.5.3 (2016-04-01)
-__________________________
+## Solarus 1.5.3 (2016-04-01)
 
 * Speed up loading maps by keeping tilesets in a cache (#1019).
 * Fix text_surface:set_horizontal/vertical_alignment() not working.
 * Fix parallax dynamic tiles still displayed when disabled or invisible.
 * Improve error message of non-square tile patterns with diagonal obstacles.
 
-__________________________
+## Solarus 1.5.1 (2016-11-29)
 
-Solarus 1.5.1 (2016-11-29)
-__________________________
-
-Engine changes
---------------
+### Engine changes
 
 * Add Spanish translation of the launcher GUI (thanks Diarandor!).
 * Fix registering quest to the launcher at quest install time (#948).
@@ -324,23 +291,17 @@ Engine changes
 * Improve error messages of surface creations and conversions.
 * Chests: set an initial value "entities/chest" to the sprite field.
 
-Solarus launcher GUI changes
-----------------------------
+### Solarus launcher GUI changes
 
 * Start the selected quest by pressing Return or double-clicking (#949).
 
-Sample quest changes
---------------------
+### Sample quest changes
 
 * The sample quest is now in a separate repository (#996).
 
-__________________________
+## Solarus 1.5.0 (2016-07-27)
 
-Solarus 1.5.0 (2016-07-27)
-__________________________
-
-Engine changes
---------------
+### Engine changes
 
 * Add a launcher GUI to ease chosing a quest and setting options (#693).
 * Rename the solarus_run executable to solarus-run.
@@ -351,7 +312,7 @@ Engine changes
 * Add a -lag option to simulate slower systems for debugging.
 * Print when the main loop starts and stops.
 * Print the Lua version at startup (#692).
-* Outputs are now prefixed by [Solarus] and the current simulated time.
+* Outputs are now prefixed by `[Solarus]` and the current simulated time.
 * Musics: Add support of custom OGG looping (#643).
 * Maps: allow more than 3 layers (#445).
 * Improve the performance of loading big maps (#854).
@@ -390,10 +351,9 @@ Engine changes
 * Fix support of joypads with multiple axes.
 * Fix sol.input.get_mouse_coordinates() ignoring the zoom factor (#734).
 
-Lua API changes
----------------
+### Lua API changes
 
-Changes that introduce incompatibilities:
+#### Changes that introduce incompatibilities
 
 * Fix missing collision detections and entity notifications.
 * chest:on_empty() is replaced by chest:on_opened(treasure) (#483).
@@ -411,7 +371,7 @@ Changes that introduce incompatibilities:
 * circle_movement:get/set_initial_angle() now use degrees (#721).
 * Add ability to hide mouse cursor (#891).
 
-Changes that do not introduce incompatibilities:
+#### Changes that do not introduce incompatibilities
 
 * Add a function sol.main.get_solarus_version() (#767).
 * Add a function sol.main.get_quest_format().
@@ -454,8 +414,7 @@ Changes that do not introduce incompatibilities:
 * Add a method surface:get_opacity() (#722).
 * Add methods surface/text_surface/sprite:get/set_blending_mode (#930).
 
-Data files format changes
--------------------------
+### Data files format changes
 
 * New directory logos to put the logo and icons of your quest, used in the GUI.
 * Quest properties: New properties describing the quest, used in the GUI (#838).
@@ -466,15 +425,11 @@ Data files format changes
 * Maps: width and height of custom entities are now mandatory as documented.
 * Dialogs: Allow empty texts.
 
-Sample quest changes
---------------------
+### Sample quest changes
 
 * Lots of new sprites and sounds from Diarandor.
 
-__________________________
-
-Solarus 1.4.5 (2015-11-22)
-__________________________
+## Solarus 1.4.5 (2015-11-22)
 
 Bug fixes for the 1.4 release.
 
@@ -491,19 +446,13 @@ Bug fixes for the 1.4 release.
 * Fix pickables with special movement falling in holes too early.
 * Fix blocking streams not working when the hero's speed is greater (#488).
 
-__________________________
-
-Solarus 1.4.4 (2015-08-19)
-__________________________
+## Solarus 1.4.4 (2015-08-19)
 
 Bug fixes for the 1.4 release.
 
 * Fix pickables falling in holes even when hooked (#740).
 
-__________________________
-
-Solarus 1.4.3 (2015-08-12)
-__________________________
+## Solarus 1.4.3 (2015-08-12)
 
 Bug fixes for the 1.4 release.
 
@@ -530,23 +479,15 @@ Bug fixes for the 1.4 release.
 * Fix the position of the shadow of pickables when they move.
 * Fix pickables not reacting to their ground (#655).
 
-_______________________________
+## Solarus 1.4.2 (2015-05-09)
 
-Solarus 1.4.2 (2015-05-09)
-_______________________________
-
-Bug fixes for the 1.4 release.
 No change in the engine (changes in Solarus Quest Editor only).
 
-_______________________________
-
-Solarus 1.4.1 (2015-05-09)
-_______________________________
+## Solarus 1.4.1 (2015-05-09)
 
 Bug fixes for the 1.4 release.
 
-Engine changes
---------------
+### Engine changes
 
 * Fix crash with doors whose opening condition is an item (#686).
 * Fix the size of custom entities supposed to be optional (#680).
@@ -555,15 +496,11 @@ Engine changes
 * Fix saving empty files.
 * Print an error message when there is no font in the quest.
 
-_______________________________
-
-Solarus 1.4.0 (2015-05-02)
-_______________________________
+## Solarus 1.4.0 (2015-05-02)
 
 The new quest editor release!
 
-Engine changes
---------------
+### Engine changes
 
 * Solarus now compiles with C++11.
 * Solarus Quest Editor was rewritten and is now in a separate repository.
@@ -581,63 +518,50 @@ Engine changes
 * Fix crash when a tileset image is missing (#590).
 * Don't die if the animation of a pickable treasure is missing.
 
-Lua API changes
----------------
+### Lua API changes
 
-Changes that introduce incompatibilities:
+#### Changes that introduce incompatibilities
 
 * Text surfaces: the size must now be set at runtime instead of in fonts.dat.
 * Text surfaces: the default font is now the first one in alphabetical order.
 
-Changes that do not introduce incompatibilities:
+#### Changes that do not introduce incompatibilities
 
 * sol.text_surface.create() now accepts a size parameter (default is 11).
 * Add a function sol.main.get_os().
 * Fix sprite:on_frame_changed() called twice on animation/direction change.
 
-Data files format changes
--------------------------
+### Data files format changes
 
 You can use the script
-editor/resources/tools/data_files_conversion/1.3_to_1.4/update_quest.lua
-to automatically update your data files.
-Don't forget to make a backup first.
+`editor/resources/tools/data_files_conversion/1.3_to_1.4/update_quest.lua` to
+automatically update your data files. Don't forget to make a backup first.
 
 * fonts.dat no longer exists. Fonts are a resource like others now (#611).
 * Fonts are now in a "fonts" directory instead of "text".
 * Maps: shop treasures have a new property "font".
 
-
-_________________________________
-
-Solarus 1.3.1 (2014-08-25)
-_________________________________
+## Solarus 1.3.1 (2014-08-25)
 
 Bug fixes for the 1.3 release.
 
-Solarus Quest Editor changes
-----------------------------
+### Solarus Quest Editor changes
 
 * Fix opening an empty sprite (#581).
 * Sort resources in the quest tree by natural order (#579).
 
-_______________________________
-
-Solarus 1.3.0 (2014-08-21)
-_______________________________
+## Solarus 1.3.0 (2014-08-21)
 
 The sprite editor release!
 
-Engine changes
---------------
+### Engine changes
 
 * Fix a crash when creating a timer from game:on_started() (#575).
 * Fix hero:save_solid_ground having no effect on water/lava/prickles (#567).
 
-Lua API changes
----------------
+### Lua API changes
 
-Changes that do not introduce incompatibilities:
+#### Changes that do not introduce incompatibilities
 
 * Add mouse functions and events.
 * Add a method sprite:get_animation_set_id() (#552).
@@ -652,20 +576,17 @@ Changes that do not introduce incompatibilities:
 * Fix custom entity collision detection when the other is not moving (#551).
 * Allow to call map methods even when the map is not running.
 
-Data files format changes
--------------------------
+### Data files format changes
 
 You can use the script
-editor/resources/tools/data_files_conversion/1.2_to_1.3/update_quest.lua
-to automatically update your data files.
-Don't forget to make a backup first.
+`editor/resources/tools/data_files_conversion/1.2_to_1.3/update_quest.lua` to
+automatically update your data files. Don't forget to make a backup first.
 
 * Maps: New properties sprite, sound for switches (#553).
 * Maps: The subtype of switches is now a string.
 * Tilesets: The id of a tile pattern is now a string (#559).
 
-Solarus Quest Editor changes
-----------------------------
+### Solarus Quest Editor changes
 
 * Add a sprite editor (#135). By Maxs.
 * Add a zoom level of 400%. By Maxs.
@@ -679,15 +600,11 @@ Solarus Quest Editor changes
 * Don't initially maximize the editor window.
 * Fix converting quests to several versions in one go.
 
-_________________________________
-
-Solarus 1.2.1 (2014-08-02)
-_________________________________
+## Solarus 1.2.1 (2014-08-02)
 
 Bug fixes for the 1.2 release.
 
-Engine changes
---------------
+### Engine changes
 
 * Fix entity:is_in_same_region() giving wrong results (#500).
 * Fix custom_entity:set_can_traverse() giving opposite results.
@@ -701,22 +618,17 @@ Engine changes
 * Fix on_joypad events not always working (#519). By xethm55.
 * Add an error when a hero sprite animation is missing (#485). By Nate-Devv.
 
-Solarus Quest Editor changes
-----------------------------
+### Solarus Quest Editor changes
 
 * Fix corrupted image in quest created by Quest > New quest (#548).
 * Fix tiles created on invisible layer (#508). By Maxs1789.
 * Fix crash when an NPC sprite does not have 4 directions (#510). By Maxs1789.
 
-_______________________________
-
-Solarus 1.2.0 (2014-05-06)
-_______________________________
+## Solarus 1.2.0 (2014-05-06)
 
 The SDL2 release.
 
-Engine changes
---------------
+### Engine changes
 
 * Upgrade to SDL 2 (#262). Thanks Vlag.
 * Accelerate video operations in GPU if available. Expect huge speedups.
@@ -767,12 +679,10 @@ Engine changes
 * Don't die if attempting to start a game without map.
 * Don't die if attempting to start a non-existing dialog.
 
-Data files format changes
--------------------------
+### Data files format changes
 
-You can use the script tools/data_files_conversion/1.1_to_1.2/update_quest.lua
-to automatically update your data files.
-Don't forget to make a backup first.
+You can use the script `tools/data_files_conversion/1.1_to_1.2/update_quest.lua`
+to automatically update your data files. Don't forget to make a backup first.
 
 * Languages: New syntax of strings.dat easier to read and parse (#170).
 * Maps: The world property is now optional (#128).
@@ -783,10 +693,9 @@ Don't forget to make a backup first.
 * Maps: Walls have a new property "stops_projectiles".
 * Sounds: Running into a wall now plays a sound other than "explosion" (#297).
 
-Lua API changes
----------------
+### Lua API changes
 
-Changes that introduce incompatibilities:
+#### Changes that introduce incompatibilities
 
 * Video mode names have changed: no more wide, fullscreen ou windowed names.
 * sol.video.switch_mode() no longer changes the fullscreen flag.
@@ -814,7 +723,7 @@ Changes that introduce incompatibilities:
 * Timers: returning true in the callback now repeats the timer (#152).
 * sol.timer.start() now always returns the timer, even if its delay is zero.
 
-Changes that do not introduce incompatibilities:
+#### Changes that do not introduce incompatibilities
 
 * New Lua type and methods for custom map entities.
 * New API of destructible objects, fully customizable now (#270).
@@ -862,8 +771,7 @@ Changes that do not introduce incompatibilities:
 * New function sol.main.get_elapsed_time() to get the simulated time (#424).
 * New function sol.input.get_key_modifiers() to get the key modifiers state.
 
-Solarus Quest Editor changes
-----------------------------
+### Solarus Quest Editor changes
 
 * The editor is now built with Maven (#365).
 * Multiple entities can now be resized at the same time (#405).
@@ -894,28 +802,20 @@ Solarus Quest Editor changes
 * Fix wrong displaying of right-up and left-down diagonal jumpers.
 * Switches, crystals and crystal blocks now show their actual sprite (#376).
 
-_________________________________
-
-Solarus 1.1.1 (2013-12-01)
-_________________________________
+## Solarus 1.1.1 (2013-12-01)
 
 Bug fixes for the 1.1 release.
 
-Engine changes
---------------
+### Engine changes
 
 * Fix a libmodplug compilation problem due to wrong sndfile.h (#324).
 * Fix teletransporters activated while coming back from falling (#346).
 * Fix a crash when changing the hero state in block:on_moved (#340).
 * Fix enemy death detection when falling into hole, lava or water (#350).
 
-_______________________________
+## Solarus 1.1.0 (2013-10-13)
 
-Solarus 1.1.0 (2013-10-13)
-_______________________________
-
-Engine changes
---------------
+### Engine changes
 
 * Add a very short sample quest with free graphics and musics (#232, #318).
 * Allow scripted dialog boxes (#184).
@@ -953,12 +853,10 @@ Engine changes
 * Log all errors in error.txt (#287).
 * The quest archive can now also be named data.solarus.zip (#293).
 
-Data files format changes
--------------------------
+### Data files format changes
 
-You can use the script tools/data_files_conversion/1.0_to_1.1/update_quest.lua
-to automatically update your data files.
-Don't forget to make a backup first.
+You can use the script `tools/data_files_conversion/1.0_to_1.1/update_quest.lua`
+to automatically update your data files. Don't forget to make a backup first.
 
 * Sprites: New syntax easier to read and parse (#168).
 * project_db.dat: New syntax easier to read and parse (#169).
@@ -970,10 +868,9 @@ Don't forget to make a backup first.
 * dialogs.dat: Allow any property in dialogs. dialog_id and text are mandatory.
 * languages.dat no longer exists. Languages are in project_db.dat now (#265).
 
-Lua API changes
----------------
+### Lua API changes
 
-Changes that introduce incompatibilities:
+#### Changes that introduce incompatibilities
 
 * map:is_dialog_enabled() is replaced by game:is_dialog_enabled().
 * map:start_dialog() is replaced by game:start_dialog().
@@ -981,7 +878,6 @@ Changes that introduce incompatibilities:
 * Remove map:set_dialog_style(): replace it in your own dialog box system.
 * Remove map:set_dialog_position(): replace it in your own dialog box system.
 * Remove map:set_dialog_variable(): use the info param of game:start_dialog().
-
 * Make map:get_entities() returns an iterator instead of an array (#249).
 * Replace map:set_pause_enabled() by game:set_pause_allowed().
 * Make the enemy:create_enemy() more like map:create_enemy() (#215).
@@ -991,12 +887,11 @@ Changes that introduce incompatibilities:
 * In game:get/set_ability(), ability "get_back_from_death" no longer exists.
 * Empty chests no longer show a dialog if there is no on:empty() event (#274).
 
-Changes that do not introduce incompatibilities:
+#### Changes that do not introduce incompatibilities
 
 * game:get/set_starting_location(): map and destination can now be nil.
 * hero:teleport(): make destination optional (maps now have a default one).
 * map:create_teletransporter(): make destination optional.
-
 * Add a function sol.video.get_quest_size().
 * Make map:get_camera_position() also return the size of the visible area.
 * Add a method entity:is_in_same_region(entity).
@@ -1018,32 +913,26 @@ Changes that do not introduce incompatibilities:
 * Add a method map:get_music() (#306).
 * Add an optional parameter on_top to sol.menu.start.
 * Add sprite:on_animation_changed() and sprite:on_direction_changed() (#153).
-
 * Add a function sol.input.is_key_pressed().
 * Add a function sol.input.is_joypad_button_pressed().
 * Add a function sol.input.get_joypad_axis_state().
 * Add a function sol.input.get_joypad_hat_direction().
 * Add functions sol.input.is/set_joypad_enabled() (#175).
-
 * Add a function sol.audio.get_music() (#146).
 * Add a function sol.audio.get_music_format().
 * Add a function sol.audio.get_music_num_channels().
 * Add functions sol.audio.get/set_music_channel_volume() for .it files (#250).
 * Add functions sol.audio.get/set_music_tempo() for .it files (#250).
-
 * Return nil if the string is not found in sol.language.get_string().
 * sol.language.get_dialog() is now implemented.
 * Add a function game:stop_dialog(status) to close the scripted dialog box.
 * Add an event game:on_dialog_started(dialog, info).
 * Add an event game:on_dialog_finished(dialog).
-
 * Add functions game:start_game_over() and game:stop_game_over (#261).
 * Add events game:on_game_over_started(), game:on_game_over_finished (#261).
-
 * Add sol.file functions: open(), exists(), remove(), mkdir() (#267).
 
-Solarus Quest Editor changes
-----------------------------
+### Solarus Quest Editor changes
 
 * Add a GUI to upgrade automatically quest files to the latest format (#247).
 * Remove the initial prompt dialog to open a quest (#264).
@@ -1056,32 +945,29 @@ Solarus Quest Editor changes
 * Fix a crash when creating a destructible without tileset selected (#283).
 * Fix the sprite field disabled in the NPC properties dialog (#303).
 
-__________________________
-
-solarus-1.0.4 (2013-06-26)
-__________________________
+## Solarus 1.0.4 (2013-06-26)
 
 Bug fixes for the 1.0 release.
 
-Solarus changes:
+### Engine changes
 
 * Don't die if a script tries so show a missing string (#237).
 * Don't die if a treasure has a variant unexistent in the item sprite.
 * Fix customization of joypad commands.
 
-solarus-1.0.3 (2013-06-25)
+## Solarus 1.0.3 (2013-06-25)
 
 Bug fixes for the 1.0 release.
 
-Solarus changes:
+### Engine changes
 
 * Fix blocks not completely moved since Solarus 1.0.2.
 
-solarus-1.0.2 (2013-06-22)
+## Solarus 1.0.2 (2013-06-22)
 
 Bug fixes for the 1.0 release.
 
-Solarus changes:
+### Engine changes
 
 * Fix a crash when a treasure callback changes the hero's state (#224).
 * Fix a crash when a victory callback changes the hero's state.
@@ -1107,21 +993,21 @@ Solarus changes:
 * Don't die if the self parameter is missing when calling a method (#219).
 * Fix dangling pointers after removing some kind of entities.
 
-Solarus Quest Editor changes:
+### Solarus Quest Editor changes
 
 * Editor: allow to create map entities from the quest tree (#208).
 * Editor: fix a typo in the bomb flower sprite (#214).
 * Editor: fix a possible NullPointerException when opening an invalid map.
 
-Documentation changes:
+### Documentation changes
 
 * Documentation: add the syntax specification of maps and tilesets.
 
-solarus-1.0.1 (2013-05-12)
+## Solarus 1.0.1 (2013-05-12)
 
 Bug fixes for the 1.0 release.
 
-Solarus changes:
+### Engine changes
 
 * Fix the Mac OS X port.
 * Fix jump movement accross two maps ending up in a wall (#189).
@@ -1141,7 +1027,7 @@ Solarus changes:
 * Allow enemies to lose 0 life points when attacked (#137).
 * Pixel-precise collisions can now also be performed on 32-bit images.
 
-Solarus Quest Editor changes:
+### Solarus Quest Editor changes
 
 * Editor: add the possibility to show or hide each type of entity (#60).
 * Editor: keep the map coordinates shown when changing the zoom (#183).
@@ -1150,12 +1036,12 @@ Solarus Quest Editor changes:
 * Editor: show an appropriate error message if the LuaJ jar is missing (#173).
 * Editor: fix the title bar string (#176).
 
-Documentation changes:
+### Documentation changes
 
 * Split the C++ documentation and the quest data files documentation (#181).
 * Add a search feature to the documentation pages.
 
-solarus-1.0.0 (2013-05-03)
+## Solarus 1.0.0 (2013-05-03)
 
 The "I love Lua" release.
 
@@ -1180,7 +1066,7 @@ Anyway, conversion scripts are provided to upgrade your existing data files,
 but not your scripts (the scripting API, which was working but ugly and
 unstable, has totally changed).
 
-Changes:
+### Engine changes
 
 * Rewrite the Lua scripting API from scratch. Cleaner, real datatypes, much
 easier to use, less error-prone, much more features, fully documentated.
@@ -1196,8 +1082,7 @@ and customizable.
 * Add conversion scripts to upgrade existing data files (but not scripts).
 * Fix infinite explosions of bomb flowers.
 
-This version also include changes from 0.9.3, though 0.9.3 is not released
-yet:
+This version also include changes from 0.9.3, though 0.9.3 is not released yet:
 
 * The game screen size can now be set at compilation time.
 * Change the savegames directory on Mac OS X.
@@ -1208,7 +1093,7 @@ yet:
 * Fix the end of target movement on slow machines (#34).
 * Fix the hero being freezed when using the hookshot on bomb flowers (#119).
 
-Changes in Solarus Quest Editor:
+### Solarus Quest Editor changes
 
 * First release of a working editor.
 * Implement creating a new quest.
@@ -1216,10 +1101,10 @@ Changes in Solarus Quest Editor:
 * Allow to show a grid on the map editor.
 * Fix a lot of bugs.
 
-solarus-0.9.3 (2013-05-08)
+## Solarus 0.9.3 (2013-05-08)
 
-This should be the last release of the 0.9 branch.
-Existing games must now upgrade to Solarus 1.0.
+This should be the last release of the 0.9 branch. Existing games must now
+upgrade to Solarus 1.0.
 
 However, upgrading to Solarus 1.0 represents a lot of work and testing: in the
 meantime, this release introduces important fixes that improve the situation
@@ -1236,12 +1121,12 @@ of existing games.
 * Fix the end of target movement on slow machines (#34).
 * Fix the hero being freezed when using the hookshot on bomb flowers (#119).
 
-solarus-0.9.2 (2012-04-03)
+## Solarus 0.9.2 (2012-04-03)
 
 * Fix a crash using a teletransporter to the same map while an enemy is dying
 * Immobilized enemies restarted too early when using a teletransporter
 
-solarus-0.9.1 (2012-02-12)
+## Solarus 0.9.1 (2012-02-12)
 
 * The player can now run with the action key if he has the ability "run"
 * Fix locked doors and blocks that could consume more than one small key
@@ -1260,6 +1145,6 @@ hookshot, they are activated instead
 * Don't stop the super spin attack on shallow water
 * Add debug keys to change the hero's layer
 
-solarus-0.9.0 (2011-12-23)
+## Solarus 0.9.0 (2011-12-23)
 
 * Initial release of Solarus without quest data
