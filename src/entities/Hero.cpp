@@ -132,6 +132,10 @@ Hero::Hero(const EquipmentPtr &equipment, const std::string& name):
   // sprites
   set_drawn_in_y_order(true);
   sprites = std::unique_ptr<HeroSprites>(new HeroSprites(*this, get_equipment()));
+
+  //Allow hero to collide with other heroes
+  set_collision_modes(CollisionMode::COLLISION_OVERLAPPING |
+                      CollisionMode::COLLISION_SPRITE);
 }
 
 /**
@@ -1694,6 +1698,13 @@ bool Hero::is_separator_obstacle(Separator& separator, const Rectangle& /* candi
 }
 
 /**
+ * @copydoc Entity::notify_collision
+ */
+void Hero::notify_collision(Entity& other, Sprite& this_sprite, Sprite& other_sprite) {
+  other.notify_collision_with_hero(*this, other_sprite, this_sprite);
+}
+
+/**
  * \copydoc Entity::notify_collision_with_destructible
  */
 void Hero::notify_collision_with_destructible(
@@ -1745,6 +1756,65 @@ void Hero::notify_collision_with_enemy(
 
     if (overlaps(enemy_sprite_rectangle)) {
       enemy.attack_hero(*this, &enemy_sprite);
+    }
+  }
+}
+
+/**
+ * @brief notify_collision_with_hero
+ * @param hero
+ * @param this_sprite
+ * @param hero_sprite
+ */
+void Hero::notify_collision_with_hero(Hero& hero, Sprite& this_sprite, Sprite& hero_sprite) {
+  const std::string& this_sprite_id = this_sprite.get_animation_set_id();
+  const std::string& other_sprite_id = hero_sprite.get_animation_set_id();
+  if (this_sprite_id == get_hero_sprites().get_sword_sprite_id() && other_sprite_id == hero.get_hero_sprites().get_tunic_sprite_id()) {
+    // the hero's sword overlaps the enemy
+    attack_hero(hero, &this_sprite);
+  }
+}
+
+/**
+ * @brief Hero::attack_hero
+ * @param hero
+ * @param this_sprite
+ */
+void Hero::attack_hero(Hero& hero, Sprite* this_sprite) {
+  if (hero.can_be_hurt(this)) {
+    bool hero_protected = false;
+    if (hero.get_equipment().has_ability(Ability::SHIELD, 1)
+        && hero.can_use_shield()) {
+
+      // Compute the direction corresponding to the angle between the enemy and the hero.
+      double angle = hero.get_angle(*this, nullptr, this_sprite);
+      int protected_direction4 = (int) ((angle + Geometry::PI_OVER_2 / 2.0) * 4 / Geometry::TWO_PI);
+      protected_direction4 = (protected_direction4 + 4) % 4;
+
+      // Also get the direction of the enemy's sprite.
+      int sprite_opposite_direction4 = -1;
+      if (this_sprite != nullptr) {
+        sprite_opposite_direction4 = (this_sprite->get_current_direction() + 2) % 4;
+      }
+
+      // The hero is protected if he is facing the opposite of one of these directions.
+      hero_protected = hero.is_facing_direction4(protected_direction4) ||
+          hero.is_facing_direction4(sprite_opposite_direction4);
+    }
+
+    if (hero_protected) {
+      hero.get_equipment().notify_ability_used(Ability::SHIELD);
+    }
+    else {
+      // Let the enemy script handle this if it wants.
+      const bool handled = false; /*get_lua_context()->enemy_on_attacking_hero(
+          *this, hero, this_sprite
+      );*/
+      if (!handled) {
+        // Scripts did not customize the attack:
+        // do the built-in hurt state of the hero.
+        hero.hurt(*this, this_sprite, get_sword_damage_factor());
+      }
     }
   }
 }

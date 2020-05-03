@@ -167,7 +167,11 @@ const Game& Entity::State::get_game() const {
  * \return the equipment
  */
 Equipment& Entity::State::get_equipment() {
-  return get_game().get_equipment();
+  if(has_entity() && entity->is_hero()) {
+    return entity->as<Hero>().get_equipment();
+  } else {
+    return get_game().get_equipment();
+  }
 }
 
 /**
@@ -175,7 +179,11 @@ Equipment& Entity::State::get_equipment() {
  * \return the equipment
  */
 const Equipment& Entity::State::get_equipment() const {
-  return get_game().get_equipment();
+  if(has_entity() && entity->is_hero()) {
+    return entity->as<Hero>().get_equipment();
+  } else {
+    return get_game().get_equipment();
+  }
 }
 
 /**

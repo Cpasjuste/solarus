@@ -207,6 +207,7 @@ class Hero: public Entity {
      * Handle collisions between the hero and other entities.
      */
     void check_position() override;
+    void notify_collision(Entity& other, Sprite& this_sprite, Sprite& other_sprite) override;
     void notify_collision_with_destructible(Destructible& destructible, CollisionMode collision_mode) override;
     void notify_collision_with_enemy(Enemy& enemy, CollisionMode) override;
     void notify_collision_with_enemy(Enemy& enemy, Sprite& this_sprite, Sprite& enemy_sprite) override;
@@ -223,6 +224,7 @@ class Hero: public Entity {
     void notify_collision_with_block(Block& block) override;
     void notify_collision_with_separator(Separator& separator, CollisionMode collision_mode) override;
     void notify_collision_with_explosion(Explosion& explosion, Sprite& sprite_overlapping) override;
+    void notify_collision_with_hero(Hero& hero, Sprite& this_sprite, Sprite& hero_sprite) override;
     void avoid_collision(Entity& entity, int direction);
     bool is_striking_with_sword(Entity& entity) const;
 
@@ -379,6 +381,9 @@ class Hero: public Entity {
 
     // commands
     void update_commands_effects();
+
+    // friendly fire
+    void attack_hero(Hero& hero, Sprite* this_sprite);
 
     // state
     bool invincible;                       /**< Whether the hero is temporarily invincible. */

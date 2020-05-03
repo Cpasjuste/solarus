@@ -3476,6 +3476,15 @@ void Entity::notify_collision_with_enemy(Enemy& /* enemy */, Sprite& /* this_spr
 }
 
 /**
+ * @brief This function is called when a hero's sprite collides with a sprite of this entity.
+ * @param hero the hero
+ * @param this_sprite this entity's sprite that overlaps the hero sprite
+ * @param hero_sprite the hero's sprite that overlaps a sprite of this entity
+ */
+void Entity::notify_collision_with_hero(Hero& /*hero*/, Sprite& /*this_sprite*/, Sprite& /*hero_sprite*/) {
+}
+
+/**
  * \brief Notifies this entity that it has just attacked an enemy.
  *
  * This function is called even if this attack was not successful.

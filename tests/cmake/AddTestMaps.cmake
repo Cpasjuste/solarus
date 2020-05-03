@@ -19,6 +19,7 @@ list(APPEND LUA_TEST_MAPS
   "teletransportation_tests/main"
   "multiplayer/heroes"
   "multiplayer/cameras"
+  "multiplayer/friendly_fire"
   "bugs/486_diagonal_dynamic_tiles"
   "bugs/496_stream_speed_0"
   "bugs/526_get_entities_same_region"
