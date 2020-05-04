@@ -2446,6 +2446,9 @@ int LuaContext::map_api_create_entity(lua_State* l) {
         l, lua_upvalueindex(1)
     );
     Map& map = *check_map(l, 1);
+    if (!map.is_loaded()) {
+      LuaTools::arg_error(l, 1, "This map is not loaded");
+    }
     const EntityData& data = EntityData::check_entity_data(l, 2, type);
 
     get().create_map_entity_from_data(map, data);

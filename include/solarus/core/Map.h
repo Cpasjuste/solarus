@@ -272,6 +272,7 @@ inline const Tileset& Map::get_tileset() const {
  * \return The entities of the map.
  */
 inline const Entities& Map::get_entities() const {
+  SOLARUS_ASSERT(entities != nullptr, "Entities are not loaded");
   return *entities;
 }
 
@@ -279,6 +280,7 @@ inline const Entities& Map::get_entities() const {
  * \overload Non-const version.
  */
 inline Entities& Map::get_entities() {
+  SOLARUS_ASSERT(entities != nullptr, "Entities are not loaded");
   return *entities;
 }
 
