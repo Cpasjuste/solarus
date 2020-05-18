@@ -577,9 +577,8 @@ void TextSurface::rebuild_ttf() {
        format->Gmask,
        format->Bmask,
        format->Amask));
-  SDL_FillRect(full.get(),nullptr,0x00FFFFFF);
   SDL_BlitSurface(surface.get(),nullptr,full.get(),nullptr);
-  this->surface = Surface::create(std::move(full));
+  this->surface = Surface::create(std::move(full), true);
 }
 
 /**
