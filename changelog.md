@@ -4,6 +4,8 @@
 
 ### Engine changes
 
+* Fix TTF fonts using wrong color for antialiasing (#1390).
+* Fix TTF Fonts not rendering correctly (#1389).
 * Fix a possible crash when starting a timer on a removed entity (#1469).
 
 ## Solarus 1.6.4 (2020-04-12)
