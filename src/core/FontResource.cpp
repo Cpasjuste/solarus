@@ -189,9 +189,11 @@ SurfacePtr FontResource::get_bitmap_font(const std::string& font_id) {
  * \brief Returns an outline font with the specified size.
  * \param font_id Id of the outline font to get. It must exist.
  * \param size Size to use.
+ * \param hinting The hinting setting to use.
+ * \param kerning Whether to use kerning for rendering.
  * \return The font.
  */
-TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size) {
+TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size, HintingSetting hinting, bool kerning) {
 
   if (!fonts_loaded) {
     load_fonts();
@@ -202,14 +204,14 @@ TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size) {
   FontFile& font = kvp->second;
   Debug::check_assertion(font.bitmap_font == nullptr, std::string("This is not an outline font: '") + font_id + "'");
 
-  std::map<int, OutlineFontReader>& outline_fonts = kvp->second.outline_fonts;
+  std::map<OutlineFontProperties, OutlineFontReader>& outline_fonts = kvp->second.outline_fonts;
 
-  const auto& kvp2 = outline_fonts.find(size);
+  const auto& kvp2 = outline_fonts.find(OutlineFontProperties{size, hinting, kerning});
   if (kvp2 != outline_fonts.end()) {
     return *kvp2->second.outline_font;
   }
 
-  // First time we want this font with this particular size.
+  // First time we want this font with this particular size, hinting and kerning.
   SDL_RWops_UniquePtr rw = SDL_RWops_UniquePtr(SDL_RWFromMem(
       const_cast<char*>(font.buffer.data()),
       (int) font.buffer.size()
@@ -219,9 +221,29 @@ TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size) {
       std::string("Cannot load font from file '") + font.file_name
       + "': " + TTF_GetError()
   );
+
+  // Set font hinting setting.
+  switch (hinting) {
+    case HintingSetting::NORMAL:
+      TTF_SetFontHinting(outline_font.get(), TTF_HINTING_NORMAL);
+      break;
+    case HintingSetting::LIGHT:
+      TTF_SetFontHinting(outline_font.get(), TTF_HINTING_LIGHT);
+      break;
+    case HintingSetting::MONO:
+      TTF_SetFontHinting(outline_font.get(), TTF_HINTING_MONO);
+      break;
+    case HintingSetting::NONE:
+      TTF_SetFontHinting(outline_font.get(), TTF_HINTING_NONE);
+      break;
+  }
+
+  // Set font kerning.
+  TTF_SetFontKerning(outline_font.get(), kerning);
+
   OutlineFontReader reader = { std::move(rw), std::move(outline_font) };
-  outline_fonts.emplace(size, std::move(reader));
-  return *outline_fonts.at(size).outline_font;
+  outline_fonts.emplace(OutlineFontProperties{size, hinting, kerning}, std::move(reader));
+  return *outline_fonts.at(OutlineFontProperties{size, hinting, kerning}).outline_font;
 }
 
 }

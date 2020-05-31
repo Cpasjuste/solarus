@@ -19,12 +19,16 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/graphics/SurfacePtr.h"
+#include "solarus/graphics/TextSurface.h"
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <SDL_ttf.h>
 
 namespace Solarus {
+
+using HintingSetting = TextSurface::HintingSetting;
 
 /**
  * \brief Provides access to font files.
@@ -40,7 +44,7 @@ class FontResource {
     static bool exists(const std::string& font_id);
     static bool is_bitmap_font(const std::string& font_id);
     static SurfacePtr get_bitmap_font(const std::string& font_id);
-    static TTF_Font& get_outline_font(const std::string& font_id, int size);
+    static TTF_Font& get_outline_font(const std::string& font_id, int size, HintingSetting hinting, bool kerning);
 
   private:
 
@@ -59,7 +63,12 @@ class FontResource {
     using TTF_Font_UniquePtr = std::unique_ptr<TTF_Font, TTF_Font_Deleter>;
 
     /**
-     * Reading an outline font for a given font size.
+     * Properties of an outline font: size, hinting and kerning.
+     */
+    using OutlineFontProperties = std::tuple<int, HintingSetting, bool>;
+
+    /**
+     * Reading an outline font for a given font size, hinting and kerning.
      */
     struct OutlineFontReader {
         SDL_RWops_UniquePtr rw;
@@ -74,8 +83,8 @@ class FontResource {
       std::string buffer;                             /**< The font file loaded into memory. */
 
       SurfacePtr bitmap_font;                         /**< The font bitmap. Only used for bitmap fonts. */
-      std::map<int, OutlineFontReader>
-          outline_fonts;                              /**< This font in any size it was loaded with.
+      std::map<OutlineFontProperties, OutlineFontReader>
+          outline_fonts;                              /**< This font in any size/hinting/kerning it was loaded with.
                                                        * Only used for outline fonts. */
     };
 
