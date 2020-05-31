@@ -41,6 +41,7 @@ foreach(TEST_SOURCE ${TEST_SOURCES})
   target_link_libraries(${TEST_TARGET}
     PUBLIC
       solarus-testing
+      SDL2::Main
   )
   set_target_properties(${TEST_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin"

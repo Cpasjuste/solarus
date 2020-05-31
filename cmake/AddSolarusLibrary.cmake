@@ -16,25 +16,29 @@ endif()
 # Declare the public/private libraries that "solarus" depends on
 target_link_libraries(solarus
   PUBLIC
-    "${SDL2_LIBRARY}"
-    "${SDL2_IMAGE_LIBRARY}"
-    "${SDL2_TTF_LIBRARY}"
-    "${OPENGL_LIBRARY}"
-    "${OPENAL_LIBRARY}"
-    "${LUA_LIBRARY}"
-    "${DL_LIBRARY}"
-    "${PHYSFS_LIBRARY}"
-    "${VORBIS_LIBRARY}"
-    "${VORBISFILE_LIBRARY}"
-    "${OGG_LIBRARY}"
-    "${MODPLUG_LIBRARY}"
+    SDL2::Core
+    SDL2::Image
+    SDL2::TTF
+    GLM::GLM
+    OpenAL::OpenAL
+    PhysFS::PhysFS
+    Vorbis::Vorbis
+    Vorbis::File
+    Ogg::Ogg
+    ModPlug::ModPlug
 )
 
-# Set the public/private compiler options required by "solarus"
-target_compile_options(solarus
-  PUBLIC
-    "${SDL2_CFLAGS_OTHER}"
-)
+# Add OpenGL imported target to "solarus" declared dependencies
+if(OPENGL_FOUND)
+  target_link_libraries(solarus PUBLIC OpenGL::GL)
+endif()
+
+# Add Lua or LuaJIT imported target to "solarus" declared dependencies
+if(LUA_FOUND)
+  target_link_libraries(solarus PUBLIC Lua::Lua)
+elseif(LUAJIT_FOUND)
+  target_link_libraries(solarus PUBLIC Lua::LuaJIT)
+endif()
 
 # Set the build properties for "solarus"
 set_target_properties(solarus PROPERTIES
