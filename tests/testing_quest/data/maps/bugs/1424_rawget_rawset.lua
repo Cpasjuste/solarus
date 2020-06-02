@@ -29,6 +29,9 @@ function map:test_on_userdata()
   assert_equal(tele2.on_activated, unique_on_activated, "__index: tele2")
   assert_equal(sol.main.rawget(tele1, "on_activated"), nil, "rawget: tele1")
   assert_equal(sol.main.rawget(tele2, "on_activated"), unique_on_activated, "rawget: tele2")
+
+  -- Testing sol.main.rawset on userdata.
+  self:test_set_returns(sol.main.rawset, tele2)
 end
 
 function map:test_on_table(get, set)
@@ -39,6 +42,7 @@ function map:test_on_table(get, set)
   assert_equal(get(data, "z"), nil, "nil not found at z")
   set(data, "d", 4)
   assert_equal(data.d, 4, "4 is not found at d")
+  self:test_set_returns(set, data)
 
   -- Edge cases that might not be documented:
   assert_equal(get(data, nil), nil, "nil not found at nil")
@@ -51,4 +55,9 @@ function map:test_on_table(get, set)
   assert_error{set, data, label="set with 1 argument worked"}
   assert_error{set, data, "a", label="set with 2 arguments worked"}
   assert_error{set, data, nil, 9, label="set index nil worked"}
+end
+
+function map:test_set_returns(set, table)
+  local tmp = {}
+  assert_equal(table, set(table, tmp, 0), "set did not return the table")
 end

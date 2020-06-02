@@ -590,13 +590,16 @@ int LuaContext::main_api_rawset(lua_State* l) {
   return state_boundary_handle(l, [&] {
     switch (lua_type(l, 1)) {
     case LUA_TUSERDATA:
-      return userdata_meta_newindex_as_table(l);
+      userdata_meta_newindex_as_table(l);
+      // Take advantage of the fact newindex leaves the arguments in place.
+      lua_settop(l, 1);
+      return 1;
     case LUA_TTABLE:
       if (3 < LuaTools::check_mintop(l, 3)) {
         lua_settop(l, 3);
       }
       lua_rawset(l, 1);
-      return 0;
+      return 1;
     default:
       LuaTools::arg_error(l, 1, "table or userdata expected");
     }
