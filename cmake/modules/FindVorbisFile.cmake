@@ -1,31 +1,111 @@
-# - Find vorbisfile
-# Find the native vorbisfile includes and libraries
+# FindVorbisFile - finds the VorbisFile library
 #
-#  VORBISFILE_INCLUDE_DIR - where to find vorbisfile.h, etc.
-#  VORBISFILE_LIBRARIES   - List of libraries when using libvorbisfile.
-#  VORBISFILE_FOUND       - True if vorbisfile was found.
+# This module uses the following environment variables:
+#
+#   VORBISFILE_DIR
+#     A directory to use as hint for locating VorbisFile
+#
+# This module provides the following imported targets:
+#
+#   Vorbis::File
+#     The VorbisFile library
+#
+# This module defines the following result variables:
+#
+#   VORBISFILE_FOUND
+#     True if the system has VorbisFile
+#   VORBISFILE_VERSION
+#     The version of the found VorbisFile (if available)
+#   VORBISFILE_INCLUDE_DIRS
+#     Include directories needed to use VorbisFile
+#   VORBISFILE_LIBRARIES
+#     Libraries needed to link to VorbisFile
+#   VORBISFILE_DEFINITIONS
+#     Definitions to use when compiling code that uses VorbisFile
+#
+# This module defines the following cache variables:
+#
+#   VORBISFILE_INCLUDE_DIR
+#     The directory containing 'vorbis/vorbisfile.h'
+#   VORBISFILE_LIBRARY
+#     The path to the VorbisFile library
+#
 
-if(VORBISFILE_INCLUDE_DIR)
-    # Already in cache, be silent
-    set(VORBISFILE_FIND_QUIETLY TRUE)
-endif(VORBISFILE_INCLUDE_DIR)
+# try to obtain package data from pkg-config
+find_package(PkgConfig QUIET)
+pkg_check_modules(PC_VORBISFILE QUIET vorbisfile)
 
-find_path(VORBISFILE_INCLUDE_DIR vorbisfile.h
-    HINTS /usr/local/angstrom/arm/arm-angstrom-linux-gnueabi/usr
-    PATH_SUFFIXES vorbis)
+# locate VorbisFile header
+find_path(VORBISFILE_INCLUDE_DIR
+  NAMES
+    vorbis/vorbisfile.h
+  HINTS
+    ENV VORBISFILE_DIR
+    ${PC_VORBISFILE_INCLUDEDIR}
+    ${PC_VORBISFILE_INCLUDE_DIRS}
+  PATHS
+    ~/Library/Frameworks
+    /Library/Frameworks
+    /sw # Fink
+    /opt/local # DarwinPorts
+    /opt/csw # Blastwave
+    /opt
+  PATH_SUFFIXES
+    include
+)
 
-find_library(VORBISFILE_LIBRARY NAMES vorbisfile vorbis)
+# locate VorbisFile library
+find_library(VORBISFILE_LIBRARY
+  NAMES
+    vorbisfile
+  HINTS
+    ENV VORBISFILE_DIR
+    ${PC_VORBISFILE_LIBDIR}
+    ${PC_VORBISFILE_LIBRARY_DIRS}
+  PATHS
+    ~/Library/Frameworks
+    /Library/Frameworks
+    /sw # Fink
+    /opt/local # DarwinPorts
+    /opt/csw # Blastwave
+    /opt
+  PATH_SUFFIXES
+    lib
+    lib64
+)
 
-# Handle the QUIETLY and REQUIRED arguments and set VORBISFILE_FOUND to TRUE if
-# all listed variables are TRUE.
+# extract VorbisFile version
+set(VORBISFILE_VERSION ${PC_VORBISFILE_VERSION})
+
+# handle finding VorbisFile
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(VORBISFILE DEFAULT_MSG
-    VORBISFILE_INCLUDE_DIR VORBISFILE_LIBRARY)
+find_package_handle_standard_args(VorbisFile
+  FOUND_VAR VORBISFILE_FOUND
+  REQUIRED_VARS
+    VORBISFILE_LIBRARY
+    VORBISFILE_INCLUDE_DIR
+  VERSION_VAR VORBISFILE_VERSION
+)
 
+# set user variables for compiling with VorbisFile
 if(VORBISFILE_FOUND)
   set(VORBISFILE_LIBRARIES ${VORBISFILE_LIBRARY})
-else(VORBISFILE_FOUND)
-  set(VORBISFILE_LIBRARIES)
-endif(VORBISFILE_FOUND)
+  set(VORBISFILE_INCLUDE_DIRS ${VORBISFILE_INCLUDE_DIR})
+  set(VORBISFILE_DEFINITIONS ${PC_VORBISFILE_CFLAGS_OTHER})
+endif()
 
-mark_as_advanced(VORBISFILE_INCLUDE_DIR VORBISFILE_LIBRARY)
+# create an imported target for VorbisFile
+if(VORBISFILE_FOUND AND NOT TARGET Vorbis::File)
+  add_library(Vorbis::File UNKNOWN IMPORTED)
+  set_target_properties(Vorbis::File PROPERTIES
+    IMPORTED_LOCATION "${VORBISFILE_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${VORBISFILE_INCLUDE_DIR}"
+    INTERFACE_COMPILE_OPTIONS "${VORBISFILE_DEFINITIONS}"
+  )
+endif()
+
+# mark cache variables as advanced
+mark_as_advanced(
+  VORBISFILE_LIBRARY
+  VORBISFILE_INCLUDE_DIR
+)

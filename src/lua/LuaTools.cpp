@@ -694,7 +694,9 @@ bool opt_boolean_field(
         + get_type_name(l, -1) + ")"
     );
   }
-  return lua_toboolean(l, -1);
+  bool value = lua_toboolean(l, -1);
+  lua_pop(l, 1);
+  return value;
 }
 
 /**

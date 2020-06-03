@@ -135,6 +135,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1291_hero_start_attack_loading"
   "bugs/1301_state_set_can_be_hurt_function"
   "bugs/1319_disabled_entity_timer_unsuspended"
+  "bugs/1348_hero_sprite_stuck"
   "bugs/1354_crash_start_movement"
   "bugs/1351_camera_stuck_on_separator"
   "bugs/1353_water_no_flippers"
@@ -146,14 +147,19 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1381_jumpers_hero_16_8"
   "bugs/1383_blocks_hero_16_8"
   "bugs/1392_carried_object_directions"
+  "bugs/1395_large_map_memory_leak"
   "bugs/1416_state_set_affected_by_ground_speed"
   "bugs/1418_state_set_can_be_hurt"
   "bugs/1423_crash_carried_without_shadow"
   "bugs/1424_rawget_rawset"
   "bugs/1428_movement_blocking"
   "bugs/1436_thrown_object_shadow"
+  "bugs/1439_ground_sprite_ladder"
   "bugs/1440_enemy_set_life_0_on_dying"
   "bugs/1448_custom_state_side_teletransporter"
+  "bugs/1452_crash_carried_object"
+  "bugs/1458_ground_sprite_when_jumping"
+  "bugs/1461_tileset_sprite"
 )
 
 # Test that should not fail when there are errors
