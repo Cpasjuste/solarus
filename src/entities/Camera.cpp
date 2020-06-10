@@ -96,7 +96,7 @@ void TrackingState::update() {
 
   Camera& camera = get_entity<Camera>();
   if (separator_next_scrolling_date == 0) {
-    camera.track_position(tracked_entity->get_center_point());
+    camera.track_position(tracked_entity->get_center_point() + camera.get_origin());
   }
   else {
     // The tracked entity is currently traversing a separator.
