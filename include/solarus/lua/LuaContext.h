@@ -443,8 +443,8 @@ class LuaContext {
         const ScopedLuaRef& info_ref
     );
     void game_on_dialog_finished(Game& game, const Dialog& dialog);
-    bool game_on_game_over_started(Game& game);
-    void game_on_game_over_finished(Game& game);
+    bool game_on_game_over_started(Game& game, const HeroPtr& hero);
+    void game_on_game_over_finished(Game& game, const HeroPtr& hero);
     bool game_on_input(Game& game, const InputEvent& event);
 
     bool game_on_control(Game& game, const ControlEvent& event);
@@ -1661,8 +1661,8 @@ private:
     void on_unpaused();
     bool on_dialog_started(const Dialog& dialog, const ScopedLuaRef& info_ref);
     void on_dialog_finished(const Dialog& dialog);
-    bool on_game_over_started();
-    void on_game_over_finished();
+    bool on_game_over_started(const HeroPtr& hero);
+    void on_game_over_finished(const HeroPtr& hero);
     bool on_input(const InputEvent& event);
     bool on_command(const ControlEvent& event);
     bool on_key_pressed(const InputEvent& event);

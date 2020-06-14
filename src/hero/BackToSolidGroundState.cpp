@@ -154,7 +154,7 @@ void Hero::BackToSolidGroundState::update() {
       if (get_equipment().get_life() <= 0 &&
           !get_game().is_showing_game_over()) {
         get_sprites().stop_blinking();
-        get_game().start_game_over();
+        get_game().start_game_over(hero.shared_from_this_cast<Hero>());
         return;
       }
 

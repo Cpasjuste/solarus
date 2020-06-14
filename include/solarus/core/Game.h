@@ -150,8 +150,8 @@ class SOLARUS_API Game {
     void stop_dialog(const ScopedLuaRef& status_ref);
 
     // game over
-    void start_game_over();
-    void stop_game_over();
+    void start_game_over(const HeroPtr& hero);
+    void stop_game_over(const HeroPtr& ptr);
 
     // Suspend manually.
     void set_suspended_by_script(bool suspended);

@@ -1704,10 +1704,15 @@ void LuaContext::on_dialog_finished(const Dialog& dialog) {
 /**
  * \brief Calls the on_game_over_started() method of the object on top of the stack.
  */
-bool LuaContext::on_game_over_started() {
+bool LuaContext::on_game_over_started(const HeroPtr& hero) {
   check_callback_thread();
   if (find_method("on_game_over_started")) {
-    call_function(1, 0, "on_game_over_started");
+    if(hero) {
+      push_hero(current_l, *hero);
+    } else {
+      lua_pushnil(current_l);
+    }
+    call_function(2, 0, "on_game_over_started");
     return true;
   }
   return false;
@@ -1716,10 +1721,15 @@ bool LuaContext::on_game_over_started() {
 /**
  * \brief Calls the on_game_over_finished() method of the object on top of the stack.
  */
-void LuaContext::on_game_over_finished() {
+void LuaContext::on_game_over_finished(const HeroPtr& hero) {
   check_callback_thread();
   if (find_method("on_game_over_finished")) {
-    call_function(1, 0, "on_game_over_finished");
+    if(hero) {
+      push_hero(current_l, *hero);
+    } else {
+      lua_pushnil(current_l);
+    }
+    call_function(2, 0, "on_game_over_finished");
   }
 }
 

@@ -1184,37 +1184,64 @@ bool Game::is_showing_game_over() const {
 /**
  * \brief Launches the game-over sequence.
  */
-void Game::start_game_over() {
+void Game::start_game_over(const HeroPtr& hero) {
 
   Debug::check_assertion(!is_showing_game_over(),
       "The game-over sequence is already active");
 
   showing_game_over = true;
 
-  if (!get_lua_context().game_on_game_over_started(*this)) {
+  if (!get_lua_context().game_on_game_over_started(*this, hero)) {
     // The script does not define a game-over sequence:
     // then, the built-in behavior is to restart the game.
-    restart();
-    stop_game_over();
+    if(hero && hero->is_on_map()) {
+      hero->get_map().get_entities().remove_entity(*hero); //Remove the dead hero from the map
+
+      //Remove linked camera if any
+      auto& cam = hero->get_linked_camera();
+      if(cam) {
+        remove_camera(cam, get_default_transition_style());
+      }
+    }
+
+    //Check for remaining heroes
+    auto still_some_heroes = false;
+    for(const MapPtr& current_map : current_maps) {
+      if(current_map->get_entities().get_heroes().size() != 0){
+        still_some_heroes = true;
+        break;
+      }
+    }
+
+    //Restart game only if there is no heroes anymore
+    if(not still_some_heroes){
+      restart();
+    }
+
+    stop_game_over(hero);
   }
 }
 
 /**
  * \brief Cancels the current game-over sequence.
  */
-void Game::stop_game_over() {
+void Game::stop_game_over(const HeroPtr& hero) {
 
   Debug::check_assertion(is_showing_game_over(),
       "The game-over sequence is not running");
 
-  get_lua_context().game_on_game_over_finished(*this);
+  get_lua_context().game_on_game_over_finished(*this, hero);
   showing_game_over = false;
   if (!restarting && !get_main_loop().is_resetting()) {
-    // The heroes gets back to life.
-    for(const MapPtr& current_map : current_maps) {
-      current_map->check_suspended();  // To unsuspend the heroes before making them blink.
-      for(const HeroPtr& hero : current_map->get_entities().get_heroes()) {
-        hero->notify_game_over_finished();
+    // If hero was given, notify only this one that game_over is finished
+    if(hero) {
+      hero->notify_game_over_finished();
+    } else { //else notify each heroes
+      for(const MapPtr& current_map : current_maps) {
+        current_map->check_suspended();  // To unsuspend the heroes before making them blink.
+        for(const HeroPtr& hero : current_map->get_entities().get_heroes()) {
+          hero->notify_game_over_finished();
+        }
       }
     }
   }

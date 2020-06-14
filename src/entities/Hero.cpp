@@ -453,7 +453,7 @@ void Hero::check_gameover() {
   if (get_equipment().get_life() <= 0 &&
       get_state()->can_start_gameover_sequence()) {
     sprites->stop_blinking();
-    get_game().start_game_over();
+    get_game().start_game_over(shared_from_this_cast<Hero>());
   }
 }
 

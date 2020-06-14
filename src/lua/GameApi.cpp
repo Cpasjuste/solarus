@@ -544,12 +544,17 @@ int LuaContext::game_api_start_game_over(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
+    HeroPtr hero;
+    if(!lua_isnil(l, 2)){
+      hero = check_hero(l, 2);
+    }
+
     Game* game = savegame.get_game();
     if (game == nullptr) {
       LuaTools::error(l, "Cannot start game-over: this game is not running");
     }
 
-    game->start_game_over();
+    game->start_game_over(hero);
 
     return 0;
   });
@@ -565,12 +570,17 @@ int LuaContext::game_api_stop_game_over(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
+    HeroPtr hero;
+    if(!lua_isnil(l, 2)){
+      hero = check_hero(l, 2);
+    }
+
     Game* game = savegame.get_game();
     if (game == nullptr) {
       LuaTools::error(l, "Cannot stop game-over: this game is not running.");
     }
 
-    game->stop_game_over();
+    game->stop_game_over(hero);
 
     return 0;
   });
@@ -1916,14 +1926,14 @@ void LuaContext::game_on_dialog_finished(Game& game,
  * \param game A game.
  * \return true if the game:on_game_over_started() method is defined.
  */
-bool LuaContext::game_on_game_over_started(Game& game) {
+bool LuaContext::game_on_game_over_started(Game& game, const HeroPtr& hero) {
 
   if (!userdata_has_field(game.get_savegame(), "on_game_over_started")) {
     return false;
   }
 
   push_game(current_l, game.get_savegame());
-  bool exists = on_game_over_started();
+  bool exists = on_game_over_started(hero);
   lua_pop(current_l, 1);
 
   return exists;
@@ -1936,14 +1946,14 @@ bool LuaContext::game_on_game_over_started(Game& game) {
  *
  * \param game A game.
  */
-void LuaContext::game_on_game_over_finished(Game& game) {
+void LuaContext::game_on_game_over_finished(Game& game, const HeroPtr& hero) {
 
   if (!userdata_has_field(game.get_savegame(), "on_game_over_finished")) {
     return;
   }
 
   push_game(current_l, game.get_savegame());
-  on_game_over_finished();
+  on_game_over_finished(hero);
   lua_pop(current_l, 1);
 }
 
