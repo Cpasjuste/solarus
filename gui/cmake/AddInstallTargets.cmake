@@ -33,9 +33,11 @@ if(UNIX AND NOT APPLE)
     DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/24x24/apps RENAME solarus-launcher.png)
   install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_32.png
     DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/32x32/apps RENAME solarus-launcher.png)
+  install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_40.png
+    DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/40x40/apps RENAME solarus-launcher.png)
   install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_48.png
     DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/48x48/apps RENAME solarus-launcher.png)
-  
+
   # Pixmap icon for desktop that don't support multiple sizes
   install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_512.png
     DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/pixmaps RENAME solarus-launcher.png)
