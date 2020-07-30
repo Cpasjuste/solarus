@@ -132,6 +132,7 @@ MainLoop::MainLoop(const Arguments& args):
   next_game(nullptr),
   exiting(false),
   debug_lag(0),
+  suspended(false),
   turbo(false),
   lua_commands(),
   lua_commands_mutex(),
@@ -270,6 +271,27 @@ ResourceProvider& MainLoop::get_resource_provider() {
 }
 
 /**
+ * \brief Returns whether the simulation is suspended.
+ *
+ * \return true if the simulation is suspended
+ */
+bool MainLoop::is_suspended() {
+  return suspended;
+}
+
+/**
+ * \brief Suspends or resumes the simulation.
+ *
+ * \param suspended true to suspend the simulation, false to resume it
+ */
+void MainLoop::set_suspended(bool suspended) {
+
+  if (suspended != this->suspended) {
+    this->suspended = suspended;
+  }
+}
+
+/**
  * \brief Returns whether the user just closed the window.
  *
  * When this function returns true, you should stop immediately
@@ -394,7 +416,7 @@ void MainLoop::run() {
     // 2. Update the world once, or several times (skipping some draws)
     // to catch up if the system is slow.
     int num_updates = 0;
-    if (turbo) {
+    if (turbo && !is_suspended()) {
       // Turbo mode: always update at least once.
       step();
       lag -= System::timestep;
@@ -403,7 +425,7 @@ void MainLoop::run() {
 
     while (lag >= System::timestep &&
            num_updates < 10 && // To draw sometimes anyway on very slow systems.
-           !is_exiting()
+           !is_exiting() && !is_suspended()
     ) {
       step();
       lag -= System::timestep;
@@ -411,12 +433,12 @@ void MainLoop::run() {
     }
 
     // 3. Redraw the screen.
-    if (num_updates > 0) {
+    if (num_updates > 0 && !is_suspended()) {
       draw();
     }
 
     // 4. Sleep if we have time, to save CPU and GPU cycles.
-    if (debug_lag > 0 && !turbo) {
+    if (debug_lag > 0 && !turbo && !is_suspended()) {
       // Extra sleep time for debugging, useful to simulate slower systems.
       System::sleep(debug_lag);
     }
@@ -533,6 +555,18 @@ void MainLoop::notify_input(const InputEvent& event) {
   }
   else if (event.is_window_resizing()) {
     Video::on_window_resized(event.get_window_size());
+  }
+  else if (event.is_window_focus_lost()) {
+    if (!is_suspended()) {
+      Logger::info("Simulation suspended");
+      set_suspended(true);
+    }
+  }
+  else if (event.is_window_focus_gained()) {
+    if (is_suspended()) {
+      Logger::info("Simulation resumed");
+      set_suspended(false);
+    }
   }
   else if (event.is_keyboard_key_pressed()) {
     // A key was pressed.
