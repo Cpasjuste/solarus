@@ -766,6 +766,9 @@ QPushButton#play_button {
    <property name="text">
     <string>About</string>
    </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
   </action>
   <action name="action_force_software">
    <property name="checkable">
