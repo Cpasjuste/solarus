@@ -29,13 +29,13 @@ if(MINGW OR WIN32)
   # Configure resources.rc file with that information.
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/win32/resources.rc.in"
-    "${CMAKE_BINARY_DIR}/src/resources.rc"
+    "${CMAKE_CURRENT_BINARY_DIR}/src/resources.rc"
   )
 
   # Add it as source file.
   target_sources(solarus-run
     PRIVATE
-      "${CMAKE_BINARY_DIR}/src/resources.rc"
+      "${CMAKE_CURRENT_BINARY_DIR}/src/resources.rc"
   )
 endif()
 

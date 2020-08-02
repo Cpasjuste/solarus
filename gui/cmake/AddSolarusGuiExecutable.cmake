@@ -5,16 +5,37 @@ target_sources(solarus-launcher
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
 )
 
-# Add the Solarus Launcher icon for Windows-based builds
-if(MINGW)
-  target_sources(solarus-launcher
-    PRIVATE
-      "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32/resources-mingw.rc"
+# Set meta-information for Windows-based builds.
+if(MINGW OR WIN32)
+  set(WIN32_GUI_APPLICATION_DISPLAY_NAME "Solarus Launcher")
+  set(WIN32_GUI_PROJECT_VERSION "${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},0")
+  set(WIN32_GUI_PROJECT_VERSION_STR "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.0")
+  set(WIN32_GUI_FILE_VERSION_STR "${WIN32_PROJECT_VERSION_STR}")
+  set(WIN32_GUI_PROJECT_INTERNAL_NAME "${WIN32_APPLICATION_DISPLAY_NAME}")
+  set(WIN32_GUI_ORIGINAL_FILE_NAME "solarus-launcher.exe")
+
+  get_filename_component(WIN32_GUI_ICON_FILEPATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon.ico"
+    REALPATH
   )
-elseif(WIN32)
+
+  # Get absolute native paths for icon(s) defined in resources.rc.
+  if(MINGW)
+    set(WIN32_GUI_ICON_FILEPATH_WIN ${WIN32_GUI_ICON_FILEPATH})
+  elseif(WIN32)
+    string(REPLACE "/" "\\\\" WIN32_GUI_ICON_FILEPATH_WIN ${WIN32_ICON_FILEPATH})
+  endif()
+  
+  # Configure resources.rc file with that information.
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/win32/resources.rc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/src/resources.rc"
+  )
+
+  # Add it as source file.
   target_sources(solarus-launcher
     PRIVATE
-      "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32/resources.rc"
+      "${CMAKE_CURRENT_BINARY_DIR}/src/resources.rc"
   )
 endif()
 
