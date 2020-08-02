@@ -700,6 +700,9 @@ QPushButton#play_button {
    <property name="text">
     <string>Remove quest</string>
    </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
   </action>
   <action name="action_stop_quest">
    <property name="icon">
