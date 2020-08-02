@@ -33,10 +33,8 @@ AboutDialog::AboutDialog(QWidget* parent) :
     ui.app_title_label->setText(QApplication::applicationName());
     ui.app_version_label->setText(QApplication::applicationVersion());
 
-    // Setup dialog properties.
-    setWindowModality(Qt::WindowModal);
-
-    // Connect html links
+    // Remove "?" button on Windows.
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 }
 
 } // namespace SolarusGui
