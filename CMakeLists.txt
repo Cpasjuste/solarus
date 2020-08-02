@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.1)
 
 # Android: version information must be updated manually in AndroidConfig.h
 project(solarus-engine
+  LANGUAGES CXX
   VERSION 1.6.5
-  HOMEPAGE_URL "https://www.solarus-games.org/"
+  HOMEPAGE_URL "https://www.solarus-games.org"
   DESCRIPTION "A free and open-source multiplatform 2D game engine")
 
 include(cmake/AddMetaInformation.cmake)
