@@ -148,9 +148,9 @@ void QuestsItemDelegate::paint(QPainter* painter,
     painter->drawText(title_rect, title_elided_text);
   }
 
-  // Compute title text color
-  const QColor& author_pen_color =
-      palette.brush(QPalette::Disabled, pen_color_role).color();
+  // Compute secondary text color
+  QColor author_pen_color = title_pen_color;
+  author_pen_color.setAlpha(127);
 
   // Paint secondary text
   QString secondary_text = quest_info.path;
