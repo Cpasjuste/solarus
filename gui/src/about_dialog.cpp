@@ -29,6 +29,9 @@ AboutDialog::AboutDialog(QWidget* parent) :
     // Setup up widgets.
     ui.setupUi(this);
 
+    // Window title
+    setWindowTitle(tr("About %1").arg(QApplication::applicationDisplayName()));
+
     // Set app information in labels
     ui.app_title_label->setText(QApplication::applicationName());
     ui.app_version_label->setText(QApplication::applicationVersion());
