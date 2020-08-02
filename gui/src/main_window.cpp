@@ -76,6 +76,8 @@ MainWindow::MainWindow(QWidget* parent) :
   setAcceptDrops(true);
 
   // Make connections.
+  connect(ui.quests_view, &QuestsView::playRequested, this, &MainWindow::on_action_play_quest_triggered);
+  connect(ui.quests_view, &QuestsView::removeRequested, this, &MainWindow::on_action_remove_quest_triggered);
   connect(ui.quests_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
           this, SLOT(selected_quest_changed()));
   connect(ui.play_button, SIGNAL(clicked()),

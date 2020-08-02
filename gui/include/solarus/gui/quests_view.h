@@ -31,9 +31,9 @@ class QuestsItemDelegate;
  * @brief A widget where the user can select a quest.
  */
 class SOLARUS_GUI_API QuestsView : public QTableView {
+  Q_OBJECT
 
 public:
-
   QuestsView(QWidget* parent = nullptr);
 
   int path_to_index(const QString& path) const;
@@ -56,7 +56,12 @@ public:
   void select_quest(int index);
   void select_quest(const QString& path);
 
+signals:
+  void playRequested();
+  void removeRequested();
+
 private:
+  void onCustomMenuRequested(const QPoint &point);
 
   QuestsModel* quests_model;
   QSortFilterProxyModel* proxy_model;

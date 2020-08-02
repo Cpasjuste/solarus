@@ -18,6 +18,9 @@
 #include "solarus/gui/quests_view.h"
 #include "solarus/gui/quests_item_delegate.h"
 #include <QHeaderView>
+#include <QMenu>
+#include <QAction>
+#include <QDebug>
 
 namespace SolarusGui {
 
@@ -41,6 +44,9 @@ QuestsView::QuestsView(QWidget* parent) :
 
   horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
   horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+
+  setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+  connect(this, &QTableView::customContextMenuRequested, this, &QuestsView::onCustomMenuRequested);
 }
 
 /**
@@ -212,6 +218,30 @@ void QuestsView::select_quest(const QString& path) {
     return;
   }
   select_quest(index);
+}
+
+void QuestsView::onCustomMenuRequested(const QPoint &point) {
+  QModelIndex index = indexAt(point);
+  if (index.isValid()) {
+    if (index.column() > 0) {
+      index = index.siblingAtColumn(0);
+    }
+    const QVariant& data = model()->data(index, Qt::DisplayRole);
+    const QuestsModel::QuestInfo& quest_info = data.value<QuestsModel::QuestInfo>();
+    const QString quest_title = QString::fromStdString(quest_info.properties.get_title());
+
+    QMenu menu(this);
+
+    QAction *actionPlay = new QAction(tr("Play %1").arg(quest_title), &menu);
+    connect(actionPlay, &QAction::triggered, this, &QuestsView::playRequested);
+    menu.addAction(actionPlay);
+
+    QAction *actionRemove = new QAction(tr("Remove %1").arg(quest_title), &menu);
+    connect(actionRemove, &QAction::triggered, this, &QuestsView::removeRequested);
+    menu.addAction(actionRemove);
+
+    menu.exec(this->viewport()->mapToGlobal(point));
+  }
 }
 
 }
