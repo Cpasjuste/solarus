@@ -138,7 +138,7 @@ void QuestsItemDelegate::paint(QPainter* painter,
   const QColor& title_pen_color = palette.brush(color_group, pen_color_role).color();
 
   // Paint title text
-  const QString& title_text = QString::fromStdString(quest_info.properties.get_title());
+  const QString title_text = QString::fromStdString(quest_info.properties.get_title());
   if (!title_text.isEmpty()) {
     QString title_elided_text = title_font_metrics.elidedText(title_text,
                                                               Qt::ElideRight,
