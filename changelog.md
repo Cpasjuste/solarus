@@ -2,6 +2,8 @@
 
 ## Solarus 1.6.5 (in progress)
 
+* Fix joystick hot-plug/unplug. (#1501, #1387)
+
 ### Engine changes
 
 * Fix TTF fonts using wrong color for antialiasing (#1390).
