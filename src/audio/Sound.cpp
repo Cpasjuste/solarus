@@ -17,14 +17,15 @@
 #include <algorithm>
 #include <cstring>  // memcpy
 #include <sstream>
+#include "solarus/audio/Music.h"
+#include "solarus/audio/Sound.h"
 #include "solarus/core/Arguments.h"
 #include "solarus/core/CurrentQuest.h"
 #include "solarus/core/Debug.h"
 #include "solarus/core/PerfCounter.h"
 #include "solarus/core/QuestFiles.h"
 #include "solarus/core/String.h"
-#include "solarus/audio/Music.h"
-#include "solarus/audio/Sound.h"
+#include "solarus/lua/LuaContext.h"
 #include <cstdio>
 
 namespace Solarus {
@@ -551,6 +552,14 @@ ALuint Sound::decode_file(const std::string& file_name) {
   mem.data.clear();
 
   return buffer;
+}
+
+/**
+ * \brief Returns the name identifying this type in Lua.
+ * \return The name identifying this type in Lua.
+ */
+const std::string& Sound::get_lua_type_name() const {
+  return LuaContext::sound_module_name;
 }
 
 }

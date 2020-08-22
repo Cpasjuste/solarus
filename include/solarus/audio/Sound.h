@@ -18,6 +18,7 @@
 #define SOLARUS_SOUND_H
 
 #include "solarus/core/Common.h"
+#include "solarus/lua/ExportableToLua.h"
 #include <string>
 #include <list>
 #include <map>
@@ -38,7 +39,7 @@ class Arguments;
  * This class is the only one that depends on the sound decoding library (libsndfile).
  * This class and the Music class are the only ones that depend on the audio mixer library (OpenAL).
  */
-class SOLARUS_API Sound {
+class SOLARUS_API Sound: public ExportableToLua {
 
   public:
 
@@ -73,6 +74,8 @@ class SOLARUS_API Sound {
 
     static int get_volume();
     static void set_volume(int volume);
+
+    const std::string& get_lua_type_name() const override;
 
   private:
 
