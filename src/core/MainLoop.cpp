@@ -560,12 +560,16 @@ void MainLoop::notify_input(const InputEvent& event) {
     if (!is_suspended()) {
       Logger::info("Simulation suspended");
       set_suspended(true);
+      Sound::pause_all();
+      Music::pause_playing();
     }
   }
   else if (event.is_window_focus_gained()) {
     if (is_suspended()) {
       Logger::info("Simulation resumed");
       set_suspended(false);
+      Music::resume_playing();
+      Sound::resume_all();
     }
   }
   else if (event.is_keyboard_key_pressed()) {
