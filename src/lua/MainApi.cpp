@@ -68,12 +68,13 @@ void LuaContext::register_main_module() {
         { "get_game", main_api_get_game },
     });
   }
-  /* TODO: This block of functions should be included conditionally. */ {
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
     functions.insert(functions.end(), {
         { "rawget", main_api_rawget },
         { "rawset", main_api_rawset },
     });
   }
+
   register_functions(main_module_name, functions);
 
   // Store sol.main in the registry to access it safely
@@ -558,7 +559,7 @@ int LuaContext::main_api_get_game(lua_State* l) {
 }
 
 /**
- * \brief Implementation of sol.main.rawget(), universial rawget.
+ * \brief Implementation of sol.main.rawget().
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
@@ -581,7 +582,7 @@ int LuaContext::main_api_rawget(lua_State* l) {
 }
 
 /**
- * \brief Implementation of sol.main.rawset(), universial rawset.
+ * \brief Implementation of sol.main.rawset().
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
