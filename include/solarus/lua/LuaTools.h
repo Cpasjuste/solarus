@@ -83,9 +83,9 @@ void check_type(
     int arg_index,
     int expected_type
 );
-void check_any(
+int check_mintop(
     lua_State* l,
-    int arg_index
+    int minimum
 );
 
 // int

@@ -1404,6 +1404,50 @@ void LuaContext::userdata_close_lua() {
 }
 
 /**
+ * \brief Preform a rawget on a userdata as if it were a table.
+ *
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::userdata_rawget_as_table(lua_State* l) {
+
+  LuaTools::check_type(l, 1, LUA_TUSERDATA);
+  LuaTools::check_mintop(l, 2);
+
+  const ExportableToLuaPtr& userdata =
+    *(static_cast<ExportableToLuaPtr*>(lua_touserdata(l, 1)));
+  LuaContext& lua_context = get();
+
+  // If there is a possibility it will have a key, try and find it.
+  if (userdata->is_with_lua_table() &&
+      (!lua_isstring(l, 2) ||
+       lua_context.userdata_has_field(*userdata, lua_tostring(l, 2)))) {
+    // udata key ...
+    lua_getfield(l, LUA_REGISTRYINDEX, "sol.userdata_tables");
+    // udata key ... udata_tables
+    lua_pushlightuserdata(l, userdata.get());
+    // udata key ... udata_tables lightudata
+    lua_rawget(l, -2);
+    // udata key ... udata_tables udata_table|nil
+    if (lua_istable(l, -1)) {
+      // udata key ... udata_tables udata_table
+      lua_pushvalue(l, 2);
+      // udata key ... udata_tables udata_table key
+      lua_gettable(l, -2);
+      // udata key ... udata_tables udata_table value|nil
+    }
+  }
+  // Otherwise just push nil and finish.
+  else {
+    // udata key ...
+    lua_pushnil(l);
+    // udata key ... nil
+  }
+  // udata key ... value|nil
+  return 1;
+}
+
+/**
  * \brief Implementation of __newindex that allows userdata to be like tables.
  *
  * Lua code can make "object[key] = value" if object is a userdata with this
@@ -1418,8 +1462,7 @@ void LuaContext::userdata_close_lua() {
 int LuaContext::userdata_meta_newindex_as_table(lua_State* l) {
 
   LuaTools::check_type(l, 1, LUA_TUSERDATA);
-  LuaTools::check_any(l, 2);
-  LuaTools::check_any(l, 3);
+  LuaTools::check_mintop(l, 3);
 
   const ExportableToLuaPtr& userdata =
       *(static_cast<ExportableToLuaPtr*>(lua_touserdata(l, 1)));
@@ -1495,49 +1538,25 @@ int LuaContext::userdata_meta_index_as_table(lua_State* l) {
    * to the userdata __index metamethod.
    */
 
-  LuaTools::check_type(l, 1, LUA_TUSERDATA);
-  LuaTools::check_any(l, 2);
-
-  const ExportableToLuaPtr& userdata =
-      *(static_cast<ExportableToLuaPtr*>(lua_touserdata(l, 1)));
-  LuaContext& lua_context = get();
-
-  // If the userdata actually has a table, lookup this table, unless we already
-  // know that we won't find it (because we know all the existing string keys).
-  if (userdata->is_with_lua_table() &&
-      (!lua_isstring(l, 2) || lua_context.userdata_has_field(*userdata, lua_tostring(l, 2)))) {
-
-    lua_getfield(l, LUA_REGISTRYINDEX, "sol.userdata_tables");
-                                  // ... udata_tables
-    lua_pushlightuserdata(l, userdata.get());
-                                  // ... udata_tables lightudata
-    // Lookup the key in the table, without metamethods.
-    lua_rawget(l, -2);
-                                  // ... udata_tables udata_table/nil
-    if (!lua_isnil(l, -1)) {
-      lua_pushvalue(l, 2);
-                                  // ... udata_tables udata_table key
-      lua_gettable(l, -2);
-                                  // ... udata_tables udata_table value/nil
-      if (!lua_isnil(l, -1)) {
-        // Found it!
-        return 1;
-      }
-    }
+  // Try a rawget. (returns 1)
+  userdata_rawget_as_table(l);
+                                  // udata key ... value|nil
+  if (!lua_isnil(l, -1)) {
+    return 1;
   }
+                                  // udata key ... nil
 
-  // Not in the table. See in the metatable
+  // Not in the table. Check the metatable.
   // (just like when metatable.__index = metatable).
-
-  lua_pushvalue(l, 1);
-                                  // ... udata
-  lua_getmetatable(l, -1);
-                                  // ... udata meta
+  // (Argument checking is already complete.)
+                                  // udata key ... nil
+  lua_getmetatable(l, 1);
+                                  // udata key ... meta
   Debug::check_assertion(!lua_isnil(l, -1), "Missing userdata metatable");
   lua_pushvalue(l, 2);
-                                  // ... udata meta key
+                                  // udata key ... meta key
   lua_gettable(l, -2);
-                                  // ... udata meta key value/nil
+                                  // udata key ... meta value|nil
   return 1;
 }
 

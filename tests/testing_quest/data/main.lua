@@ -20,7 +20,7 @@ function format_value(value)
   return tostring(value)
 end
 
-function assert_equal(actual, expected,msg)
+function assert_equal(actual, expected, msg)
 
   if actual ~= expected then
     local err = string.format("equality assertion failed: expected %s, got %s",
@@ -63,6 +63,23 @@ function assert_equal_xy(actual_entity, expected_entity)
   assert_equal(actual_y, expected_y)
   assert_equal(actual_width, expected_width)
   assert_equal(actual_height, expected_height)
+end
+
+function assert_error(test)
+  local success, message = pcall(unpack(test))
+  local failure
+  if success then
+    failure = "expected pcall failure"
+  elseif test.msg ~= nil and test.msg ~= message then
+    local fmte, fmtg = format_value(test.msg), format_value(message)
+    failure = string.format("expected %s, got %s", fmte, fmtg)
+  else
+      return
+  end
+  if test.label then
+    failure = string.format("%s (%s)", test.label, failure)
+  end
+  error(failure)
 end
 
 function sol.main:on_started()
