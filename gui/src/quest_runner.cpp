@@ -92,8 +92,14 @@ QStringList QuestRunner::create_arguments(const QString& quest_path) const {
     arguments << "-no-audio";
   }
 
+  // force-software-rendering
   if (settings.value("force_software_rendering", false).toBool()) {
     arguments << "-force-software-rendering";
+  }
+
+  // suspend-unfocused
+  if (!settings.value("suspend_unfocused", true).toBool()) {
+    arguments << "-suspend-unfocused=no";
   }
 
   // quest-size

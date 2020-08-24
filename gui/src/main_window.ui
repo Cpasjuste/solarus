@@ -632,9 +632,9 @@ QPushButton#play_button {
     <addaction name="action_stop_quest"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menu_video">
+   <widget class="QMenu" name="menu_options">
     <property name="title">
-     <string>Video</string>
+     <string>Options</string>
     </property>
     <widget class="QMenu" name="menu_zoom">
      <property name="title">
@@ -648,6 +648,7 @@ QPushButton#play_button {
     <addaction name="action_fullscreen"/>
     <addaction name="menu_zoom"/>
     <addaction name="action_force_software"/>
+    <addaction name="action_suspend_unfocused"/>
    </widget>
    <widget class="QMenu" name="menu_audio">
     <property name="title">
@@ -665,7 +666,7 @@ QPushButton#play_button {
    </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_quest"/>
-   <addaction name="menu_video"/>
+   <addaction name="menu_options"/>
    <addaction name="menu_audio"/>
    <addaction name="menu_help"/>
   </widget>
@@ -754,6 +755,14 @@ QPushButton#play_button {
     <string>x4</string>
    </property>
   </action>
+  <action name="action_suspend_unfocused">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Suspend when unfocused</string>
+   </property>
+  </action>
   <action name="action_mute">
    <property name="checkable">
     <bool>true</bool>
@@ -772,7 +781,7 @@ QPushButton#play_button {
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Force Software</string>
+    <string>Force software rendering</string>
    </property>
   </action>
  </widget>
