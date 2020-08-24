@@ -83,6 +83,8 @@ class SOLARUS_API MainLoop {
     std::atomic<bool> exiting;    /**< Indicates that the program is about to stop. */
     uint32_t debug_lag;           /**< Artificial lag added to each frame.
                                    * Useful to debug issues that only happen on slow systems. */
+    bool suspend_unfocused;       /**< Whether to suspend the simulation when the
+                                   * application window is not focused. */
     bool suspended;               /**< Indicates that the simulation is suspended. */
     bool turbo;                   /**< Whether to run the simulation as fast as possible
                                    * rather than following real time. */

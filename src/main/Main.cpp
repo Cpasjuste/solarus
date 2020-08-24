@@ -71,6 +71,8 @@ void print_help(const Arguments& args) {
     << std::endl
     << "  -fullscreen=yes|no            sets fullscreen mode on start (default leave unchanged)"
     << std::endl
+    << "  -suspend-unfocused=yes|no     suspends the simulation when the application window is not focused (default yes)"
+    << std::endl
     << "  -perf-sound-play=yes|no       enables performance reporting of sound playing (default no)"
     << std::endl
     << "  -perf-video-render=yes|no     enables performance reporting of video rendering, i.e. FPS (default no)"

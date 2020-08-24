@@ -132,6 +132,7 @@ MainLoop::MainLoop(const Arguments& args):
   next_game(nullptr),
   exiting(false),
   debug_lag(0),
+  suspend_unfocused(true),
   suspended(false),
   turbo(false),
   lua_commands(),
@@ -153,6 +154,8 @@ MainLoop::MainLoop(const Arguments& args):
   }
   const std::string& turbo_arg = args.get_argument_value("-turbo");
   turbo = (turbo_arg == "yes");
+  const std::string& suspend_unfocused_arg = args.get_argument_value("-suspend-unfocused");
+  suspend_unfocused = suspend_unfocused_arg.empty() || suspend_unfocused_arg == "yes";
 
   // Try to open the quest.
   const std::string& quest_path = get_quest_path(args);
@@ -556,7 +559,7 @@ void MainLoop::notify_input(const InputEvent& event) {
   else if (event.is_window_resizing()) {
     Video::on_window_resized(event.get_window_size());
   }
-  else if (event.is_window_focus_lost()) {
+  else if (suspend_unfocused && event.is_window_focus_lost()) {
     if (!is_suspended()) {
       Logger::info("Simulation suspended");
       set_suspended(true);
@@ -564,7 +567,7 @@ void MainLoop::notify_input(const InputEvent& event) {
       Music::pause_playing();
     }
   }
-  else if (event.is_window_focus_gained()) {
+  else if (suspend_unfocused && event.is_window_focus_gained()) {
     if (is_suspended()) {
       Logger::info("Simulation resumed");
       set_suspended(false);
