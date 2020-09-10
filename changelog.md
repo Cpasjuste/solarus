@@ -1,5 +1,9 @@
 # Changelog
 
+## Solarus 1.7.0 (in progress)
+
+* Add functions sol.main.rawget/rawset() (#1424).
+
 ## Solarus 1.6.5 (in progress)
 
 * Fix joystick hot-plug/unplug. (#1501, #1387)
