@@ -234,8 +234,49 @@ void type_error(
     int arg_index,
     const std::string& expected_type_name
 ) {
-  arg_error(l, arg_index, std::string(expected_type_name) +
-      " expected, got " + get_type_name(l, arg_index));
+  arg_error(l, arg_index,
+      expected_type_name + " expected, got " + get_type_name(l, arg_index));
+}
+
+/**
+ * \brief Similar to arg_error but adds field information to the message.
+ *
+ * This function never returns.
+ *
+ * \param l A Lua state.
+ * \param table_index Index of an argument (usually a table) on the stack.
+ * \param key Key of the field in the table.
+ * \param message Error message.
+ */
+void field_error(
+    lua_State* l,
+    int table_index,
+    const std::string& key,
+    const std::string& message
+) {
+  arg_error(l, table_index,
+      std::string("Bad field '") + key + "': " + message);
+}
+
+/**
+ * \brief Similar to type_error but adds field information to the message.
+ *
+ * This function never returns. The field's value (of the incorrect type)
+ * should be at the top of the stack, as if it had just been pushed.
+ *
+ * \param l A Lua state.
+ * \param table_index Index of an argument (usually a table) on the stack.
+ * \param key Key of the field in the table.
+ * \param expected_type_name A name describing the type that was expected.
+ */
+void field_type_error(
+    lua_State* l,
+    int table_index,
+    const std::string& key,
+    const std::string& expected_type_name
+) {
+  field_error(l, table_index, key,
+      expected_type_name + " expected, got " + get_type_name(l, -1));
 }
 
 /**
@@ -286,10 +327,7 @@ int check_int(
     int index
 ) {
   if (!lua_isnumber(l, index)) {
-    arg_error(l, index,
-        std::string("integer expected, got ")
-            + get_type_name(l, index) + ")"
-    );
+    type_error(l, index, "integer");
   }
 
   return (int) lua_tointeger(l, index);
@@ -312,10 +350,7 @@ int check_int_field(
 ) {
   lua_getfield(l, table_index, key.c_str());
   if (!lua_isnumber(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (integer expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "integer");
   }
 
   int value = (int) lua_tointeger(l, -1);
@@ -369,10 +404,7 @@ int opt_int_field(
   }
 
   if (!lua_isnumber(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (integer expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "integer");
   }
   int value = (int) lua_tointeger(l, -1);
   lua_pop(l, 1);
@@ -394,10 +426,7 @@ double check_number(
     int index
 ) {
   if (!lua_isnumber(l, index)) {
-    arg_error(l, index,
-        std::string("number expected, got ")
-            + get_type_name(l, index) + ")"
-    );
+    type_error(l, index, "number");
   }
 
   return lua_tonumber(l, index);
@@ -420,10 +449,7 @@ double check_number_field(
 ) {
   lua_getfield(l, table_index, key.c_str());
   if (!lua_isnumber(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (number expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "number");
   }
 
   double value = lua_tonumber(l, -1);
@@ -477,10 +503,7 @@ double opt_number_field(
   }
 
   if (!lua_isnumber(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (number expected, got "
-        + luaL_typename(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "number");
   }
   double value = lua_tonumber(l, -1);
   lua_pop(l, 1);
@@ -502,10 +525,7 @@ std::string check_string(
     int index
 ) {
   if (!lua_isstring(l, index)) {
-    arg_error(l, index,
-        std::string("string expected, got ")
-            + get_type_name(l, index) + ")"
-    );
+    type_error(l, index, "string");
   }
   size_t size = 0;
   const char* data = lua_tolstring(l, index, &size);
@@ -529,10 +549,7 @@ std::string check_string_field(
 ) {
   lua_getfield(l, table_index, key.c_str());
   if (!lua_isstring(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (string expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "string");
   }
 
   size_t size = 0;
@@ -588,10 +605,7 @@ std::string opt_string_field(
   }
 
   if (!lua_isstring(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (string expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "string");
   }
   size_t size = 0;
   const char* data = lua_tolstring(l, -1, &size);
@@ -614,10 +628,7 @@ bool check_boolean(
     int index
 ) {
   if (!lua_isboolean(l, index)) {
-    arg_error(l, index,
-        std::string("boolean expected, got ")
-            + get_type_name(l, index) + ")"
-    );
+    type_error(l, index, "boolean");
   }
   return lua_toboolean(l, index);
 }
@@ -636,10 +647,7 @@ bool check_boolean_field(
 ) {
   lua_getfield(l, table_index, key.c_str());
   if (lua_type(l, -1) != LUA_TBOOLEAN) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (boolean expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "boolean");
   }
 
   bool value = lua_toboolean(l, -1);
@@ -689,10 +697,7 @@ bool opt_boolean_field(
   }
 
   if (lua_type(l, -1) != LUA_TBOOLEAN) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (boolean expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "boolean");
   }
   bool value = lua_toboolean(l, -1);
   lua_pop(l, 1);
@@ -730,10 +735,7 @@ ScopedLuaRef check_function_field(
 ) {
   lua_getfield(l, table_index, key.c_str());
   if (!lua_isfunction(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (function expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "function");
   }
 
   return create_ref(l);  // This also pops the function from the stack.
@@ -774,10 +776,7 @@ ScopedLuaRef opt_function_field(
   }
 
   if (!lua_isfunction(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (function expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "function");
   }
   return create_ref(l);  // This also pops the function from the stack.
 }
@@ -844,10 +843,7 @@ int check_layer_field(
 ) {
   lua_getfield(l, table_index, key.c_str());
   if (!is_layer(l, -1, map)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (layer expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "layer");
   }
 
   int value = lua_tointeger(l, -1);
@@ -898,10 +894,7 @@ int opt_layer_field(
   }
 
   if (!is_layer(l, -1, map)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (layer expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "layer");
   }
   int value = lua_tointeger(l, -1);
   lua_pop(l, 1);
@@ -980,10 +973,7 @@ Color check_color_field(
 ) {
   lua_getfield(l, table_index, key.c_str());
   if (!is_color(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (color table expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "color");
   }
 
   const Color& value = check_color(l, -1);
@@ -1030,10 +1020,7 @@ Color opt_color_field(
   }
 
   if (!is_color(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (color expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "color");
   }
   const Color& color = check_color(l, -1);
   lua_pop(l, 1);
