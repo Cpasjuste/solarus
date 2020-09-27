@@ -733,7 +733,7 @@ int LuaContext::state_api_set_can_be_hurt(lua_State* l) {
       state.set_can_be_hurt(can_be_hurt_callback);
     }
     else {
-      LuaTools::arg_error(l, 2, "boolean or function");
+      LuaTools::type_error(l, 2, "boolean or function");
     }
 
     return 0;
@@ -807,7 +807,7 @@ int LuaContext::state_api_set_can_cut(lua_State* l) {
       state.set_can_cut(can_cut_callback);
     }
     else {
-      LuaTools::arg_error(l, 2, "boolean or function");
+      LuaTools::type_error(l, 2, "boolean or function");
     }
 
     return 0;
