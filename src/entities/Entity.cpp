@@ -298,7 +298,7 @@ void Entity::set_map(Map& map) {
   this->main_loop = &map.get_game().get_main_loop();
   this->map = &map;
   set_lua_context(&main_loop->get_lua_context());
-  if (&get_game().get_current_map() == &map) {
+  if (get_game().has_current_map() && &get_game().get_current_map() == &map) {
     notify_tileset_changed();
   }
 
