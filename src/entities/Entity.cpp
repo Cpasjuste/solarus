@@ -1825,7 +1825,7 @@ void Entity::update_stream_action() {
  */
 void Entity::notify_obstacle_reached() {
 
-  if (are_movement_notifications_enabled()) {
+  if (are_movement_notifications_enabled() && get_movement() != nullptr) {
     get_lua_context()->entity_on_obstacle_reached(*this, *get_movement());
   }
 }
@@ -2452,7 +2452,7 @@ void Entity::check_collision_with_detectors(Sprite& sprite) {
  */
 void Entity::notify_movement_started() {
 
-  if (are_movement_notifications_enabled()) {
+  if (are_movement_notifications_enabled() && get_movement() != nullptr) {
     get_lua_context()->entity_on_movement_started(*this, *get_movement());
   }
 }
