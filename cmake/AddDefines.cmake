@@ -1,5 +1,10 @@
 # Solarus-specific -D preprocessor constants.
 
+# AppID to report to the window system on Linux/Wayland.
+# From a user PoV this also determines were the corresponding XDG metadata is installed in the system.
+set(SOLARUS_APP_ID "org.solarus_games.solarus" CACHE STRING "AppID base for installed XDG metadata on Linux/BSD.")
+add_definitions(-DSOLARUS_APP_ID=\"${SOLARUS_APP_ID}\")
+
 # Quest to launch if none is specified at runtime.
 set(SOLARUS_DEFAULT_QUEST "." CACHE STRING "Path to the quest to launch if none is specified at runtime.")
 if(SOLARUS_DEFAULT_QUEST)
