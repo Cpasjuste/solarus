@@ -1,9 +1,17 @@
 # Changelog
 
+## Solarus 1.7.0 (in progress)
+
+* Add functions sol.main.rawget/rawset() (#1424).
+
 ## Solarus 1.6.5 (in progress)
+
+* Fix joystick hot-plug/unplug. (#1501, #1387)
 
 ### Engine changes
 
+* Fix TTF fonts using wrong color for antialiasing (#1390).
+* Fix TTF Fonts not rendering correctly (#1389).
 * Fix a possible crash when starting a timer on a removed entity (#1469).
 
 ## Solarus 1.6.4 (2020-04-12)

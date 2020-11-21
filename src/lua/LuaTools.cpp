@@ -250,23 +250,25 @@ void check_type(
     int expected_type
 ) {
   if (lua_type(l, arg_index) != expected_type) {
-    arg_error(l, arg_index, std::string(lua_typename(l, expected_type)) +
-        " expected, got " + get_type_name(l, arg_index));
+    type_error(l, arg_index, std::string(lua_typename(l, expected_type)));
   }
 }
 
 /**
- * \brief Like luaL_checkany() but throws a LuaException in case of error.
+ * \brief Throws a LuaException if not enough arguments have been provided.
  * \param l A Lua state.
- * \param arg_index Index of an argument in the stack.
+ * \param minimum The minimum number of values on the Lua stack.
+ * \return The current value of Lua top.
  */
-void check_any(
+int check_mintop(
     lua_State* l,
-    int arg_index
+    int minimum
 ) {
-  if (lua_type(l, arg_index) == LUA_TNONE) {
-    arg_error(l, arg_index, "value expected");
+  int top = lua_gettop(l);
+  if (top < minimum) {
+    arg_error(l, top + 1, "value expected");
   }
+  return top;
 }
 
 /**
@@ -692,7 +694,9 @@ bool opt_boolean_field(
         + get_type_name(l, -1) + ")"
     );
   }
-  return lua_toboolean(l, -1);
+  bool value = lua_toboolean(l, -1);
+  lua_pop(l, 1);
+  return value;
 }
 
 /**

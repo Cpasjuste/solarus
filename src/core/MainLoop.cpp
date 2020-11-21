@@ -74,7 +74,8 @@ void check_version_compatibility(const std::pair<int, int>& quest_version) {
       compatible = false;
     }
     else {
-      // 1.5 quests can be run by Solarus 1.6.
+      // 1.5 quests can be run by Solarus 1.5, 1.6 and 1.7.
+      // 1.6 quests can be run by Solarus 1.6 and 1.7.
       if (quest_minor_version < SOLARUS_MINOR_VERSION &&
           quest_major_version == 1 &&
           quest_minor_version < 5

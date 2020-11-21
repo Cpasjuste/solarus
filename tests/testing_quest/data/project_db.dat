@@ -76,6 +76,7 @@ map{ id = "bugs/1395_large_map_memory_leak", description = "#1395: Memory leak w
 map{ id = "bugs/1416_state_set_affected_by_ground_speed", description = "#1416: state:set_affected_by_ground() not working on grounds that alter the speed" }
 map{ id = "bugs/1418_state_set_can_be_hurt", description = "#1418: state:set_can_be_hurt() not working with touching attack mode" }
 map{ id = "bugs/1423_crash_carried_without_shadow", description = "#1423: Crash when carrying an object without shadow sprite" }
+map{ id = "bugs/1424_rawget_rawset", description = "#1424: Add a rawget() function that works on Solarus userdata" }
 map{ id = "bugs/1428_movement_blocking", description = "#1428: straight movements blocking" }
 map{ id = "bugs/1436_thrown_object_shadow", description = "#1436: Unwanted shadow below thrown object " }
 map{ id = "bugs/1439_ground_sprite_ladder", description = "#1439: Ground sprite still shown on ladders" }
@@ -466,8 +467,8 @@ file{ path = "maps/bugs/1163_circular_movement_get_direction4.dat", author = "Ch
 file{ path = "maps/bugs/1163_circular_movement_get_direction4.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1171_sword_knowledge_on_ability_used.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1171_sword_knowledge_on_ability_used.lua", author = "Christopho", license = "GPL v3" }
-file{ path = "maps/bugs/1175_dynamic_tile_set_get_tileset.dat", author = "Christopho", license = "CC BY-SA 4.0" }
-file{ path = "maps/bugs/1175_dynamic_tile_set_get_tileset.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1175_dynamic_tile_set_get_tileset.dat", author = "Cluedrew", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1175_dynamic_tile_set_get_tileset.lua", author = "Cluedrew", license = "GPL v3" }
 file{ path = "maps/bugs/1179_enemy_on_restarted_called_twice.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1179_enemy_on_restarted_called_twice.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1181_hurt_enemy_after_custom_attack.dat", author = "Christopho", license = "CC BY-SA 4.0" }
@@ -560,6 +561,8 @@ file{ path = "maps/bugs/1418_state_set_can_be_hurt.dat", author = "Christopho", 
 file{ path = "maps/bugs/1418_state_set_can_be_hurt.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1423_crash_carried_without_shadow.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1423_crash_carried_without_shadow.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1424_rawget_rawset.dat", author = "Cluedrew", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1424_rawget_rawset.lua", author = "Cluedrew", license = "GPL v3" }
 file{ path = "maps/bugs/1428_movement_blocking.dat", author = "stdgregwar", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1428_movement_blocking.lua", author = "stdgregwar", license = "GPL v3" }
 file{ path = "maps/bugs/1436_thrown_object_shadow.dat", author = "Christopho", license = "CC BY-SA 4.0" }

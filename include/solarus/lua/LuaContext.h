@@ -594,6 +594,8 @@ class LuaContext {
       main_api_get_metatable,
       main_api_get_os,
       main_api_get_game,
+      main_api_rawget,
+      main_api_rawset,
 
       // Audio API.
       audio_api_get_sound_volume,
@@ -1384,6 +1386,7 @@ class LuaContext {
 
 
       // available to all userdata types
+      userdata_rawget_as_table,
       userdata_meta_gc,
       userdata_meta_newindex_as_table,
       userdata_meta_index_as_table,
