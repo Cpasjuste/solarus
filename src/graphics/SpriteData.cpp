@@ -600,17 +600,14 @@ int SpriteData::l_animation(lua_State* l) {
     int frame_to_loop_on = LuaTools::opt_int_field(l, 1, "frame_to_loop_on", -1);
 
     if (frame_to_loop_on < -1) {
-      LuaTools::arg_error(l, 1,
-          "Bad field 'frame_to_loop_on' (must be a positive number or -1)"
-      );
+      LuaTools::field_error(l, 1, "frame_to_loop_on",
+          "must be a non-negative integer or -1");
     }
 
     lua_settop(l, 1);
     lua_getfield(l, 1, "directions");
     if (lua_type(l, 2) != LUA_TTABLE) {
-      LuaTools::arg_error(l, 1,
-          std::string("Bad field 'directions' (table expected, got ")
-      + luaL_typename(l, -1) + ")");
+      LuaTools::field_type_error(l, 1, "directions", "table");
     }
 
     // Traverse the directions table.
@@ -621,10 +618,7 @@ int SpriteData::l_animation(lua_State* l) {
       ++i;
 
       if (lua_type(l, -1) != LUA_TTABLE) {
-        LuaTools::arg_error(l, 1,
-            std::string("Bad field 'directions' (expected table, got ")
-                + luaL_typename(l, -1)
-        );
+        LuaTools::field_type_error(l, 1, "directions", "table");
       }
 
       int x = LuaTools::check_int_field(l, -1, "x");
@@ -637,13 +631,13 @@ int SpriteData::l_animation(lua_State* l) {
       int num_columns = LuaTools::opt_int_field(l, -1, "num_columns", num_frames);
 
       if (num_columns < 1 || num_columns > num_frames) {
-        LuaTools::arg_error(l, 1,
-            "Bad field 'num_columns': must be between 1 and the number of frames");
+        LuaTools::field_error(l, 1, "num_columns",
+            "must be between 1 and the number of frames");
       }
 
       if (frame_to_loop_on >= num_frames) {
-        LuaTools::arg_error(l, 1,
-            "Bad field 'frame_to_loop_on': exceeds the number of frames");
+        LuaTools::field_error(l, 1, "frame_to_loop_on",
+            "exceeds the number of frames");
       }
 
       lua_pop(l, 1);

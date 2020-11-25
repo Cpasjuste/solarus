@@ -313,10 +313,8 @@ std::string entity_creation_check_savegame_variable_mandatory(
   const std::string& savegame_variable = entity_data.get_string(field_name);
 
   if (!LuaTools::is_valid_lua_identifier(savegame_variable)) {
-    LuaTools::arg_error(l, index,
-        "Bad field '" + field_name + "' (invalid savegame variable identifier: '"
-        + savegame_variable + "')"
-    );
+    LuaTools::field_error(l, index, field_name,
+        "invalid savegame variable identifier: '" + savegame_variable + "'");
   }
 
   return savegame_variable;
@@ -379,18 +377,8 @@ E entity_creation_check_enum(
     }
   }
 
-  // The value was not found. Build an error message with possible values.
-  std::string allowed_names;
-  for (const auto& kvp: names) {
-    allowed_names += "\"" + kvp.second + "\", ";
-  }
-  allowed_names = allowed_names.substr(0, allowed_names.size() - 2);
-
-  LuaTools::arg_error(l, index,
-      std::string("Invalid name '") + name + "'. Allowed names are: "
-      + allowed_names
-  );
-  return E();  // Make sure the compiler is happy.
+  LuaTools::field_error(l, index, field_name,
+      LuaTools::check_enum_error_message(name, names));
 }
 
 template<typename E>
@@ -653,15 +641,13 @@ int LuaContext::l_create_chest(lua_State* l) {
     }
     else if (opening_method == Chest::OpeningMethod::BY_INTERACTION_IF_ITEM) {
       if (!game.get_equipment().item_exists(opening_condition)) {
-        LuaTools::arg_error(l, 1, "Bad field 'opening_condition' (no such equipment item: '"
-            + opening_condition + "')"
-        );
+        LuaTools::field_error(l, 1, "opening_condition",
+            "no such equipment item: '" + opening_condition + "'");
       }
       EquipmentItem& item = game.get_equipment().get_item(opening_condition);
       if (!item.is_saved()) {
-        LuaTools::arg_error(l, 1, "Bad field 'opening_condition' (equipment item '"
-            + opening_condition + "' is not saved)"
-        );
+        LuaTools::field_error(l, 1, "opening_condition",
+            "equipment item '" + opening_condition + "' is not saved");
       }
     }
 
@@ -1157,15 +1143,13 @@ int LuaContext::l_create_door(lua_State* l) {
     }
     else if (opening_method == Door::OpeningMethod::BY_INTERACTION_IF_ITEM) {
       if (!game.get_equipment().item_exists(opening_condition)) {
-        LuaTools::arg_error(l, 1, "Bad field 'opening_condition' (no such equipment item: '"
-            + opening_condition + "')"
-        );
+        LuaTools::field_error(l, 1, "opening_condition",
+            "no such equipment item: '" + opening_condition + "'");
       }
       EquipmentItem& item = game.get_equipment().get_item(opening_condition);
       if (!item.is_saved()) {
-        LuaTools::arg_error(l, 1, "Bad field 'opening_condition' (equipment item '"
-            + opening_condition + "' is not saved)"
-        );
+        LuaTools::field_error(l, 1, "opening_condition",
+            "equipment item '" + opening_condition + "' is not saved");
       }
     }
     std::shared_ptr<Door> door = std::make_shared<Door>(

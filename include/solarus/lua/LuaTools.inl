@@ -81,7 +81,8 @@ E opt_enum_field(
     const std::string& key,
     E default_value
 ) {
-  return opt_enum_field(l, table_index, key, EnumInfoTraits<E>::names, default_value);
+  return opt_enum_field(l, table_index, key,
+      EnumInfoTraits<E>::names, default_value);
 }
 
 /**
@@ -125,8 +126,30 @@ int exception_boundary_handle(
 }
 
 /**
+ * \brief Generates an error message explaining that a string may not be
+ * converted into an enum value.
+ *
+ * \param bad_name The name that does not become an enum value.
+ * \param names A mapping of enum values to the strings used to repersent them.
+ */
+template<typename E>
+std::string check_enum_error_message(
+    const std::string& bad_name,
+    const std::map<E, std::string>& names
+) {
+  std::string allowed_names;
+  for (const auto& kvp: names) {
+    allowed_names += "'" + kvp.second + "', ";
+  }
+  allowed_names = allowed_names.substr(0, allowed_names.size() - 2);
+
+  return std::string("Invalid name '") + bad_name + "'. Allowed names are: "
+      + allowed_names;
+}
+
+/**
  * \brief Checks whether a value is the name of an enumeration value and
- * returns this value.
+ * returns its value.
  *
  * Throws a LuaException if the value is not a string or if the string is not
  * a valid name for the enum.
@@ -154,18 +177,7 @@ E check_enum(
     }
   }
 
-  // The value was not found. Build an error message with possible values.
-  std::string allowed_names;
-  for (const auto& kvp: names) {
-    allowed_names += "\"" + kvp.second + "\", ";
-  }
-  allowed_names = allowed_names.substr(0, allowed_names.size() - 2);
-
-  arg_error(l, index,
-      std::string("Invalid name '") + name + "'. Allowed names are: "
-      + allowed_names
-  );
-  return E();  // Make sure the compiler is happy.
+  arg_error(l, index, check_enum_error_message(name, names));
 }
 
 /**
@@ -187,17 +199,14 @@ E check_enum_field(
     const std::string& key,
     const std::map<E, std::string>& names
 ) {
-  lua_getfield(l, table_index, key.c_str());
-  if (!lua_isstring(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (string expected, got "
-        + get_type_name(l, -1)
-    );
+  const std::string& name = LuaTools::check_string_field(l, table_index, key);
+  for (const auto& kvp: names) {
+    if (kvp.second == name) {
+      return kvp.first;
+    }
   }
 
-  E value = check_enum<E>(l, -1, names);
-  lua_pop(l, 1);
-  return value;
+  field_error(l, table_index, key, check_enum_error_message(name, names));
 }
 
 /**
@@ -247,10 +256,7 @@ E opt_enum_field(
   }
 
   if (!lua_isstring(l, -1)) {
-    arg_error(l, table_index,
-        std::string("Bad field '") + key + "' (string expected, got "
-        + get_type_name(l, -1) + ")"
-    );
+    field_type_error(l, table_index, key, "string");
   }
   E value = check_enum<E>(l, -1, names);
   lua_pop(l, 1);

@@ -576,7 +576,7 @@ int LuaContext::main_api_rawget(lua_State* l) {
       lua_rawget(l, 1);
       return 1;
     default:
-      LuaTools::arg_error(l, 1, "table or userdata expected");
+      LuaTools::type_error(l, 1, "table or userdata");
     }
   });
 }
@@ -602,7 +602,7 @@ int LuaContext::main_api_rawset(lua_State* l) {
       lua_rawset(l, 1);
       return 1;
     default:
-      LuaTools::arg_error(l, 1, "table or userdata expected");
+      LuaTools::type_error(l, 1, "table or userdata");
     }
   });
 }
