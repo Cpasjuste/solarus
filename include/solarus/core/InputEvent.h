@@ -310,6 +310,8 @@ class InputEvent {
     // window event
     bool is_window_closing() const;
     bool is_window_resizing() const;
+    bool is_window_focus_lost() const;
+    bool is_window_focus_gained() const;
 
     Size get_window_size() const;
 
