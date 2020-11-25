@@ -1,0 +1,116 @@
+properties{
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  min_layer = 0,
+  max_layer = 2,
+  tileset = "castle",
+}
+
+tile{
+  layer = 0,
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  pattern = "3",
+}
+
+tile{
+  layer = 0,
+  x = 16,
+  y = 160,
+  width = 16,
+  height = 16,
+  pattern = "27",
+}
+
+tile{
+  layer = 0,
+  x = 64,
+  y = 160,
+  width = 16,
+  height = 16,
+  pattern = "27",
+}
+
+destination{
+  name = "destination",
+  layer = 0,
+  x = 16,
+  y = 21,
+  direction = 1,
+}
+
+tile{
+  layer = 1,
+  x = 16,
+  y = 128,
+  width = 16,
+  height = 32,
+  pattern = "28",
+}
+
+tile{
+  layer = 1,
+  x = 64,
+  y = 128,
+  width = 16,
+  height = 32,
+  pattern = "28",
+}
+
+tile{
+  layer = 1,
+  x = 16,
+  y = 80,
+  width = 64,
+  height = 64,
+  pattern = "67",
+}
+
+tile{
+  layer = 1,
+  x = 16,
+  y = 80,
+  width = 16,
+  height = 16,
+  pattern = "27",
+}
+
+tile{
+  layer = 1,
+  x = 64,
+  y = 80,
+  width = 16,
+  height = 16,
+  pattern = "27",
+}
+
+tile{
+  layer = 2,
+  x = 16,
+  y = 48,
+  width = 16,
+  height = 32,
+  pattern = "28",
+}
+
+tile{
+  layer = 2,
+  x = 64,
+  y = 48,
+  width = 16,
+  height = 32,
+  pattern = "28",
+}
+
+pickable{
+  name = "pickable",
+  layer = 2,
+  x = 48,
+  y = 117,
+  treasure_name = "sword",
+}
+

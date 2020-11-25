@@ -412,7 +412,7 @@ void Pickable::check_bad_ground() {
     {
       // Fall to a lower layer.
       int layer = get_layer();
-      if (layer > 0) {
+      if (layer > get_map().get_min_layer()) {
         --layer;
         get_entities().set_entity_layer(*this, layer);
       }
