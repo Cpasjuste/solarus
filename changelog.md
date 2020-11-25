@@ -2,14 +2,14 @@
 
 ## Solarus 1.6.5 (in progress)
 
-* Fix joystick hot-plug/unplug. (#1501, #1387)
-
 ### Engine changes
 
 * Add support for suspending the simulation on Window Focus events (!1352).
+* Fix joystick hot-plug/unplug (#1501, #1387).
 * Fix TTF fonts using wrong color for antialiasing (#1390).
 * Fix TTF Fonts not rendering correctly (#1389).
 * Fix a possible crash when starting a timer on a removed entity (#1469).
+* Fix pickables not falling on negative layers.
 
 ### Solarus launcher GUI changes
 
