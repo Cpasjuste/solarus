@@ -26,18 +26,10 @@ install(FILES
 if(UNIX AND NOT APPLE)
   foreach(SUFFIX IN ITEMS Launcher Runner)
     # Pixmap icons for sizes under 48x48 pixels
-    install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_16.png
-      DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/16x16/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}.png)
-    install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_20.png
-      DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/20x20/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}.png)
-    install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_24.png
-      DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/24x24/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}.png)
-    install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_32.png
-      DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/32x32/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}.png)
-    install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_40.png
-      DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/40x40/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}.png)
-    install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_48.png
-      DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/48x48/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}.png)
+    foreach(SIZE IN ITEMS 16 20 24 32 40 48)
+      install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_${SIZE}.png
+        DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/${SIZE}x${SIZE}/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}.png)
+    endforeach(SIZE)
 
     # Pixmap icon for desktop that don't support multiple sizes
     install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_512.png
@@ -48,7 +40,7 @@ if(UNIX AND NOT APPLE)
       DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/scalable/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}.svg)
     install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/images/icon/solarus_launcher_icon_symbolic.svg
       DESTINATION ${SOLARUS_SHARE_INSTALL_DESTINATION}/icons/hicolor/symbolic/apps RENAME ${SOLARUS_APP_ID}.${SUFFIX}-symbolic.svg)
-  endforeach()
+  endforeach(SUFFIX)
 endif(UNIX AND NOT APPLE)
 
 # FreeDesktop compatible start menu launcher
