@@ -116,7 +116,8 @@ Hero::Hero(Equipment& equipment):
   target_solid_ground_callback(),
   next_ground_date(0),
   next_ice_date(0),
-  ice_movement_direction8(0) {
+  ice_movement_direction8(0),
+  push_delay(800) {
 
   // position
   set_origin(8, 13);
@@ -984,6 +985,22 @@ void Hero::set_walking_speed(int walking_speed) {
     this->walking_speed = walking_speed;
     get_state()->notify_walking_speed_changed();
   }
+}
+
+/**
+* \brief Returns the delay between the moment the hero start pushing on an obstacle, and the moment he actually enters the push state.
+*/
+
+int Hero::get_push_delay() const{
+  return push_delay;
+}
+
+/**
+ * \brief Sets the delay between the moment the hero start pushing on an obstacle, and the moment he actually enters the push state.
+ * \param walking_speed the new delay
+ */
+void Hero::set_push_delay(int delay) {
+  this->push_delay = delay;
 }
 
 /**
