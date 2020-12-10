@@ -312,8 +312,6 @@ class Hero: public Entity {
     void start_state_from_ground();
     void start_custom_state(const std::shared_ptr<CustomState>& custom_state);
 
-
-
   private:
 
     // state
