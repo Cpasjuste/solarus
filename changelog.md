@@ -1,14 +1,26 @@
 # Changelog
 
-## Solarus 1.6.5 (in progress)
+## Solarus 1.7.0 (in progress)
 
-* Fix joystick hot-plug/unplug. (#1501, #1387)
+* Add functions sol.main.rawget/rawset() (#1424).
+
+## Solarus 1.6.5 (in progress)
 
 ### Engine changes
 
+* Add support for suspending the simulation on Window Focus events (#1352).
+* Fix crash when calling command functions before the game is started (#1476).
+* Fix joystick hot-plug/unplug (#1501, #1387).
 * Fix TTF fonts using wrong color for antialiasing (#1390).
 * Fix TTF Fonts not rendering correctly (#1389).
 * Fix a possible crash when starting a timer on a removed entity (#1469).
+* Fix pickables not falling on negative layers.
+
+### Solarus launcher GUI changes
+
+* Add option to control suspension on Window Focus events.
+* Rename *Force Software* to *Force software rendering*.
+* Disable force-software and suspend-unfocused options when quest is running.
 
 ## Solarus 1.6.4 (2020-04-12)
 

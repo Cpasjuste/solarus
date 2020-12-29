@@ -485,11 +485,11 @@ int LuaContext::game_api_stop_dialog(lua_State* l) {
 
     Game* game = savegame.get_game();
     if (game == nullptr) {
-      LuaTools::error(l, "Cannot stop dialog: this game is not running.");
+      LuaTools::error(l, "Cannot stop dialog: this game is not running");
     }
 
     if (!game->is_dialog_enabled()) {
-      LuaTools::error(l, "Cannot stop dialog: no dialog is active.");
+      LuaTools::error(l, "Cannot stop dialog: no dialog is active");
     }
 
     // Optional parameter: status.
@@ -561,7 +561,7 @@ int LuaContext::game_api_stop_game_over(lua_State* l) {
 
     Game* game = savegame.get_game();
     if (game == nullptr) {
-      LuaTools::error(l, "Cannot stop game-over: this game is not running.");
+      LuaTools::error(l, "Cannot stop game-over: this game is not running");
     }
 
     game->stop_game_over();
@@ -1311,7 +1311,6 @@ int LuaContext::game_api_get_command_effect(lua_State* l) {
       lua_pushnil(l);
     }
     else {
-
       std::string effect_name;
       switch (command) {
 
@@ -1400,7 +1399,11 @@ int LuaContext::game_api_get_command_keyboard_binding(lua_State* l) {
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
 
-    GameCommands& commands = savegame.get_game()->get_commands();
+    const Game* game = savegame.get_game();
+    if (game == nullptr) {
+      LuaTools::error(l, "This game is not running");
+    }
+    const GameCommands& commands = game->get_commands();
     InputEvent::KeyboardKey key = commands.get_keyboard_binding(command);
     const std::string& key_name = enum_to_name(key);
 
@@ -1430,7 +1433,11 @@ int LuaContext::game_api_set_command_keyboard_binding(lua_State* l) {
     }
     const std::string& key_name = LuaTools::opt_string(l, 3, "");
 
-    GameCommands& commands = savegame.get_game()->get_commands();
+    Game* game = savegame.get_game();
+    if (game == nullptr) {
+      LuaTools::error(l, "This game is not running");
+    }
+    GameCommands& commands = game->get_commands();
     InputEvent::KeyboardKey key = name_to_enum(key_name, InputEvent::KeyboardKey::NONE);
     if (!key_name.empty() && key == InputEvent::KeyboardKey::NONE) {
       LuaTools::arg_error(l, 3,
@@ -1454,7 +1461,11 @@ int LuaContext::game_api_get_command_joypad_binding(lua_State* l) {
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
 
-    GameCommands& commands = savegame.get_game()->get_commands();
+    const Game* game = savegame.get_game();
+    if (game == nullptr) {
+      LuaTools::error(l, "This game is not running");
+    }
+    const GameCommands& commands = game->get_commands();
     const std::string& joypad_string = commands.get_joypad_binding(command);
 
     if (joypad_string.empty()) {
@@ -1487,7 +1498,11 @@ int LuaContext::game_api_set_command_joypad_binding(lua_State* l) {
       LuaTools::arg_error(l, 3,
           std::string("Invalid joypad string: '") + joypad_string + "'");
     }
-    GameCommands& commands = savegame.get_game()->get_commands();
+    Game* game = savegame.get_game();
+    if (game == nullptr) {
+      LuaTools::error(l, "This game is not running");
+    }
+    GameCommands& commands = game->get_commands();
     commands.set_joypad_binding(command, joypad_string);
 
     return 0;
@@ -1507,7 +1522,11 @@ int LuaContext::game_api_capture_command_binding(lua_State* l) {
         l, 2, GameCommands::command_names);
     const ScopedLuaRef& callback_ref = LuaTools::opt_function(l, 3);
 
-    GameCommands& commands = savegame.get_game()->get_commands();
+    Game* game = savegame.get_game();
+    if (game == nullptr) {
+      LuaTools::error(l, "This game is not running");
+    }
+    GameCommands& commands = game->get_commands();
     commands.customize(command, callback_ref);
 
     return 0;
@@ -1526,7 +1545,11 @@ int LuaContext::game_api_is_command_pressed(lua_State* l) {
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
 
-    GameCommands& commands = savegame.get_game()->get_commands();
+    const Game* game = savegame.get_game();
+    if (game == nullptr) {
+      LuaTools::error(l, "This game is not running");
+    }
+    const GameCommands& commands = game->get_commands();
     lua_pushboolean(l, commands.is_command_pressed(command));
 
     return 1;
@@ -1543,11 +1566,12 @@ int LuaContext::game_api_get_commands_direction(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Savegame& savegame = *check_game(l, 1);
 
-    if(!savegame.get_game()) {
+    const Game* game = savegame.get_game();
+    if (game == nullptr) {
       return 0;
     }
 
-    GameCommands& commands = savegame.get_game()->get_commands();
+    const GameCommands& commands = game->get_commands();
     int wanted_direction8 = commands.get_wanted_direction8();
     if (wanted_direction8 == -1) {
       lua_pushnil(l);
@@ -1572,7 +1596,11 @@ int LuaContext::game_api_simulate_command_pressed(lua_State* l){
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
 
-    savegame.get_game()->simulate_command_pressed(command);
+    Game* game = savegame.get_game();
+    if (game == nullptr) {
+      LuaTools::error(l, "This game is not running");
+    }
+    game->simulate_command_pressed(command);
 
     return 0;
   });
@@ -1590,7 +1618,11 @@ int LuaContext::game_api_simulate_command_released(lua_State* l) {
     GameCommand command = LuaTools::check_enum<GameCommand>(
         l, 2, GameCommands::command_names);
 
-    savegame.get_game()->simulate_command_released(command);
+    Game* game = savegame.get_game();
+    if (game == nullptr) {
+      LuaTools::error(l, "This game is not running");
+    }
+    game->simulate_command_released(command);
 
     return 0;
   });

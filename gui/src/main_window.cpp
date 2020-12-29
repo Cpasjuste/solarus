@@ -128,6 +128,7 @@ void MainWindow::update_menus() {
 
   update_fullscreen_action();
   update_force_software_action();
+  update_suspend_unfocused_action();
 }
 
 /**
@@ -147,8 +148,18 @@ void MainWindow::update_fullscreen_action() {
 void MainWindow::update_force_software_action() {
   Settings settings;
 
-  bool force_software = settings.value("force_software_rendering", false).toBool();
-  ui.action_force_software->setChecked(force_software);
+  bool state = settings.value("force_software_rendering", false).toBool();
+  ui.action_force_software->setChecked(state);
+}
+
+/**
+ * @brief Updates the suspend unfocused action with the current settings.
+ */
+void MainWindow::update_suspend_unfocused_action() {
+  Settings settings;
+
+  bool state = settings.value("suspend_unfocused", true).toBool();
+  ui.action_suspend_unfocused->setChecked(state);
 }
 
 /**
@@ -382,11 +393,24 @@ void MainWindow::on_action_fullscreen_triggered() {
   }
 }
 
+/**
+ * @brief Slot called when the user triggers the "Force software rendering" action.
+ */
 void MainWindow::on_action_force_software_triggered() {
-  bool force = ui.action_force_software->isChecked();
+  bool state = ui.action_force_software->isChecked();
 
   Settings settings;
-  settings.setValue("force_software_rendering", force);
+  settings.setValue("force_software_rendering", state);
+}
+
+/**
+ * @brief Slot called when the user triggers the "Suspend when unfocused" action.
+ */
+void MainWindow::on_action_suspend_unfocused_triggered() {
+  bool state = ui.action_suspend_unfocused->isChecked();
+
+  Settings settings;
+  settings.setValue("suspend_unfocused", state);
 }
 
 /**
@@ -441,6 +465,8 @@ void MainWindow::update_run_quest() {
   ui.action_stop_quest->setEnabled(enable_stop);
 
   ui.menu_zoom->setEnabled(playing);
+  ui.action_force_software->setEnabled(!playing);
+  ui.action_suspend_unfocused->setEnabled(!playing);
 }
 
 /**

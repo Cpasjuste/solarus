@@ -308,6 +308,26 @@ void Sound::play(const std::string& sound_id) {
 }
 
 /**
+ * \brief Pauses all currently playing sounds.
+ */
+void Sound::pause_all() {
+
+  for (Sound* sound: current_sounds) {
+    sound->set_paused(true);
+  }
+}
+
+/**
+ * \brief Resumes playing all sounds previously paused.
+ */
+void Sound::resume_all() {
+
+  for (Sound* sound: current_sounds) {
+    sound->set_paused(false);
+  }
+}
+
+/**
  * \brief Returns the current volume of sound effects.
  * \return the volume (0 to 100)
  */
@@ -442,6 +462,26 @@ bool Sound::start() {
     }
   }
   return success;
+}
+
+/**
+ * \brief Pauses or resumes all sources of the sound.
+ * \param pause true to pause the sources, false to resume them
+ */
+void Sound::set_paused(bool pause) {
+
+  if (!is_initialized()) {
+    return;
+  }
+
+  for (ALuint source: sources) {
+    if (pause) {
+      alSourcePause(source);
+    }
+    else {
+      alSourcePlay(source);
+    }
+  }
 }
 
 /**

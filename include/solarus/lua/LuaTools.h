@@ -78,14 +78,26 @@ int exception_boundary_handle(
     int arg_index,
     const std::string& expected_type_name
 );
+[[noreturn]] void field_error(
+    lua_State* l,
+    int table_index,
+    const std::string& key,
+    const std::string& message
+);
+[[noreturn]] void field_type_error(
+    lua_State* l,
+    int table_index,
+    const std::string& key,
+    const std::string& expected_type_name
+);
 void check_type(
     lua_State* l,
     int arg_index,
     int expected_type
 );
-void check_any(
+int check_mintop(
     lua_State* l,
-    int arg_index
+    int minimum
 );
 
 // int

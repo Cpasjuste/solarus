@@ -68,6 +68,13 @@ void LuaContext::register_main_module() {
         { "get_game", main_api_get_game },
     });
   }
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
+    functions.insert(functions.end(), {
+        { "rawget", main_api_rawget },
+        { "rawset", main_api_rawset },
+    });
+  }
+
   register_functions(main_module_name, functions);
 
   // Store sol.main in the registry to access it safely
@@ -548,6 +555,55 @@ int LuaContext::main_api_get_game(lua_State* l) {
       push_game(l, game->get_savegame());
     }
     return 1;
+  });
+}
+
+/**
+ * \brief Implementation of sol.main.rawget().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_rawget(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    switch (lua_type(l, 1)) {
+    case LUA_TUSERDATA:
+      return userdata_rawget_as_table(l);
+    case LUA_TTABLE:
+      if (2 < LuaTools::check_mintop(l, 2)) {
+        lua_settop(l, 2);
+      }
+      lua_rawget(l, 1);
+      return 1;
+    default:
+      LuaTools::type_error(l, 1, "table or userdata");
+    }
+  });
+}
+
+/**
+ * \brief Implementation of sol.main.rawset().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::main_api_rawset(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    switch (lua_type(l, 1)) {
+    case LUA_TUSERDATA:
+      userdata_meta_newindex_as_table(l);
+      // Take advantage of the fact newindex leaves the arguments in place.
+      lua_settop(l, 1);
+      return 1;
+    case LUA_TTABLE:
+      if (3 < LuaTools::check_mintop(l, 3)) {
+        lua_settop(l, 3);
+      }
+      lua_rawset(l, 1);
+      return 1;
+    default:
+      LuaTools::type_error(l, 1, "table or userdata");
+    }
   });
 }
 

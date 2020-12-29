@@ -62,10 +62,13 @@ class SOLARUS_API Sound: public ExportableToLua {
     ~Sound();
     void load();
     bool start();
+    void set_paused(bool pause);
 
     static void load_all();
     static bool exists(const std::string& sound_id);
     static void play(const std::string& sound_id);
+    static void pause_all();
+    static void resume_all();
 
     static void initialize(const Arguments& args);
     static void quit();

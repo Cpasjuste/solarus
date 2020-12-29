@@ -298,7 +298,7 @@ void Entity::set_map(Map& map) {
   this->main_loop = &map.get_game().get_main_loop();
   this->map = &map;
   set_lua_context(&main_loop->get_lua_context());
-  if (&get_game().get_current_map() == &map) {
+  if (get_game().has_current_map() && &get_game().get_current_map() == &map) {
     notify_tileset_changed();
   }
 
@@ -1825,7 +1825,7 @@ void Entity::update_stream_action() {
  */
 void Entity::notify_obstacle_reached() {
 
-  if (are_movement_notifications_enabled()) {
+  if (are_movement_notifications_enabled() && get_movement() != nullptr) {
     get_lua_context()->entity_on_obstacle_reached(*this, *get_movement());
   }
 }
@@ -2452,7 +2452,7 @@ void Entity::check_collision_with_detectors(Sprite& sprite) {
  */
 void Entity::notify_movement_started() {
 
-  if (are_movement_notifications_enabled()) {
+  if (are_movement_notifications_enabled() && get_movement() != nullptr) {
     get_lua_context()->entity_on_movement_started(*this, *get_movement());
   }
 }

@@ -88,23 +88,20 @@ int l_quest(lua_State* l) {
     Size normal_quest_size, min_quest_size, max_quest_size;
     bool success = Video::parse_size(normal_quest_size_string, normal_quest_size);
     if (!success) {
-      LuaTools::arg_error(l, 1, std::string(
-          "Bad field 'normal_quest_size' (not a valid size string: '")
-      + normal_quest_size_string + "')");
+      LuaTools::field_error(l, 1, "normal_quest_size",
+          "not a valid size string: '" + normal_quest_size_string + "'");
     }
 
     success = Video::parse_size(min_quest_size_string, min_quest_size);
     if (!success) {
-      LuaTools::arg_error(l, 1, std::string(
-          "Bad field 'min_quest_size' (not a valid size string: '")
-      + min_quest_size_string + "')");
+      LuaTools::field_error(l, 1, "min_quest_size",
+          "not a valid size string: '" + min_quest_size_string + "'");
     }
 
     success = Video::parse_size(max_quest_size_string, max_quest_size);
     if (!success) {
-      LuaTools::arg_error(l, 1, std::string(
-          "Bad field 'max_quest_size' (not a valid size string: '")
-      + max_quest_size_string + "')");
+      LuaTools::field_error(l, 1, "max_quest_size",
+          "not a valid size string: '" + max_quest_size_string + "'");
     }
 
     if (normal_quest_size.width < min_quest_size.width
