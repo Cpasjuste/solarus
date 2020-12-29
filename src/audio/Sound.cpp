@@ -476,6 +476,22 @@ bool Sound::start() {
 }
 
 /**
+ * \brief Stops all sources of this sound.
+ */
+void Sound::stop() {
+
+  if (!is_initialized()) {
+    return;
+  }
+
+  for (ALuint source: sources) {
+    alSourceStop(source);
+    alSourcei(source, AL_BUFFER, 0);
+    alDeleteSources(1, &source);
+  }
+}
+
+/**
  * \brief Pauses or resumes all sources of the sound.
  * \param pause true to pause the sources, false to resume them
  */
@@ -580,7 +596,7 @@ ALuint Sound::decode_file(const std::string& file_name) {
       // copy the samples into an OpenAL buffer
       alGenBuffers(1, &buffer);
       if (alGetError() != AL_NO_ERROR) {
-          Debug::error("Failed to generate audio buffer");
+        Debug::error("Failed to generate audio buffer");
       }
       alBufferData(buffer,
           AL_FORMAT_STEREO16,

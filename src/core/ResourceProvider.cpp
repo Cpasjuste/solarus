@@ -117,11 +117,13 @@ const std::map<std::string, std::shared_ptr<Tileset>>& ResourceProvider::get_loa
 /**
  * \brief Provides the sound with the given id.
  * \param sound_id A sound id.
+ * \param language_specific \c true to load the sound from the
+ * language-specific sound directory.
  * \return The corresponding sound.
  */
-Sound& ResourceProvider::get_sound(const std::string& sound_id) {
+Sound& ResourceProvider::get_sound(const std::string& sound_id, bool /* language_specific */) {
 
-  // TODO handle languages
+  // TODO handle language
 
   std::shared_ptr<Sound> sound;
   auto it = sound_cache.find(sound_id);

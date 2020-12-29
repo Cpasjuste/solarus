@@ -64,6 +64,7 @@ class SOLARUS_API Sound: public ExportableToLua {
     bool is_loaded() const;
     void load();
     bool start();
+    void stop();
     void set_paused(bool pause);
 
     static bool exists(const std::string& sound_id);
@@ -91,7 +92,7 @@ class SOLARUS_API Sound: public ExportableToLua {
 
     std::string id;                              /**< id of this sound */
     ALuint buffer;                               /**< the OpenAL buffer containing the PCM decoded data of this sound */
-    std::list<ALuint> sources;                   /**< the sources currently playing this sound */
+    std::list<ALuint> sources;                   /**< the sources currently playing this sound */ // TODO have only one source, use different instances
     bool loaded;                                 /**< Whether the sound is loaded. */
     std::mutex load_mutex;                       /**< Lock to protect concurrent sound loading. */
 

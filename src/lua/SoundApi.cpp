@@ -16,6 +16,8 @@
  */
 #include "solarus/audio/Sound.h"
 #include "solarus/core/CurrentQuest.h"
+#include "solarus/core/MainLoop.h"
+#include "solarus/core/ResourceProvider.h"
 #include "solarus/lua/LuaContext.h"
 
 namespace Solarus {
@@ -73,7 +75,7 @@ bool LuaContext::is_sound(lua_State* l, int index) {
  */
 SoundPtr LuaContext::check_sound(lua_State* l, int index) {
   return std::static_pointer_cast<Sound>(check_userdata(
-      l, index, game_module_name
+      l, index, sound_module_name
   ));
 }
 
@@ -94,11 +96,11 @@ void LuaContext::push_sound(lua_State* l, Sound& sound) {
 int LuaContext::sound_api_create(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
-    SoundPtr sound;
-    // TODO const std::string& sound_id = luaL_checkstring(l, 1);
-    // TODO bool language_specific = LuaTools::opt_boolean(l, 2, false);
-    // TODO sound = ResourceProvider::get_sound(sound_id, language_specific);
-    push_sound(l, *sound);
+    const std::string& sound_id = luaL_checkstring(l, 1);
+    const bool language_specific = LuaTools::opt_boolean(l, 2, false);
+    // TODO don't return the same instance
+    Sound& sound = get().get_main_loop().get_resource_provider().get_sound(sound_id, language_specific);
+    push_sound(l, sound);
     return 1;
   });
 }
@@ -111,10 +113,9 @@ int LuaContext::sound_api_create(lua_State* l) {
 int LuaContext::sound_api_play(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
-    // TODO Sound& sound = *check_sound(l, 1);
-
-    // TODO sound.play();
-
+    Sound& sound = *check_sound(l, 1);
+    sound.start();  // TODO what if the sound is already playing? Currently another source is created,
+                    // the same sound instance can be played multiple times.
     return 0;
   });
 }
@@ -127,9 +128,8 @@ int LuaContext::sound_api_play(lua_State* l) {
 int LuaContext::sound_api_stop(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
-    // Sound& sound = *check_sound(l, 1);
-
-    // TODO sound.stop();
+    Sound& sound = *check_sound(l, 1);
+    sound.stop();
 
     return 0;
   });
