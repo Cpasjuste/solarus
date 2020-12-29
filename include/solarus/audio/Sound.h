@@ -60,6 +60,7 @@ class SOLARUS_API Sound: public ExportableToLua {
     Sound();
     explicit Sound(const std::string& sound_id);
     ~Sound();
+    const std::string & get_id() const;
     bool is_loaded() const;
     void load();
     bool start();

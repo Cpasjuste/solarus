@@ -256,6 +256,14 @@ bool Sound::is_initialized() {
 }
 
 /**
+ * \brief Returns the id of this sound.
+ * \return The sound id.
+ */
+const std::string& Sound::get_id() const {
+  return id;
+}
+
+/**
  * \brief Returns whether a sound exists.
  * \param sound_id id of the sound to test
  * \return true if the sound exists
@@ -380,6 +388,11 @@ bool Sound::is_loaded() const {
  */
 void Sound::load() {
 
+  if (!is_initialized()) {
+    // Sound might be disabled.
+    return;
+  }
+
   if (is_loaded()) {
     return;
   }
@@ -391,7 +404,9 @@ void Sound::load() {
   }
 
   if (alGetError() != AL_NONE) {
-    Debug::error("Previous audio error not cleaned");
+    std::ostringstream oss;
+    oss << std::hex << alGetError();
+    Debug::error("Previous audio error not cleaned: " + oss.str());
   }
 
   std::string file_name = std::string("sounds/" + id);
@@ -412,48 +427,51 @@ void Sound::load() {
  */
 bool Sound::start() {
 
+  if (!is_initialized()) {
+    // Sound might be disabled.
+    return false;
+  }
+
+  if (!is_loaded()) { // first time: load and decode the file
+    load();
+  }
+
   bool success = false;
 
-  if (is_initialized()) {
+  if (buffer != AL_NONE) {
 
-    if (!is_loaded()) { // first time: load and decode the file
-      load();
+    // create a source
+    ALuint source;
+    alGenSources(1, &source);
+    alSourcei(source, AL_BUFFER, buffer);
+    alSourcef(source, AL_GAIN, volume);
+
+    // play the sound
+    int error = alGetError();
+    if (error != AL_NO_ERROR) {
+      std::ostringstream oss;
+      oss << "Cannot attach buffer " << buffer
+          << " to the source to play sound '" << id << "': error " << error;
+      Debug::error(oss.str());
+      alDeleteSources(1, &source);
     }
-
-    if (buffer != AL_NONE) {
-
-      // create a source
-      ALuint source;
-      alGenSources(1, &source);
-      alSourcei(source, AL_BUFFER, buffer);
-      alSourcef(source, AL_GAIN, volume);
-
-      // play the sound
-      int error = alGetError();
+    else {
+      sources.push_back(source);
+      current_sounds.remove(this); // to avoid duplicates
+      current_sounds.push_back(this);
+      alSourcePlay(source);
+      error = alGetError();
       if (error != AL_NO_ERROR) {
         std::ostringstream oss;
-        oss << "Cannot attach buffer " << buffer
-            << " to the source to play sound '" << id << "': error " << error;
+        oss << "Cannot play sound '" << id << "': error " << error;
         Debug::error(oss.str());
-        alDeleteSources(1, &source);
       }
       else {
-        sources.push_back(source);
-        current_sounds.remove(this); // to avoid duplicates
-        current_sounds.push_back(this);
-        alSourcePlay(source);
-        error = alGetError();
-        if (error != AL_NO_ERROR) {
-          std::ostringstream oss;
-          oss << "Cannot play sound '" << id << "': error " << error;
-          Debug::error(oss.str());
-        }
-        else {
-          success = true;
-        }
+        success = true;
       }
     }
   }
+
   return success;
 }
 
