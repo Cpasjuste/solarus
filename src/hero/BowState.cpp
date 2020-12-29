@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/audio/Sound.h"
+#include "solarus/core/Game.h"
 #include "solarus/hero/BowState.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
@@ -52,7 +53,7 @@ void Hero::BowState::update() {
 
   Hero& hero = get_entity();
   if (get_sprites().is_animation_finished()) {
-    Sound::play("bow");
+    Sound::play("bow", get_game().get_resource_provider());
     get_entities().add_entity(std::make_shared<Arrow>(hero));
     hero.set_state(std::make_shared<FreeState>(hero));
   }

@@ -139,7 +139,7 @@ void Crystal::activate(Entity& entity_activating) {
 
   uint32_t now = System::now();
   if (!recently_activated || now >= next_possible_hit_date) {
-    Sound::play("switch");
+    Sound::play("switch", get_game().get_resource_provider());
     get_game().change_crystal_state();
     next_possible_hit_date = now + 1000;
     entities_activating.push_back(&entity_activating);

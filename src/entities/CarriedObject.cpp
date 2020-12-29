@@ -224,7 +224,7 @@ void CarriedObject::throw_item(int direction) {
   this->is_throwing = true;
 
   // play the sound
-  Sound::play("throw");
+  Sound::play("throw", get_game().get_resource_provider());
 
   // Set up sprites.
   if (main_sprite->has_animation("stopped")) {
@@ -289,7 +289,7 @@ void CarriedObject::break_item() {
 
   if (!can_explode()) {
     if (!destruction_sound_id.empty()) {
-      Sound::play(destruction_sound_id);
+      Sound::play(destruction_sound_id, get_game().get_resource_provider());
     }
     if (main_sprite->has_animation("destroy")) {
       main_sprite->set_current_animation("destroy");
@@ -302,7 +302,7 @@ void CarriedObject::break_item() {
     get_entities().add_entity(std::make_shared<Explosion>(
         "", get_layer(), get_xy(), true
     ));
-    Sound::play("explosion");
+    Sound::play("explosion", get_game().get_resource_provider());
     if (is_throwing) {
       remove_from_map(); // because if the item was still carried by the hero, then the hero class will destroy it
     }
@@ -342,13 +342,13 @@ void CarriedObject::break_item_on_ground() {
     }
 
     case Ground::HOLE:
-      Sound::play("jump");
+      Sound::play("jump", get_game().get_resource_provider());
       remove_from_map();
       break;
 
     case Ground::DEEP_WATER:
     case Ground::LAVA:
-      Sound::play("walk_on_water");
+      Sound::play("walk_on_water", get_game().get_resource_provider());
       remove_from_map();
       break;
 

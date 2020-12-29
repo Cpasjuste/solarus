@@ -22,6 +22,7 @@
 #include <string>
 #include <list>
 #include <map>
+#include <mutex>
 #include <al.h>
 #include <alc.h>
 #include <vorbis/vorbisfile.h>
@@ -29,6 +30,7 @@
 namespace Solarus {
 
 class Arguments;
+class ResourceProvider;
 
 /**
  * \brief Represents a sound effect that can be played in the program.
@@ -42,8 +44,6 @@ class Arguments;
 class SOLARUS_API Sound: public ExportableToLua {
 
   public:
-
-    // libvorbisfile
 
     /**
      * \brief Buffer containing an encoded sound file.
@@ -60,13 +60,13 @@ class SOLARUS_API Sound: public ExportableToLua {
     Sound();
     explicit Sound(const std::string& sound_id);
     ~Sound();
+    bool is_loaded() const;
     void load();
     bool start();
     void set_paused(bool pause);
 
-    static void load_all();
     static bool exists(const std::string& sound_id);
-    static void play(const std::string& sound_id);
+    static void play(const std::string& sound_id, ResourceProvider& resource_provider);
     static void pause_all();
     static void resume_all();
 
@@ -91,11 +91,12 @@ class SOLARUS_API Sound: public ExportableToLua {
     std::string id;                              /**< id of this sound */
     ALuint buffer;                               /**< the OpenAL buffer containing the PCM decoded data of this sound */
     std::list<ALuint> sources;                   /**< the sources currently playing this sound */
+    bool loaded;                                 /**< Whether the sound is loaded. */
+    std::mutex load_mutex;                       /**< Lock to protect concurrent sound loading. */
+
     static std::list<Sound*> current_sounds;     /**< the sounds currently playing */
-    static std::map<std::string, Sound> all_sounds;   /**< all sounds created before */
 
     static bool initialized;                     /**< indicates that the audio system is initialized */
-    static bool sounds_preloaded;                /**< true if load_all() was called */
     static float volume;                         /**< the volume of sound effects (0.0 to 1.0) */
 
     static bool pc_play;                         /**< Whether playing performance counter is used. */

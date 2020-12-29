@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/audio/Sound.h"
+#include "solarus/core/CurrentQuest.h"
 #include "solarus/lua/LuaContext.h"
 
 namespace Solarus {
@@ -94,7 +95,7 @@ int LuaContext::sound_api_create(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     SoundPtr sound;
-    const std::string& sound_id = luaL_checkstring(l, 1);
+    // TODO const std::string& sound_id = luaL_checkstring(l, 1);
     // TODO bool language_specific = LuaTools::opt_boolean(l, 2, false);
     // TODO sound = ResourceProvider::get_sound(sound_id, language_specific);
     push_sound(l, *sound);
@@ -110,7 +111,7 @@ int LuaContext::sound_api_create(lua_State* l) {
 int LuaContext::sound_api_play(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
-    Sound& sound = *check_sound(l, 1);
+    // TODO Sound& sound = *check_sound(l, 1);
 
     // TODO sound.play();
 
@@ -126,7 +127,7 @@ int LuaContext::sound_api_play(lua_State* l) {
 int LuaContext::sound_api_stop(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
-    Sound& sound = *check_sound(l, 1);
+    // Sound& sound = *check_sound(l, 1);
 
     // TODO sound.stop();
 

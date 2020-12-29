@@ -24,6 +24,7 @@
 #include "solarus/core/Debug.h"
 #include "solarus/core/PerfCounter.h"
 #include "solarus/core/QuestFiles.h"
+#include "solarus/core/ResourceProvider.h"
 #include "solarus/core/String.h"
 #include "solarus/lua/LuaContext.h"
 #include <cstdio>
@@ -33,11 +34,9 @@ namespace Solarus {
 ALCdevice* Sound::device = nullptr;
 ALCcontext* Sound::context = nullptr;
 bool Sound::initialized = false;
-bool Sound::sounds_preloaded = false;
 float Sound::volume = 1.0;
 bool Sound::pc_play = false;
 std::list<Sound*> Sound::current_sounds;
-std::map<std::string, Sound> Sound::all_sounds;
 
 namespace {
 
@@ -149,8 +148,8 @@ Sound::Sound():
  */
 Sound::Sound(const std::string& sound_id):
   id(sound_id),
-  buffer(AL_NONE) {
-
+  buffer(AL_NONE),
+  loaded(false) {
 }
 
 /**
@@ -235,9 +234,6 @@ void Sound::quit() {
     // uninitialize the music subsystem
     Music::quit();
 
-    // clear the sounds
-    all_sounds.clear();
-
     // uninitialize OpenAL
 
     alcMakeContextCurrent(nullptr);
@@ -260,26 +256,6 @@ bool Sound::is_initialized() {
 }
 
 /**
- * \brief Loads and decodes all sounds listed in the game database.
- */
-void Sound::load_all() {
-
-  if (is_initialized() && !sounds_preloaded) {
-
-    const std::map<std::string, std::string>& sound_elements =
-        CurrentQuest::get_resources(ResourceType::SOUND);
-    for (const auto& kvp: sound_elements) {
-      const std::string& sound_id = kvp.first;
-
-      all_sounds[sound_id] = Sound(sound_id);
-      all_sounds[sound_id].load();
-    }
-
-    sounds_preloaded = true;
-  }
-}
-
-/**
  * \brief Returns whether a sound exists.
  * \param sound_id id of the sound to test
  * \return true if the sound exists
@@ -293,18 +269,16 @@ bool Sound::exists(const std::string& sound_id) {
 
 /**
  * \brief Starts playing the specified sound.
- * \param sound_id id of the sound to play
+ * \param sound_id Id of the sound to play.
+ * \param resource_provider The resource provider.
  */
-void Sound::play(const std::string& sound_id) {
+void Sound::play(const std::string& sound_id, ResourceProvider& resource_provider) {
   if (pc_play) {
     PerfCounter::update("sound-play");
   }
 
-  if (all_sounds.find(sound_id) == all_sounds.end()) {
-    all_sounds[sound_id] = Sound(sound_id);
-  }
-
-  all_sounds[sound_id].start();
+  Sound& sound = resource_provider.get_sound(sound_id);
+  sound.start();
 }
 
 /**
@@ -394,9 +368,27 @@ bool Sound::update_playing() {
 }
 
 /**
+ * \brief Returns whether this sound is loaded.
+ * \return \c true if this sound is loaded.
+ */
+bool Sound::is_loaded() const {
+  return loaded;
+}
+
+/**
  * \brief Loads and decodes the sound into memory.
  */
 void Sound::load() {
+
+  if (is_loaded()) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock(load_mutex);
+
+  if (is_loaded()) {
+    return;
+  }
 
   if (alGetError() != AL_NONE) {
     Debug::error("Previous audio error not cleaned");
@@ -411,6 +403,7 @@ void Sound::load() {
   buffer = decode_file(file_name);
 
   // buffer is now AL_NONE if there was an error.
+  loaded = true;
 }
 
 /**
@@ -423,7 +416,7 @@ bool Sound::start() {
 
   if (is_initialized()) {
 
-    if (buffer == AL_NONE) { // first time: load and decode the file
+    if (!is_loaded()) { // first time: load and decode the file
       load();
     }
 

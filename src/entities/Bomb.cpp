@@ -16,6 +16,7 @@
  */
 #include "solarus/audio/Sound.h"
 #include "solarus/core/CommandsEffects.h"
+#include "solarus/core/Game.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/System.h"
 #include "solarus/entities/Bomb.h"
@@ -198,7 +199,7 @@ bool Bomb::notify_action_command_pressed() {
         0,
         explosion_date)
     );
-    Sound::play("lift");
+    Sound::play("lift", get_game().get_resource_provider());
     remove_from_map();
     return true;
   }
@@ -262,7 +263,7 @@ void Bomb::explode() {
   get_entities().add_entity(std::make_shared<Explosion>(
       "", get_layer(), get_center_point(), true
   ));
-  Sound::play("explosion");
+  Sound::play("explosion", get_game().get_resource_provider());
   remove_from_map();
 }
 

@@ -90,7 +90,7 @@ void Hero::RunningState::update() {
   uint32_t now = System::now();
 
   if (!is_bouncing() && now >= next_sound_date) {
-    Sound::play("running");
+    Sound::play("running", get_game().get_resource_provider());
     next_sound_date = now + 170;
   }
 
@@ -180,7 +180,7 @@ void Hero::RunningState::notify_obstacle_reached() {
         opposite_direction, 32, 64, false
     ));
     get_sprites().set_animation_hurt();
-    Sound::play("running_obstacle");
+    Sound::play("running_obstacle", get_game().get_resource_provider());
     phase++;
   }
 }

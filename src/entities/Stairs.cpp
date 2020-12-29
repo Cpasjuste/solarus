@@ -201,7 +201,7 @@ int Stairs::get_animation_direction(Way way) const {
  *
  * \param way The way you are taking these stairs.
  */
-void Stairs::play_sound(Way way) const {
+void Stairs::play_sound(Way way) {
 
   std::string sound_id;
   if (is_inside_floor()) {
@@ -221,7 +221,7 @@ void Stairs::play_sound(Way way) const {
   }
 
   if (Sound::exists(sound_id)) {
-    Sound::play(sound_id);
+    Sound::play(sound_id, get_game().get_resource_provider());
   }
 }
 

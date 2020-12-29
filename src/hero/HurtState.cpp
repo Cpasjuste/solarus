@@ -60,7 +60,7 @@ void Hero::HurtState::start(const State* previous_state) {
 
   Equipment& equipment = get_equipment();
 
-  Sound::play("hero_hurt");
+  Sound::play("hero_hurt", get_game().get_resource_provider());
 
   Hero& hero = get_entity();
   const uint32_t invincibility_duration = 2000;

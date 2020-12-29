@@ -145,7 +145,7 @@ void Hero::BackToSolidGroundState::update() {
       get_sprites().blink(2000);
 
       if (with_sound) {
-        Sound::play("message_end");  // TODO rename this sound.
+        Sound::play("message_end", get_game().get_resource_provider());  // TODO rename this sound.
       }
     }
 

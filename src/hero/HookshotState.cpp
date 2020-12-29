@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/audio/Sound.h"
+#include "solarus/core/Game.h"
 #include "solarus/core/Map.h"
 #include "solarus/hero/BackToSolidGroundState.h"
 #include "solarus/hero/FreeState.h"
@@ -216,14 +217,14 @@ void Hero::HookshotState::finish_movement() {
     // the lower layer are not obstacles, and go to this layer
     --layer;
     if (!map.test_collision_with_obstacles(layer, hero_position, hero)) {
-      Sound::play("hero_lands");
+      Sound::play("hero_lands", get_game().get_resource_provider());
       entities.set_entity_layer(hero, layer);
       hero.start_state_from_ground();
     }
     else {
       // illegal position: get back to the start point
       // TODO: get back to the closest valid point from the destination instead
-      Sound::play("hero_hurt");
+      Sound::play("hero_hurt", get_game().get_resource_provider());
       hero.set_state(std::make_shared<BackToSolidGroundState>(hero, false, 0, true));
     }
   }

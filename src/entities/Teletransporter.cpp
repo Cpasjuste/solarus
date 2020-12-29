@@ -338,7 +338,7 @@ void Teletransporter::transport_hero(Hero& hero) {
   }
 
   if (!sound_id.empty()) {
-    Sound::play(sound_id);
+    Sound::play(sound_id, get_game().get_resource_provider());
   }
 
   get_game().set_current_map(destination_map_id, name, transition_style);

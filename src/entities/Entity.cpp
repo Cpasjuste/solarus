@@ -3538,7 +3538,7 @@ bool Entity::notify_action_command_pressed() {
     );
     get_hero().start_lifting(carried_object);
 
-    Sound::play("lift");
+    Sound::play("lift", get_game().get_resource_provider());
     remove_from_map();
     get_lua_context()->entity_on_lifting(*this, get_hero(), *carried_object);
     return true;

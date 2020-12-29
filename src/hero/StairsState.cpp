@@ -40,7 +40,7 @@ namespace Solarus {
  */
 Hero::StairsState::StairsState(
     Hero& hero,
-    const std::shared_ptr<const Stairs>& stairs,
+    const std::shared_ptr<Stairs>& stairs,
     Stairs::Way way
 ):
   HeroState(hero, "stairs"),

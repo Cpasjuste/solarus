@@ -2039,7 +2039,7 @@ int LuaContext::map_api_open_doors(lua_State* l) {
     // make sure the sound is played only once even if the script calls
     // this function repeatedly while the door is still changing
     if (done) {
-      Sound::play("door_open");
+      Sound::play("door_open", get().get_main_loop().get_resource_provider());
     }
 
     return 0;
@@ -2071,7 +2071,7 @@ int LuaContext::map_api_close_doors(lua_State* l) {
     // make sure the sound is played only once even if the script calls
     // this function repeatedly while the door is still changing
     if (done) {
-      Sound::play("door_closed");
+      Sound::play("door_closed", get().get_main_loop().get_resource_provider());
     }
 
     return 0;

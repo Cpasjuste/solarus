@@ -17,6 +17,8 @@
 #ifndef SOLARUS_RESOURCE_PROVIDER_H
 #define SOLARUS_RESOURCE_PROVIDER_H
 
+#include "solarus/audio/Sound.h"
+#include "solarus/audio/SoundPtr.h"
 #include "solarus/core/Common.h"
 #include "solarus/core/ResourceType.h"
 #include "solarus/entities/Tileset.h"
@@ -43,6 +45,7 @@ class SOLARUS_API ResourceProvider {
 
     Tileset& get_tileset(const std::string& tileset_id);
     const std::map<std::string, std::shared_ptr<Tileset>>& get_loaded_tilesets();
+    Sound& get_sound(const std::string& sound_id);
 
     // TODO other types of resources
     // TODO clear/update when the resource list changes dynamically
@@ -56,6 +59,8 @@ class SOLARUS_API ResourceProvider {
     std::thread preloader_thread;  /**< Thread that loads resources in background. */
     std::map<std::string, std::shared_ptr<Tileset>>
         tileset_cache;             /**< Cache of loaded tilesets. */
+    std::map<std::string, SoundPtr>
+        sound_cache;               /**< Cache of loaded sounds. */
 };
 
 }

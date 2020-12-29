@@ -17,6 +17,7 @@
 #include "solarus/audio/Sound.h"
 #include "solarus/core/CommandsEffects.h"
 #include "solarus/core/Equipment.h"
+#include "solarus/core/Game.h"
 #include "solarus/core/System.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
@@ -158,7 +159,7 @@ void Hero::SwimmingState::try_swim_faster() {
     fast_swimming = true;
     get_entity().set_walking_speed(get_fast_swimming_speed());
     get_sprites().set_animation_swimming_fast();
-    Sound::play("swim");
+    Sound::play("swim", get_game().get_resource_provider());
     end_fast_swim_date = System::now() + 600;
   }
 }

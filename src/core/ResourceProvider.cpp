@@ -31,7 +31,7 @@ ResourceProvider::ResourceProvider() {
  */
 void ResourceProvider::start_preloading_resources() {
 
-  // Put all tilesets in the cache, without loading them yet.
+  // Put all resources in the cache, without loading them yet.
   const QuestDatabase& database = CurrentQuest::get_database();
   const QuestDatabase::ResourceMap& tileset_ids = database.get_resource_elements(ResourceType::TILESET);
   std::vector<std::shared_ptr<Tileset>> tilesets_to_preload;
@@ -42,13 +42,30 @@ void ResourceProvider::start_preloading_resources() {
     tilesets_to_preload.emplace_back(tileset);
   }
 
+  const QuestDatabase::ResourceMap& sound_ids = database.get_resource_elements(ResourceType::SOUND);
+  std::vector<SoundPtr> sounds_to_preload;
+  for (const auto& pair : sound_ids) {
+    const std::string& sound_id = pair.first;
+    SoundPtr sound = std::make_shared<Sound>(sound_id);
+    sound_cache.emplace(sound_id, sound);
+    sounds_to_preload.emplace_back(sound);
+  }
+
   // Start loading them in a separate thread.
-  preloader_thread = std::thread([this, tilesets_to_preload]() {
+  preloader_thread = std::thread([this, tilesets_to_preload, sounds_to_preload]() {
+
+    for (const std::shared_ptr<Sound>& sound : sounds_to_preload) {
+      if (sound_cache.empty()) {
+        // clear() was probably called in the meantime.
+        // No reason to continue.
+        return;
+      }
+      sound->load();
+      std::this_thread::yield();
+    }
 
     for (const std::shared_ptr<Tileset>& tileset : tilesets_to_preload) {
       if (tileset_cache.empty()) {
-        // clear() was probably called in the meantime.
-        // No reason to continue.
         return;
       }
       tileset->load();
@@ -63,6 +80,7 @@ void ResourceProvider::start_preloading_resources() {
 void ResourceProvider::clear() {
 
   tileset_cache.clear();
+  sound_cache.clear();
   preloader_thread.join();
 }
 
@@ -97,6 +115,30 @@ const std::map<std::string, std::shared_ptr<Tileset>>& ResourceProvider::get_loa
 }
 
 /**
+ * \brief Provides the sound with the given id.
+ * \param sound_id A sound id.
+ * \return The corresponding sound.
+ */
+Sound& ResourceProvider::get_sound(const std::string& sound_id) {
+
+  // TODO handle languages
+
+  std::shared_ptr<Sound> sound;
+  auto it = sound_cache.find(sound_id);
+  if (it->second != nullptr) {
+    sound = it->second;
+  }
+  else {
+    sound = std::make_shared<Sound>(sound_id);
+    sound_cache.emplace(sound_id, sound);
+  }
+
+  sound->load();
+
+  return *sound;
+}
+
+/**
  * \brief Notifies the resource provider that cached data (if any) is no longer valid.
  *
  * This function must be called when a resource element has changed on disk.
@@ -113,6 +155,12 @@ void ResourceProvider::invalidate_resource_element(
   case ResourceType::TILESET:
   {
     tileset_cache.erase(element_id);
+  }
+    break;
+
+  case ResourceType::SOUND:
+  {
+    sound_cache.erase(element_id);
   }
     break;
 
