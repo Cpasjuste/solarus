@@ -487,6 +487,8 @@ void LuaContext::register_entity_module() {
         { "set_destruction_sound", carried_object_api_set_destruction_sound },
         { "get_damage_on_enemies", carried_object_api_get_damage_on_enemies },
         { "set_damage_on_enemies", carried_object_api_set_damage_on_enemies },
+        { "get_object_height", carried_object_api_get_object_height},
+        { "set_object_height", carried_object_api_set_object_height}
     });
   }
 
@@ -5018,6 +5020,39 @@ int LuaContext::carried_object_api_set_damage_on_enemies(lua_State* l) {
     int damage_on_enemies = LuaTools::check_int(l, 2);
 
     carried_object.set_damage_on_enemies(damage_on_enemies);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of carried_object:set_damage_on_enemies().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::carried_object_api_get_object_height(lua_State* l){
+  return state_boundary_handle(l, [&] {
+    CarriedObject& carried_object = *check_carried_object(l, 1);
+
+    int height = carried_object.get_object_height();
+
+    lua_pushinteger(l, height);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of carried_object:set_damage_on_enemies().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::carried_object_api_set_object_height(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    CarriedObject& carried_object = *check_carried_object(l, 1);
+    int height = LuaTools::check_int(l, 2);
+
+    carried_object.set_object_height(height);
 
     return 0;
   });

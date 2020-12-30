@@ -1170,6 +1170,8 @@ class LuaContext {
       carried_object_api_set_destruction_sound,
       carried_object_api_get_damage_on_enemies,
       carried_object_api_set_damage_on_enemies,
+      carried_object_api_get_object_height,
+      carried_object_api_set_object_height,
       enemy_api_get_breed,
       enemy_api_get_life,
       enemy_api_set_life,

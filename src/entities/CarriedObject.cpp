@@ -62,6 +62,7 @@ const std::string CarriedObject::lifting_trajectories[4] = {
  * \param explosion_date date of the explosion if the item should explode,
  * or 0 if the item does not explode
  */
+
 CarriedObject::CarriedObject(
     Hero& hero,
     const Entity& original_entity,
@@ -81,7 +82,7 @@ CarriedObject::CarriedObject(
   shadow_sprite(nullptr),
   throwing_direction(0),
   next_down_date(0),
-  item_height(0),
+  item_height(18),
   y_increment(0),
   explosion_date(explosion_date) {
 
@@ -166,6 +167,36 @@ void CarriedObject::set_damage_on_enemies(int damage_on_enemies) {
 }
 
 /**
+ * \brief Returns the height this object will be displayed at, relative to the hero.
+ * \return The object height.
+ */
+
+int CarriedObject::get_object_height(){
+  return item_height;
+}
+
+/**
+ * \brief Sets the damage this object will be displayed at, relative to the hero.
+ * \param height The object height.
+ */
+void CarriedObject::set_object_height(int height) {
+
+  if (height != item_height){
+    std::shared_ptr<Movement> movement = get_movement();
+    if (movement != nullptr) clear_movement();
+
+    set_movement(std::make_shared<RelativeMovement>(
+      hero,
+      0,
+      -height,
+      true
+    ));
+  }
+
+  this->item_height = height;
+}
+
+/**
  * \brief Returns the id of the sound to play when this object is destroyed.
  * \return The destruction sound id or an empty string.
  */
@@ -243,7 +274,7 @@ void CarriedObject::throw_item(int direction) {
 
   this->y_increment = -2;
   this->next_down_date = System::now() + 40;
-  this->item_height = 18;
+  //this->item_height = 18;
 
   get_lua_context()->carried_object_on_thrown(*this);
 }
@@ -280,6 +311,7 @@ void CarriedObject::break_item() {
   if (is_throwing && throwing_direction != 3) {
     // destroy the item where it is actually drawn
     set_y(get_y() - item_height);
+    main_sprite->set_xy({0, 0});
   }
 
   if (get_movement() != nullptr) {
@@ -425,7 +457,7 @@ void CarriedObject::update() {
     set_movement(std::make_shared<RelativeMovement>(
         hero,
         0,
-        -18,
+        -item_height,
         true
     ));
     get_lua_context()->carried_object_on_lifted(*this);
