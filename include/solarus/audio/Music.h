@@ -90,6 +90,8 @@ class SOLARUS_API Music {
     );
     static void stop_playing();
     static const std::string& get_current_music_id();
+    static void pause_playing();
+    static void resume_playing();
 
   private:
 
