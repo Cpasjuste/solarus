@@ -82,7 +82,7 @@ CarriedObject::CarriedObject(
   shadow_sprite(nullptr),
   throwing_direction(0),
   next_down_date(0),
-  item_height(18),
+  item_height(hero.get_carry_height()),
   y_increment(0),
   explosion_date(explosion_date) {
 
@@ -181,7 +181,7 @@ int CarriedObject::get_object_height(){
  */
 void CarriedObject::set_object_height(int height) {
 
-  if (height != item_height){
+  if (height != item_height && !is_breaking){
     std::shared_ptr<Movement> movement = get_movement();
     if (movement != nullptr) clear_movement();
 

@@ -116,6 +116,7 @@ Hero::Hero(Equipment& equipment):
   target_solid_ground_callback(),
   next_ground_date(0),
   next_ice_date(0),
+  carry_height(18),
   ice_movement_direction8(0) {
 
   // position
@@ -985,7 +986,30 @@ void Hero::set_walking_speed(int walking_speed) {
     get_state()->notify_walking_speed_changed();
   }
 }
+ 	
+/**
+* \brief Returns the default height carried objects will be displayed at.
+* \return the height in pixels.
+*/
 
+int Hero::get_carry_height() const{
+  return carry_height;
+}
+
+/**
+* \brief Sets the default height carried objects will be displayed at.
+* \param height the height in pixels.
+  */
+void Hero::set_carry_height(int height) {
+  std::shared_ptr<CarriedObject> carried = get_carried_object();
+
+  if (carried != nullptr && !carried->is_being_thrown()){
+    carried->set_object_height(height);
+  }
+
+  this->carry_height = height;
+}
+	
 /**
  * \brief Returns the direction of the hero's movement as defined by the controls applied by the player.
  *

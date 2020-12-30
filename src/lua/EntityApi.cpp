@@ -178,6 +178,8 @@ void LuaContext::register_entity_module() {
       { "set_direction", hero_api_set_direction },
       { "get_walking_speed", hero_api_get_walking_speed },
       { "set_walking_speed", hero_api_set_walking_speed },
+      { "get_carry_height", hero_api_get_carry_height},
+      { "set_carry_height", hero_api_set_carry_height},
       { "save_solid_ground", hero_api_save_solid_ground },
       { "reset_solid_ground", hero_api_reset_solid_ground },
       { "get_solid_ground_position", hero_api_get_solid_ground_position },
@@ -2199,6 +2201,37 @@ int LuaContext::hero_api_set_walking_speed(lua_State* l) {
     int normal_walking_speed = LuaTools::check_int(l, 2);
 
     hero.set_normal_walking_speed(normal_walking_speed);
+
+    return 0;
+  });
+}
+
+/** \brief Implementation of hero:get_carry_height()
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+
+int LuaContext::hero_api_get_carry_height(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const Hero& hero = *check_hero(l, 1);
+
+    lua_pushinteger(l, hero.get_carry_height());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_carry_height().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_set_carry_height(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.set_carry_height(LuaTools::check_int(l, 2));
 
     return 0;
   });
