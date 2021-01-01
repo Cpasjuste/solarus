@@ -60,6 +60,7 @@ class SOLARUS_API Sound: public ExportableToLua {
     static void quit();
     static bool is_initialized();
     static void update();
+    static bool check_openal_clean_state(const std::string& function_name);
 
     static int get_volume();
     static void set_volume(int volume);

@@ -49,12 +49,20 @@ Sound::Sound(const SoundBuffer& data):
  */
 Sound::~Sound() {
 
-  if (is_initialized() && data.is_loaded()) {
+  if (is_initialized() && source != AL_NONE) {
 
     // Stop the source where this buffer is attached
     alSourceStop(source);
     alSourcei(source, AL_BUFFER, 0);
     alDeleteSources(1, &source);
+
+    int error = alGetError();
+    if (error != AL_NO_ERROR) {
+      std::ostringstream oss;
+      oss << "Failed to delete AL source " << source
+          << " when deleting sound '" << get_id() << "': error " << std::hex << error;
+      Debug::error(oss.str());
+    }
   }
 }
 
@@ -263,10 +271,26 @@ bool Sound::update_playing() {
   ALint status;
   alGetSourcei(source, AL_SOURCE_STATE, &status);
 
+  int error = alGetError();
+  if (error != AL_NO_ERROR) {
+    std::ostringstream oss;
+    oss << "Failed to get status of AL source " << source
+        << " for sound '" << get_id() << "': error " << std::hex << error;
+    Debug::error(oss.str());
+  }
+
   if (status != AL_PLAYING) {
     alSourcei(source, AL_BUFFER, 0);
     alDeleteSources(1, &source);
     source = AL_NONE;
+
+    int error = alGetError();
+    if (error != AL_NO_ERROR) {
+      std::ostringstream oss;
+      oss << "Failed to delete AL source " << source
+          << " with status " << status << " after playing sound '" << get_id() << "': error " << std::hex << error;
+      Debug::error(oss.str());
+    }
   }
 
   return source != AL_NONE;
@@ -280,6 +304,10 @@ bool Sound::start() {
 
   if (!is_initialized()) {
     // Sound might be disabled.
+    return false;
+  }
+
+  if (!check_openal_clean_state(__FUNCTION__)) {
     return false;
   }
 
@@ -333,9 +361,22 @@ void Sound::stop() {
     return;
   }
 
+  if (source == AL_NONE) {
+    // Nothing to do.
+    return;
+  }
+
   alSourceStop(source);
   alSourcei(source, AL_BUFFER, 0);
   alDeleteSources(1, &source);
+
+  int error = alGetError();
+  if (error != AL_NO_ERROR) {
+    std::ostringstream oss;
+    oss << "Failed to delete AL source " << source
+        << " when stopping sound '" << get_id() << "': error " << std::hex << error;
+    Debug::error(oss.str());
+  }
 }
 
 /**
@@ -355,6 +396,25 @@ void Sound::set_paused(bool pause) {
     alSourcePlay(source);
   }
 }
+
+/**
+ * \brief Prints an error message if there is a current OpenAL error.
+ * \param function_name Current function name for debugging purposes.
+ * \return \c false if there is an error.
+ */
+bool Sound::check_openal_clean_state(const std::string& function_name) {
+
+  ALenum error = alGetError();
+  if (error != AL_NONE) {
+    std::ostringstream oss;
+    oss << "Previous audio error not cleaned in " << function_name << ": " << std::hex << error;
+    Debug::error(oss.str());
+    return false;
+  }
+
+  return true;
+}
+
 
 /**
  * \brief Returns the name identifying this type in Lua.

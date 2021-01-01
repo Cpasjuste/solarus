@@ -176,7 +176,7 @@ void SoundBuffer::load() {
   if (alGetError() != AL_NONE) {
     std::ostringstream oss;
     oss << std::hex << alGetError();
-    Debug::error("Previous audio error not cleaned: " + oss.str());
+    Debug::error("Previous audio error not cleaned in SoundBuffer::load(): " + oss.str());
   }
 
   std::string file_name = std::string("sounds/" + id);
