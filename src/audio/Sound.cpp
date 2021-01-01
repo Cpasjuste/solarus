@@ -41,7 +41,8 @@ std::list<SoundPtr> Sound::current_sounds;
  * \param data The loaded sound data ready to be played.
  */
 Sound::Sound(const SoundBuffer& data):
-  data(data) {
+  data(data),
+  source(AL_NONE) {
 }
 
 /**
@@ -50,19 +51,7 @@ Sound::Sound(const SoundBuffer& data):
 Sound::~Sound() {
 
   if (is_initialized() && source != AL_NONE) {
-
-    // Stop the source where this buffer is attached
-    alSourceStop(source);
-    alSourcei(source, AL_BUFFER, 0);
-    alDeleteSources(1, &source);
-
-    int error = alGetError();
-    if (error != AL_NO_ERROR) {
-      std::ostringstream oss;
-      oss << "Failed to delete AL source " << source
-          << " when deleting sound '" << get_id() << "': error " << std::hex << error;
-      Debug::error(oss.str());
-    }
+    stop_source();
   }
 }
 
@@ -263,6 +252,8 @@ void Sound::update() {
  */
 bool Sound::update_playing() {
 
+  check_openal_clean_state("Sound::update_playing");
+
   // See if this sound is still playing.
   if (source == AL_NONE) {
     return false;
@@ -271,26 +262,8 @@ bool Sound::update_playing() {
   ALint status;
   alGetSourcei(source, AL_SOURCE_STATE, &status);
 
-  int error = alGetError();
-  if (error != AL_NO_ERROR) {
-    std::ostringstream oss;
-    oss << "Failed to get status of AL source " << source
-        << " for sound '" << get_id() << "': error " << std::hex << error;
-    Debug::error(oss.str());
-  }
-
   if (status != AL_PLAYING) {
-    alSourcei(source, AL_BUFFER, 0);
-    alDeleteSources(1, &source);
-    source = AL_NONE;
-
-    int error = alGetError();
-    if (error != AL_NO_ERROR) {
-      std::ostringstream oss;
-      oss << "Failed to delete AL source " << source
-          << " with status " << status << " after playing sound '" << get_id() << "': error " << std::hex << error;
-      Debug::error(oss.str());
-    }
+    stop_source();
   }
 
   return source != AL_NONE;
@@ -307,53 +280,51 @@ bool Sound::start() {
     return false;
   }
 
-  if (!check_openal_clean_state(__FUNCTION__)) {
+  if (!check_openal_clean_state("Sound::start")) {
     return false;
   }
 
-  bool success = false;
-
   ALuint buffer = data.get_buffer();
-  if (buffer != AL_NONE) {
+  if (buffer == AL_NONE) {
+    return false;
+  }
 
+  if (source == AL_NONE) {
     // create a source
-    ALuint source;
     alGenSources(1, &source);
     alSourcei(source, AL_BUFFER, buffer);
     alSourcef(source, AL_GAIN, volume);
 
     // play the sound
-    int error = alGetError();
+    ALenum error = alGetError();
     if (error != AL_NO_ERROR) {
       std::ostringstream oss;
       oss << "Cannot attach buffer " << buffer
           << " to source " << source << " to play sound '" << get_id() << "': error " << std::hex << error;
       Debug::error(oss.str());
       alDeleteSources(1, &source);
-    }
-    else {
-      this->source = source;
-      SoundPtr shared_this = std::static_pointer_cast<Sound>(shared_from_this());
-      current_sounds.remove(shared_this);  // To avoid duplicates.
-      current_sounds.push_back(shared_this);
-      alSourcePlay(source);
-      error = alGetError();
-      if (error != AL_NO_ERROR) {
-        std::ostringstream oss;
-        oss << "Cannot play sound '" << get_id() << "': error " << std::hex << error;
-        Debug::error(oss.str());
-      }
-      else {
-        success = true;
-      }
+      source = AL_NONE;
+      return false;
     }
   }
 
-  return success;
+  SoundPtr shared_this = std::static_pointer_cast<Sound>(shared_from_this());
+  current_sounds.remove(shared_this);  // To avoid duplicates.
+  current_sounds.push_back(shared_this);
+  alSourcePlay(source);
+  ALenum error = alGetError();
+  if (error != AL_NO_ERROR) {
+    std::ostringstream oss;
+    oss << "Cannot play sound '" << get_id() << "': error " << std::hex << error;
+    Debug::error(oss.str());
+    return false;
+  }
+
+  return true;
 }
 
 /**
- * \brief Stops all sources of this sound.
+ * \brief Stops playing this sound.
  */
 void Sound::stop() {
 
@@ -361,8 +332,26 @@ void Sound::stop() {
     return;
   }
 
+  check_openal_clean_state("Sound::stop");
+
   if (source == AL_NONE) {
     // Nothing to do.
+    return;
+  }
+
+  ALint status;
+  alGetSourcei(source, AL_SOURCE_STATE, &status);
+  if (status == AL_PLAYING || status == AL_PAUSED) {
+    stop_source();
+  }
+}
+
+/**
+ * \brief Stops playing the sound.
+ */
+void Sound::stop_source() {
+
+  if (source == AL_NONE) {
     return;
   }
 
@@ -374,9 +363,11 @@ void Sound::stop() {
   if (error != AL_NO_ERROR) {
     std::ostringstream oss;
     oss << "Failed to delete AL source " << source
-        << " when stopping sound '" << get_id() << "': error " << std::hex << error;
+        << " for sound '" << get_id() << "': error " << std::hex << error;
     Debug::error(oss.str());
   }
+
+  source = AL_NONE;
 }
 
 /**

@@ -71,6 +71,7 @@ class SOLARUS_API Sound: public ExportableToLua {
 
     explicit Sound(const SoundBuffer& data);
     bool update_playing();
+    void stop_source();
 
     const SoundBuffer& data;                     /**< The loaded sound data. */
     ALuint source;                               /**< the source currently playing this sound */

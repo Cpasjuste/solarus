@@ -525,7 +525,6 @@ void Music::decode_ogg(ALuint destination_buffer, ALsizei nb_samples) {
  */
 bool Music::start() {
 
-  /*
   if (!is_initialized()) {
     return false;
   }
@@ -615,8 +614,6 @@ bool Music::start() {
   // The update() function will then take care of filling the buffers
 
   return success;
-  */
-  return true;
 }
 
 /**

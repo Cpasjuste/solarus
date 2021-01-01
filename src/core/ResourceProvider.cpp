@@ -52,7 +52,7 @@ void ResourceProvider::start_preloading_resources() {
   }
 
   // Start loading them in a separate thread.
-//  preloader_thread = std::thread([this, tilesets_to_preload, sounds_to_preload]() {
+  preloader_thread = std::thread([this, tilesets_to_preload, sounds_to_preload]() {
 
     for (const std::shared_ptr<SoundBuffer>& sound : sounds_to_preload) {
       if (sound_cache.empty()) {
@@ -71,7 +71,7 @@ void ResourceProvider::start_preloading_resources() {
       tileset->load();
       std::this_thread::yield();
     }
-//  });
+  });
 }
 
 /**
