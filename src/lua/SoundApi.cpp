@@ -98,9 +98,9 @@ int LuaContext::sound_api_create(lua_State* l) {
   return state_boundary_handle(l, [&] {
     const std::string& sound_id = luaL_checkstring(l, 1);
     const bool language_specific = LuaTools::opt_boolean(l, 2, false);
-    // TODO don't return the same instance
-    Sound& sound = get().get_main_loop().get_resource_provider().get_sound(sound_id, language_specific);
-    push_sound(l, sound);
+    SoundBuffer& sound_buffer = get().get_main_loop().get_resource_provider().get_sound(sound_id, language_specific);
+    SoundPtr sound = Sound::create(sound_buffer);
+    push_sound(l, *sound);
     return 1;
   });
 }

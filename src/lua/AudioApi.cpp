@@ -97,9 +97,9 @@ int LuaContext::audio_api_play_sound(lua_State* l) {
     if (!Sound::exists(sound_id)) {
       LuaTools::error(l, std::string("No such sound: '") + sound_id + "'");
     }
-    LuaContext& lua_context = get();
-    Sound& sound = lua_context.get_main_loop().get_resource_provider().get_sound(sound_id);
-    sound.start();
+    SoundBuffer& sound_buffer = get().get_main_loop().get_resource_provider().get_sound(sound_id);
+    SoundPtr sound = Sound::create(sound_buffer);
+    sound->start();
     return 0;
   });
 }

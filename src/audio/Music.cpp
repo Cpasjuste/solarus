@@ -501,7 +501,7 @@ void Music::decode_it(ALuint destination_buffer, ALsizei nb_samples) {
   if (error != AL_NO_ERROR) {
     std::ostringstream oss;
     oss << "Failed to fill the audio buffer with decoded IT data for music file '"
-        << file_name << ": error " << error;
+        << file_name << ": error " << std::hex << error;
     Debug::error(oss.str());
   }
 }

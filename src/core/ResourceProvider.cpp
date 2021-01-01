@@ -43,10 +43,10 @@ void ResourceProvider::start_preloading_resources() {
   }
 
   const QuestDatabase::ResourceMap& sound_ids = database.get_resource_elements(ResourceType::SOUND);
-  std::vector<SoundPtr> sounds_to_preload;
+  std::vector<std::shared_ptr<SoundBuffer>> sounds_to_preload;
   for (const auto& pair : sound_ids) {
     const std::string& sound_id = pair.first;
-    SoundPtr sound = std::make_shared<Sound>(sound_id);
+    std::shared_ptr<SoundBuffer> sound = std::make_shared<SoundBuffer>(sound_id);
     sound_cache.emplace(sound_id, sound);
     sounds_to_preload.emplace_back(sound);
   }
@@ -54,7 +54,7 @@ void ResourceProvider::start_preloading_resources() {
   // Start loading them in a separate thread.
   preloader_thread = std::thread([this, tilesets_to_preload, sounds_to_preload]() {
 
-    for (const std::shared_ptr<Sound>& sound : sounds_to_preload) {
+    for (const std::shared_ptr<SoundBuffer>& sound : sounds_to_preload) {
       if (sound_cache.empty()) {
         // clear() was probably called in the meantime.
         // No reason to continue.
@@ -119,19 +119,19 @@ const std::map<std::string, std::shared_ptr<Tileset>>& ResourceProvider::get_loa
  * \param sound_id A sound id.
  * \param language_specific \c true to load the sound from the
  * language-specific sound directory.
- * \return The corresponding sound.
+ * \return The corresponding sound buffer.
  */
-Sound& ResourceProvider::get_sound(const std::string& sound_id, bool /* language_specific */) {
+SoundBuffer& ResourceProvider::get_sound(const std::string& sound_id, bool /* language_specific */) {
 
   // TODO handle language
 
-  std::shared_ptr<Sound> sound;
+  std::shared_ptr<SoundBuffer> sound;
   auto it = sound_cache.find(sound_id);
   if (it->second != nullptr) {
     sound = it->second;
   }
   else {
-    sound = std::make_shared<Sound>(sound_id);
+    sound = std::make_shared<SoundBuffer>(sound_id);
     sound_cache.emplace(sound_id, sound);
   }
 
