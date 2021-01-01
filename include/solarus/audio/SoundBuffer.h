@@ -45,7 +45,7 @@ public:
   // functions to load the encoded sound from memory
   static ov_callbacks ogg_callbacks;           /**< vorbisfile object used to load the encoded sound from memory */
 
-  explicit SoundBuffer(const std::string &sound_id);
+  explicit SoundBuffer(const std::string& sound_id);
   ~SoundBuffer();
   const std::string& get_id() const;
 
