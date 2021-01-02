@@ -126,6 +126,21 @@ class SOLARUS_API Savegame: public ExportableToLua {
     void set_default_joypad_controls();
     void post_process_existing_savegame();
 
+
+    // unsaved data
+    /*MainLoop& get_main_loop();
+    LuaContext& get_lua_context();
+    const Equipment& get_equipment() const;
+    Equipment& get_equipment();
+    const Game* get_game() const;
+    Game* get_game();
+    void set_game(Game* game);
+    void notify_game_started();
+    void notify_game_finished();
+    Transition::Style get_default_transition_style() const;
+    void set_default_transition_style(Transition::Style default_transition_style);
+
+    const std::string& get_lua_type_name() const override;*/
   private:
 
     struct SavedValue {

@@ -858,7 +858,7 @@ void Enemy::update() {
       get_entities().add_entity(std::make_shared<Explosion>(
           "", get_map().get_max_layer(), xy, false
       ));
-      Sound::play("explosion");
+      Sound::play("explosion", get_game().get_resource_provider());
 
       next_explosion_date = now + 200;
       nb_explosions++;
@@ -1080,7 +1080,7 @@ void Enemy::attack_hero(Hero& hero, Sprite* this_sprite) {
  */
 void Enemy::attack_stopped_by_hero_shield(Hero& hero) {
 
-  Sound::play("shield");
+  Sound::play("shield", get_game().get_resource_provider());
 
   uint32_t now = System::now();
   can_attack = false;
@@ -1111,7 +1111,7 @@ void Enemy::play_hurt_sound() {
 
   }
 
-  Sound::play(sound_id);
+  Sound::play(sound_id, get_game().get_resource_provider());
 }
 
 /**
@@ -1194,7 +1194,7 @@ void Enemy::try_hurt(EnemyAttack attack, Entity& source, Sprite* this_sprite) {
 
     case EnemyReaction::ReactionType::PROTECTED:
       // attack failure sound
-      Sound::play("sword_tapping");
+      Sound::play("sword_tapping", get_game().get_resource_provider());
       break;
 
     case EnemyReaction::ReactionType::IMMOBILIZED:
@@ -1383,7 +1383,7 @@ void Enemy::kill() {
         if (get_obstacle_behavior() != ObstacleBehavior::FLYING) {
           // TODO animation of falling into a hole.
           special_ground = true;
-          Sound::play("jump");
+          Sound::play("jump", get_game().get_resource_provider());
           clear_treasure();
         }
         break;
@@ -1393,7 +1393,7 @@ void Enemy::kill() {
             get_obstacle_behavior() != ObstacleBehavior::SWIMMING) {
           // TODO water animation.
           special_ground = true;
-          Sound::play("splash");
+          Sound::play("splash", get_game().get_resource_provider());
           clear_treasure();
         }
         break;
@@ -1403,7 +1403,7 @@ void Enemy::kill() {
             get_obstacle_behavior() != ObstacleBehavior::SWIMMING) {
           // TODO lava animation.
           special_ground = true;
-          Sound::play("splash");
+          Sound::play("splash", get_game().get_resource_provider());
           clear_treasure();
         }
         break;
@@ -1420,7 +1420,7 @@ void Enemy::kill() {
         }
         create_sprite(dying_sprite_id);
       }
-      Sound::play("enemy_killed");
+      Sound::play("enemy_killed", get_game().get_resource_provider());
     }
   }
 

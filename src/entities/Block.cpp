@@ -266,7 +266,7 @@ void Block::notify_position_changed() {
   // Now we know that the block moves at least of 1 pixel:
   // we can play the sound.
   if (get_movement() != nullptr && !sound_played) {
-    Sound::play("hero_pushes");
+    Sound::play("hero_pushes", get_game().get_resource_provider());
     sound_played = true;
   }
 }
@@ -294,13 +294,13 @@ void Block::notify_ground_below_changed() {
   switch (ground) {
 
     case Ground::HOLE:
-      Sound::play("jump");
+      Sound::play("jump", get_game().get_resource_provider());
       remove_from_map();
       break;
 
     case Ground::LAVA:
     case Ground::DEEP_WATER:
-      Sound::play("splash");
+      Sound::play("splash", get_game().get_resource_provider());
       remove_from_map();
       break;
 

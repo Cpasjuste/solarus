@@ -810,7 +810,7 @@ void Hero::place_on_destination(Map& map, const Rectangle& previous_map_location
         get_lua_context()->destination_on_activated(*destination, *this);
       }
 
-      const std::shared_ptr<const Stairs> stairs = get_stairs_overlapping();
+      const std::shared_ptr<Stairs> stairs = get_stairs_overlapping();
       if (stairs != nullptr) {
         // The hero arrived on the map by stairs.
         set_state(std::make_shared<StairsState>(*this, stairs, Stairs::REVERSE_WAY));
@@ -941,13 +941,13 @@ bool Hero::is_on_raised_blocks() const {
 
 /**
  * \brief Returns the stairs the hero may be currently overlapping.
- * \return the stairs the hero is currently overlapping, or nullptr
+ * \return The stairs the hero is currently overlapping, or nullptr.
  */
-std::shared_ptr<const Stairs> Hero::get_stairs_overlapping() const {
+std::shared_ptr<Stairs> Hero::get_stairs_overlapping() {
 
-  std::set<std::shared_ptr<const Stairs>> all_stairs =
+  std::set<std::shared_ptr<Stairs>> all_stairs =
       get_entities().get_entities_by_type<Stairs>(get_layer());
-  for (const std::shared_ptr<const Stairs>& stairs: all_stairs) {
+  for (const std::shared_ptr<Stairs>& stairs: all_stairs) {
 
     if (overlaps(*stairs)) {
       return stairs;
@@ -1273,7 +1273,7 @@ void Hero::check_position() {
           (new_ground == Ground::TRAVERSABLE
            || new_ground == Ground::GRASS
            || new_ground == Ground::LADDER)) {
-        Sound::play("hero_lands");
+        Sound::play("hero_lands", get_game().get_resource_provider());
       }
     }
   }
@@ -1994,8 +1994,8 @@ void Hero::notify_collision_with_stairs(
     // Check whether the hero is trying to move in the direction of the stairs.
     int correct_direction = stairs.get_movement_direction(stairs_way);
     if (is_moving_towards(correct_direction / 2)) {
-      std::shared_ptr<const Stairs> shared_stairs =
-          std::static_pointer_cast<const Stairs>(stairs.shared_from_this());
+      std::shared_ptr<Stairs> shared_stairs =
+          std::static_pointer_cast<Stairs>(stairs.shared_from_this());
       set_state(std::make_shared<StairsState>(*this, shared_stairs, stairs_way));
     }
   }
@@ -2517,7 +2517,7 @@ void Hero::start_lava() {
  */
 void Hero::start_prickle(uint32_t delay) {
 
-  Sound::play("hero_hurt");
+  Sound::play("hero_hurt", get_game().get_resource_provider());
   get_equipment().remove_life(2);
   start_back_to_solid_ground(true, delay, false);
 }

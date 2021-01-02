@@ -1197,7 +1197,7 @@ void HeroSprites::set_animation_sword() {
  * \brief Plays the sound corresponding to the current sword.
  */
 void HeroSprites::play_sword_sound() {
-  Sound::play(sword_sound_id);
+  Sound::play(sword_sound_id, hero.get_game().get_resource_provider());
 }
 
 /**
@@ -1571,7 +1571,7 @@ void HeroSprites::destroy_ground() {
  * \brief Plays a sound for the ground displayed under the hero.
  */
 void HeroSprites::play_ground_sound() {
-  Sound::play(ground_sound_id);
+  Sound::play(ground_sound_id, hero.get_game().get_resource_provider());
 }
 
 /**

@@ -50,7 +50,7 @@ void Hero::VictoryState::start(const State* previous_state) {
 
   get_sprites().set_animation_victory();
   get_sprites().set_ignore_suspend(true);
-  Sound::play("victory");
+  Sound::play("victory", get_game().get_resource_provider());
 
   // compute the date when the victory state is considered as finished,
   // but the game may be currently suspended

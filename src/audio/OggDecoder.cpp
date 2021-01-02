@@ -50,7 +50,7 @@ bool OggDecoder::load(std::string&& ogg_data, bool loop) {
   ogg_mem.data = ogg_data;
   // Now, ogg_mem contains the encoded data.
 
-  int error = ov_open_callbacks(&ogg_mem, ogg_file.get(), nullptr, 0, Sound::ogg_callbacks);
+  int error = ov_open_callbacks(&ogg_mem, ogg_file.get(), nullptr, 0, SoundBuffer::ogg_callbacks);
 
   if (error != 0) {
     return false;
@@ -197,7 +197,7 @@ void OggDecoder::decode(ALuint destination_buffer, ALsizei nb_samples) {
   int error = alGetError();
   if (error != AL_NO_ERROR) {
     std::ostringstream oss;
-    oss << "Failed to fill the audio buffer with decoded OGG data: error " << error;
+    oss << "Failed to fill the audio buffer with decoded OGG data: error " << std::hex << error;
     Debug::error(oss.str());
   }
 }

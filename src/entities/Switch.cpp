@@ -147,7 +147,7 @@ void Switch::activate(Entity* opt_entity) {
     set_activated(true);
 
     if (!sound_id.empty()) {
-      Sound::play(sound_id);
+      Sound::play(sound_id, get_game().get_resource_provider());
     }
 
     get_lua_context()->switch_on_activated(*this, opt_entity);

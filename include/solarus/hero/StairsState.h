@@ -33,7 +33,7 @@ class Hero::StairsState: public HeroState {
 
     StairsState(
         Hero& hero,
-        const std::shared_ptr<const Stairs>& stairs,
+        const std::shared_ptr<Stairs>& stairs,
         Stairs::Way way
     );
 
@@ -53,7 +53,7 @@ class Hero::StairsState: public HeroState {
 
   private:
 
-    std::shared_ptr<const Stairs>
+    std::shared_ptr<Stairs>
         stairs;                        /**< The stairs the hero is currently taking. */
     Stairs::Way way;                   /**< indicates the way the hero is taking the stairs:
                                         * - for stairs inside a single floor, NORMAL_WAY means that the hero is going upstairs

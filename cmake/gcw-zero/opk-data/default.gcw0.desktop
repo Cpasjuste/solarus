@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Solarus
-Comment=An open-source Zelda-like game engine
+Comment=A free and open-source ARPG 2D game engine
 MimeType=application/zip;
 Exec=run_solarus.sh %f
 Terminal=false

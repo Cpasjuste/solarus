@@ -255,7 +255,7 @@ void Boomerang::update() {
 
   uint32_t now = System::now();
   if (now >= next_sound_date) {
-    Sound::play("boomerang");
+    Sound::play("boomerang", get_game().get_resource_provider());
     next_sound_date = now + 150;
   }
 
@@ -278,7 +278,7 @@ void Boomerang::notify_obstacle_reached() {
     if (!get_map().test_collision_with_border(
         get_movement()->get_last_collision_box_on_obstacle())) {
       // play a sound unless the obstacle is the map border
-      Sound::play("sword_tapping");
+      Sound::play("sword_tapping", get_game().get_resource_provider());
     }
     go_back();
   }
@@ -311,7 +311,7 @@ void Boomerang::notify_collision_with_switch(Switch& sw, CollisionMode collision
     sw.try_activate();
     if (!is_going_back()) {
       go_back();
-      Sound::play("sword_tapping");
+      Sound::play("sword_tapping", get_game().get_resource_provider());
     }
   }
 }

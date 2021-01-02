@@ -424,7 +424,8 @@ bool Chest::notify_action_command_pressed(Hero &hero) {
   ) {
 
     if (can_open(hero)) {
-      Sound::play("chest_open");
+      Sound::play("chest_open", get_game().get_resource_provider());
+
       set_open(true);
       treasure_date = System::now() + 300;
 
@@ -433,7 +434,7 @@ bool Chest::notify_action_command_pressed(Hero &hero) {
       opening_hero = hero.shared_from_this_cast<Hero>();
     }
     else if (!get_cannot_open_dialog_id().empty()) {
-      Sound::play("wrong");
+      Sound::play("wrong", get_game().get_resource_provider());
       get_game().start_dialog(get_cannot_open_dialog_id(), ScopedLuaRef(), ScopedLuaRef());
     }
 

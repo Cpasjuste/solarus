@@ -22,6 +22,7 @@
 #include "solarus/core/Equipment.h"
 #include "solarus/core/EquipmentItem.h"
 #include "solarus/core/Game.h"
+#include "solarus/core/MainLoop.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/Savegame.h"
 #include "solarus/core/Timer.h"
@@ -4897,7 +4898,7 @@ int LuaContext::door_api_open(lua_State* l) {
 
     if (!door.is_open() && !door.is_opening()) {
       door.open();
-      Sound::play("door_open");
+      Sound::play("door_open", get().get_main_loop().get_resource_provider());
     }
 
     return 0;
@@ -4916,7 +4917,7 @@ int LuaContext::door_api_close(lua_State* l) {
 
     if (!door.is_closed() && !door.is_closing()) {
       door.close();
-      Sound::play("door_closed");
+      Sound::play("door_closed", get().get_main_loop().get_resource_provider());
     }
 
     return 0;
@@ -5120,16 +5121,16 @@ int LuaContext::l_shop_treasure_question_dialog_finished(lua_State* l) {
 
       if (!treasure.is_obtainable()) {
         // This treasure is not allowed.
-        Sound::play("wrong");
+        Sound::play("wrong", lua_context.get_main_loop().get_resource_provider());
       }
       else if (equipment.get_money() < shop_treasure.get_price()) {
         // Not enough money.
-        Sound::play("wrong");
+        Sound::play("wrong", lua_context.get_main_loop().get_resource_provider());
         game.start_dialog("_shop.not_enough_money", ScopedLuaRef(), ScopedLuaRef());
       }
       else if (item.has_amount() && item.get_amount() >= item.get_max_amount()) {
         // The player already has the maximum amount of this item.
-        Sound::play("wrong");
+        Sound::play("wrong", lua_context.get_main_loop().get_resource_provider());
         game.start_dialog("_shop.amount_full", ScopedLuaRef(), ScopedLuaRef());
       }
       else {

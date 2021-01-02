@@ -69,6 +69,7 @@ int run_gui(int argc, char* argv[]) {
   application.setApplicationDisplayName("Solarus Launcher");
   application.setApplicationVersion(SOLARUS_VERSION);
   application.setOrganizationName("solarus");
+  application.setOrganizationDomain("solarus-games.org");  // Used by QtWayland backend
 
   // Get current system locale.
   const QLocale locale = QLocale::system();

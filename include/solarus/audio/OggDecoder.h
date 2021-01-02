@@ -18,7 +18,7 @@
 #define SOLARUS_OGG_DECODER_H
 
 #include "solarus/core/Common.h"
-#include "solarus/audio/Sound.h"
+#include "solarus/audio/SoundBuffer.h"
 #include <memory>
 #include <string>
 
@@ -48,7 +48,8 @@ class OggDecoder {
     using OggFileUniquePtr = std::unique_ptr<OggVorbis_File, OggFileDeleter>;
 
     OggFileUniquePtr ogg_file;         /**< The file used by the vorbisfile lib. */
-    Sound::SoundFromMemory ogg_mem;    /**< The encoded music loaded in memory,
+    SoundBuffer::SoundFromMemory
+        ogg_mem;                       /**< The encoded music loaded in memory,
                                         * passed to the vorbisfile lib as user data. */
     vorbis_info* ogg_info;             /**< Info about the OGG file. */
     ogg_int64_t loop_start_pcm;        /**< Where to loop to in PCM samples.

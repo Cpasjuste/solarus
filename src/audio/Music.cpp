@@ -356,6 +356,30 @@ void Music::stop_playing() {
 }
 
 /**
+ * \brief Pauses any music currently playing.
+ *
+ * The callback if any is not called.
+ */
+void Music::pause_playing() {
+
+  if (current_music != nullptr) {
+    current_music->set_paused(true);
+  }
+}
+
+/**
+ * \brief Resumes playing any music previously paused.
+ *
+ * The callback if any is not called.
+ */
+void Music::resume_playing() {
+
+  if (current_music != nullptr) {
+    current_music->set_paused(false);
+  }
+}
+
+/**
  * \brief Updates the music system.
  *
  * When a music is playing, this function continues the streaming.
@@ -477,7 +501,7 @@ void Music::decode_it(ALuint destination_buffer, ALsizei nb_samples) {
   if (error != AL_NO_ERROR) {
     std::ostringstream oss;
     oss << "Failed to fill the audio buffer with decoded IT data for music file '"
-        << file_name << ": error " << error;
+        << file_name << ": error " << std::hex << error;
     Debug::error(oss.str());
   }
 }

@@ -338,7 +338,7 @@ void Teletransporter::transport_hero(Hero& hero) {
   }
 
   if (!sound_id.empty()) {
-    Sound::play(sound_id);
+    Sound::play(sound_id, get_game().get_resource_provider());
   }
 
   HeroPtr hero_ptr = std::static_pointer_cast<Hero>(hero.shared_from_this());

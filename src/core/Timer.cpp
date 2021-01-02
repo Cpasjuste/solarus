@@ -16,6 +16,8 @@
  */
 #include "solarus/audio/Sound.h"
 #include "solarus/core/Game.h"
+#include "solarus/core/MainLoop.h"
+#include "solarus/core/ResourceProvider.h"
 #include "solarus/core/System.h"
 #include "solarus/core/Timer.h"
 #include "solarus/lua/LuaContext.h"
@@ -178,11 +180,11 @@ void Timer::update() {
 
     uint32_t remaining_time = expiration_date - now;
     if (remaining_time > 6000) {
-      Sound::play("timer");
+      Sound::play("timer", get_lua_context()->get_main_loop().get_resource_provider());
       next_sound_date += 1000;
     }
     else {
-      Sound::play("timer_hurry");
+      Sound::play("timer_hurry", get_lua_context()->get_main_loop().get_resource_provider());
       if (remaining_time > 2000) {
         next_sound_date += 1000;
       }

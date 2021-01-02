@@ -1553,6 +1553,24 @@ bool InputEvent::is_window_resizing() const {
 }
 
 /**
+ * @brief Returns wheter this event corresponds to
+ * the window loosing focus.
+ * @return true if this is a window focus lost event
+ */
+bool InputEvent::is_window_focus_lost() const {
+  return internal_event.type == SDL_WINDOWEVENT && internal_event.window.event == SDL_WINDOWEVENT_FOCUS_LOST;
+}
+
+/**
+ * @brief Returns wheter this event corresponds to
+ * the window gaining focus.
+ * @return true if this is a window focus gained event
+ */
+bool InputEvent::is_window_focus_gained() const {
+  return internal_event.type == SDL_WINDOWEVENT && internal_event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED;
+}
+
+/**
  * @brief Get the window size if the event is a window resized event
  * @return the new window size
  */

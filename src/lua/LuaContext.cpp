@@ -74,7 +74,7 @@ LuaContext::~LuaContext() {
  * \return The LuaContext object encapsulating this Lua state.
  */
 LuaContext& LuaContext::get() {
-  Debug::check_assertion(lua_context,"No lua context available");
+  Debug::check_assertion(lua_context, "No lua context available");
   return *lua_context;
 }
 
@@ -1069,6 +1069,7 @@ void LuaContext::register_modules() {
   register_map_module();
   register_entity_module();
   register_audio_module();
+  register_sound_module();
   register_timer_module();
   register_surface_module();
   register_text_surface_module();
