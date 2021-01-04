@@ -87,6 +87,7 @@ map{ id = "bugs/1458_ground_sprite_when_jumping", description = "#1458: Ground s
 map{ id = "bugs/1461_tileset_sprite", description = "#1461 : Tileset sprite dynamicaly created cause crash" }
 map{ id = "bugs/1471_pickable_wrong_layer", description = "#1471: Pickables fall to the wrong layer" }
 map{ id = "bugs/1476_crash_command_binding", description = "#1476: Crash in game:set_command_keyboard_binding()" }
+map{ id = "bugs/1508_carried_object_height", description = "#1508 Acessing the item_height value of Carried Objects" }
 map{ id = "bugs/486_diagonal_dynamic_tiles", description = "#486: Wrong obstacles with diagonal dynamic tiles" }
 map{ id = "bugs/496_stream_speed_0", description = "#496: Allow streams to have a speed of zero" }
 map{ id = "bugs/526_get_entities_same_region", description = "#526: map:get_entities_in_same_region()" }
@@ -579,6 +580,8 @@ file{ path = "maps/bugs/1471_pickable_wrong_layer.dat", author = "Christopho", l
 file{ path = "maps/bugs/1471_pickable_wrong_layer.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1476_crash_command_binding.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1476_crash_command_binding.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1508_carried_object_height.dat", author = "TwilCynder", }
+file{ path = "maps/bugs/1508_carried_object_height.lua", author = "TwilCynder", }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/496_stream_speed_0.dat", author = "Christopho", license = "CC BY-SA 4.0" }

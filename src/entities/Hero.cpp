@@ -1003,11 +1003,11 @@ int Hero::get_carry_height() const{
 void Hero::set_carry_height(int height) {
   std::shared_ptr<CarriedObject> carried = get_carried_object();
 
-  if (carried != nullptr && !carried->is_being_thrown()){
-    carried->set_object_height(height);
-  }
-
   this->carry_height = height;
+
+  if (carried != nullptr){
+    carried->update_relative_movement();
+  }
 }
 	
 /**

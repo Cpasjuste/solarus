@@ -82,7 +82,7 @@ CarriedObject::CarriedObject(
   shadow_sprite(nullptr),
   throwing_direction(0),
   next_down_date(0),
-  item_height(hero.get_carry_height()),
+  item_height(0),
   y_increment(0),
   explosion_date(explosion_date) {
 
@@ -167,7 +167,7 @@ void CarriedObject::set_damage_on_enemies(int damage_on_enemies) {
 }
 
 /**
- * \brief Returns the height this object will be displayed at, relative to the hero.
+ * \brief Returns the height this object will be displayed at, relative to the hero's carry height.
  * \return The object height.
  */
 
@@ -176,24 +176,15 @@ int CarriedObject::get_object_height() const{
 }
 
 /**
- * \brief Sets the height this object will be displayed at, relative to the hero.
+ * \brief Sets the height this object will be displayed at, relative to the hero's carry height.
  * \param height The object height.
  */
 void CarriedObject::set_object_height(int height) {
 
-  if (height != item_height && !is_breaking){
-    std::shared_ptr<Movement> movement = get_movement();
-    if (movement != nullptr) clear_movement();
-
-    set_movement(std::make_shared<RelativeMovement>(
-      hero,
-      0,
-      -height,
-      true
-    ));
+  if (height != item_height){
+    this->item_height = height;
+    update_relative_movement();
   }
-
-  this->item_height = height;
 }
 
 /**
@@ -274,6 +265,7 @@ void CarriedObject::throw_item(int direction) {
 
   this->y_increment = -2;
   this->next_down_date = System::now() + 40;
+  this->item_height = item_height + hero->get_carry_height();
 
   get_lua_context()->carried_object_on_thrown(*this);
 }
@@ -409,6 +401,23 @@ bool CarriedObject::can_explode() const {
   return explosion_date != 0;
 }
 
+/** 
+ * \brief Creates a new RelativeMovement with the current item_height (to be called when this value changes)
+ */
+
+void CarriedObject::update_relative_movement(){
+  if (!is_breaking && !is_throwing){
+    if (get_movement() != nullptr) clear_movement();
+
+    set_movement(std::make_shared<RelativeMovement>(
+      hero,
+      0,
+      -(item_height + hero->get_carry_height()),
+      true
+    ));
+  }
+}
+
 /**
  * \brief This function is called by the map when the game is suspended or resumed.
  * \param suspended true to suspend the entity, false to resume it
@@ -456,7 +465,7 @@ void CarriedObject::update() {
     set_movement(std::make_shared<RelativeMovement>(
         hero,
         0,
-        -item_height,
+        -(item_height + hero->get_carry_height()),
         true
     ));
     get_lua_context()->carried_object_on_lifted(*this);
