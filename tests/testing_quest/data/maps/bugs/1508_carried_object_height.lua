@@ -1,24 +1,33 @@
--- Lua script of map bugs/1508_carried_object_height.
--- This script is executed every time the hero enters this map.
-
--- Feel free to modify the code below.
--- You can add more events and remove the ones you don't need.
-
--- See the Solarus Lua API documentation:
--- http://www.solarus-games.org/doc/latest
-
 local map = ...
 local game = map:get_game()
 
--- Event called at initialization time, as soon as this map is loaded.
 function map:on_started()
-
-  -- You can initialize the movement and sprites of various
-  -- map entities here.
+  hero:set_carry_height(30)
 end
 
--- Event called after the opening transition effect of the map,
--- that is, when the player takes control of the hero.
+function get_height(carried)
+  local hx, hy = carried:get_carrier():get_position()
+  local cx, cy = carried:get_position()
+  return hy - cy
+end
+
 function map:on_opening_transition_finished()
+  game:simulate_command_pressed("action")
+  sol.timer.start(map, 1000, function()
+    assert_equal(get_height(hero:get_carried_object()), 30)
+    assert_equal(get_height(hero:get_carried_object()), hero:get_carry_height())
+    hero:set_carry_height(45)
+    sol.timer.start(map, 100, function()
+      assert_equal(get_height(hero:get_carried_object()), 45)
+      hero:get_carried_object():set_object_height(-20)
+      sol.timer.start(map, 100, function()
+        assert_equal(get_height(hero:get_carried_object()), 25)
+        sol.main.exit()
+      end)
+    end)
+  end)
+end
+
+function hero:on_state_changed(state)
 
 end
