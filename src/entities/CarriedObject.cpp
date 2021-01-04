@@ -171,12 +171,12 @@ void CarriedObject::set_damage_on_enemies(int damage_on_enemies) {
  * \return The object height.
  */
 
-int CarriedObject::get_object_height(){
+int CarriedObject::get_object_height() const{
   return item_height;
 }
 
 /**
- * \brief Sets the damage this object will be displayed at, relative to the hero.
+ * \brief Sets the height this object will be displayed at, relative to the hero.
  * \param height The object height.
  */
 void CarriedObject::set_object_height(int height) {
@@ -274,7 +274,6 @@ void CarriedObject::throw_item(int direction) {
 
   this->y_increment = -2;
   this->next_down_date = System::now() + 40;
-  //this->item_height = 18;
 
   get_lua_context()->carried_object_on_thrown(*this);
 }

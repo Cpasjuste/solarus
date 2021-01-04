@@ -178,8 +178,6 @@ void LuaContext::register_entity_module() {
       { "set_direction", hero_api_set_direction },
       { "get_walking_speed", hero_api_get_walking_speed },
       { "set_walking_speed", hero_api_set_walking_speed },
-      { "get_carry_height", hero_api_get_carry_height},
-      { "set_carry_height", hero_api_set_carry_height},
       { "save_solid_ground", hero_api_save_solid_ground },
       { "reset_solid_ground", hero_api_reset_solid_ground },
       { "get_solid_ground_position", hero_api_get_solid_ground_position },
@@ -219,6 +217,12 @@ void LuaContext::register_entity_module() {
     hero_methods.insert(hero_methods.end(), {
         { "get_carried_object", hero_api_get_carried_object },
         { "start_state", hero_api_start_state },
+    });
+  }
+  if (CurrentQuest::is_format_at_least({1, 7})) {
+    hero_methods.insert(hero_methods.end(), {
+      { "get_carry_height", hero_api_get_carry_height},
+      { "set_carry_height", hero_api_set_carry_height},
     });
   }
 
@@ -488,7 +492,11 @@ void LuaContext::register_entity_module() {
         { "get_destruction_sound", carried_object_api_get_destruction_sound },
         { "set_destruction_sound", carried_object_api_set_destruction_sound },
         { "get_damage_on_enemies", carried_object_api_get_damage_on_enemies },
-        { "set_damage_on_enemies", carried_object_api_set_damage_on_enemies },
+        { "set_damage_on_enemies", carried_object_api_set_damage_on_enemies }
+    });
+  }
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
+    carried_object_methods.insert(carried_object_methods.end(), {
         { "get_object_height", carried_object_api_get_object_height},
         { "set_object_height", carried_object_api_set_object_height}
     });

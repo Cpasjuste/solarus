@@ -64,7 +64,7 @@ class CarriedObject: public Entity {
     EntityPtr get_carrier() const;
     int get_damage_on_enemies() const;
     void set_damage_on_enemies(int damage_on_enemies);
-    int get_object_height();
+    int get_object_height() const;
     void set_object_height(int height);
     const std::string& get_destruction_sound() const;
     void set_destruction_sound(const std::string& destruction_sound);
