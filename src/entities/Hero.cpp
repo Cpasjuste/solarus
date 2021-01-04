@@ -991,7 +991,6 @@ void Hero::set_walking_speed(int walking_speed) {
 * \brief Returns the default height carried objects will be displayed at.
 * \return the height in pixels.
 */
-
 int Hero::get_carry_height() const{
   return carry_height;
 }

@@ -2218,7 +2218,6 @@ int LuaContext::hero_api_set_walking_speed(lua_State* l) {
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
-
 int LuaContext::hero_api_get_carry_height(lua_State* l) {
 
   return state_boundary_handle(l, [&] {

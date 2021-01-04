@@ -117,6 +117,7 @@ class CarriedObject: public Entity {
     ) override;
 
   private:
+  
     bool will_explode_soon() const;
 
     // game data

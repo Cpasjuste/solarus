@@ -62,7 +62,6 @@ const std::string CarriedObject::lifting_trajectories[4] = {
  * \param explosion_date date of the explosion if the item should explode,
  * or 0 if the item does not explode
  */
-
 CarriedObject::CarriedObject(
     Hero& hero,
     const Entity& original_entity,
