@@ -41,8 +41,8 @@ bool InputEvent::repeat_keyboard = false;
 std::set<SDL_Keycode> InputEvent::keys_pressed;
 
 
-std::map<SDL_JoystickID,
-JoypadPtr> InputEvent::joypads;
+InputEvent::Joypads InputEvent::joypads;
+std::map<int, SDL_JoystickID> InputEvent::jindex2id;
 // Default the axis states to centered
 
 int InputEvent::joypad_deadzone = 500;
@@ -223,6 +223,7 @@ void InputEvent::initialize(const Arguments& args) {
       SDL_GameController* gc = SDL_GameControllerOpen(i);
       SDL_Joystick* js = SDL_JoystickOpen(i);
       SDL_JoystickID id = SDL_JoystickInstanceID(js);
+      jindex2id[i] = id;
       joypads.emplace(id,std::make_shared<Joypad>(gc,js));
     }
   }
@@ -976,6 +977,16 @@ JoypadPtr InputEvent::other_joypad(const JoypadPtr& joypad) {
 }
 
 /**
+ * @brief Return the corresponding joystick id
+ * @param index
+ * @return -1 on failure
+ */
+SDL_JoystickID InputEvent::joypad_id_from_index(int index) {
+  auto idit = jindex2id.find(index);
+  return idit != jindex2id.end() ? idit->second : -1;
+}
+
+/**
  * \brief Returns whether this event is a joypad event
  * corresponding to pressing a joypad button.
  * \return true if this is a joypad button pressed event.
@@ -1013,10 +1024,28 @@ JoyPadButton InputEvent::get_joypad_button() const {
 }
 
 JoypadPtr InputEvent::get_joypad() const {
-  if(!is_joypad_event()){
+  if(!is_controller_event()){
     return nullptr;
   }
-  return joypads.at(internal_event.cbutton.which);
+  int id = 0;
+  switch(internal_event.type) {
+    case SDL_CONTROLLERAXISMOTION:
+    case SDL_CONTROLLERBUTTONDOWN:
+    case SDL_CONTROLLERBUTTONUP:
+      id = internal_event.cbutton.which;
+      break;
+    case SDL_CONTROLLERDEVICEADDED:{
+      id = joypad_id_from_index(internal_event.cdevice.which);
+    break;
+    }
+    case SDL_CONTROLLERDEVICEREMAPPED:
+    case SDL_CONTROLLERDEVICEREMOVED:
+      id = internal_event.cdevice.which;
+    break;
+  }
+
+  auto it = joypads.find(id);
+  return it != joypads.end() ? it->second : nullptr;
 }
 
 /**
@@ -1602,14 +1631,17 @@ bool InputEvent::notify_joypad(LuaContext& lua_context) const {
     }
     case SDL_CONTROLLERDEVICEADDED:
     {
-
       int i = internal_event.cdevice.which;
-      if(joypads.find(i) != joypads.end()) {
+
+      SDL_JoystickID id = joypad_id_from_index(i);
+
+      if(joypads.find(id) != joypads.end()) {
         return false; //Consider joypads where already added
       }
       SDL_GameController* gc = SDL_GameControllerOpen(i);
       SDL_Joystick* js = SDL_JoystickOpen(i);
-      SDL_JoystickID id = SDL_JoystickInstanceID(js);
+      id = SDL_JoystickInstanceID(js);
+      jindex2id[i] = id;
       auto itp = joypads.emplace(id,std::make_shared<Joypad>(gc,js));
 
       lua_context.input_on_joypad_connected(*itp.first->second);
@@ -1620,6 +1652,7 @@ bool InputEvent::notify_joypad(LuaContext& lua_context) const {
       joy->reset();
       bool handled = lua_context.on_joypad_removed(*joy);
       joypads.erase(internal_event.caxis.which);
+      jindex2id.clear();
       return handled;
     }
   }

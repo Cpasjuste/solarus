@@ -277,6 +277,7 @@ class InputEvent {
     static bool is_legacy_joypad_enabled();
     static void set_legacy_joypad_enabled(bool joypad_enabled);
     static JoypadPtr other_joypad(const JoypadPtr& joypad);
+    static SDL_JoystickID joypad_id_from_index(int index);
 
     bool is_joypad_button_pressed() const;
     bool is_joypad_button_released() const;
@@ -349,6 +350,7 @@ class InputEvent {
     //static SDL_Joystick* joystick;                /**< the joystick object if enabled and plugged */
     //static std::vector<int> joypad_axis_state;    /**< keep track of the current horizontal and vertical axis states */
     static Joypads joypads;       /**< Mapping from sdl joystick index to Controller */
+    static std::map<int, SDL_JoystickID> jindex2id;/**< Joystick index to JoystickID */
 
     static std::map<KeyboardKey, std::string>
       keyboard_key_names;                         /**< Names of all existing keyboard keys. */

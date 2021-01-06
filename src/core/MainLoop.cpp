@@ -592,9 +592,15 @@ void MainLoop::notify_input(const InputEvent& event) {
 #endif
   } else if (event.is_controller_event()) {
     // First check if main joypad disconnected
-    if(InputEvent::is_legacy_joypad_enabled() && event.is_joypad_removed() && game && game->get_controls().get_joypad() == event.get_joypad()) {
+    if(InputEvent::is_legacy_joypad_enabled() &&
+       event.is_joypad_removed() &&
+       game &&
+       (game->get_controls().get_joypad() == event.get_joypad())) {
       // Main controls joypad is removed, try to fallback on another joypad
       auto new_joy = InputEvent::other_joypad(event.get_joypad());
+      if(new_joy) {
+        Logger::info("Using joystick: \"" + new_joy->get_name() + "\"");
+      }
       game->get_controls().set_joypad(new_joy); //Could set joypad to nullptr, leaving it without joy
     }
 
@@ -602,7 +608,11 @@ void MainLoop::notify_input(const InputEvent& event) {
 
     if(InputEvent::is_legacy_joypad_enabled() && event.is_joypad_added() && game && !game->get_controls().get_joypad()) {
       // A joypad was connected and main commands did not had a joypad
-      game->get_controls().set_joypad(event.get_joypad());
+      auto new_joy = event.get_joypad();
+      if(new_joy) {
+        Logger::info("Using joystick: \"" + new_joy->get_name() + "\"");
+      }
+      game->get_controls().set_joypad(new_joy);
     }
   }
 
