@@ -2744,6 +2744,7 @@ void LuaContext::on_moved() {
  */
 void LuaContext::on_map_changed(Map& map, Camera& camera) {
   check_callback_thread();
+
   if (find_method("on_map_changed")) {
     push_map(current_l, map);
     push_camera(current_l, camera);

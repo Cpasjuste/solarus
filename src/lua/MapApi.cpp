@@ -2489,9 +2489,11 @@ void LuaContext::map_on_started(Map& map, const std::shared_ptr<Destination>& de
     return;
   }
 
-  push_map(current_l, map);
-  on_started(destination);
-  lua_pop(current_l, 1);
+  run_on_main([this, &map, destination](lua_State* l){
+    push_map(l, map);
+    on_started(destination);
+    lua_pop(l, 1);
+  });
 }
 
 /**

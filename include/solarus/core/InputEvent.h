@@ -274,8 +274,9 @@ class InputEvent {
     static void simulate_window_closing();
 
     // joypad
-    static bool is_joypad_enabled();
-    static void set_joypad_enabled(bool joypad_enabled);
+    static bool is_legacy_joypad_enabled();
+    static void set_legacy_joypad_enabled(bool joypad_enabled);
+    static JoypadPtr other_joypad(const JoypadPtr& joypad);
 
     bool is_joypad_button_pressed() const;
     bool is_joypad_button_released() const;
@@ -289,6 +290,8 @@ class InputEvent {
     int get_joypad_hat_direction() const;
     bool is_joypad_hat_centered() const;
     JoypadPtr get_joypad() const;
+    bool is_joypad_removed() const;
+    bool is_joypad_added() const;
 
     // mouse
     bool is_mouse_button_pressed() const;
@@ -341,7 +344,7 @@ class InputEvent {
 
     static const KeyboardKey directional_keys[];  /**< array of the keyboard directional keys */
     static bool initialized;                      /**< Whether the input manager is initialized. */
-    static bool joypad_enabled;                   /**< true if joypad support is enabled
+    static bool legacy_joypad_enabled;                   /**< true if joypad support is enabled
                                                    * (may be true even without joypad plugged) */
     //static SDL_Joystick* joystick;                /**< the joystick object if enabled and plugged */
     //static std::vector<int> joypad_axis_state;    /**< keep track of the current horizontal and vertical axis states */

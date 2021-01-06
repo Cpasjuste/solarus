@@ -80,6 +80,9 @@ Controls::Controls(MainLoop& main_loop, Game& game):
   command_to_customize(CommandId::NONE),
   customize_callback_ref()
 {
+  load_default_joypad_bindings();
+  load_default_keyboard_bindings();
+
   const Savegame& save = game.get_savegame();
   // Load the commands from the savegame.
   for (const auto& kvp : EnumInfoTraits<CommandId>::names) {
@@ -96,6 +99,17 @@ Controls::Controls(MainLoop& main_loop, Game& game):
     // Joypad.
     const JoypadBinding& joypad_binding = get_saved_joypad_binding(command, save);
     joypad_mapping[joypad_binding] = command;
+  }
+
+  //Replicate binding of keyboard on default command axes :
+  keyboard_axis_mapping[get_saved_keyboard_binding(CommandId::UP, save)] = ControlAxisBinding{AxisId::Y, AxisDirection::MINUS};
+  keyboard_axis_mapping[get_saved_keyboard_binding(CommandId::DOWN, save)] = ControlAxisBinding{AxisId::Y, AxisDirection::PLUS};
+  keyboard_axis_mapping[get_saved_keyboard_binding(CommandId::LEFT, save)] = ControlAxisBinding{AxisId::X, AxisDirection::MINUS};
+  keyboard_axis_mapping[get_saved_keyboard_binding(CommandId::RIGHT, save)] = ControlAxisBinding{AxisId::X, AxisDirection::PLUS};
+
+  //Add default joypad if auto mapping is enabled
+  if(InputEvent::is_legacy_joypad_enabled()) {
+    set_joypad(InputEvent::other_joypad(nullptr));
   }
 }
 

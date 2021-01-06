@@ -124,6 +124,7 @@ void Game::start() {
 
   started = true;
   get_hero()->get_equipment().notify_game_started();
+  //Update teleportations a first time so that cameras are added to first map
   get_lua_context().game_on_started(*this);
 }
 
@@ -328,13 +329,10 @@ void Game::notify_control(const ControlEvent& event) {
 }
 
 /**
- * \brief Updates the game elements.
- *
- * Updates the map, the equipment, the HUD, etc.
+ * @brief Update teleportations of cameras
  */
-void Game::update() {
+void Game::update_teleportations() {
   // Update the transitions between maps.
-  // Use the side effect of remove_if to elegantly remove the finished teleportations
   for(auto& ct : cameras_teleportations) {
     ct.removed = update_teleportation(ct);
   }
@@ -346,6 +344,15 @@ void Game::update() {
         }),
         cameras_teleportations.end()
   );
+}
+
+/**
+ * \brief Updates the game elements.
+ *
+ * Updates the map, the equipment, the HUD, etc.
+ */
+void Game::update() {
+  update_teleportations();
 
   if (restarting && cameras_teleportations.empty()) { //All transitions finished ! Restart !
     stop();
@@ -707,13 +714,12 @@ void Game::teleport_hero(
                     a_destination_name,
                     transition_style,
                     hero);
+  } else if(is_map_loaded(map_id)) {
+    MapPtr current_map = hero->get_map().shared_from_this_cast<Map>();
+    MapPtr next_map = prepare_map(map_id);
+    hero->place_on_destination(*next_map, current_map->get_location(), a_destination_name);
   } else {
-    if(is_map_loaded(map_id)) {
-        MapPtr current_map = hero->get_map().shared_from_this_cast<Map>();
-
-        MapPtr next_map = prepare_map(map_id);
-        hero->place_on_destination(*next_map, current_map->get_location(), a_destination_name);
-    }
+    Debug::error("Teleporting a hero without camera to unloaded map \"" + map_id + "\"");
   }
 }
 
@@ -793,6 +799,11 @@ void Game::teleport_camera(const CameraPtr& camera,
 
   // Add the teleportation details to the list of current teleportations
   cameras_teleportations.emplace_back(std::move(ct));
+
+  if(!camera->is_on_map()) {
+    //Fast forward to opening transition
+    teleportation_change_map(cameras_teleportations.back());
+  }
 }
 
 /**
@@ -1198,7 +1209,7 @@ void Game::start_game_over(const HeroPtr& hero) {
       hero->get_map().get_entities().remove_entity(*hero); //Remove the dead hero from the map
 
       //Remove linked camera if any
-      auto& cam = hero->get_linked_camera();
+      auto cam = hero->get_linked_camera();
       if(cam) {
         remove_camera(cam, get_default_transition_style());
       }

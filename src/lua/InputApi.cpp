@@ -82,7 +82,7 @@ void LuaContext::push_input(lua_State *current_l) {
 int LuaContext::input_api_is_joypad_enabled(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
-    lua_pushboolean(l, InputEvent::is_joypad_enabled());
+    lua_pushboolean(l, InputEvent::is_legacy_joypad_enabled());
     return 1;
   });
 }
@@ -97,7 +97,7 @@ int LuaContext::input_api_set_joypad_enabled(lua_State* l) {
   return state_boundary_handle(l, [&] {
     bool joypad_enabled = LuaTools::opt_boolean(l, 2, true);
 
-    InputEvent::set_joypad_enabled(joypad_enabled);
+    InputEvent::set_legacy_joypad_enabled(joypad_enabled);
 
     return 0;
   });

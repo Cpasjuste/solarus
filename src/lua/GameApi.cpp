@@ -1838,9 +1838,11 @@ void LuaContext::game_on_map_changed(Game& game, Map& map, Camera& camera) {
     return;
   }
 
-  push_game(current_l, game.get_savegame());
-  on_map_changed(map, camera);
-  lua_pop(current_l, 1);
+  run_on_main([this, &game, &map, &camera](lua_State* l){
+    push_game(l, game.get_savegame());
+    on_map_changed(map, camera);
+    lua_pop(l, 1);
+  });
 }
 
 /**

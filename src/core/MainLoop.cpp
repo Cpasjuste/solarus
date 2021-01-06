@@ -553,6 +553,7 @@ void MainLoop::setup_game_icon() {
  */
 void MainLoop::notify_input(const InputEvent& event) {
 
+  bool handled = false;
   if (event.is_window_closing()) {
     set_exiting();
   }
@@ -590,12 +591,26 @@ void MainLoop::notify_input(const InputEvent& event) {
     }
 #endif
   } else if (event.is_controller_event()) {
-    //TODO take handled into account
-    event.notify_joypad(*lua_context);
+    // First check if main joypad disconnected
+    if(InputEvent::is_legacy_joypad_enabled() && event.is_joypad_removed() && game && game->get_controls().get_joypad() == event.get_joypad()) {
+      // Main controls joypad is removed, try to fallback on another joypad
+      auto new_joy = InputEvent::other_joypad(event.get_joypad());
+      game->get_controls().set_joypad(new_joy); //Could set joypad to nullptr, leaving it without joy
+    }
+
+    handled = event.notify_joypad(*lua_context);
+
+    if(InputEvent::is_legacy_joypad_enabled() && event.is_joypad_added() && game && !game->get_controls().get_joypad()) {
+      // A joypad was connected and main commands did not had a joypad
+      game->get_controls().set_joypad(event.get_joypad());
+    }
   }
 
   // Send the event to Lua and to the current screen.
-  bool handled = lua_context->notify_input(event);
+  if(!handled) {
+    handled = lua_context->notify_input(event);
+  }
+
   if (!handled && game != nullptr) {
     handled = game->notify_input(event);
   }

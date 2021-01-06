@@ -21,6 +21,7 @@
 #include "solarus/core/Rectangle.h"
 #include "solarus/graphics/Video.h"
 #include "solarus/lua/LuaContext.h"
+#include "solarus/core/CurrentQuest.h"
 #include <SDL.h>
 #include <cstdlib>  // std::abs
 #include <sstream>
@@ -35,7 +36,7 @@ const InputEvent::KeyboardKey InputEvent::directional_keys[] = {
   KeyboardKey::NONE
 };
 bool InputEvent::initialized = false;
-bool InputEvent::joypad_enabled = false;
+bool InputEvent::legacy_joypad_enabled = false;
 bool InputEvent::repeat_keyboard = false;
 std::set<SDL_Keycode> InputEvent::keys_pressed;
 
@@ -216,27 +217,37 @@ void InputEvent::initialize(const Arguments& args) {
     Logger::info(std::string("Joypad axis deadzone: ") + joypad_deadzone_arg);
   }
 
+  //Add joypads to the joy list
+  for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+    if (SDL_IsGameController(i)) {
+      SDL_GameController* gc = SDL_GameControllerOpen(i);
+      SDL_Joystick* js = SDL_JoystickOpen(i);
+      SDL_JoystickID id = SDL_JoystickInstanceID(js);
+      joypads.emplace(id,std::make_shared<Joypad>(gc,js));
+    }
+  }
+
   initialized = true;
 
   // Initialize text events.
   SDL_StartTextInput();
 
   // Initialize the joypad.
-  set_joypad_enabled(true);
+  set_legacy_joypad_enabled(true);
 }
 
 /**
  * \brief Quits the input event manager.
  */
 void InputEvent::quit() {
-
   SDL_StopTextInput();
 
-  set_joypad_enabled(false);
   repeat_keyboard = false;
   keys_pressed.clear();
 
   jbuttons_pressed.clear();
+
+  joypads.clear();
   initialized = false;
 }
 
@@ -326,28 +337,7 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
         }
       }
         break;
-        /*case SDL_JOYDEVICEADDED: {
-        if(!joystick and joypad_enabled) {
-          // We had no joystick and one was connected! Try to open it.
-          joystick = SDL_JoystickOpen(internal_event.jdevice.which);
-          Logger::info("Using joystick: \"" + std::string(SDL_JoystickName(joystick)) + "\"");
-        }
-      case SDL_JOYDEVICEREMOVED: {
-          if(joystick and joypad_enabled) {
-            // A joystick is disconnected, maybe it was our
-            Sint32 id = internal_event.jdevice.which;
-            if(SDL_JoystickInstanceID(joystick) == id) {
-              Logger::info("Joystick disconnected");
-              SDL_JoystickClose(joystick);
-              joystick = nullptr;
-            }
-          }
-        }*/
     }
-
-
-    //React to joystick connect and disconnect events
-
 
     // Always return a Solarus event if an SDL event occurred, so that
     // multiple SDL events in the same frame are all treated.
@@ -639,6 +629,14 @@ bool InputEvent::is_joypad_event() const {
   return internal_event.type == SDL_CONTROLLERAXISMOTION
       || internal_event.type == SDL_CONTROLLERBUTTONUP
       || internal_event.type == SDL_CONTROLLERBUTTONDOWN;
+}
+
+bool InputEvent::is_joypad_removed() const {
+  return internal_event.type == SDL_CONTROLLERDEVICEREMOVED;
+}
+
+bool InputEvent::is_joypad_added() const {
+  return internal_event.type == SDL_CONTROLLERDEVICEADDED;
 }
 
 /**
@@ -945,37 +943,36 @@ void InputEvent::simulate_window_closing() {
  *
  * \return true if joypad support is enabled.
  */
-bool InputEvent::is_joypad_enabled() {
-
-  return joypad_enabled;
+bool InputEvent::is_legacy_joypad_enabled() {
+  return legacy_joypad_enabled;
 }
 
 /**
- * \brief Enables or disables joypad support.
+ * \brief Enables or disables legacy joypad support.
  *
  * Joypad support may be enabled even without any joypad plugged.
  *
  * \param joypad_enabled true to enable joypad support, false to disable it.
  */
-void InputEvent::set_joypad_enabled(bool joypad_enabled) {
-  if(not joypad_enabled) {
-    joypads.clear();
+void InputEvent::set_legacy_joypad_enabled(bool joypad_enabled) {
+  if (joypad_enabled != is_legacy_joypad_enabled()) {
+    Logger::info(std::string("Legacy joypad support enabled: ") + (joypad_enabled ? "true" : "false"));
   }
+  InputEvent::legacy_joypad_enabled = joypad_enabled;
+}
 
-  if(joypad_enabled) {
-    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
-      if (SDL_IsGameController(i)) {
-        SDL_GameController* gc = SDL_GameControllerOpen(i);
-        SDL_Joystick* js = SDL_JoystickOpen(i);
-        SDL_JoystickID id = SDL_JoystickInstanceID(js);
-        joypads.emplace(id,std::make_shared<Joypad>(gc,js));
-      }
+/**
+ * @brief Return a joypad that is not the given one
+ * @param joypad joypad to not return
+ * @return other joypad or nullptr if none
+ */
+JoypadPtr InputEvent::other_joypad(const JoypadPtr& joypad) {
+  for(const auto& p : joypads) {
+    if(p.second != joypad) {
+      return p.second;
     }
   }
-
-  if (joypad_enabled != is_joypad_enabled()) {
-    Logger::info(std::string("Joypad support enabled: ") + (joypad_enabled ? "true" : "false"));
-  }
+  return nullptr;
 }
 
 /**
