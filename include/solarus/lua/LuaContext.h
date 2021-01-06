@@ -604,6 +604,8 @@ class LuaContext {
       sound_api_create,
       sound_api_play,
       sound_api_stop,
+      sound_api_is_paused,
+      sound_api_set_paused,
 
       // Video API.
       video_api_get_window_title,

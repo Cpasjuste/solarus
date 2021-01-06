@@ -132,6 +132,13 @@ class SOLARUS_API Game {
 
 private:
 
+    // update functions
+    void update_tilesets();
+    void update_commands_effects();
+    void update_transitions();
+    void update_gameover_sequence();
+    void notify_map_changed();
+
     // main objects
     MainLoop& main_loop;       /**< the main loop object */
     std::shared_ptr<Savegame>
@@ -171,13 +178,6 @@ private:
 
     // world (i.e. the current set of maps)
     bool crystal_state;        /**< indicates that a crystal has been enabled (i.e. the orange blocks are raised) */
-
-    // update functions
-    void update_tilesets();
-    void update_commands_effects();
-    void update_transitions();
-    void update_gameover_sequence();
-    void notify_map_changed();
 
 };
 

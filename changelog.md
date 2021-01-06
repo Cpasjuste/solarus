@@ -3,7 +3,7 @@
 ## Solarus 1.7.0 (in progress)
 
 * Add functions sol.main.rawget/rawset() (#1424).
-* Allow to stop a sound effect (#1289).
+* Allow to stop or pause a sound effect (#1289).
 
 ## Solarus 1.6.5 (in progress)
 
