@@ -100,7 +100,7 @@ std::shared_ptr<Controls> LuaContext::check_controls(lua_State* current_l, int i
  */
 int LuaContext::controls_api_create_from_keyboard(lua_State* l) {
   return state_boundary_handle(l, [&]{
-    ControlsPtr cmds = CommandsDispatcher::get().create_commands_from_keyboard();
+    ControlsPtr cmds = ControlsDispatcher::get().create_commands_from_keyboard();
 
     push_controls(l, *cmds);
     return 1;
@@ -116,7 +116,7 @@ int LuaContext::controls_api_create_from_joypad(lua_State* l) {
   return state_boundary_handle(l, [&]{
     JoypadPtr joypad = check_joypad(l, 1);
 
-    ControlsPtr cmds = CommandsDispatcher::get().create_commands_from_joypad(joypad);
+    ControlsPtr cmds = ControlsDispatcher::get().create_commands_from_joypad(joypad);
 
     push_controls(l, *cmds);
     return 1;

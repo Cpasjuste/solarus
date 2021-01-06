@@ -114,7 +114,7 @@ Controls::Controls(MainLoop& main_loop, Game& game):
 }
 
 Controls::~Controls() {
-  CommandsDispatcher::get().remove_commands(this);
+  ControlsDispatcher::get().remove_commands(this);
 }
 
 /**
@@ -415,7 +415,7 @@ void Controls::joypad_hat_moved(int hat, int value) {
  */
 void Controls::command_pressed(const Command& command) {
   commands_pressed.insert(command);
-  main_loop.notify_command(ControlEvent::make_pressed(command, shared_from_this_cast<Controls>()));
+  main_loop.notify_control(ControlEvent::make_pressed(command, shared_from_this_cast<Controls>()));
 }
 
 /**
@@ -427,12 +427,12 @@ void Controls::command_pressed(const Command& command) {
  */
 void Controls::command_released(const Command &command) {
   commands_pressed.erase(command);
-  main_loop.notify_command(ControlEvent::make_released(command, shared_from_this_cast<Controls>()));
+  main_loop.notify_control(ControlEvent::make_released(command, shared_from_this_cast<Controls>()));
 }
 
 void Controls::command_axis_moved(const Axis& axis, double state) {
   command_axes_state[axis] = state;
-  main_loop.notify_command(ControlEvent::make_moved(axis,state, shared_from_this_cast<Controls>()));
+  main_loop.notify_control(ControlEvent::make_moved(axis,state, shared_from_this_cast<Controls>()));
 }
 
 /**

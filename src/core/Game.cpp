@@ -62,7 +62,7 @@ Game::Game(MainLoop& main_loop, const SavegamePtr& savegame):
   savegame->set_game(this);
 
   // initialize members
-  controls = CommandsDispatcher::get().create_commands_from_game(*this); //TODO differentiate commands from hero to hero
+  controls = ControlsDispatcher::get().create_commands_from_game(*this); //TODO differentiate commands from hero to hero
 
   default_hero = std::make_shared<Hero>(savegame->get_default_equipment(), "hero");
   CameraPtr default_camera = create_camera("main_camera");

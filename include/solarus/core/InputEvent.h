@@ -335,10 +335,6 @@ class InputEvent {
     bool notify_joypad(LuaContext& lua_context) const;
 
   private:
-
-    static inline void SDL_Controller_Deleter(SDL_GameController* controller) {
-          SDL_GameControllerClose(controller);
-    }
     using SDL_GameControllerPtr = std::shared_ptr<SDL_GameController>;
 
     explicit InputEvent(const SDL_Event& event);

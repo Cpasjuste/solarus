@@ -1380,7 +1380,7 @@ int LuaContext::l_create_hero(lua_State* l) {
      equipment, data.get_name()
     );
 
-    ControlsPtr cmds = CommandsDispatcher::get().create_commands_from_keyboard();
+    ControlsPtr cmds = ControlsDispatcher::get().create_commands_from_keyboard();
     entity->set_controls(cmds);
     entity->start_free();
     entity->place_on_map(map);

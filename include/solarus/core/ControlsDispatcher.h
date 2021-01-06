@@ -28,18 +28,18 @@ class Game;
 /**
  * @brief Holds all of the current Commands object and dispatches the input into them
  */
-class CommandsDispatcher
+class ControlsDispatcher
 {
   friend class Controls;
 public:
-  CommandsDispatcher(MainLoop& main);
-  static CommandsDispatcher& get();
+  ControlsDispatcher(MainLoop& main);
+  static ControlsDispatcher& get();
   void notify_input(const InputEvent& event);
   ControlsPtr create_commands_from_game(Game& game);
   ControlsPtr create_commands_from_keyboard();
   ControlsPtr create_commands_from_joypad(const JoypadPtr& joypad);
 private:
-  static CommandsDispatcher* instance;
+  static ControlsDispatcher* instance;
   using WeakCommands = std::weak_ptr<Controls>;
 
   void add_commands(const WeakCommands& cmds);

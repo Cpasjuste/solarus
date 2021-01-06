@@ -630,7 +630,7 @@ void MainLoop::notify_input(const InputEvent& event) {
   }
 }
 
-void MainLoop::notify_command(const ControlEvent& event) {
+void MainLoop::notify_control(const ControlEvent& event) {
   if(game != nullptr) {
     game->notify_control(event);
   }
