@@ -126,7 +126,7 @@ class SOLARUS_API Savegame: public ExportableToLua {
     Transition::Style get_default_transition_style() const;
     void set_default_transition_style(Transition::Style default_transition_style);
 
-    virtual const std::string& get_lua_type_name() const override;
+    const std::string& get_lua_type_name() const override;
 
   private:
 

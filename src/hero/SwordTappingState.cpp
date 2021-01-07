@@ -109,7 +109,7 @@ void Hero::SwordTappingState::update() {
         else {
           sound_id = "sword_tapping";
         }
-        Sound::play(sound_id);
+        Sound::play(sound_id, get_game().get_resource_provider());
         next_sound_date = now + 100;
       }
     }

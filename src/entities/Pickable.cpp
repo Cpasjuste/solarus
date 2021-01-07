@@ -412,7 +412,7 @@ void Pickable::check_bad_ground() {
     {
       // Fall to a lower layer.
       int layer = get_layer();
-      if (layer > 0) {
+      if (layer > get_map().get_min_layer()) {
         --layer;
         get_entities().set_entity_layer(*this, layer);
       }
@@ -421,7 +421,7 @@ void Pickable::check_bad_ground() {
 
     case Ground::HOLE:
     {
-      Sound::play("jump");
+      Sound::play("jump", get_game().get_resource_provider());
       remove_from_map();
     }
     break;
@@ -429,7 +429,7 @@ void Pickable::check_bad_ground() {
     case Ground::DEEP_WATER:
     case Ground::LAVA:
     {
-      Sound::play("splash");
+      Sound::play("splash", get_game().get_resource_provider());
       remove_from_map();
     }
     break;
@@ -460,7 +460,7 @@ void Pickable::try_give_item_to_player() {
   // play the sound
   const std::string& sound_id = item.get_sound_when_picked();
   if (!sound_id.empty()) {
-    Sound::play(sound_id);
+    Sound::play(sound_id, get_game().get_resource_provider());
   }
 
   // give the item

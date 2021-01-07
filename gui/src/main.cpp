@@ -69,7 +69,7 @@ int run_gui(int argc, char* argv[]) {
   application.setApplicationDisplayName("Solarus Launcher");
   application.setApplicationVersion(SOLARUS_VERSION);
   application.setOrganizationName("solarus");
-  application.setOrganizationDomain("solarus-games.org");  // Used by QtWayland backend
+  application.setOrganizationDomain("solarus-games.org");
 
   // Get current system locale.
   const QLocale locale = QLocale::system();
@@ -207,6 +207,10 @@ int main(int argc, char* argv[]) {
       return SolarusGui::add_quest(argc, argv);
     }
   }
+
+  // Set desktop filename so that the QtWayland backend will report the correct AppID
+  // based on this and make the launcher icon and startup notification work.
+  QGuiApplication::setDesktopFileName(SOLARUS_APP_ID ".Launcher.desktop");
 
   // Solarus GUI mode.
   return SolarusGui::run_gui(argc, argv);

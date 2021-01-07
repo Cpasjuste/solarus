@@ -160,6 +160,8 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1452_crash_carried_object"
   "bugs/1458_ground_sprite_when_jumping"
   "bugs/1461_tileset_sprite"
+  "bugs/1471_pickable_wrong_layer"
+  "bugs/1476_crash_command_binding"
   "bugs/1524_push_delay"
 )
 

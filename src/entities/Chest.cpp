@@ -422,7 +422,7 @@ bool Chest::notify_action_command_pressed() {
   ) {
 
     if (can_open()) {
-      Sound::play("chest_open");
+      Sound::play("chest_open", get_game().get_resource_provider());
       set_open(true);
       treasure_date = System::now() + 300;
 
@@ -430,7 +430,7 @@ bool Chest::notify_action_command_pressed() {
       get_hero().start_frozen();
     }
     else if (!get_cannot_open_dialog_id().empty()) {
-      Sound::play("wrong");
+      Sound::play("wrong", get_game().get_resource_provider());
       get_game().start_dialog(get_cannot_open_dialog_id(), ScopedLuaRef(), ScopedLuaRef());
     }
 

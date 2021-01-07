@@ -133,6 +133,8 @@ MainLoop::MainLoop(const Arguments& args):
   next_game(nullptr),
   exiting(false),
   debug_lag(0),
+  suspend_unfocused(true),
+  suspended(false),
   turbo(false),
   lua_commands(),
   lua_commands_mutex(),
@@ -153,6 +155,8 @@ MainLoop::MainLoop(const Arguments& args):
   }
   const std::string& turbo_arg = args.get_argument_value("-turbo");
   turbo = (turbo_arg == "yes");
+  const std::string& suspend_unfocused_arg = args.get_argument_value("-suspend-unfocused");
+  suspend_unfocused = suspend_unfocused_arg.empty() || suspend_unfocused_arg == "yes";
 
   // Try to open the quest.
   const std::string& quest_path = get_quest_path(args);
@@ -268,6 +272,27 @@ LuaContext& MainLoop::get_lua_context() {
  */
 ResourceProvider& MainLoop::get_resource_provider() {
   return resource_provider;
+}
+
+/**
+ * \brief Returns whether the simulation is suspended.
+ *
+ * \return true if the simulation is suspended
+ */
+bool MainLoop::is_suspended() {
+  return suspended;
+}
+
+/**
+ * \brief Suspends or resumes the simulation.
+ *
+ * \param suspended true to suspend the simulation, false to resume it
+ */
+void MainLoop::set_suspended(bool suspended) {
+
+  if (suspended != this->suspended) {
+    this->suspended = suspended;
+  }
 }
 
 /**
@@ -395,7 +420,7 @@ void MainLoop::run() {
     // 2. Update the world once, or several times (skipping some draws)
     // to catch up if the system is slow.
     int num_updates = 0;
-    if (turbo) {
+    if (turbo && !is_suspended()) {
       // Turbo mode: always update at least once.
       step();
       lag -= System::timestep;
@@ -404,7 +429,7 @@ void MainLoop::run() {
 
     while (lag >= System::timestep &&
            num_updates < 10 && // To draw sometimes anyway on very slow systems.
-           !is_exiting()
+           !is_exiting() && !is_suspended()
     ) {
       step();
       lag -= System::timestep;
@@ -412,12 +437,12 @@ void MainLoop::run() {
     }
 
     // 3. Redraw the screen.
-    if (num_updates > 0) {
+    if (num_updates > 0 && !is_suspended()) {
       draw();
     }
 
     // 4. Sleep if we have time, to save CPU and GPU cycles.
-    if (debug_lag > 0 && !turbo) {
+    if (debug_lag > 0 && !turbo && !is_suspended()) {
       // Extra sleep time for debugging, useful to simulate slower systems.
       System::sleep(debug_lag);
     }
@@ -471,7 +496,7 @@ void MainLoop::check_input() {
     notify_input(*event);
     event = InputEvent::get_event();
   }
-
+/*
   // Check Lua requests.
   if (!lua_commands.empty()) {
     std::lock_guard<std::mutex> lock(lua_commands_mutex);
@@ -490,7 +515,7 @@ void MainLoop::check_input() {
       ++num_lua_commands_done;
     }
     lua_commands.clear();
-  }
+  }*/
 }
 
 void MainLoop::setup_game_icon() {
@@ -534,6 +559,22 @@ void MainLoop::notify_input(const InputEvent& event) {
   }
   else if (event.is_window_resizing()) {
     Video::on_window_resized(event.get_window_size());
+  }
+  else if (suspend_unfocused && event.is_window_focus_lost()) {
+    if (!is_suspended()) {
+      Logger::info("Simulation suspended");
+      set_suspended(true);
+      Sound::pause_all();
+      Music::pause_playing();
+    }
+  }
+  else if (suspend_unfocused && event.is_window_focus_gained()) {
+    if (is_suspended()) {
+      Logger::info("Simulation resumed");
+      set_suspended(false);
+      Music::resume_playing();
+      Sound::resume_all();
+    }
   }
   else if (event.is_keyboard_key_pressed()) {
     // A key was pressed.

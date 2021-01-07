@@ -94,7 +94,7 @@ class Stairs: public Entity {
 
     int get_movement_direction(Way way) const;
     int get_animation_direction(Way way) const;
-    void play_sound(Way way) const;
+    void play_sound(Way way);
     std::string get_path(Way way) const;
     Rectangle get_clipping_rectangle(Way way) const;
 

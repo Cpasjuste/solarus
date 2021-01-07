@@ -16,6 +16,7 @@
  */
 #include "solarus/audio/Sound.h"
 #include "solarus/core/Debug.h"
+#include "solarus/core/Game.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/System.h"
 #include "solarus/entities/Block.h"
@@ -174,7 +175,7 @@ void Hookshot::update() {
 
   uint32_t now = System::now();
   if (now >= next_sound_date) {
-    Sound::play("hookshot");
+    Sound::play("hookshot", get_game().get_resource_provider());
     next_sound_date = now + 150;
   }
 
@@ -304,7 +305,7 @@ void Hookshot::notify_obstacle_reached() {
     if (!get_map().test_collision_with_border(
         get_movement()->get_last_collision_box_on_obstacle())) {
       // play a sound unless the obstacle is the map border
-      Sound::play("sword_tapping");
+      Sound::play("sword_tapping", get_game().get_resource_provider());
     }
     go_back();
   }
@@ -389,7 +390,7 @@ void Hookshot::notify_collision_with_switch(Switch& sw, CollisionMode collision_
     sw.try_activate();
     if (!is_going_back()) {
       go_back();
-      Sound::play("sword_tapping");
+      Sound::play("sword_tapping", get_game().get_resource_provider());
     }
   }
 }

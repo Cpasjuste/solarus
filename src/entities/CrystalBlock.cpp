@@ -171,7 +171,7 @@ bool CrystalBlock::try_jump(Hero& hero, const Rectangle& collision_box,
       && !get_entities().overlaps_raised_blocks(get_layer(), collision_box)) {
 
     hero.start_jumping(jump_direction, jump_length, true, false);
-    Sound::play("hero_lands");
+    Sound::play("hero_lands", get_game().get_resource_provider());
     return true;
   }
 

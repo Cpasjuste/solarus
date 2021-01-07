@@ -48,7 +48,7 @@ void Hero::PlungingState::start(const State* previous_state) {
   else {
     get_sprites().set_animation("plunging_lava");
   }
-  Sound::play("splash");
+  Sound::play("splash", get_game().get_resource_provider());
 }
 
 /**
