@@ -169,6 +169,7 @@ map{ id = "custom_state/reuse_state", description = "Using the same state object
 map{ id = "dynamic_tile_tests", description = "Dynamic tile tests" }
 map{ id = "jumper_tests", description = "Jumper tests" }
 map{ id = "oriented_collisions", description = "Test rotation and scaled collisions" }
+map{ id = "push_delay", description = "!1359 Push state delay" }
 map{ id = "surface_tests", description = "Surface tests" }
 map{ id = "teletransportation_tests/main", description = "Main map" }
 map{ id = "teletransportation_tests/start_in_deep_water_drown", description = "Start in deep water (drowning)" }
@@ -742,6 +743,8 @@ file{ path = "maps/jumper_tests.dat", author = "Christopho", license = "CC BY-SA
 file{ path = "maps/jumper_tests.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/oriented_collisions.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/oriented_collisions.lua", author = "std::gregwar", license = "GPL v3" }
+file{ path = "maps/push_delay.dat", author = "TwilCynder", }
+file{ path = "maps/push_delay.lua", author = "TwilCynder", }
 file{ path = "maps/surface_tests.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/surface_tests.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/teletransportation_tests/main.dat", author = "Christopho", license = "CC BY-SA 4.0" }

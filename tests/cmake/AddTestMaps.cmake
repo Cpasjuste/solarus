@@ -7,6 +7,7 @@ list(APPEND LUA_TEST_MAPS
   "surface_tests"
   "oriented_collisions"
   "text_predict"
+  "push_delay"
   "custom_state/can_traverse"
   "custom_state/can_traverse_ground"
   "custom_state/carried_object"
