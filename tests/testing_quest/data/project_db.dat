@@ -85,6 +85,7 @@ map{ id = "bugs/1448_custom_state_side_teletransporter", description = "#1448: S
 map{ id = "bugs/1452_crash_carried_object", description = "#1452: Crash when stopping the movement of a thrown object" }
 map{ id = "bugs/1458_ground_sprite_when_jumping", description = "#1458: Ground sprite displayed while jumping" }
 map{ id = "bugs/1461_tileset_sprite", description = "#1461 : Tileset sprite dynamicaly created cause crash" }
+map{ id = "bugs/1524_push_delay", description = "!1359 Push state delay" }
 map{ id = "bugs/486_diagonal_dynamic_tiles", description = "#486: Wrong obstacles with diagonal dynamic tiles" }
 map{ id = "bugs/496_stream_speed_0", description = "#496: Allow streams to have a speed of zero" }
 map{ id = "bugs/526_get_entities_same_region", description = "#526: map:get_entities_in_same_region()" }
@@ -169,7 +170,6 @@ map{ id = "custom_state/reuse_state", description = "Using the same state object
 map{ id = "dynamic_tile_tests", description = "Dynamic tile tests" }
 map{ id = "jumper_tests", description = "Jumper tests" }
 map{ id = "oriented_collisions", description = "Test rotation and scaled collisions" }
-map{ id = "push_delay", description = "!1359 Push state delay" }
 map{ id = "surface_tests", description = "Surface tests" }
 map{ id = "teletransportation_tests/main", description = "Main map" }
 map{ id = "teletransportation_tests/start_in_deep_water_drown", description = "Start in deep water (drowning)" }
@@ -574,6 +574,8 @@ file{ path = "maps/bugs/1458_ground_sprite_when_jumping.dat", author = "Christop
 file{ path = "maps/bugs/1458_ground_sprite_when_jumping.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1461_tileset_sprite.dat", author = "stdgregwar", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1461_tileset_sprite.lua", author = "stdgregwar", license = "GPL v3" }
+file{ path = "maps/bugs/1524_push_delay.dat", author = "TwilCynder", }
+file{ path = "maps/bugs/1524_push_delay.lua", author = "TwilCynder", }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/496_stream_speed_0.dat", author = "Christopho", license = "CC BY-SA 4.0" }
@@ -743,8 +745,6 @@ file{ path = "maps/jumper_tests.dat", author = "Christopho", license = "CC BY-SA
 file{ path = "maps/jumper_tests.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/oriented_collisions.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/oriented_collisions.lua", author = "std::gregwar", license = "GPL v3" }
-file{ path = "maps/push_delay.dat", author = "TwilCynder", }
-file{ path = "maps/push_delay.lua", author = "TwilCynder", }
 file{ path = "maps/surface_tests.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/surface_tests.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/teletransportation_tests/main.dat", author = "Christopho", license = "CC BY-SA 4.0" }

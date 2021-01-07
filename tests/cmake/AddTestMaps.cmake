@@ -7,7 +7,6 @@ list(APPEND LUA_TEST_MAPS
   "surface_tests"
   "oriented_collisions"
   "text_predict"
-  "push_delay"
   "custom_state/can_traverse"
   "custom_state/can_traverse_ground"
   "custom_state/carried_object"
@@ -161,6 +160,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1452_crash_carried_object"
   "bugs/1458_ground_sprite_when_jumping"
   "bugs/1461_tileset_sprite"
+  "bugs/1524_push_delay"
 )
 
 # Test that should not fail when there are errors
