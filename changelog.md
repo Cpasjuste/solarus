@@ -4,7 +4,7 @@
 
 ### Engine changes
 
-* Add support for suspending the simulation on Window Focus events (#1352).
+* Add support for suspending the simulation on Window Focus events (!1352).
 * Fix crash when calling command functions before the game is started (#1476).
 * Fix joystick hot-plug/unplug (#1501, #1387).
 * Fix TTF fonts using wrong color for antialiasing (#1390).
