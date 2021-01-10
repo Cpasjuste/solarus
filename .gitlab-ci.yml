@@ -1,2 +1,4 @@
 include:
-  - https://gitlab.com/solarus-games/solarus-devops/raw/master/gitlab/solarus.yml
+  - project: solarus-games/solarus-devops
+    file: gitlab/solarus.yml
+    ref: docker-refactor
