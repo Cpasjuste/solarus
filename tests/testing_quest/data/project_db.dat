@@ -576,8 +576,8 @@ file{ path = "maps/bugs/1458_ground_sprite_when_jumping.dat", author = "Christop
 file{ path = "maps/bugs/1458_ground_sprite_when_jumping.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1461_tileset_sprite.dat", author = "stdgregwar", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1461_tileset_sprite.lua", author = "stdgregwar", license = "GPL v3" }
-file{ path = "maps/bugs/1524_push_delay.dat", author = "TwilCynder", }
-file{ path = "maps/bugs/1524_push_delay.lua", author = "TwilCynder", }
+file{ path = "maps/bugs/1524_push_delay.dat", author = "TwilCynder", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1524_push_delay.lua", author = "TwilCynder", license = "GPL v3" }
 file{ path = "maps/bugs/1471_pickable_wrong_layer.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1471_pickable_wrong_layer.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1476_crash_command_binding.dat", author = "Christopho", license = "CC BY-SA 4.0" }
