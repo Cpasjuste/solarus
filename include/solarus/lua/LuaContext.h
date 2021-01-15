@@ -307,9 +307,8 @@ class LuaContext {
         Entity& entity,
         Camera& camera
     );
-    bool do_traversable_test_function(
-        const ScopedLuaRef& traversable_test_ref,
-        ExportableToLua& userdata,
+    bool do_traversable_test_function(const ScopedLuaRef& traversable_test_ref,
+        ExportableToLua &userdata,
         Entity& other_entity
     );
     bool do_custom_entity_collision_test_function(

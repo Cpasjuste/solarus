@@ -35,6 +35,7 @@
 #include "solarus/graphics/Color.h"
 #include "solarus/graphics/Surface.h"
 #include "solarus/lua/LuaContext.h"
+#include "solarus/core/Profiler.h"
 #include <sstream>
 #include <lua.hpp>
 
@@ -397,7 +398,7 @@ bool Entities::has_entity_with_prefix(const std::string& prefix) const {
 void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, ConstEntityVector& result
 ) const {
-
+  SOL_PFUN();
   EntityVector non_const_result = quadtree->get_elements(rectangle);
 
   result.reserve(non_const_result.size());
@@ -412,7 +413,7 @@ void Entities::get_entities_in_rectangle_z_sorted(
 void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, EntityVector& result
 ) {
-
+  SOL_PFUN();
   result = quadtree->get_elements(rectangle);
 }
 
@@ -1124,7 +1125,7 @@ void Entities::set_suspended(bool suspended) {
  * \brief Updates the position, movement and animation each entity.
  */
 void Entities::update() {
-
+  SOL_PFUN(profiler::colors::Red);
   Debug::check_assertion(map.is_started(), "The map is not started");
 
   // First update the hero.
@@ -1214,23 +1215,32 @@ void Entities::draw() {
     // in other words, draw all regions containing animated tiles
     // (and maybe more, but we don't care because non-animated tiles
     // will be drawn later).
-    for (unsigned int i = 0; i < tiles_in_animated_regions[layer].size(); ++i) {
-      Tile& tile = *tiles_in_animated_regions[layer][i];
-      if (tile.overlaps(*camera) || !tile.is_drawn_at_its_position()) {
-        tile.draw(*camera);
+    {
+      SOL_PBLOCK("Draw dynamic tiles", profiler::colors::Green);
+      for (unsigned int i = 0; i < tiles_in_animated_regions[layer].size(); ++i) {
+        Tile& tile = *tiles_in_animated_regions[layer][i];
+        if (tile.overlaps(*camera) || !tile.is_drawn_at_its_position()) {
+          tile.draw(*camera);
+        }
       }
     }
 
     // Draw the non-animated tiles (with transparent rectangles on the regions of animated tiles
     // since they are already drawn).
-    non_animated_regions[layer]->draw_on_map();
+    {
+      SOL_PBLOCK("Draw non animated region", profiler::colors::Green)
+      non_animated_regions[layer]->draw_on_map();
+    }
 
     // Draw dynamic entities, ordered by their data structure.
-    for (const EntityPtr& entity: entities_to_draw[layer]) {
-      if (!entity->is_being_removed() &&
-          entity->is_enabled() &&
-          entity->is_visible()) {
-        entity->draw(*camera);
+    {
+      SOL_PBLOCK("Draw entitites", profiler::colors::Green);
+      for (const EntityPtr& entity: entities_to_draw[layer]) {
+        if (!entity->is_being_removed() &&
+            entity->is_enabled() &&
+            entity->is_visible()) {
+          entity->draw(*camera);
+        }
       }
     }
   }
