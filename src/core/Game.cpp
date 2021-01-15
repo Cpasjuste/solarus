@@ -24,6 +24,7 @@
 #include "solarus/core/Map.h"
 #include "solarus/core/Savegame.h"
 #include "solarus/core/Treasure.h"
+#include "solarus/core/Profiler.h"
 #include "solarus/entities/Destination.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/EntityState.h"
@@ -355,7 +356,7 @@ void Game::notify_command_released(GameCommand command) {
  * Updates the map, the equipment, the HUD, etc.
  */
 void Game::update() {
-
+  SOL_PFUN(profiler::colors::Red);
   // Update the transitions between maps.
   update_transitions();
 
@@ -591,7 +592,7 @@ void Game::update_commands_effects() {
  * \param dst_surface The surface where the game will be drawn.
  */
 void Game::draw(const SurfacePtr& dst_surface) {
-
+  SOL_PFUN(profiler::colors::Green);
   if (current_map == nullptr) {
     // Nothing to do. The game is not fully initialized yet.
     return;

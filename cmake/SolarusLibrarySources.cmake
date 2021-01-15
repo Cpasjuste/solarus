@@ -39,6 +39,7 @@ target_sources(solarus
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/PerfCounter.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/PixelBits.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Point.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Profiler.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/QuestDatabase.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/QuestFiles.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/QuestProperties.h"

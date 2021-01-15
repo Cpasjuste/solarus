@@ -119,13 +119,26 @@ class SOLARUS_API Map: public ExportableToLua {
         int x,
         int y,
         const Entity& entity_to_check,
-        bool& found_diagonal_wall
+        bool& found_diagonal_wall,
+        const ConstEntityVector& entities_nearby
     ) const;
     bool test_collision_with_entities(
         int layer,
         const Rectangle& collision_box,
         Entity& entity_to_check
     );
+    bool test_collision_with_entities_nearby(
+        int layer,
+        const Rectangle& collision_box,
+        Entity& entity_to_check,
+        const ConstEntityVector& entities_nearby
+        ) const;
+    bool test_collision_with_entities_nearby(
+        int layer,
+        const Rectangle& collision_box,
+        Entity& entity_to_check,
+        const EntityVector& entities_nearby
+        ) const;
     bool test_collision_with_obstacles(
         int layer,
         const Rectangle& collision_box,
@@ -157,6 +170,12 @@ class SOLARUS_API Map: public ExportableToLua {
         int layer,
         const Point& xy,
         const Entity* entity_to_check
+    ) const;
+    Ground get_ground_with_nearby_entities(
+        int layer,
+        const Point& xy,
+        const Entity* entity_to_check,
+        const ConstEntityVector& nearby_entities
     ) const;
     Ground get_ground_from_entity(const Entity& entity, int x, int y) const;
     Ground get_ground_from_entity(const Entity& entity, const Point& xy) const;

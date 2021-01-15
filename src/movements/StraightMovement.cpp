@@ -17,6 +17,7 @@
 #include "solarus/core/Debug.h"
 #include "solarus/core/Geometry.h"
 #include "solarus/core/System.h"
+#include "solarus/core/Profiler.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/movements/StraightMovement.h"
@@ -330,7 +331,7 @@ void StraightMovement::set_smooth(bool smooth) {
  * in the smooth case.
  */
 void StraightMovement::update_smooth_xy() {
-
+  SOL_PFUN();
   // Save the current coordinates.
   Point old_xy = get_xy();
 
@@ -586,7 +587,7 @@ void StraightMovement::update_smooth_y() {
  * in the non-smooth case.
  */
 void StraightMovement::update_non_smooth_xy() {
-
+  SOL_PFUN();
   // Save the current coordinates.
   Point old_xy = get_xy();
 
@@ -625,7 +626,6 @@ void StraightMovement::update_non_smooth_xy() {
   if (!is_suspended() &&
       get_entity() != nullptr &&
       !finished) {
-
     // the movement was successful if the entity's coordinates have changed
     // and the movement was not stopped
     bool success = (get_xy() != old_xy)
@@ -644,7 +644,7 @@ void StraightMovement::update_non_smooth_xy() {
  * This function is called repeatedly.
  */
 void StraightMovement::update() {
-
+  SOL_PFUN();
   if (!is_suspended()) {
 
     uint32_t now = System::now();

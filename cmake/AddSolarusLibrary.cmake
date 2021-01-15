@@ -26,7 +26,10 @@ target_link_libraries(solarus
     Vorbis::File
     Ogg::Ogg
     ModPlug::ModPlug
+    easy_profiler
 )
+
+target_compile_definitions(solarus PUBLIC -DBUILD_WITH_EASY_PROFILER=1)
 
 # Add OpenGL imported target to "solarus" declared dependencies
 if(OPENGL_FOUND)

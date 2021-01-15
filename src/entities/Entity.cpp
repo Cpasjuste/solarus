@@ -22,6 +22,7 @@
 #include "solarus/core/MainLoop.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/System.h"
+#include "solarus/core/Profiler.h"
 #include "solarus/entities/CollisionMode.h"
 #include "solarus/entities/Destructible.h"
 #include "solarus/entities/Door.h"
@@ -1840,7 +1841,7 @@ void Entity::notify_obstacle_reached() {
  * TODO only keep notify_bounding_box_changed()
  */
 void Entity::notify_position_changed() {
-
+  SOL_PFUN();
   // Notify the quadtree.
   notify_bounding_box_changed();
 
