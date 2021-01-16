@@ -101,7 +101,7 @@ Rectangle Quadtree<T, Comparator>::get_space() const {
  */
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::add(const T& element, const Rectangle& bounding_box) {
-
+  SOL_PBLOCK("Solarus::Quadtree::add");
   if (contains(element)) {
     // Element already in the quadtree.
     return false;
@@ -129,7 +129,7 @@ bool Quadtree<T, Comparator>::add(const T& element, const Rectangle& bounding_bo
  */
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::remove(const T& element) {
-
+  SOL_PBLOCK("Solarus::Quadtree::remove");
   const auto& it = elements.find(element);
   if (it == elements.end()) {
     // Unknown element.
@@ -163,7 +163,7 @@ bool Quadtree<T, Comparator>::remove(const T& element) {
  */
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::move(const T& element, const Rectangle& bounding_box) {
-
+  SOL_PBLOCK("Solarus::Quadtree::move");
   const auto& it = elements.find(element);
   if (it == elements.end()) {
     // Not in the quadtree: error.
@@ -262,6 +262,7 @@ Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree, const Rectangle& c
     quadtree(quadtree),
     elements(),
     children(),
+    num_elements(0),
     cell(cell),
     center(cell.get_center()),
     color() {
@@ -280,9 +281,9 @@ Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree, const Rectangle& c
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::Node::clear() {
-
   elements.clear();
   std::fill(std::begin(children), std::end(children), nullptr);
+  num_elements = 0;
 }
 
 /**
@@ -334,10 +335,12 @@ bool Quadtree<T, Comparator>::Node::add(
     return false;
   }
 
+  bool main = is_main_cell(bounding_box);
+
   if (!is_split()) {
 
     // See if it is time to split.
-    if (is_main_cell(bounding_box)) {
+    if (main) {
       // We are the main cell of this element: it counts in the total.
       if (get_num_elements() >= max_in_cell &&
           get_cell_size().width > min_cell_size &&
@@ -345,6 +348,11 @@ bool Quadtree<T, Comparator>::Node::add(
         split();
       }
     }
+  }
+
+  // Count element if we are its main cell at this level
+  if(main) {
+    num_elements++;
   }
 
   if (!is_split()) {
@@ -374,6 +382,7 @@ bool Quadtree<T, Comparator>::Node::remove(
     const T& element,
     const Rectangle& bounding_box
 ) {
+  SOL_PBLOCK("Solarus::Quadtree::Node::remove");
   if (!get_cell().overlaps(bounding_box)) {
     // Nothing to do.
     return false;
@@ -381,12 +390,16 @@ bool Quadtree<T, Comparator>::Node::remove(
 
   if (!is_split()) {
     // Remove from this cell.
+    SOL_PBLOCK("Solarus::Quadtree::Node::Erase", profiler::colors::Purple);
     const auto& it = std::find(elements.begin(), elements.end(), std::make_pair(element, bounding_box));
     if (it == elements.end()) {
       // The element was not here.
       return false;
     }
     elements.erase(it);
+    if(is_main_cell(bounding_box)) {
+      --num_elements;
+    }
     return true;
   }
 
@@ -394,6 +407,10 @@ bool Quadtree<T, Comparator>::Node::remove(
   bool removed = false;
   for (const std::unique_ptr<Node>& child : children) {
     removed |= child->remove(element, bounding_box);
+  }
+
+  if(removed && is_main_cell(bounding_box)) {
+    --num_elements;
   }
 
   if (removed &&
@@ -423,7 +440,7 @@ bool Quadtree<T, Comparator>::Node::is_split() const {
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::Node::split() {
-
+  SOL_PBLOCK("Solarus::Quadtree::Node::split", profiler::colors::Purple);
   Debug::check_assertion(!is_split(), "Quadtree node already split");
 
   // Create 4 children cells.
@@ -460,7 +477,7 @@ void Quadtree<T, Comparator>::Node::split() {
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::Node::merge() {
-
+  SOL_PBLOCK("Solarus::Quadtree::Node::merge", profiler::colors::Purple);
   Debug::check_assertion(is_split(), "Quadtree node already merged");
 
   // We want to avoid duplicates while preserving a deterministic order.
@@ -516,8 +533,9 @@ bool Quadtree<T, Comparator>::Node::is_main_cell(const Rectangle& bounding_box) 
  */
 template<typename T, typename Comparator>
 int Quadtree<T, Comparator>::Node::get_num_elements() const {
-
-  int num_elements = 0;
+  #ifndef NDEBUG //Do the slow check when in debug
+  SOL_PFUN("Solarus::Quadtree::Node::get_num_elements");
+  size_t num_elements = 0;
   if (!is_split()) {
     // Some elements can overlap several cells.
     // To avoid duplicates, we count an element if this cell is its main cell.
@@ -535,6 +553,9 @@ int Quadtree<T, Comparator>::Node::get_num_elements() const {
       num_elements += child->get_num_elements();
     }
   }
+  //Check our fast num_elements match the original num_elements
+  Debug::check_assertion(this->num_elements == num_elements, "Incorrect quadtree num_element invariant");
+  #endif
   return num_elements;
 }
 

@@ -20,6 +20,7 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/core/Size.h"
+#include "solarus/core/Profiler.h"
 #include "solarus/graphics/Color.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include <array>
@@ -132,6 +133,7 @@ class Quadtree {
         const Quadtree& quadtree;
         std::vector<std::pair<T, Rectangle>> elements;
         std::array<std::unique_ptr<Node>, 4> children;
+        size_t num_elements;
         Rectangle cell;
         Point center;
         Color color;
