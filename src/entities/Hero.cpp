@@ -109,6 +109,7 @@ Hero::Hero(Equipment& equipment):
   end_invincible_date(0),
   normal_walking_speed(88),
   walking_speed(normal_walking_speed),
+  carry_height(18),
   delayed_teletransporter(nullptr),
   on_raised_blocks(false),
   last_solid_ground_coords(0, 0),
@@ -118,8 +119,6 @@ Hero::Hero(Equipment& equipment):
   next_ice_date(0),
   ice_movement_direction8(0),
   push_delay(800) {
-  carry_height(18),
-  ice_movement_direction8(0) {
 
   // position
   set_origin(8, 13);
@@ -991,7 +990,7 @@ void Hero::set_walking_speed(int walking_speed) {
  	
 /**
 * \brief Returns the default height carried objects will be displayed at.
-* \return the height in pixels.
+* \return The height in pixels.
 */
 int Hero::get_carry_height() const{
   return carry_height;
@@ -999,14 +998,14 @@ int Hero::get_carry_height() const{
 
 /**
 * \brief Sets the default height carried objects will be displayed at.
-* \param height the height in pixels.
+* \param carry_height The height in pixels.
   */
-void Hero::set_carry_height(int height) {
+void Hero::set_carry_height(int carry_height) {
   std::shared_ptr<CarriedObject> carried = get_carried_object();
 
-  this->carry_height = height;
+  this->carry_height = carry_height;
 
-  if (carried != nullptr){
+  if (carried != nullptr) {
     carried->update_relative_movement();
   }
 }
@@ -1014,17 +1013,16 @@ void Hero::set_carry_height(int height) {
 /**
 * \brief Returns the delay between the moment the hero start pushing on an obstacle, and the moment he actually enters the push state.
 */
-
-int Hero::get_push_delay() const{
+int Hero::get_push_delay() const {
   return push_delay;
 }
 
 /**
  * \brief Sets the delay between the moment the hero start pushing on an obstacle, and the moment he actually enters the push state.
- * \param walking_speed the new delay
+ * \param push_delay The new delay in ms.
  */
-void Hero::set_push_delay(int delay) {
-  this->push_delay = delay;
+void Hero::set_push_delay(int push_delay) {
+  this->push_delay = push_delay;
 }
 
 /**

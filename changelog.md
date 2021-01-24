@@ -4,7 +4,8 @@
 
 * Allow to stop or pause a sound effect (#1289).
 * Add functions sol.main.rawget/rawset() (#1424).
-* Add methods `hero.get/set_push_delay()` (#1524).
+* Add methods `hero:get/set_push_delay()` (#1524).
+* Add methods `hero:get/set_carry_height()`.
 
 ## Solarus 1.6.5 (in progress)
 
