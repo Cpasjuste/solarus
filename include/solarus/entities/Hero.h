@@ -133,6 +133,8 @@ class Hero: public Entity {
     void set_normal_walking_speed(int normal_walking_speed);
     int get_walking_speed() const;
     void set_walking_speed(int walking_speed);
+    int get_push_delay() const;
+    void set_push_delay(int delay);
     int get_wanted_movement_direction8() const;
     int get_real_movement_direction8();
     bool is_moving_towards(int direction4) const;
@@ -391,6 +393,9 @@ class Hero: public Entity {
     uint32_t next_ice_date;                /**< when recomputing the additional movement on ice */
     int ice_movement_direction8;           /**< wanted movement direction a while ago */
     Point ground_dxy;                      /**< additional movement with special ground (hole or ice) */
+
+    //behavior
+    int push_delay;                        /**< delay before going into pushing state */
 
 };
 

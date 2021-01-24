@@ -220,6 +220,12 @@ void LuaContext::register_entity_module() {
         { "start_state", hero_api_start_state },
     });
   }
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
+    hero_methods.insert(hero_methods.end(), {
+      { "get_push_delay", hero_api_get_push_delay},
+      { "set_push_delay", hero_api_set_push_delay},
+    });
+  }
 
   hero_methods.insert(hero_methods.end(), common_methods.begin(), common_methods.end());
   register_type(
@@ -2198,6 +2204,37 @@ int LuaContext::hero_api_set_walking_speed(lua_State* l) {
     int normal_walking_speed = LuaTools::check_int(l, 2);
 
     hero.set_normal_walking_speed(normal_walking_speed);
+
+    return 0;
+  });
+}
+
+/** \brief Implementation of hero:get_push_delay()
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+
+int LuaContext::hero_api_get_push_delay(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const Hero& hero = *check_hero(l, 1);
+
+    lua_pushinteger(l, hero.get_push_delay());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_push_delay().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_set_push_delay(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.set_push_delay(LuaTools::check_int(l, 2));
 
     return 0;
   });
