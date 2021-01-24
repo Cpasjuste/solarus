@@ -1,0 +1,35 @@
+properties{
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  min_layer = 0,
+  max_layer = 2,
+  tileset = "castle",
+}
+
+tile{
+  layer = 0,
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  pattern = "3",
+}
+
+destructible{
+  name = "vase",
+  layer = 0,
+  x = 80,
+  y = 85,
+  sprite = "destructibles/vase_multi_directions",
+}
+
+destination{
+  name = "destination",
+  layer = 0,
+  x = 64,
+  y = 85,
+  direction = 0,
+}
+

@@ -64,6 +64,8 @@ class CarriedObject: public Entity {
     EntityPtr get_carrier() const;
     int get_damage_on_enemies() const;
     void set_damage_on_enemies(int damage_on_enemies);
+    int get_object_height() const;
+    void set_object_height(int height);
     const std::string& get_destruction_sound() const;
     void set_destruction_sound(const std::string& destruction_sound);
 
@@ -76,6 +78,7 @@ class CarriedObject: public Entity {
     void break_item_on_ground();
     bool is_broken() const;
     bool can_explode() const;
+    void update_relative_movement();
 
     void set_suspended(bool suspended) override;
     void update() override;
@@ -114,7 +117,7 @@ class CarriedObject: public Entity {
     ) override;
 
   private:
-
+  
     bool will_explode_soon() const;
 
     // game data

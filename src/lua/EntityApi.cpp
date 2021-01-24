@@ -224,6 +224,8 @@ void LuaContext::register_entity_module() {
     hero_methods.insert(hero_methods.end(), {
       { "get_push_delay", hero_api_get_push_delay},
       { "set_push_delay", hero_api_set_push_delay},
+      { "get_carry_height", hero_api_get_carry_height},
+      { "set_carry_height", hero_api_set_carry_height},
     });
   }
 
@@ -493,7 +495,13 @@ void LuaContext::register_entity_module() {
         { "get_destruction_sound", carried_object_api_get_destruction_sound },
         { "set_destruction_sound", carried_object_api_set_destruction_sound },
         { "get_damage_on_enemies", carried_object_api_get_damage_on_enemies },
-        { "set_damage_on_enemies", carried_object_api_set_damage_on_enemies },
+        { "set_damage_on_enemies", carried_object_api_set_damage_on_enemies }
+    });
+  }
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
+    carried_object_methods.insert(carried_object_methods.end(), {
+        { "get_object_height", carried_object_api_get_object_height},
+        { "set_object_height", carried_object_api_set_object_height}
     });
   }
 
@@ -2209,7 +2217,9 @@ int LuaContext::hero_api_set_walking_speed(lua_State* l) {
   });
 }
 
-/** \brief Implementation of hero:get_push_delay()
+
+/**
+ * \brief Implementation of hero:get_push_delay().
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
  */
@@ -2235,6 +2245,38 @@ int LuaContext::hero_api_set_push_delay(lua_State* l) {
     Hero& hero = *check_hero(l, 1);
 
     hero.set_push_delay(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_carry_height()
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_get_carry_height(lua_State* l) {
+
+
+  return state_boundary_handle(l, [&] {
+    const Hero& hero = *check_hero(l, 1);
+
+    lua_pushinteger(l, hero.get_carry_height());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_carry_height().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_set_carry_height(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.set_carry_height(LuaTools::check_int(l, 2));
 
     return 0;
   });
@@ -5056,6 +5098,39 @@ int LuaContext::carried_object_api_set_damage_on_enemies(lua_State* l) {
     int damage_on_enemies = LuaTools::check_int(l, 2);
 
     carried_object.set_damage_on_enemies(damage_on_enemies);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of carried_object:set_damage_on_enemies().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::carried_object_api_get_object_height(lua_State* l){
+  return state_boundary_handle(l, [&] {
+    CarriedObject& carried_object = *check_carried_object(l, 1);
+
+    int height = carried_object.get_object_height();
+
+    lua_pushinteger(l, height);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of carried_object:set_damage_on_enemies().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::carried_object_api_set_object_height(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    CarriedObject& carried_object = *check_carried_object(l, 1);
+    int height = LuaTools::check_int(l, 2);
+
+    carried_object.set_object_height(height);
 
     return 0;
   });

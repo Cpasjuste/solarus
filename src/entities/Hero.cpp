@@ -118,6 +118,8 @@ Hero::Hero(Equipment& equipment):
   next_ice_date(0),
   ice_movement_direction8(0),
   push_delay(800) {
+  carry_height(18),
+  ice_movement_direction8(0) {
 
   // position
   set_origin(8, 13);
@@ -986,7 +988,29 @@ void Hero::set_walking_speed(int walking_speed) {
     get_state()->notify_walking_speed_changed();
   }
 }
+ 	
+/**
+* \brief Returns the default height carried objects will be displayed at.
+* \return the height in pixels.
+*/
+int Hero::get_carry_height() const{
+  return carry_height;
+}
 
+/**
+* \brief Sets the default height carried objects will be displayed at.
+* \param height the height in pixels.
+  */
+void Hero::set_carry_height(int height) {
+  std::shared_ptr<CarriedObject> carried = get_carried_object();
+
+  this->carry_height = height;
+
+  if (carried != nullptr){
+    carried->update_relative_movement();
+  }
+}
+	
 /**
 * \brief Returns the delay between the moment the hero start pushing on an obstacle, and the moment he actually enters the push state.
 */

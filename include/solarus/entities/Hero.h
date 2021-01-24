@@ -135,6 +135,8 @@ class Hero: public Entity {
     void set_walking_speed(int walking_speed);
     int get_push_delay() const;
     void set_push_delay(int delay);
+    int get_carry_height() const;
+    void set_carry_height(int height);
     int get_wanted_movement_direction8() const;
     int get_real_movement_direction8();
     bool is_moving_towards(int direction4) const;
@@ -373,6 +375,9 @@ class Hero: public Entity {
     // position
     int normal_walking_speed;              /**< speed when normally walking */
     int walking_speed;                     /**< current walking speed (possibly changed by the ground) */
+
+    // carrying objects
+    int carry_height;                      /**< default value for the carried objects display height */
 
     // state specific
     std::shared_ptr<Teletransporter>
