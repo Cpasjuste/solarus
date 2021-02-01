@@ -1306,10 +1306,10 @@ void Entity::State::notify_grabbed_entity_collision() {
  * entity wants to cut a bush or some grass.
  * Returns false by default.
  *
- * \param entity The entity to check.
+ * \param destructible The entity to check.
  * \return \c true if the sword is cutting this entity.
  */
-bool Entity::State::is_cutting_with_sword(Entity& /* detector */) {
+bool Entity::State::is_cutting_with_sword(Destructible& /* destructible */) {
   return false;
 }
 

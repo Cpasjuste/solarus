@@ -462,6 +462,8 @@ void LuaContext::register_entity_module() {
       { "set_destruction_sound", destructible_api_set_destruction_sound },
       { "get_can_be_cut", destructible_api_get_can_be_cut },
       { "set_can_be_cut", destructible_api_set_can_be_cut },
+      { "get_cut_method", destructible_api_get_cut_method },
+      { "set_cut_method", destructible_api_set_cut_method },
       { "get_can_explode", destructible_api_get_can_explode },
       { "set_can_explode", destructible_api_set_can_explode },
       { "get_can_regenerate", destructible_api_get_can_regenerate },
@@ -4851,6 +4853,40 @@ int LuaContext::destructible_api_set_can_be_cut(lua_State* l) {
     bool can_be_cut = LuaTools::opt_boolean(l, 2, true);
 
     destructible.set_can_be_cut(can_be_cut);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of destructible:get_cut_method().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::destructible_api_get_cut_method(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const Destructible& destructible = *check_destructible(l, 1);
+
+    Destructible::CutMethod cut_method = destructible.get_cut_method();
+
+    push_string(l, enum_to_name(cut_method));
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of destructible:set_cut_method().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::destructible_api_set_cut_method(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Destructible& destructible = *check_destructible(l, 1);
+    Destructible::CutMethod cut_method = LuaTools::check_enum<Destructible::CutMethod>(l, 2);
+
+    destructible.set_cut_method(cut_method);
 
     return 0;
   });

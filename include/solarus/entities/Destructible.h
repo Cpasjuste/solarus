@@ -42,6 +42,14 @@ class Destructible: public Entity {
 
     static constexpr EntityType ThisType = EntityType::DESTRUCTIBLE;
 
+    /**
+     * \brief The different possible ways of cutting a destructible with the built-in sword.
+     */
+    enum class CutMethod {
+      ALIGNED,  /**< The hero has to be aligned and close to the destructible to cut it. */
+      PIXEL     /**< The bush can be cut as long as there is a sprite collision with the sword. */
+    };
+
     // Creation and destruction.
     Destructible(
         const std::string& name,
@@ -64,6 +72,8 @@ class Destructible: public Entity {
     void set_destruction_sound(const std::string& destruction_sound);
     bool get_can_be_cut() const;
     void set_can_be_cut(bool can_be_cut);
+    CutMethod get_cut_method() const;
+    void set_cut_method(CutMethod cut_method);
     bool get_can_explode() const;
     void set_can_explode(bool can_explode);
     bool get_can_regenerate() const;
@@ -107,14 +117,22 @@ class Destructible: public Entity {
     std::string destruction_sound_id;  /**< Sound played when this object is cut or broken
                                         * or an empty string. */
     bool can_be_cut;                   /**< Whether this object can be cut with the sword. */
+    CutMethod cut_method;              /**< How the hero can cut the destructible with the sword. */
     bool can_explode;                  /**< Whether this object explodes after a delay when lifted. */
     bool can_regenerate;               /**< Whether this object regenerates once destroyed. */
     int damage_on_enemies;             /**< Damage this object can cause to enemies. */
 
-    bool is_being_cut;                 /**< Whether this object is being cut */
+    bool is_being_cut;                 /**< Whether this object is being cut. */
     uint32_t regeneration_date;        /**< Date when this object starts regenerating. */
     bool is_regenerating;              /**< Whether this object is currently regenerating. */
 
+};
+
+template <>
+struct SOLARUS_API EnumInfoTraits<Destructible::CutMethod> {
+  static const std::string pretty_name;
+
+  static const EnumInfo<Destructible::CutMethod>::names_type names;
 };
 
 }

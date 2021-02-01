@@ -223,7 +223,7 @@ class Hero: public Entity {
     void notify_collision_with_separator(Separator& separator, CollisionMode collision_mode) override;
     void notify_collision_with_explosion(Explosion& explosion, Sprite& sprite_overlapping) override;
     void avoid_collision(Entity& entity, int direction);
-    bool is_striking_with_sword(Entity& entity) const;
+    bool is_cutting_with_sword(Destructible& destructible) const;
 
     /**
      * \name Enemies.

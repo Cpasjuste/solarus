@@ -19,6 +19,12 @@
 * Fix a possible crash when starting a timer on a removed entity (#1469).
 * Fix pickables not falling on negative layers.
 
+### Lua API changes
+
+This release adds new features but does not introduce any incompatibility.
+
+* Add methods `destructible:get/set_cut_method()` (#1526).
+
 ### Solarus launcher GUI changes
 
 * Add option to control suspension on Window Focus events.

@@ -164,6 +164,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1476_crash_command_binding"
   "bugs/1508_carried_object_height"
   "bugs/1524_push_delay"
+  "bugs/1526_destructible_cut_method"
 )
 
 # Test that should not fail when there are errors
