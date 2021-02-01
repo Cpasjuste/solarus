@@ -38,6 +38,13 @@
 
 namespace Solarus {
 
+const std::string EnumInfoTraits<Destructible::CutMethod>::pretty_name = "cut method";
+
+const EnumInfo<Destructible::CutMethod>::names_type EnumInfoTraits<Destructible::CutMethod>::names = {
+  { Destructible::CutMethod::ALIGNED, "aligned" },
+  { Destructible::CutMethod::PIXEL, "pixel" },
+};
+
 /**
  * \brief Creates a new destructible item with the specified subtype.
  * \param name Name identifying the entity on the map or an empty string.
@@ -61,6 +68,7 @@ Destructible::Destructible(
   animation_set_id(animation_set_id),
   destruction_sound_id(),
   can_be_cut(false),
+  cut_method(CutMethod::ALIGNED),
   can_explode(false),
   can_regenerate(false),
   damage_on_enemies(1),
@@ -153,6 +161,22 @@ void Destructible::set_can_be_cut(bool can_be_cut) {
 
   this->can_be_cut = can_be_cut;
   update_collision_modes();
+}
+
+/**
+ * \brief Returns how this object can be cut by the hero's sword.
+ * \return The cut method.
+ */
+Destructible::CutMethod Destructible::get_cut_method() const {
+  return cut_method;
+}
+
+/**
+ * \brief Sets how this object can be cut by the hero's sword.
+ * \param cut_method The cut method.
+ */
+void Destructible::set_cut_method(CutMethod cut_method) {
+  this->cut_method = cut_method;
 }
 
 /**
@@ -324,7 +348,7 @@ void Destructible::notify_collision(
 
     Hero& hero = static_cast<Hero&>(other_entity);
     if (other_sprite.get_animation_set_id() == hero.get_hero_sprites().get_sword_sprite_id() &&
-        hero.is_striking_with_sword(*this)) {
+        hero.is_cutting_with_sword(*this)) {
 
       play_destroy_animation();
       hero.check_position();  // To update the ground under the hero.

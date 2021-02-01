@@ -1152,6 +1152,8 @@ class LuaContext {
       destructible_api_set_destruction_sound,
       destructible_api_get_can_be_cut,
       destructible_api_set_can_be_cut,
+      destructible_api_get_cut_method,
+      destructible_api_set_cut_method,
       destructible_api_get_can_explode,
       destructible_api_set_can_explode,
       destructible_api_get_can_regenerate,

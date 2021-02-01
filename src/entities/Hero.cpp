@@ -2127,11 +2127,11 @@ void Hero::notify_grabbed_entity_collision() {
  * hero wants to cut a bush or some grass.
  * Returns false by default.
  *
- * \param entity The entity to check.
+ * \param destructible The entity to check.
  * \return \c true if the sword is cutting this entity.
  */
-bool Hero::is_striking_with_sword(Entity& entity) const {
-  return get_state()->is_cutting_with_sword(entity);
+bool Hero::is_cutting_with_sword(Destructible& destructible) const {
+  return get_state()->is_cutting_with_sword(destructible);
 }
 
 /**
