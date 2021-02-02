@@ -1,40 +1,39 @@
-![Solarus logo](/images/solarus_logo.png)
+<div align="center">
+<img alt="Solarus logo" src="images/solarus_logo.svg" width="300"/>
+</div>
+
+# Solarus
 
 [![Build status](https://gitlab.com/solarus-games/solarus/badges/dev/pipeline.svg)](https://gitlab.com/solarus-games/solarus/commits/dev)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/copyleft/gpl.html)
 
----
+**Solarus** is a free and open-source 2D game engine written in C++, that can run games scripted in Lua. It has been designed with 16-bit classic Action-RPGs in mind, and is available on a wide range of platforms.
 
-### About Solarus
+You'll find more information about Solarus on <https://www.solarus-games.org>, such as downloads, games, news, tutorials and more.
 
-Solarus is an open-source adventure 2D game engine written in C++.
-It can run games scripted in Lua.
-This engine is used by our Zelda fangames.
-Solarus is licensed under GPL v3.
+![Sample quest screenshot](images/solarus_screenshot.png)
 
+Solarus has a CLI, `solarus-run` and a GUI launcher, [Solarus Launcher](https://gitlab.com/solarus-games/solarus/gui).
 
-### Games made with Solarus
+Solarus also features a graphical game creation editor called [Solarus Quest Editor](https://gitlab.com/solarus-games/solarus-quest-editor), that allows you to create maps, sprites and scripts with ease.
 
-You might be interested in our fangames created with Solarus:
-
-* [Zelda Mystery of Solarus DX](https://gitlab.com/solarus-games/zsdx), our first and main creation, release in 2011.
-
-* [Zelda Return of the Hylian SE](https://gitlab.com/solarus-games/zelda_roth_se), a remake of Vincent Jouillat's game, released in 2015.
-
-* [Zelda Mystery of Solarus XD](https://gitlab.com/solarus-games/zsxd), a parodic game released on April 1st, 2011.
-
-* [Zelda XD2: Mercuris Chess](https://gitlab.com/solarus-games/zelda-xd2-mercuris-chess), a sequel to the first XD, released on April 1st, 2017.
-
-
-### Create your own games
-
-If you want to create your own games with the Solarus engine, see
-[Solarus Quest Editor](https://gitlab.com/solarus-games/solarus-quest-editor), our Solarus game creation software.
-
-See our [website](https://www.solarus-games.org) to get more
-information and documentation about using the Solarus engine.
-
-
-### Compile Solarus
+## Compilation
 
 To compile Solarus, instructions can be found in the [compilation.md](compilation.md) file.
+
+## Create your own game
+
+See [tutorials](https://www.solarus-games.org/en/development/tutorials) (video and text), and [documentation](https://www.solarus-games.org/doc/latest/) on Solarus website.
+
+## License
+
+The source code of Solarus is licensed under the terms of the [GNU GPL v3](https://www.gnu.org/copyleft/gpl.html).
+
+Resources made for Solarus are licensed under the terms of the [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/).
+
+## Donate
+
+Solarus is backed by [Solarus Labs](https://www.solarus-games.org/en/about/nonprofit-organization), a nonprofit organization under French law. All your donations will be totally reinvested into the project.
+
+[![](https://img.shields.io/liberapay/receives/solarus-labs.svg?logo=liberapay)](https://liberapay.com/solarus-labs/donate
+)

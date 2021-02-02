@@ -1,21 +1,15 @@
-# Default installation directories.
-if(CMAKE_LIBRARY_ARCHITECTURE)
-  # Handle standard multi-architecture library directory names like x86_64-linux-gnu
-  set(SOLARUS_LIBRARY_DIRECTORY_NAME "lib/${CMAKE_LIBRARY_ARCHITECTURE}")
-else()
-  set(SOLARUS_LIBRARY_DIRECTORY_NAME "lib${LIB_SUFFIX}")
-endif()
+include(GNUInstallDirs)
 
-set(SOLARUS_LIBRARY_INSTALL_DESTINATION "${SOLARUS_LIBRARY_DIRECTORY_NAME}" CACHE PATH "Library install destination")
+set(SOLARUS_LIBRARY_INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}" CACHE PATH "Library install destination")
 # Install location for Debian-based systems
-if(EXISTS '/usr/bin/apt')
+if(EXISTS '/etc/debian_version')
   set(SOLARUS_EXECUTABLE_INSTALL_DESTINATION "games" CACHE PATH "Binary install destination")
 else()
-  set(SOLARUS_EXECUTABLE_INSTALL_DESTINATION "bin" CACHE PATH "Binary install destination")
+  set(SOLARUS_EXECUTABLE_INSTALL_DESTINATION "${CMAKE_INSTALL_BINDIR}" CACHE PATH "Binary install destination")
 endif()
-set(SOLARUS_SHARE_INSTALL_DESTINATION "share" CACHE PATH "Shared files install destination")
-set(SOLARUS_MANUAL_INSTALL_DESTINATION "${SOLARUS_SHARE_INSTALL_DESTINATION}/man" CACHE PATH "Manual install destination")
-set(SOLARUS_HEADERS_INSTALL_DESTINATION "include" CACHE PATH "Headers install destination")
+set(SOLARUS_SHARE_INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}" CACHE PATH "Shared files install destination")
+set(SOLARUS_MANUAL_INSTALL_DESTINATION "${CMAKE_INSTALL_MANDIR}" CACHE PATH "Manual install destination")
+set(SOLARUS_HEADERS_INSTALL_DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" CACHE PATH "Headers install destination")
 
 # Files to install with make install.
 # Install the shared library and the solarus-run executable.
