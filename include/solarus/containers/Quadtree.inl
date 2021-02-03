@@ -40,9 +40,8 @@ Quadtree<T, Comparator>::Quadtree() :
  */
 template<typename T, typename Comparator>
 Quadtree<T, Comparator>::Quadtree(const Rectangle& space) :
-    elements(),
-    root(*this) {
-
+  space(space)
+{
     initialize(space);
 }
 
@@ -51,10 +50,11 @@ Quadtree<T, Comparator>::Quadtree(const Rectangle& space) :
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::clear() {
+  elements_storage.clear();
+  elements_nodes_storage.clear();
+  nodes.clear();
 
-  elements.clear();
-  elements_outside.clear();
-  root.clear();
+  free_node = -1;
 }
 
 /**
@@ -77,7 +77,10 @@ void Quadtree<T, Comparator>::initialize(const Rectangle& space) {
     square.set_width(square.get_height());
   }
 
-  root.initialize(square);
+  this->space = square;
+
+  //Allocate root node
+  nodes.resize(1);
 }
 
 /**
@@ -86,7 +89,7 @@ void Quadtree<T, Comparator>::initialize(const Rectangle& space) {
  */
 template<typename T, typename Comparator>
 Rectangle Quadtree<T, Comparator>::get_space() const {
-    return root.get_cell();
+    return space;
 }
 
 /**
@@ -102,22 +105,19 @@ Rectangle Quadtree<T, Comparator>::get_space() const {
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::add(const T& element, const Rectangle& bounding_box) {
   SOL_PBLOCK("Solarus::Quadtree::add");
-  if (contains(element)) {
+  /**if (contains(element)) {
     // Element already in the quadtree.
     return false;
-  }
+  }*/ //TODO take care of this later
 
   if (!bounding_box.overlaps(get_space())) {
     // Out of the space of the quadtree.
-    elements_outside.insert(element);
+    return false;
   }
-  else if (!root.add(element, bounding_box)) {
+  else if (!root().add(*this, get_space(), element, bounding_box)) {
     // Add failed.
     return false;
   }
-
-  ElementInfo info = { bounding_box };
-  elements.emplace(element, info);
 
   return true;
 }
@@ -128,23 +128,11 @@ bool Quadtree<T, Comparator>::add(const T& element, const Rectangle& bounding_bo
  * \return \c true in case of success.
  */
 template<typename T, typename Comparator>
-bool Quadtree<T, Comparator>::remove(const T& element) {
+bool Quadtree<T, Comparator>::remove(const T& element, const Rectangle& previous_box) {
   SOL_PBLOCK("Solarus::Quadtree::remove");
-  const auto& it = elements.find(element);
-  if (it == elements.end()) {
-    // Unknown element.
-    return false;
-  }
-
-  Rectangle box = it->second.bounding_box;
-  elements.erase(element);
-  if (elements_outside.erase(element) > 0) {
-    // It was outside the quadtree space.
-    return true;
-  }
 
   // Normal case.
-  return root.remove(element, box);
+  return root().remove(*this, get_space(), element, previous_box);
 }
 
 /**
@@ -162,23 +150,12 @@ bool Quadtree<T, Comparator>::remove(const T& element) {
  * \return \c true in case of success.
  */
 template<typename T, typename Comparator>
-bool Quadtree<T, Comparator>::move(const T& element, const Rectangle& bounding_box) {
+bool Quadtree<T, Comparator>::move(const T& element, const Rectangle& previous_box, const Rectangle& bounding_box) {
   SOL_PBLOCK("Solarus::Quadtree::move");
-  const auto& it = elements.find(element);
-  if (it == elements.end()) {
-    // Not in the quadtree: error.
-    return false;
-  }
-  else {
-    if (it->second.bounding_box == bounding_box) {
-      // Already in the quadtree and no change.
-      return true;
-    }
 
-    if (!remove(element)) {
-      // Failed to remove.
-      return false;
-    }
+  if (!remove(element, previous_box)) {
+    // Failed to remove.
+    return false;
   }
 
   if (!add(element, bounding_box)) {
@@ -193,10 +170,10 @@ bool Quadtree<T, Comparator>::move(const T& element, const Rectangle& bounding_b
  * \return The number of elements, including elements outside the quadtree
  * space.
  */
-template<typename T, typename Comparator>
+/*template<typename T, typename Comparator>
 int Quadtree<T, Comparator>::get_num_elements() const {
   return root.get_num_elements() + elements_outside.size();
-}
+}*/
 
 /**
  * \brief Gets the elements intersecting the given rectangle.
@@ -211,9 +188,18 @@ std::vector<T> Quadtree<T, Comparator>::get_elements(
     const Rectangle& region
 ) const {
   Set element_set;
-  root.get_elements(region, element_set);
+  root().get_elements(*this, get_space(), region, element_set);
   return std::vector<T>(element_set.begin(), element_set.end());
 }
+
+/*template<typename T, typename Comparator>
+template<typename C>
+void Quadtree<T, Comparator>::raw_get_elements(
+    const Rectangle& where,
+    C& elements
+    ) const {
+  root.raw_get_elements(where, elements);
+}*/
 
 /**
  * \brief Returns whether an element is in the quadtree.
@@ -221,12 +207,12 @@ std::vector<T> Quadtree<T, Comparator>::get_elements(
  * \return \c true if it is in the quadtree, even if it is
  * outside the quadtree space.
  */
-template<typename T, typename Comparator>
+/*template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::contains(const T& element) const {
 
   const auto& it = elements.find(element);
   return it != elements.end();
-}
+}*/
 
 /**
  * \brief Draws the quadtree on a surface for debugging purposes.
@@ -235,8 +221,7 @@ bool Quadtree<T, Comparator>::contains(const T& element) const {
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::draw(const SurfacePtr& dst_surface, const Point& dst_position) {
-
-  root.draw(dst_surface, dst_position);
+  root().draw(*this, get_space(), dst_surface, dst_position);
 }
 
 /**
@@ -258,20 +243,8 @@ Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree) :
  * \param cell Cell coordinates of the node.
  */
 template<typename T, typename Comparator>
-Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree, const Rectangle& cell) :
-    quadtree(quadtree),
-    elements(),
-    children(),
-    num_elements(0),
-    cell(cell),
-    center(cell.get_center()),
-    color() {
+Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree) {
 
-  initialize(cell);
-
-  if (debug_quadtrees) {
-    color = Color(Random::get_number(256), Random::get_number(256), Random::get_number(256));
-  }
 }
 
 /**
@@ -382,7 +355,6 @@ bool Quadtree<T, Comparator>::Node::remove(
     const T& element,
     const Rectangle& bounding_box
 ) {
-  SOL_PBLOCK("Solarus::Quadtree::Node::remove");
   if (!get_cell().overlaps(bounding_box)) {
     // Nothing to do.
     return false;
@@ -390,7 +362,6 @@ bool Quadtree<T, Comparator>::Node::remove(
 
   if (!is_split()) {
     // Remove from this cell.
-    SOL_PBLOCK("Solarus::Quadtree::Node::Erase", profiler::colors::Purple);
     const auto& it = std::find(elements.begin(), elements.end(), std::make_pair(element, bounding_box));
     if (it == elements.end()) {
       // The element was not here.
@@ -440,7 +411,6 @@ bool Quadtree<T, Comparator>::Node::is_split() const {
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::Node::split() {
-  SOL_PBLOCK("Solarus::Quadtree::Node::split", profiler::colors::Purple);
   Debug::check_assertion(!is_split(), "Quadtree node already split");
 
   // Create 4 children cells.
@@ -477,7 +447,6 @@ void Quadtree<T, Comparator>::Node::split() {
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::Node::merge() {
-  SOL_PBLOCK("Solarus::Quadtree::Node::merge", profiler::colors::Purple);
   Debug::check_assertion(is_split(), "Quadtree node already merged");
 
   // We want to avoid duplicates while preserving a deterministic order.
@@ -590,6 +559,37 @@ void Quadtree<T, Comparator>::Node::get_elements(
   }
 }
 
+/**
+ * \brief Gets the elements intersecting the given rectangle under this node.
+ * \param[in] region The rectangle to check.
+ * \param[in/out] result A set that will be filled with elements.
+ */
+template<typename T, typename Comparator>
+template<typename C>
+void Quadtree<T, Comparator>::Node::raw_get_elements(
+    const Rectangle& region,
+    C& result
+) const {
+
+  if (!get_cell().overlaps(region)) {
+    // Nothing here.
+    return;
+  }
+
+  if (!is_split()) {
+    for (const std::pair<T, Rectangle>& pair : elements) {
+      if (pair.second.overlaps(region)) {
+        result.emplace_back(pair.first);
+      }
+    }
+  }
+  else {
+    // Get from from children cells.
+    for (const std::unique_ptr<Node>& child : children) {
+      child->raw_get_elements(region, result);
+    }
+  }
+}
 /**
  * \brief Draws the node on a surface for debugging purposes.
  * \param dst_surface The destination surface.

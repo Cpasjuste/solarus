@@ -398,6 +398,7 @@ void MainLoop::run() {
   // Each call to update() makes the simulated time advance one fixed step.
 
   while (!is_exiting()) {
+    SOL_PBLOCK("Solarus::MainLoop::Frame");
     // Measure the time of the last iteration.
     uint32_t now = System::get_real_time() - time_dropped;
     uint32_t last_frame_duration = now - last_frame_date;

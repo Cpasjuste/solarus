@@ -58,7 +58,6 @@ class DrawingOrderComparator {
      * \return \c true if the first entity should be drawn before the secone one.
      */
     bool operator()(const EntityPtr& first, const EntityPtr& second) const {
-
       if (first->get_layer() < second->get_layer()) {
         return true;
       }
@@ -77,6 +76,7 @@ class DrawingOrderComparator {
         return false;
       }
 
+
       if (first->is_drawn_in_y_order()) {
         // Both entities are displayed in Y order.
         return first->get_y() < second->get_y();
@@ -85,7 +85,6 @@ class DrawingOrderComparator {
       // Both entities are displayed in Z order.
       return first->get_z() < second->get_z();
     }
-
 };
 
 }  // Anonymous namespace.
@@ -399,11 +398,20 @@ void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, ConstEntityVector& result
 ) const {
   SOL_PFUN();
-  EntityVector non_const_result = quadtree->get_elements(rectangle);
+  /*EntityVector non_const_result = quadtree->get_elements(rectangle);
 
-  result.reserve(non_const_result.size());
-  for (const ConstEntityPtr& entity : non_const_result) {
+  {
+    SOL_PBLOCK("Copy to result");
+    result.reserve(non_const_result.size());
+    for (const ConstEntityPtr& entity : non_const_result) {
       result.push_back(entity);
+    }
+  }*/
+  quadtree->raw_get_elements(rectangle, result);
+  {
+    SOL_PBLOCK("Sorting");
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
   }
 }
 
@@ -414,7 +422,26 @@ void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, EntityVector& result
 ) {
   SOL_PFUN();
-  result = quadtree->get_elements(rectangle);
+  //result = quadtree->get_elements(rectangle);
+  quadtree->raw_get_elements(rectangle, result);
+  {
+    SOL_PBLOCK("Sorting");
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+  }
+}
+
+/**
+ * @brief Gets the entities whose bouding box overlap the queried rectangle
+ *
+ * This raw version returns directly the quadtree query result, with duplicates and unsorted
+ *
+ * @param rectangle the area to query
+ * @param result
+ */
+void Entities::get_entities_in_rectangle_raw(const Rectangle& rectangle, EntityVector& result) {
+  SOL_PFUN();
+  quadtree->raw_get_elements(rectangle, result);
 }
 
 /**
@@ -1182,29 +1209,45 @@ void Entities::draw() {
         ),
         camera->get_size() * 3
     );
-    get_entities_in_rectangle_z_sorted(around_camera, entities_in_camera);
+    //get_entities_in_rectangle_z_sorted(around_camera, entities_in_camera);
+    get_entities_in_rectangle_raw(around_camera, entities_in_camera);
 
-    for (const EntityPtr& entity : entities_in_camera) {
-      int layer = entity->get_layer();
-      Debug::check_assertion(map.is_valid_layer(layer), "Invalid layer");
-      entities_to_draw[layer].push_back(entity);
+    {
+      SOL_PBLOCK("Pushing entities.", profiler::colors::Green);
+      for (const EntityPtr& entity : entities_in_camera) {
+        int layer = entity->get_layer();
+        Debug::check_assertion(map.is_valid_layer(layer), "Invalid layer");
+        entities_to_draw[layer].push_back(entity);
+      }
     }
 
     // Add entities displayed even when out of the camera.
-    for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
-      for (const EntityPtr& entity : entities_drawn_not_at_their_position[layer]) {
-        entities_to_draw[layer].push_back(entity);
-      }
+    {
+      SOL_PBLOCK("Merging position independent and sorting", profiler::colors::Green);
+      for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
+        {
+          SOL_PBLOCK("Adding position independent");
+          for (const EntityPtr& entity : entities_drawn_not_at_their_position[layer]) {
+            entities_to_draw[layer].push_back(entity);
+          }
+        }
 
-      // Sort them and remove duplicates.
-      // Duplicate drawings are a problem for entities with semi-transparency.
-      // Using an std::set would be slower because duplicates are rare:
-      // there are not often a lot of dynamic entities displayed out of the camera.
-      std::sort(entities_to_draw[layer].begin(), entities_to_draw[layer].end(), DrawingOrderComparator());
-      entities_to_draw[layer].erase(
-            std::unique(entities_to_draw[layer].begin(), entities_to_draw[layer].end()),
-            entities_to_draw[layer].end()
-      );
+        {
+          SOL_PBLOCK("Sorting");
+          // Sort them and remove duplicates.
+          // Duplicate drawings are a problem for entities with semi-transparency.
+          // Using an std::set would be slower because duplicates are rare:
+          // there are not often a lot of dynamic entities displayed out of the camera.
+          std::sort(entities_to_draw[layer].begin(), entities_to_draw[layer].end(), DrawingOrderComparator());
+        }
+        {
+          SOL_PBLOCK("Dedup");
+          entities_to_draw[layer].erase(
+                std::unique(entities_to_draw[layer].begin(), entities_to_draw[layer].end()),
+                entities_to_draw[layer].end()
+          );
+        }
+      }
     }
 
   }
@@ -1246,6 +1289,7 @@ void Entities::draw() {
   }
 
   if (EntityTree::debug_quadtrees) {
+    SOL_PBLOCK("Quadtree debug draw", profiler::colors::DarkGreen);
     // Draw the quadtree structure for debugging.
     quadtree->draw(camera_surface, -camera->get_top_left_xy());
   }

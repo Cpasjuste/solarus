@@ -1377,6 +1377,21 @@ void Map::check_collision_with_detectors(Entity& entity) {
   Rectangle box = entity.get_extended_bounding_box(8);
   std::vector<EntityPtr> entities_nearby;
   entities->get_entities_in_rectangle_z_sorted(box, entities_nearby);
+  check_collision_with_detectors(entity, entities_nearby);
+}
+
+/**
+ * @brief Checks the collisions between an entity and the detectors of the map. With prior knowledge of nearby entities
+ *
+ * This function is called by an entity sensitive to the entity detectors
+ * when this entity has just moved on the map, or when a detector
+ * wants to check this entity.
+ * We check whether or not the entity overlaps an entity detector.
+ * If the map is suspended, this function does nothing.
+ * @param entity The entity that just moved
+ * @param entities_nearby Entities surrounding the entity that should be checked for collision
+ */
+void Map::check_collision_with_detectors(Entity& entity, EntityVector& entities_nearby) {
   for (const EntityPtr& entity_nearby: entities_nearby) {
 
     if (entity.is_being_removed()) {
@@ -1406,7 +1421,7 @@ void Map::check_collision_with_detectors(Entity& entity) {
  * \param detector A detector.
  */
 void Map::check_collision_from_detector(Entity& detector) {
-
+  SOL_PFUN();
   if (suspended) {
     return;
   }
@@ -1512,6 +1527,22 @@ void Map::check_collision_with_detectors(Entity& entity, Sprite& sprite) {
   Rectangle box = entity.get_max_bounding_box();
   std::vector<EntityPtr> entities_nearby;
   entities->get_entities_in_rectangle_z_sorted(box, entities_nearby);
+  check_collision_with_detectors(entity, sprite, entities_nearby);
+}
+
+/**
+ * @brief hecks the pixel-precise collisions between an entity and the
+ * detectors of the map.
+ *
+ * This function is called by an entity
+ * when the frame of one of its sprites has just changed.
+ * We check whether or not the sprite overlaps the detector.
+ * If the map is suspended, this function does nothing.
+ * @param entity A map entity
+ * @param sprite The sprite of this entity to check
+ * @param entities_nearby Entities that surround the checked entity
+ */
+void Map::check_collision_with_detectors(Entity& entity, Sprite& sprite, EntityVector& entities_nearby) {
   for (const EntityPtr& entity_nearby: entities_nearby) {
 
     if (entity.is_being_removed()) {

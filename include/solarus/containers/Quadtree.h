@@ -23,6 +23,7 @@
 #include "solarus/core/Profiler.h"
 #include "solarus/graphics/Color.h"
 #include "solarus/graphics/SurfacePtr.h"
+#include "FreeList.h"
 #include <array>
 #include <map>
 #include <memory>
@@ -57,14 +58,20 @@ class Quadtree {
     Rectangle get_space() const;
 
     bool add(const T& element, const Rectangle& bounding_box);
-    bool remove(const T& element);
-    bool move(const T& element, const Rectangle& bounding_box);
+    bool remove(const T& element, const Rectangle& previous_box);
+    bool move(const T& element, const Rectangle& previous_box, const Rectangle& bounding_box);
 
     std::vector<T> get_elements(
         const Rectangle& where
     ) const;
 
-    int get_num_elements() const;
+    /*template<typename C>
+    void raw_get_elements(
+        const Rectangle& where,
+        C& elements
+    ) const;*/
+
+    //int get_num_elements() const;
     bool contains(const T& element) const;
 
     void draw(const SurfacePtr& dst_surface, const Point& dst_position);
@@ -87,33 +94,46 @@ class Quadtree {
     class Node {
 
       public:
-
         explicit Node(const Quadtree& quadtree);
-        Node(const Quadtree& quadtree, const Rectangle& cell);
 
         void clear();
         void initialize(const Rectangle& cell);
 
-        Rectangle get_cell() const;
-        Size get_cell_size() const;
+        //Rectangle get_cell() const;
+        //Size get_cell_size() const;
 
         bool add(
+            Quadtree& quadtree,
+            const Rectangle& cell_rect,
             const T& element,
             const Rectangle& bounding_box
         );
         bool remove(
+            Quadtree& quadtree,
+            const Rectangle& cell_rect,
             const T& element,
             const Rectangle& bounding_box
         );
 
         void get_elements(
+            const Quadtree& quadtree,
+            const Rectangle& cell_rect,
             const Rectangle& region,
             Set& result
         ) const;
 
-        int get_num_elements() const;
+        /*template<typename C>
+        void raw_get_elements(
+            const QuadTree&
+            const Rectangle& region,
+            C& result
+        ) const;*/
+
+        //int get_num_elements() const;
 
         void draw(
+            const Quadtree& quadtree,
+            const Rectangle& cell_rect,
             const SurfacePtr& dst_surface, const Point& dst_position
         );
         void draw_rectangle(
@@ -130,27 +150,49 @@ class Quadtree {
         void merge();
         bool is_main_cell(const Rectangle& bounding_box) const;
 
-        const Quadtree& quadtree;
+        /**const Quadtree& quadtree;
         std::vector<std::pair<T, Rectangle>> elements;
         std::array<std::unique_ptr<Node>, 4> children;
         size_t num_elements;
         Rectangle cell;
         Point center;
-        Color color;
+        Color color;*/
+        int32_t first_child = -1; /**< first child of the node, or first element if it is a leaf */
+        int32_t count = 0; /**< count of elements in the leaf or -1 if a branch */
+    };
 
+    int allocate_node();
+    void add_element_to_list(int head);
+    Node& root();
+    const Node& root() const;
+
+    /**
+     * @brief
+     */
+    struct Element{
+        T data; /**< Data held by the quadtree */
+        Rectangle rect; /**< Extent of this element */
+    };
+
+    /**
+     * @brief The QuadElementNode struct
+     */
+    struct ElementNode {
+        int next;
+        int element;
     };
 
     struct ElementInfo {
         Rectangle bounding_box;
     };
 
-    std::map<T, ElementInfo> elements;      /**< Elements in the quadtree and
-                                             * intersecting its space. */
-    Set elements_outside;                   /**< Elements that were added to
-                                             * the quadtree but that are
-                                             * currently outside its space. */
-    Node root;                              /** The root node of the tree. */
+    FreeList<Element> elements_storage; /**< contiguous storage for elements */
+    FreeList<ElementNode> elements_nodes_storage; /**< contiguous storage for element nodes */
 
+    std::vector<Node> nodes;
+
+    int free_node = -1; /**< first free group of four node or -1 if no free nodes */
+    Rectangle space;
 };
 
 template<typename T>

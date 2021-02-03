@@ -143,6 +143,7 @@ class SOLARUS_API Entities {
     // By coordinates.
     void get_entities_in_rectangle_z_sorted(const Rectangle& rectangle, ConstEntityVector& result) const;
     void get_entities_in_rectangle_z_sorted(const Rectangle& rectangle, EntityVector& result);
+    void get_entities_in_rectangle_raw(const Rectangle& rectangle, EntityVector& result);
 
     // By separator region.
     void get_entities_in_region_z_sorted(const Point& xy, EntityVector& result);
