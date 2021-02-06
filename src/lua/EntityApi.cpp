@@ -164,6 +164,11 @@ void LuaContext::register_entity_module() {
         { "set_properties", entity_api_set_properties },
     });
   }
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
+      common_methods.insert(common_methods.end(), {
+        { "set_name", entity_api_set_name },
+    });
+  }
 
   // Metamethods of all entity types.
   std::vector<luaL_Reg> metamethods = {
@@ -933,6 +938,32 @@ int LuaContext::entity_api_get_name(lua_State* l) {
       push_string(l, name);
     }
     return 1;
+  });
+}
+
+/**
+ * \brief Implementation of entity:set_name().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::entity_api_set_name(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const EntityPtr& entity = check_entity(l, 1);
+    std::string name;
+    if (lua_gettop(l) == 1) {
+      LuaTools::type_error(l, 2, "string or nil");
+    }
+    name = LuaTools::opt_string(l, 2, "");
+
+    if (!entity->is_on_map()) {
+      entity->set_name(name);
+    } else {
+      // Let the map rename the entity to ensure uniqueness.
+      entity->get_map().get_entities().set_entity_name(entity, name);
+    }
+
+    return 0;
   });
 }
 

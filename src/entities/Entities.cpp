@@ -962,40 +962,7 @@ void Entities::add_entity(const EntityPtr& entity) {
   }
 
   // Rename the entity if there is already an entity with the same name.
-  std::string name = entity->get_name();
-  if (!name.empty()) {
-
-    if (named_entities.find(name) != named_entities.end()) {
-      // This name is already used by another entity. Add a suffix.
-      std::ostringstream oss;
-      std::istringstream iss;
-      int suffix_number = 1;
-      std::string prefix = name;
-      size_t index = name.rfind('_');
-      if (index != std::string::npos) {
-        // If there is already a numbered suffix, we will increment it.
-        const std::string& suffix = name.substr(index + 1);
-        iss.clear();
-        iss.str(suffix);
-        if (iss >> suffix_number) {
-          prefix = name.substr(0, index);
-        }
-      }
-
-      // Now we have the final prefix. Find the first available suffix.
-      do {
-        ++suffix_number;
-        oss.str("");
-        oss.clear();
-        oss << prefix << '_' << suffix_number;
-        name = oss.str();
-      }
-      while (named_entities.find(name) != named_entities.end());
-
-      entity->set_name(name);
-    }
-    named_entities[name] = entity;
-  }
+  set_entity_name(entity, entity->get_name());
 
   // Notify the entity.
   if (type != EntityType::HERO) {
@@ -1325,6 +1292,61 @@ bool Entities::overlaps_raised_blocks(int layer, const Rectangle& rectangle) {
   }
 
   return false;
+}
+
+/**
+ * \brief Computes a unique name for an entity on this map.
+ * \param candidate_name Candidate name.
+ * \return The same name, possibly with a numbered suffix.
+ */
+std::string Entities::ensure_unique_name(const std::string &candidate_name) {
+
+  std::string name = candidate_name;
+  if (named_entities.find(name) != named_entities.end()) {
+    // This name is already used by another entity. Add a suffix.
+    std::ostringstream oss;
+    std::istringstream iss;
+    int suffix_number = 1;
+    std::string prefix = name;
+    size_t index = name.rfind('_');
+    if (index != std::string::npos) {
+      // If there is already a numbered suffix, we will increment it.
+      const std::string& suffix = name.substr(index + 1);
+      iss.clear();
+      iss.str(suffix);
+      if (iss >> suffix_number) {
+        prefix = name.substr(0, index);
+      }
+    }
+
+    // Now we have the final prefix. Find the first available suffix.
+    do {
+      ++suffix_number;
+      oss.str("");
+      oss.clear();
+      oss << prefix << '_' << suffix_number;
+      name = oss.str();
+    }
+    while (named_entities.find(name) != named_entities.end());
+  }
+  return name;
+}
+
+/**
+ * \brief Changes the name of an entity on this map.
+ * \param entity The entity.
+ * \param name The new name, or an empty string to set no name.
+ */
+void Entities::set_entity_name(const EntityPtr& entity, const std::string &name) {
+
+  const std::string &old_name = entity->get_name();
+  named_entities.erase(old_name);
+  std::string new_name = name;
+  if (!new_name.empty()) {
+    new_name = ensure_unique_name(new_name);
+    named_entities[new_name] = entity;
+  }
+  entity->set_name(new_name);
 }
 
 /**

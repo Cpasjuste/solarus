@@ -1002,6 +1002,7 @@ class LuaContext {
       entity_api_get_map,
       entity_api_get_game,
       entity_api_get_name,
+      entity_api_set_name,
       entity_api_exists,
       entity_api_remove,
       entity_api_is_enabled,

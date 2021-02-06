@@ -160,6 +160,8 @@ class SOLARUS_API Entities {
     void bring_to_back(Entity& entity);
     void set_entity_layer(Entity& entity, int layer);
     void notify_entity_bounding_box_changed(Entity& entity);
+    std::string ensure_unique_name(const std::string& candidate_name);
+    void set_entity_name(const EntityPtr& entity, const std::string& name);
 
     // Specific to some entity types.
     bool overlaps_raised_blocks(int layer, const Rectangle& rectangle) ;
