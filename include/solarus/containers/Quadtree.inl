@@ -232,19 +232,36 @@ void Quadtree<T, Comparator>::draw(const SurfacePtr& dst_surface, const Point& d
  * \param quadtree The quadtree this node belongs to.
  */
 template<typename T, typename Comparator>
-Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree) :
-    Node(quadtree, Rectangle(0, 0, 256, 256)) {
+Quadtree<T, Comparator>::Node::Node() :
+    first_child(-1), count(-1) {
 
 }
 
-/**
- * \brief Creates a node with the given coordinates.
- * \param quadtree The quadtree this node belongs to.
- * \param cell Cell coordinates of the node.
- */
 template<typename T, typename Comparator>
-Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree) {
+template <typename F>
+void Quadtree<T, Comparator>::Node::foreach_child(const Quadtree& tree, const Rectangle& cell, F fun) {
+  assert(count < 0);
+  int hw = cell.get_width() >> 1;
+  int hh = cell.get_height() >> 1;
+  int x = cell.get_left();
+  int y = cell.get_top();
+  fun(tree.nodes[first_child], {x,y,hw,hh});
+  fun(tree.nodes[first_child+1], {x+hw, y, hw, hh});
+  fun(tree.nodes[first_child+2], {x, y+hh, hw, hh});
+  fun(tree.nodes[first_child+3], {x+hw, y+hh, hw, hh});
+}
 
+template<typename T, typename Comparator>
+template <typename F>
+void Quadtree<T, Comparator>::Node::foreach_element(const Quadtree& tree, F fun) {
+  assert(is_leaf);
+  int curr = first_child;
+  while(curr != -1) {
+    ElementNode& node = tree.elements_nodes_storage[curr];
+    Element& el = tree.elements_storage[node.element];
+    fun(curr, node, el);
+    curr = node.next;
+  }
 }
 
 /**
@@ -253,40 +270,10 @@ Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree) {
  * Children nodes and their content are destroyed.
  */
 template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::clear() {
-  elements.clear();
-  std::fill(std::begin(children), std::end(children), nullptr);
-  num_elements = 0;
-}
-
-/**
- * \brief Clears this node and initializes it with a new cell rectangle.
- * \param cell The new cell.
- */
-template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::initialize(const Rectangle& cell) {
-
-  clear();
-  this->cell = cell;
-  elements.reserve(max_in_cell);
-}
-
-/**
- * \brief Returns the cell represented by this node.
- * \return The cell's rectangle.
- */
-template<typename T, typename Comparator>
-Rectangle Quadtree<T, Comparator>::Node::get_cell() const {
-  return cell;
-}
-
-/**
- * \brief Returns the size of the cell represented by this node.
- * \return The cell size.
- */
-template<typename T, typename Comparator>
-Size Quadtree<T, Comparator>::Node::get_cell_size() const {
-    return get_cell().get_size();
+void Quadtree<T, Comparator>::Node::clear(Quadtree& tree) {
+  foreach_element(tree, [&](int nodeid, ElementNode& node, Element& el) {
+    elements_nodes_storage.erase(nodeid);
+  });
 }
 
 /**

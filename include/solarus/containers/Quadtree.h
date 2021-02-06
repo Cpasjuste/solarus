@@ -71,7 +71,7 @@ class Quadtree {
         C& elements
     ) const;*/
 
-    //int get_num_elements() const;
+    int get_num_elements() const;
     bool contains(const T& element) const;
 
     void draw(const SurfacePtr& dst_surface, const Point& dst_position);
@@ -94,13 +94,9 @@ class Quadtree {
     class Node {
 
       public:
-        explicit Node(const Quadtree& quadtree);
+        explicit Node();
 
-        void clear();
-        void initialize(const Rectangle& cell);
-
-        //Rectangle get_cell() const;
-        //Size get_cell_size() const;
+        void clear(Quadtree& tree);
 
         bool add(
             Quadtree& quadtree,
@@ -122,14 +118,11 @@ class Quadtree {
             Set& result
         ) const;
 
-        /*template<typename C>
-        void raw_get_elements(
-            const QuadTree&
-            const Rectangle& region,
-            C& result
-        ) const;*/
+        template <typename F>
+        void foreach_child(const Quadtree& tree, const Rectangle& cell, F fun);
 
-        //int get_num_elements() const;
+        template <typename F>
+        void foreach_element(const Quadtree& tree, F fun);
 
         void draw(
             const Quadtree& quadtree,
@@ -158,8 +151,11 @@ class Quadtree {
         Point center;
         Color color;*/
         int32_t first_child = -1; /**< first child of the node, or first element if it is a leaf */
-        int32_t count = 0; /**< count of elements in the leaf or -1 if a branch */
+        bool is_leaf : 1;
+        uint32_t count : 31; /**< count of elements in the leaf or -1 if a branch */
     };
+
+    static_assert (sizeof(Node) == 8, "Size of node should not be more than 8 bytes");
 
     int allocate_node();
     void add_element_to_list(int head);

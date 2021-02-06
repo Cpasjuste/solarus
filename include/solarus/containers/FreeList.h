@@ -32,6 +32,8 @@ public:
     // Returns the nth element.
     const T& operator[](int n) const;
 
+    size_t size() const;
+
 private:
     union FreeElement
     {
@@ -40,6 +42,7 @@ private:
     };
     std::vector<FreeElement> data;
     int first_free;
+    size_t count;
 };
 
 template <class T>
@@ -50,6 +53,7 @@ FreeList<T>::FreeList(): first_free(-1)
 template <class T>
 int FreeList<T>::insert(const T& element)
 {
+    count++;
     if (first_free != -1)
     {
         const int index = first_free;
@@ -69,6 +73,7 @@ int FreeList<T>::insert(const T& element)
 template <class T>
 void FreeList<T>::erase(int n)
 {
+    count--;
     data[n].next = first_free;
     first_free = n;
 }
@@ -96,5 +101,10 @@ template <class T>
 const T& FreeList<T>::operator[](int n) const
 {
     return data[n].element;
+}
+
+template <class T>
+size_t FreeList<T>::size() const {
+  return count;
 }
 }
