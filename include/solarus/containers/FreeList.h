@@ -1,6 +1,8 @@
 #pragma once
 
+
 #include <vector>
+#include <variant>
 
 namespace Solarus {
 
@@ -35,18 +37,19 @@ public:
     size_t size() const;
 
 private:
-    union FreeElement
+    /*union FreeElement
     {
         T element;
         int next;
-    };
+    };*/
+    using FreeElement = std::variant<T, int>;
     std::vector<FreeElement> data;
     int first_free;
     size_t count;
 };
 
 template <class T>
-FreeList<T>::FreeList(): first_free(-1)
+FreeList<T>::FreeList(): first_free(-1), count(0)
 {
 }
 
@@ -57,15 +60,13 @@ int FreeList<T>::insert(const T& element)
     if (first_free != -1)
     {
         const int index = first_free;
-        first_free = data[first_free].next;
-        data[index].element = element;
+        first_free = std::get<1>(data[first_free]);
+        data[index] = element;
         return index;
     }
     else
     {
-        FreeElement fe;
-        fe.element = element;
-        data.push_back(fe);
+        data.push_back(element);
         return static_cast<int>(data.size() - 1);
     }
 }
@@ -74,7 +75,7 @@ template <class T>
 void FreeList<T>::erase(int n)
 {
     count--;
-    data[n].next = first_free;
+    data[n] = first_free;
     first_free = n;
 }
 
@@ -94,13 +95,14 @@ int FreeList<T>::range() const
 template <class T>
 T& FreeList<T>::operator[](int n)
 {
-    return data[n].element;
+    auto& val = data[n];
+    return std::get<0>(val);
 }
 
 template <class T>
 const T& FreeList<T>::operator[](int n) const
 {
-    return data[n].element;
+    return std::get<0>(data[n]);
 }
 
 template <class T>

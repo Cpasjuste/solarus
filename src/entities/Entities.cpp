@@ -407,7 +407,7 @@ void Entities::get_entities_in_rectangle_z_sorted(
       result.push_back(entity);
     }
   }*/
-  quadtree->raw_get_elements(rectangle, result);
+  quadtree->raw_get_elements(rectangle, std::back_inserter(result));
   {
     SOL_PBLOCK("Sorting");
     std::sort(result.begin(), result.end());
@@ -423,7 +423,7 @@ void Entities::get_entities_in_rectangle_z_sorted(
 ) {
   SOL_PFUN();
   //result = quadtree->get_elements(rectangle);
-  quadtree->raw_get_elements(rectangle, result);
+  quadtree->raw_get_elements(rectangle, std::back_inserter(result));
   {
     SOL_PBLOCK("Sorting");
     std::sort(result.begin(), result.end());
@@ -441,7 +441,7 @@ void Entities::get_entities_in_rectangle_z_sorted(
  */
 void Entities::get_entities_in_rectangle_raw(const Rectangle& rectangle, EntityVector& result) {
   SOL_PFUN();
-  quadtree->raw_get_elements(rectangle, result);
+  quadtree->raw_get_elements(rectangle, std::back_inserter(result));
 }
 
 /**
@@ -1178,6 +1178,9 @@ void Entities::update() {
 
   // Remove the entities that have to be removed now.
   remove_marked_entities();
+
+  //Shrink the quadtree
+  quadtree->shrink_to_fit();
 }
 
 /**

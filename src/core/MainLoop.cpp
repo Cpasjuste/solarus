@@ -566,7 +566,7 @@ void MainLoop::notify_input(const InputEvent& event) {
   else if (event.is_window_resizing()) {
     Video::on_window_resized(event.get_window_size());
   }
-  else if (suspend_unfocused && event.is_window_focus_lost()) {
+  /*else if (suspend_unfocused && event.is_window_focus_lost()) {
     if (!is_suspended()) {
       Logger::info("Simulation suspended");
       set_suspended(true);
@@ -581,7 +581,7 @@ void MainLoop::notify_input(const InputEvent& event) {
       Music::resume_playing();
       Sound::resume_all();
     }
-  }
+  }*/
   else if (event.is_keyboard_key_pressed()) {
     // A key was pressed.
 #if defined(PANDORA)
@@ -657,7 +657,7 @@ void MainLoop::load_quest_properties() {
 void MainLoop::initialize_lua_console() {
 
   // Watch stdin in a separate thread.
-  stdin_thread = std::thread([this]() {
+  /*stdin_thread = std::thread([this]() {
 
     std::string line;
     while (!is_exiting()) {
@@ -674,7 +674,7 @@ void MainLoop::initialize_lua_console() {
       }
     }
   });
-  stdin_thread.detach();
+  stdin_thread.detach();*/
 }
 
 /**

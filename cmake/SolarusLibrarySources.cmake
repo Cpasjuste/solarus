@@ -11,6 +11,7 @@ target_sources(solarus
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/containers/FreeList.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/containers/Grid.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/containers/Quadtree.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/containers/Quadtree.inl"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/Ability.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/AbilityInfo.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/solarus/core/AndroidConfig.h"
