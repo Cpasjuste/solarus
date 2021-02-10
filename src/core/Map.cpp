@@ -1438,6 +1438,20 @@ void Map::check_collision_from_detector(Entity& detector) {
   Rectangle box = detector.get_extended_bounding_box(8);
   std::vector<EntityPtr> entities_nearby;
   entities->get_entities_in_rectangle_z_sorted(box, entities_nearby);
+  check_collision_from_detector(detector, entities_nearby);
+}
+
+/**
+ * \brief Checks the collisions between all entities and a detector.
+ *
+ * This function is called when a detector wants to check entities,
+ * typically when the detector has just moved.
+ * If the map is suspended, this function does nothing.
+ *
+ * \param detector A detector.
+ * \param entities_nearby Entities surrounding this detector
+ */
+void Map::check_collision_from_detector(Entity& detector, EntityVector& entities_nearby) {
   for (const EntityPtr& entity_nearby: entities_nearby) {
 
     if (detector.is_being_removed()) {

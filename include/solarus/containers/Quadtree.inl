@@ -566,7 +566,7 @@ void Quadtree<T, Comparator>::node_merge(int nodeid) {
       node_merge(child);
     }
 
-    foreach_element(node.first_child, [&](int elnode, ElementNode& element){
+    foreach_element(node.first_child, [&](int elnode, ElementNode& /*element*/){
       element_list_add(first_element, elnode);
     });
   }

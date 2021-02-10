@@ -398,21 +398,8 @@ void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, ConstEntityVector& result
 ) const {
   SOL_PFUN();
-  /*EntityVector non_const_result = quadtree->get_elements(rectangle);
-
-  {
-    SOL_PBLOCK("Copy to result");
-    result.reserve(non_const_result.size());
-    for (const ConstEntityPtr& entity : non_const_result) {
-      result.push_back(entity);
-    }
-  }*/
   quadtree->raw_get_elements(rectangle, std::back_inserter(result));
-  {
-    SOL_PBLOCK("Sorting");
-    std::sort(result.begin(), result.end());
-    result.erase(std::unique(result.begin(), result.end()), result.end());
-  }
+  std::sort(result.begin(), result.end());
 }
 
 /**
@@ -422,13 +409,8 @@ void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, EntityVector& result
 ) {
   SOL_PFUN();
-  //result = quadtree->get_elements(rectangle);
   quadtree->raw_get_elements(rectangle, std::back_inserter(result));
-  {
-    SOL_PBLOCK("Sorting");
-    std::sort(result.begin(), result.end());
-    result.erase(std::unique(result.begin(), result.end()), result.end());
-  }
+  std::sort(result.begin(), result.end());
 }
 
 /**

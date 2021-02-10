@@ -1845,14 +1845,19 @@ void Entity::notify_position_changed() {
   // Notify the quadtree.
   notify_bounding_box_changed();
 
+  // Query the quadtree
+  Rectangle box = get_max_bounding_box().get_union(get_extended_bounding_box(8));
+  EntityVector entities_nearby;
+  get_map().get_entities().get_entities_in_rectangle_z_sorted(box, entities_nearby);
+
   if (is_detector()) {
     // Since this entity is a detector, all entities need to check
     // their collisions with it.
-    get_map().check_collision_from_detector(*this);
+    get_map().check_collision_from_detector(*this, entities_nearby);
   }
 
   // Check collisions between this entity and other detectors.
-  check_collision_with_detectors();
+  check_collision_with_detectors(entities_nearby);
 
   // Update the ground.
   if (is_ground_modifier()) {
@@ -2420,6 +2425,20 @@ void Entity::check_collision_with_detectors() {
   EntityVector entities_nearby;
   Rectangle box = get_max_bounding_box().get_union(get_extended_bounding_box(8));
   get_map().get_entities().get_entities_in_rectangle_z_sorted(box, entities_nearby);
+
+  check_collision_with_detectors(entities_nearby);
+}
+
+/**
+ * \brief Checks collisions between this entity and the detectors of the map.
+ *
+ * Simple collisions are checked, and then pixel-precise collisions if they are
+ * enabled for some sprites of this entity.
+ *
+ * \param entities_nearby entities_surrounding this entity
+ */
+void Entity::check_collision_with_detectors(EntityVector& entities_nearby) {
+  SOL_PFUN();
 
   // Detect simple collisions.
   get_map().check_collision_with_detectors(*this, entities_nearby);
