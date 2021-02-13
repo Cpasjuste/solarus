@@ -173,7 +173,7 @@ class Entity::State : public ExportableToLua {
     virtual bool is_grabbing_or_pulling() const;
     virtual bool is_moving_grabbed_entity() const;
     virtual void notify_grabbed_entity_collision();
-    virtual bool is_cutting_with_sword(Entity& entity);
+    virtual bool is_cutting_with_sword(Destructible& destructible);
     bool is_carrying_item() const;
     virtual std::shared_ptr<CarriedObject> get_carried_object() const;
     virtual CarriedObject::Behavior get_previous_carried_object_behavior() const;

@@ -862,15 +862,22 @@ void HeroSprites::notify_creating() {
   hero.set_default_sprite_name("tunic");
   shadow_sprite = hero.create_sprite("entities/shadow", "shadow");
   shadow_sprite->stop_animation();
-  set_tunic_sprite_id(get_default_tunic_sprite_id());
+  if (has_default_tunic_sprite) {
+    // Only set it if Lua has not customized it already.
+    set_tunic_sprite_id(get_default_tunic_sprite_id());
+  }
   trail_sprite = hero.create_sprite("hero/trail", "trail");
   trail_sprite->stop_animation();
   create_ground(Ground::SHALLOW_WATER);
   ground_sprite->stop_animation();
-  set_sword_sprite_id(get_default_sword_sprite_id());
+  if (has_default_sword_sprite) {
+    set_sword_sprite_id(get_default_sword_sprite_id());
+  }
   sword_stars_sprite = hero.create_sprite("hero/sword_stars1", "sword_stars");
   sword_stars_sprite->stop_animation();
-  set_shield_sprite_id(get_default_shield_sprite_id());
+  if (has_default_shield_sprite) {
+    set_shield_sprite_id(get_default_shield_sprite_id());
+  }
 
   rebuild_equipment();
 }

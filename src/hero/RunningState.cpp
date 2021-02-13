@@ -24,6 +24,7 @@
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
 #include "solarus/hero/RunningState.h"
+#include "solarus/entities/Destructible.h"
 #include "solarus/entities/Enemy.h"
 #include "solarus/entities/Jumper.h"
 #include "solarus/entities/Stream.h"
@@ -356,32 +357,41 @@ bool Hero::RunningState::is_sensor_obstacle(Sensor& /* sensor */) {
 /**
  * \copydoc Entity::State::is_cutting_with_sword
  */
-bool Hero::RunningState::is_cutting_with_sword(Entity& entity) {
+bool Hero::RunningState::is_cutting_with_sword(Destructible& destructible) {
 
-  // check the distance to the detector
-  const int distance = 8;
-  Point tested_point = get_entity().get_facing_point();
+  switch (destructible.get_cut_method()) {
+  case Destructible::CutMethod::PIXEL:
+    return true;
 
-  switch (get_sprites().get_animation_direction()) {
+  case Destructible::CutMethod::ALIGNED:
+    {
+      // check the distance to the detector
+      const int distance = 8;
+      Point tested_point = get_entity().get_facing_point();
 
-    case 0: // right
-      tested_point.x += distance;
-      break;
+      switch (get_sprites().get_animation_direction()) {
 
-    case 1: // up
-      tested_point.y -= distance;
-      break;
+        case 0: // right
+          tested_point.x += distance;
+          break;
 
-    case 2: // left
-      tested_point.x -= distance;
-      break;
+        case 1: // up
+          tested_point.y -= distance;
+          break;
 
-    case 3: // down
-      tested_point.y += distance;
-      break;
+        case 2: // left
+          tested_point.x -= distance;
+          break;
+
+        case 3: // down
+          tested_point.y += distance;
+          break;
+      }
+      return destructible.overlaps(tested_point);
+    }
   }
 
-  return entity.overlaps(tested_point);
+  return false;
 }
 
 /**

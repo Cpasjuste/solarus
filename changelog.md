@@ -2,20 +2,29 @@
 
 ## Solarus 1.7.0 (in progress)
 
+* Allow to stop or pause a sound effect (#1289).
 * Add functions sol.main.rawget/rawset() (#1424).
-* Allow to stop a sound effect (#1289).
+* Add a method `entity:set_name()` (#1527).
+* Add methods `hero:get/set_push_delay()` (#1524).
+* Add methods `hero:get/set_carry_height()`.
 
 ## Solarus 1.6.5 (in progress)
 
 ### Engine changes
 
-* Add support for suspending the simulation on Window Focus events (#1352).
+* Add support for suspending the simulation on Window Focus events (!1352).
 * Fix crash when calling command functions before the game is started (#1476).
 * Fix joystick hot-plug/unplug (#1501, #1387).
 * Fix TTF fonts using wrong color for antialiasing (#1390).
 * Fix TTF Fonts not rendering correctly (#1389).
 * Fix a possible crash when starting a timer on a removed entity (#1469).
 * Fix pickables not falling on negative layers.
+
+### Lua API changes
+
+This release adds new features but does not introduce any incompatibility.
+
+* Add methods `destructible:get/set_cut_method()` (#1526).
 
 ### Solarus launcher GUI changes
 

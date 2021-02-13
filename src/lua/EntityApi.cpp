@@ -164,6 +164,11 @@ void LuaContext::register_entity_module() {
         { "set_properties", entity_api_set_properties },
     });
   }
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
+      common_methods.insert(common_methods.end(), {
+        { "set_name", entity_api_set_name },
+    });
+  }
 
   // Metamethods of all entity types.
   std::vector<luaL_Reg> metamethods = {
@@ -218,6 +223,14 @@ void LuaContext::register_entity_module() {
     hero_methods.insert(hero_methods.end(), {
         { "get_carried_object", hero_api_get_carried_object },
         { "start_state", hero_api_start_state },
+    });
+  }
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
+    hero_methods.insert(hero_methods.end(), {
+      { "get_push_delay", hero_api_get_push_delay},
+      { "set_push_delay", hero_api_set_push_delay},
+      { "get_carry_height", hero_api_get_carry_height},
+      { "set_carry_height", hero_api_set_carry_height},
     });
   }
 
@@ -454,6 +467,8 @@ void LuaContext::register_entity_module() {
       { "set_destruction_sound", destructible_api_set_destruction_sound },
       { "get_can_be_cut", destructible_api_get_can_be_cut },
       { "set_can_be_cut", destructible_api_set_can_be_cut },
+      { "get_cut_method", destructible_api_get_cut_method },
+      { "set_cut_method", destructible_api_set_cut_method },
       { "get_can_explode", destructible_api_get_can_explode },
       { "set_can_explode", destructible_api_set_can_explode },
       { "get_can_regenerate", destructible_api_get_can_regenerate },
@@ -487,7 +502,13 @@ void LuaContext::register_entity_module() {
         { "get_destruction_sound", carried_object_api_get_destruction_sound },
         { "set_destruction_sound", carried_object_api_set_destruction_sound },
         { "get_damage_on_enemies", carried_object_api_get_damage_on_enemies },
-        { "set_damage_on_enemies", carried_object_api_set_damage_on_enemies },
+        { "set_damage_on_enemies", carried_object_api_set_damage_on_enemies }
+    });
+  }
+  if (CurrentQuest::is_format_at_least({ 1, 7 })) {
+    carried_object_methods.insert(carried_object_methods.end(), {
+        { "get_object_height", carried_object_api_get_object_height},
+        { "set_object_height", carried_object_api_set_object_height}
     });
   }
 
@@ -917,6 +938,32 @@ int LuaContext::entity_api_get_name(lua_State* l) {
       push_string(l, name);
     }
     return 1;
+  });
+}
+
+/**
+ * \brief Implementation of entity:set_name().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::entity_api_set_name(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const EntityPtr& entity = check_entity(l, 1);
+    std::string name;
+    if (lua_gettop(l) == 1) {
+      LuaTools::type_error(l, 2, "string or nil");
+    }
+    name = LuaTools::opt_string(l, 2, "");
+
+    if (!entity->is_on_map()) {
+      entity->set_name(name);
+    } else {
+      // Let the map rename the entity to ensure uniqueness.
+      entity->get_map().get_entities().set_entity_name(entity, name);
+    }
+
+    return 0;
   });
 }
 
@@ -2198,6 +2245,71 @@ int LuaContext::hero_api_set_walking_speed(lua_State* l) {
     int normal_walking_speed = LuaTools::check_int(l, 2);
 
     hero.set_normal_walking_speed(normal_walking_speed);
+
+    return 0;
+  });
+}
+
+
+/**
+ * \brief Implementation of hero:get_push_delay().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+
+int LuaContext::hero_api_get_push_delay(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const Hero& hero = *check_hero(l, 1);
+
+    lua_pushinteger(l, hero.get_push_delay());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_push_delay().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_set_push_delay(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.set_push_delay(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_carry_height()
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_get_carry_height(lua_State* l) {
+
+
+  return state_boundary_handle(l, [&] {
+    const Hero& hero = *check_hero(l, 1);
+
+    lua_pushinteger(l, hero.get_carry_height());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_carry_height().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_set_carry_height(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.set_carry_height(LuaTools::check_int(l, 2));
 
     return 0;
   });
@@ -4778,6 +4890,40 @@ int LuaContext::destructible_api_set_can_be_cut(lua_State* l) {
 }
 
 /**
+ * \brief Implementation of destructible:get_cut_method().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::destructible_api_get_cut_method(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const Destructible& destructible = *check_destructible(l, 1);
+
+    Destructible::CutMethod cut_method = destructible.get_cut_method();
+
+    push_string(l, enum_to_name(cut_method));
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of destructible:set_cut_method().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::destructible_api_set_cut_method(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Destructible& destructible = *check_destructible(l, 1);
+    Destructible::CutMethod cut_method = LuaTools::check_enum<Destructible::CutMethod>(l, 2);
+
+    destructible.set_cut_method(cut_method);
+
+    return 0;
+  });
+}
+
+/**
  * \brief Implementation of destructible:get_can_explode().
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
@@ -5019,6 +5165,39 @@ int LuaContext::carried_object_api_set_damage_on_enemies(lua_State* l) {
     int damage_on_enemies = LuaTools::check_int(l, 2);
 
     carried_object.set_damage_on_enemies(damage_on_enemies);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of carried_object:set_damage_on_enemies().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::carried_object_api_get_object_height(lua_State* l){
+  return state_boundary_handle(l, [&] {
+    CarriedObject& carried_object = *check_carried_object(l, 1);
+
+    int height = carried_object.get_object_height();
+
+    lua_pushinteger(l, height);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of carried_object:set_damage_on_enemies().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::carried_object_api_set_object_height(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    CarriedObject& carried_object = *check_carried_object(l, 1);
+    int height = LuaTools::check_int(l, 2);
+
+    carried_object.set_object_height(height);
 
     return 0;
   });

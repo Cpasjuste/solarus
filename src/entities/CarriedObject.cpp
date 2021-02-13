@@ -166,6 +166,27 @@ void CarriedObject::set_damage_on_enemies(int damage_on_enemies) {
 }
 
 /**
+ * \brief Returns the height this object will be displayed at, relative to the hero's carry height.
+ * \return The object height.
+ */
+
+int CarriedObject::get_object_height() const{
+  return item_height;
+}
+
+/**
+ * \brief Sets the height this object will be displayed at, relative to the hero's carry height.
+ * \param height The object height.
+ */
+void CarriedObject::set_object_height(int height) {
+
+  if (height != item_height){
+    this->item_height = height;
+    update_relative_movement();
+  }
+}
+
+/**
  * \brief Returns the id of the sound to play when this object is destroyed.
  * \return The destruction sound id or an empty string.
  */
@@ -243,7 +264,7 @@ void CarriedObject::throw_item(int direction) {
 
   this->y_increment = -2;
   this->next_down_date = System::now() + 40;
-  this->item_height = 18;
+  this->item_height = item_height + hero->get_carry_height();
 
   get_lua_context()->carried_object_on_thrown(*this);
 }
@@ -280,6 +301,7 @@ void CarriedObject::break_item() {
   if (is_throwing && throwing_direction != 3) {
     // destroy the item where it is actually drawn
     set_y(get_y() - item_height);
+    main_sprite->set_xy({0, 0});
   }
 
   if (get_movement() != nullptr) {
@@ -378,6 +400,23 @@ bool CarriedObject::can_explode() const {
   return explosion_date != 0;
 }
 
+/** 
+ * \brief Creates a new RelativeMovement with the current item_height (to be called when this value changes)
+ */
+
+void CarriedObject::update_relative_movement(){
+  if (!is_breaking && !is_throwing){
+    if (get_movement() != nullptr) clear_movement();
+
+    set_movement(std::make_shared<RelativeMovement>(
+      hero,
+      0,
+      -(item_height + hero->get_carry_height()),
+      true
+    ));
+  }
+}
+
 /**
  * \brief This function is called by the map when the game is suspended or resumed.
  * \param suspended true to suspend the entity, false to resume it
@@ -425,7 +464,7 @@ void CarriedObject::update() {
     set_movement(std::make_shared<RelativeMovement>(
         hero,
         0,
-        -18,
+        -(item_height + hero->get_carry_height()),
         true
     ));
     get_lua_context()->carried_object_on_lifted(*this);

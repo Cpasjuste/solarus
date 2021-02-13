@@ -35,6 +35,7 @@ bool Sound::initialized = false;
 float Sound::volume = 1.0;
 bool Sound::pc_play = false;
 std::list<SoundPtr> Sound::current_sounds;
+bool Sound::paused_by_system = false;
 
 /**
  * \brief Creates a new Ogg Vorbis sound.
@@ -42,7 +43,8 @@ std::list<SoundPtr> Sound::current_sounds;
  */
 Sound::Sound(const SoundBuffer& data):
   data(data),
-  source(AL_NONE) {
+  source(AL_NONE),
+  paused_by_script(false) {
 }
 
 /**
@@ -185,26 +187,6 @@ void Sound::play(const std::string& sound_id, ResourceProvider& resource_provide
 }
 
 /**
- * \brief Pauses all currently playing sounds.
- */
-void Sound::pause_all() {
-
-  for (const SoundPtr& sound: current_sounds) {
-    sound->set_paused(true);
-  }
-}
-
-/**
- * \brief Resumes playing all sounds previously paused.
- */
-void Sound::resume_all() {
-
-  for (const SoundPtr& sound: current_sounds) {
-    sound->set_paused(false);
-  }
-}
-
-/**
  * \brief Returns the current volume of sound effects.
  * \return the volume (0 to 100)
  */
@@ -262,7 +244,7 @@ bool Sound::update_playing() {
   ALint status;
   alGetSourcei(source, AL_SOURCE_STATE, &status);
 
-  if (status != AL_PLAYING) {
+  if (status == AL_STOPPED) {
     stop_source();
   }
 
@@ -271,7 +253,7 @@ bool Sound::update_playing() {
 
 /**
  * \brief Plays the sound.
- * \return true if the sound was loaded successfully, false otherwise
+ * \return \c true if the sound was started successfully, \c false otherwise.
  */
 bool Sound::start() {
 
@@ -371,21 +353,95 @@ void Sound::stop_source() {
 }
 
 /**
- * \brief Pauses or resumes all sources of the sound.
- * \param pause true to pause the sources, false to resume them
+ * \brief Returns whether the sound is currently paused.
+ * \return \c true if the sound is paused.
  */
-void Sound::set_paused(bool pause) {
+bool Sound::is_paused() const {
 
   if (!is_initialized()) {
+    return false;
+  }
+
+  ALint status;
+  alGetSourcei(source, AL_SOURCE_STATE, &status);
+  return status == AL_PAUSED;
+}
+
+/**
+ * \brief Pauses or resumes this sound.
+ * \param paused \c true to pause the source, \c false to resume it.
+ */
+void Sound::set_paused(bool paused) {
+
+  if (!is_initialized() || source == AL_NONE) {
     return;
   }
 
-  if (pause) {
-    alSourcePause(source);
+  ALint status;
+  alGetSourcei(source, AL_SOURCE_STATE, &status);
+
+  if (paused) {
+    if (status == AL_PLAYING) {
+      alSourcePause(source);
+    }
   }
   else {
-    alSourcePlay(source);
+    if (status == AL_PAUSED) {
+      alSourcePlay(source);
+    }
   }
+}
+
+/**
+ * \brief Returns whether the sound is currently paused by a script.
+ * \return \c true if the sound is paused by a script.
+ */
+bool Sound::is_paused_by_script() const {
+  return paused_by_script;
+}
+
+/**
+ * \brief Pauses or resumes this sound from a script perspective.
+ *
+ * This is independent of the automatic pause/resume that can happen when
+ * the window loses focus.
+ *
+ * \param paused \c true to pause the sound, \c false to resume it.
+ */
+void Sound::set_paused_by_script(bool paused_by_script) {
+
+  this->paused_by_script = paused_by_script;
+  update_paused();
+}
+
+/**
+ * \brief Pauses all currently playing sounds.
+ */
+void Sound::pause_all() {
+
+  paused_by_system = true;
+  for (const SoundPtr& sound: current_sounds) {
+    sound->update_paused();
+  }
+}
+
+/**
+ * \brief Resumes playing all sounds previously paused.
+ */
+void Sound::resume_all() {
+
+  paused_by_system = false;
+  for (const SoundPtr& sound: current_sounds) {
+    sound->update_paused();
+  }
+}
+
+/**
+ * \brief Pauses or resumes the sound depending on the current pause state.
+ */
+void Sound::update_paused() {
+
+  set_paused(paused_by_script || paused_by_system);
 }
 
 /**

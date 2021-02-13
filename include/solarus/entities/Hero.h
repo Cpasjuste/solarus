@@ -133,6 +133,10 @@ class Hero: public Entity {
     void set_normal_walking_speed(int normal_walking_speed);
     int get_walking_speed() const;
     void set_walking_speed(int walking_speed);
+    int get_push_delay() const;
+    void set_push_delay(int delay);
+    int get_carry_height() const;
+    void set_carry_height(int height);
     int get_wanted_movement_direction8() const;
     int get_real_movement_direction8();
     bool is_moving_towards(int direction4) const;
@@ -219,7 +223,7 @@ class Hero: public Entity {
     void notify_collision_with_separator(Separator& separator, CollisionMode collision_mode) override;
     void notify_collision_with_explosion(Explosion& explosion, Sprite& sprite_overlapping) override;
     void avoid_collision(Entity& entity, int direction);
-    bool is_striking_with_sword(Entity& entity) const;
+    bool is_cutting_with_sword(Destructible& destructible) const;
 
     /**
      * \name Enemies.
@@ -372,6 +376,9 @@ class Hero: public Entity {
     int normal_walking_speed;              /**< speed when normally walking */
     int walking_speed;                     /**< current walking speed (possibly changed by the ground) */
 
+    // carrying objects
+    int carry_height;                      /**< default value for the carried objects display height */
+
     // state specific
     std::shared_ptr<Teletransporter>
         delayed_teletransporter;           /**< a teletransporter that will be activated when the hero finishes
@@ -391,6 +398,9 @@ class Hero: public Entity {
     uint32_t next_ice_date;                /**< when recomputing the additional movement on ice */
     int ice_movement_direction8;           /**< wanted movement direction a while ago */
     Point ground_dxy;                      /**< additional movement with special ground (hole or ice) */
+
+    // behavior
+    int push_delay;                        /**< delay before going into pushing state */
 
 };
 

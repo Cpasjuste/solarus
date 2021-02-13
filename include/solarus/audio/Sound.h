@@ -49,7 +49,11 @@ class SOLARUS_API Sound: public ExportableToLua {
     const std::string& get_id() const;
     bool start();
     void stop();
-    void set_paused(bool pause);
+    bool is_paused() const;
+    void set_paused(bool paused);
+    bool is_paused_by_script() const;
+    void set_paused_by_script(bool paused_by_script);
+    void update_paused();
 
     static bool exists(const std::string& sound_id);
     static void play(const std::string& sound_id, ResourceProvider& resource_provider);
@@ -74,16 +78,19 @@ class SOLARUS_API Sound: public ExportableToLua {
     void stop_source();
 
     const SoundBuffer& data;                     /**< The loaded sound data. */
-    ALuint source;                               /**< the source currently playing this sound */
+    ALuint source;                               /**< The source currently playing this sound. */
+    bool paused_by_script;                       /**< Whether the sound is paused by a Lua script. */
+    static bool paused_by_system;                /**< Whether sounds are currently paused by the main loop,
+                                                  * e.g. when losing focus */
 
     static ALCdevice* device;
     static ALCcontext* context;
 
     static std::list<SoundPtr>
-        current_sounds;                          /**< the sounds currently playing */
+        current_sounds;                          /**< The sounds currently playing. */
 
-    static bool initialized;                     /**< indicates that the audio system is initialized */
-    static float volume;                         /**< the volume of sound effects (0.0 to 1.0) */
+    static bool initialized;                     /**< Indicates that the audio system is initialized. */
+    static float volume;                         /**< The volume of sound effects (0.0 to 1.0). */
 
     static bool pc_play;                         /**< Whether playing performance counter is used. */
 };
@@ -91,4 +98,3 @@ class SOLARUS_API Sound: public ExportableToLua {
 }
 
 #endif
-

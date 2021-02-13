@@ -45,6 +45,8 @@ void LuaContext::register_sound_module() {
   const std::vector<luaL_Reg> methods = {
       { "play", sound_api_play },
       { "stop", sound_api_stop },
+      { "is_paused", sound_api_is_paused },
+      { "set_paused", sound_api_set_paused },
   };
 
   const std::vector<luaL_Reg> metamethods = {
@@ -114,8 +116,8 @@ int LuaContext::sound_api_play(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
     Sound& sound = *check_sound(l, 1);
-    sound.start();  // TODO what if the sound is already playing? Currently another source is created,
-                    // the same sound instance can be played multiple times.
+    sound.start();
+
     return 0;
   });
 }
@@ -130,6 +132,38 @@ int LuaContext::sound_api_stop(lua_State* l) {
   return state_boundary_handle(l, [&] {
     Sound& sound = *check_sound(l, 1);
     sound.stop();
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of sound:is_paused().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::sound_api_is_paused(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const Sound& sound = *check_sound(l, 1);
+
+    lua_pushboolean(l, sound.is_paused_by_script());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of :set_paused().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::sound_api_set_paused(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Sound& sound = *check_sound(l, 1);
+    bool paused = LuaTools::opt_boolean(l, 2, true);
+
+    sound.set_paused_by_script(paused);
 
     return 0;
   });

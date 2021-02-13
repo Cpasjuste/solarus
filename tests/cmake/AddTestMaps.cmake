@@ -162,6 +162,10 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1461_tileset_sprite"
   "bugs/1471_pickable_wrong_layer"
   "bugs/1476_crash_command_binding"
+  "bugs/1508_carried_object_height"
+  "bugs/1524_push_delay"
+  "bugs/1526_destructible_cut_method"
+  "bugs/1527_entity_set_name"
 )
 
 # Test that should not fail when there are errors
