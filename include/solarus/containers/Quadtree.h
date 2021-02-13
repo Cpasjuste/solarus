@@ -100,6 +100,9 @@ class Quadtree {
       BL, BR
     };
 
+    /**
+     * @brief Helper struct easing the spliting of the space in quadrants
+     */
     struct QuadAxis{
         Point center;   /**< center point spliting the tree quad */
         Size  qsize;    /**< size of a quadrant */
@@ -110,6 +113,10 @@ class Quadtree {
         QuadAxis child(Child c) const;
     };
 
+    /**
+     * @brief Container for all necessary information when inserting elements
+     * down the tree.
+     */
     struct InsertInfo{
         Point center;        /**< center of the element */
         Rectangle bbox;      /**< bounding box of the element */
@@ -118,9 +125,10 @@ class Quadtree {
 
     using ColorGenerator = std::uniform_int_distribution<uint8_t>;
 
-    class Node {
-
-      public:
+    /**
+     * @brief Struct holding node geometry and links to element and other nodes
+     */
+    struct Node {
         Node();
         Rectangle bounds;         /**< bounding box of all node children (elements or nodes) */
         int32_t first_child = -1; /**< first child of the node, or first element if it is a leaf */
@@ -128,7 +136,7 @@ class Quadtree {
         uint32_t count : 31;      /**< count of elements bellow this leaf */
     };
 
-    static_assert (sizeof(Node) <= sizeof(int)*8, "Size of node should not be more than 6 ints");
+    static_assert (sizeof(Node) <= sizeof(int)*8, "Size of node should not be more than 8 ints");
 
 
 
@@ -168,28 +176,30 @@ class Quadtree {
         const Point& dst_position
     ) const;
 
-    Node& root();
-    const Node& root() const;
+    //Node& root();
+    //const Node& root() const;
 
     /**
     * @brief Holds the data at the same time as the linked list impl
     */
     struct ElementNode {
-      int next;
-      Rectangle rect;
-      T data;
+      int next;          /**< next element in the linked list */
+      Rectangle rect;    /**< bounding box of this element */
+      T data;            /**< Data stored into the quadtree */
     };
 
-    FreeList<ElementNode> elements_nodes_storage; /**< contiguous storage for element nodes */
+    FreeList<ElementNode>
+      elements_nodes_storage;     /**< contiguous storage for element nodes */
 
-    std::vector<Node> nodes;
-
-
-    int free_node = -1; /**< first free group of four node or -1 if no free nodes */
-    Rectangle space;
+    std::vector<Node> nodes;      /**< contiguous storage for quadtree nodes */
 
 
-    std::unordered_map<T, int> elements_infos; /**< mapping of element to element node id */
+    int free_node = -1;           /**< first free group of four node or -1 if no free nodes */
+    Rectangle space;              /**< rectangle covered by this quadtree */
+
+
+    std::unordered_map<T, int>
+      elements_infos;             /**< mapping of element to element node id */
 };
 
 template<typename T>

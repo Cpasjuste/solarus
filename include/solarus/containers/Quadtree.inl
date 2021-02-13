@@ -120,6 +120,13 @@ bool Quadtree<T, Comparator>::add(const T& element, const Rectangle& bounding_bo
   return true;
 }
 
+/**
+ * @brief Adds an element to a node
+ * @param nodeid id of the node
+ * @param axis axis describing geometry of the node
+ * @param element element to add
+ * @return
+ */
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::node_add(int nodeid, QuadAxis axis, int element) {
   const auto& elnode = elements_nodes_storage[element];
@@ -182,6 +189,13 @@ bool Quadtree<T, Comparator>::remove(const T& element) {
   return res;
 }
 
+/**
+ * @brief Removes an element from a node
+ * @param nodeid the node id
+ * @param axis the axis describing the node geometry
+ * @param element the element to remove
+ * @return true if the element was removed
+ */
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::node_remove(int nodeid, QuadAxis axis, int element) {
   const auto& elnode = elements_nodes_storage[element];
@@ -241,20 +255,20 @@ int Quadtree<T, Comparator>::get_num_elements() const {
   return elements_infos.size();
 }
 
-template<typename T, typename Comparator>
 /**
  * @brief Does this quadtree contains given element
  * @param element an element
  * @return true if element is contained into this quadtree
  */
+template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::contains(const T& element) const {
   return elements_infos.find(element) != elements_infos.end();
 }
 
-template<typename T, typename Comparator>
 /**
  * @brief shrinks the quadtree nodes to better fit content, should be called periodically
  */
+template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::shrink_to_fit() {
   SOL_PFUN("Quadtree::shrink_to_fit");
   node_shrink(0);
@@ -277,13 +291,13 @@ std::vector<T> Quadtree<T, Comparator>::get_elements(
   return element_set;
 }
 
-template<typename T, typename Comparator>
-template<typename C>
 /**
  * @brief Insert element overlaping the given region into the given inserter
  * @param where region to query
  * @param elements inserter
  */
+template<typename T, typename Comparator>
+template<typename C>
 void Quadtree<T, Comparator>::raw_get_elements(
     const Rectangle& where,
     std::back_insert_iterator<C> elements) const {
@@ -346,11 +360,11 @@ void Quadtree<T, Comparator>::draw(const SurfacePtr& dst_surface, const Point& d
   }
 }
 
-template<typename T, typename Comparator>
 /**
  * @brief Allocate 4 nodes at once
  * @return id of the first allocated node
  */
+template<typename T, typename Comparator>
 int Quadtree<T, Comparator>::allocate_4nodes() {
   if(free_node == -1) {
     int first = static_cast<int>(nodes.size());
@@ -366,35 +380,34 @@ int Quadtree<T, Comparator>::allocate_4nodes() {
   }
 }
 
-
-template<typename T, typename Comparator>
 /**
  * @brief Free 4 nodes at once
  * @param first id of the first node to
  */
+template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::free_4nodes(int first) {
   nodes[first].first_child = free_node;
   free_node = first; //Do not de-init nodes more than that
 }
 
-template<typename T, typename Comparator>
 /**
  * @brief Add a node to an element list
  * @param head_node ref to the head of the list
  * @param element_node id of the node to add
  */
+template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::element_list_add(int& head_node, int element_node) {
   elements_nodes_storage[element_node].next = head_node;
   head_node = element_node;
 }
 
-template<typename T, typename Comparator>
 /**
  * @brief Remove a node from an element list
  * @param head_node ref to the head of the list
  * @param element_node id of the node to remove
  * @return true if removal happend
  */
+template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::element_list_remove(int& head_node, int element_node) {
   int curr = head_node;
 
@@ -419,40 +432,52 @@ bool Quadtree<T, Comparator>::element_list_remove(int& head_node, int element_no
   return false;
 }
 
-template<typename T, typename Comparator>
 /**
  * @brief clear an element list
  * @param head_node ref to the head of the list
  */
+template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::element_list_clear(int& head_node) {
   head_node = -1;
 }
 
-template<typename T, typename Comparator>
-typename Quadtree<T, Comparator>::Node& Quadtree<T, Comparator>::root() {
-  return nodes[0];
-}
-
-template<typename T, typename Comparator>
-const typename Quadtree<T, Comparator>::Node& Quadtree<T, Comparator>::root() const {
-  return nodes[0];
-}
-
+/**
+ * @brief Constructs an axis from a rectangle
+ *
+ * Center is the center of the rectangle and the axis are half  of the rectangle size
+ *
+ * @param rect a rectangle
+ */
 template<typename T, typename Comparator>
 Quadtree<T, Comparator>::QuadAxis::QuadAxis(const Rectangle& rect) : center(rect.get_center()), qsize(rect.get_width() / 2, rect.get_height() / 2) {
 
 }
 
+/**
+ * @brief Constructs a quad axis from its center and size
+ * @param center the center
+ * @param qsize the size
+ */
 template<typename T, typename Comparator>
 Quadtree<T, Comparator>::QuadAxis::QuadAxis(Point center, Size qsize) : center(center), qsize(qsize) {
 
 }
 
+/**
+ * @brief tells in which quadrant of those axes the point lie
+ * @param point a point
+ * @return in which child quadrant the point lie
+ */
 template<typename T, typename Comparator>
 typename Quadtree<T, Comparator>::Child Quadtree<T, Comparator>::QuadAxis::where(Point point) const {
   return static_cast<Child>((point.x > center.x) + 2*(point.y > center.y));
 }
 
+/**
+ * @brief Creates a child axes in the given quadrant
+ * @param c a child
+ * @return a new QuadAxis
+ */
 template<typename T, typename Comparator>
 typename Quadtree<T, Comparator>::QuadAxis Quadtree<T, Comparator>::QuadAxis::child(Child c) const {
   Size newsize = qsize / 2;
@@ -476,6 +501,11 @@ Quadtree<T, Comparator>::Node::Node() :
 
 }
 
+/**
+ * @brief Iterates trough each element starting with first
+ * @param first the first element
+ * @param fun closure to apply
+ */
 template<typename T, typename Comparator>
 template <typename F>
 void Quadtree<T, Comparator>::foreach_element(int first, F fun) {
@@ -488,6 +518,11 @@ void Quadtree<T, Comparator>::foreach_element(int first, F fun) {
   }
 }
 
+/**
+ * @brief Iterates trough each child starting with first
+ * @param first the first child
+ * @param fun closure to apply
+ */
 template<typename T, typename Comparator>
 template <typename F>
 void Quadtree<T, Comparator>::foreach_child(int first, F fun) {
@@ -496,6 +531,11 @@ void Quadtree<T, Comparator>::foreach_child(int first, F fun) {
   }
 }
 
+/**
+ * @brief Iterates trough each element starting with first
+ * @param first the first element
+ * @param fun closure to apply
+ */
 template<typename T, typename Comparator>
 template <typename F>
 void Quadtree<T, Comparator>::foreach_element(int first, F fun) const {
@@ -508,6 +548,11 @@ void Quadtree<T, Comparator>::foreach_element(int first, F fun) const {
   }
 }
 
+/**
+ * @brief Iterates trough each child starting with first
+ * @param first the first child
+ * @param fun closure to apply
+ */
 template<typename T, typename Comparator>
 template <typename F>
 void Quadtree<T, Comparator>::foreach_child(int first, F fun) const {
@@ -575,6 +620,11 @@ void Quadtree<T, Comparator>::node_merge(int nodeid) {
   topnode.is_leaf = true;
 }
 
+/**
+ * @brief Shrinks and/or merge the given node
+ * @param node_id the node to shrink
+ * @return some Rectangle if there are childs or element, else None
+ */
 template<typename T, typename Comparator>
 std::optional<Rectangle> Quadtree<T, Comparator>::node_shrink(int node_id) {
   Node& node = nodes[node_id];

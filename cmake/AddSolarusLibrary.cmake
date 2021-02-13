@@ -33,9 +33,10 @@ if(SOLARUS_PROFILING)
     PUBLIC
       easy_profiler
   )
+
+  target_compile_definitions(solarus PUBLIC -DBUILD_WITH_EASY_PROFILER=1)
 endif()
 
-target_compile_definitions(solarus PUBLIC -DBUILD_WITH_EASY_PROFILER=1)
 
 # Add OpenGL imported target to "solarus" declared dependencies
 if(OPENGL_FOUND)
