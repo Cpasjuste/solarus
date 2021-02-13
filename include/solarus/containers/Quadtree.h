@@ -128,7 +128,7 @@ class Quadtree {
         uint32_t count : 31;      /**< count of elements bellow this leaf */
     };
 
-    static_assert (sizeof(Node) <= sizeof(int)*6, "Size of node should not be more than 6 ints");
+    static_assert (sizeof(Node) <= sizeof(int)*8, "Size of node should not be more than 6 ints");
 
 
 
