@@ -222,7 +222,6 @@ bool Quadtree<T, Comparator>::move(const T& element, const Rectangle& bounding_b
   auto it = elements_infos.find(element);
   // Normal case.
   if(it == elements_infos.end()) {
-    add(element, bounding_box);
     return false;
   }
 

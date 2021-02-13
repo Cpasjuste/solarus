@@ -399,8 +399,9 @@ void Entities::get_entities_in_rectangle_z_sorted(
 ) const {
   SOL_PFUN();
   quadtree->raw_get_elements(rectangle, std::back_inserter(result));
-  std::sort(result.begin(), result.end());
+  std::sort(result.begin(), result.end(), EntityZOrderComparator());
 }
+
 
 /**
  * \overload Non-const version.
@@ -410,13 +411,27 @@ void Entities::get_entities_in_rectangle_z_sorted(
 ) {
   SOL_PFUN();
   quadtree->raw_get_elements(rectangle, std::back_inserter(result));
-  std::sort(result.begin(), result.end());
+  std::sort(result.begin(), result.end(), EntityZOrderComparator());
 }
 
 /**
  * @brief Gets the entities whose bouding box overlap the queried rectangle
  *
- * This raw version returns directly the quadtree query result, with duplicates and unsorted
+ * This raw version returns directly the quadtree query result, unsorted
+ *
+ * @param rectangle the area to query
+ * @param result
+ */
+void Entities::get_entities_in_rectangle_raw(const Rectangle& rectangle, ConstEntityVector& result) const {
+  SOL_PFUN();
+  quadtree->raw_get_elements(rectangle, std::back_inserter(result));
+}
+
+
+/**
+ * @brief Gets the entities whose bouding box overlap the queried rectangle
+ *
+ * This raw version returns directly the quadtree query result, unsorted
  *
  * @param rectangle the area to query
  * @param result

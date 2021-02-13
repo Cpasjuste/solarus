@@ -75,18 +75,8 @@ class EntityZOrderComparator {
      * \param second Another entity.
      * \return \c true if the first entity's Z index is lower than the second one's.
      */
-    bool operator()(const ConstEntityPtr& first, const ConstEntityPtr& second) const {
-
-      if (first->get_layer() < second->get_layer()) {
-        return true;
-      }
-
-      if (first->get_layer() > second->get_layer()) {
-        return false;
-      }
-
-      // Same layer.
-      return first->get_z() < second->get_z();
+    inline bool operator()(const ConstEntityPtr& first, const ConstEntityPtr& second) const {
+      return std::tuple(first->get_layer(), first->get_z()) < std::tuple(second->get_layer(), second->get_z());
     }
 };
 
@@ -143,7 +133,9 @@ class SOLARUS_API Entities {
     // By coordinates.
     void get_entities_in_rectangle_z_sorted(const Rectangle& rectangle, ConstEntityVector& result) const;
     void get_entities_in_rectangle_z_sorted(const Rectangle& rectangle, EntityVector& result);
+    void get_entities_in_rectangle_raw(const Rectangle& rectangle, ConstEntityVector& result) const;
     void get_entities_in_rectangle_raw(const Rectangle& rectangle, EntityVector& result);
+
 
     // By separator region.
     void get_entities_in_region_z_sorted(const Point& xy, EntityVector& result);
