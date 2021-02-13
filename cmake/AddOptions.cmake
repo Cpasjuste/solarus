@@ -33,3 +33,6 @@ set(SOLARUS_GL_ES "OFF" CACHE BOOL "Use OpenGL ES implementation.")
 
 # Enable logging of errors to file.
 set(SOLARUS_FILE_LOGGING "ON" CACHE BOOL "Enable logging of errors to file.")
+
+# Profiling instrumentation
+set(SOLARUS_PROFILING "OFF" CACHE BOOL "Enable compiling with easy_profiler embedded")

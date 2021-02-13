@@ -153,7 +153,7 @@ bool call_function(
     int nb_results,
     const char* function_name
 ) {
-  EASY_BLOCK(function_name, profiler::colors::Blue);
+  SOL_PBLOCK(function_name, profiler::colors::Blue);
   Debug::check_assertion(lua_gettop(l) > nb_arguments, "Missing arguments");
   int base = lua_gettop(l) - nb_arguments;
   lua_pushcfunction(l, &LuaContext::l_backtrace);

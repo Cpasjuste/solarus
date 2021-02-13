@@ -379,8 +379,10 @@ int MainLoop::push_lua_command(const std::string& command) {
  * Does nothing if the quest is missing.
  */
 void MainLoop::run() {
-  EASY_MAIN_THREAD;
+  SOL_MAIN_THREAD;
+#ifdef SOLARUS_PROFILING
   profiler::startListen();
+#endif
 
   if (!QuestFiles::quest_exists()) {
     return;

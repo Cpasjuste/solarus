@@ -29,6 +29,13 @@ target_link_libraries(solarus
     easy_profiler
 )
 
+if(SOLARUS_PROFILING)
+  target_link_libraries(solarus
+    PUBLIC
+      easy_profiler
+  )
+endif()
+
 target_compile_definitions(solarus PUBLIC -DBUILD_WITH_EASY_PROFILER=1)
 
 # Add OpenGL imported target to "solarus" declared dependencies
