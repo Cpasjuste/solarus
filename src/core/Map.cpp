@@ -827,7 +827,7 @@ bool Map::test_collision_with_ground(int layer,
   }
 
   // Get the ground property under this point.
-  Ground ground = get_ground_with_nearby_entities(layer, Point(x, y), &entity_to_check, entities_nearby);
+  Ground ground = get_ground(layer, Point(x, y), &entity_to_check, entities_nearby);
   switch (ground) {
 
   case Ground::EMPTY:
@@ -904,10 +904,10 @@ bool Map::test_collision_with_entities(
 
   EntityVector entities_nearby;
   get_entities().get_entities_in_rectangle_z_sorted(collision_box, entities_nearby);
-  return test_collision_with_entities_nearby(layer, collision_box, entity_to_check, entities_nearby);
+  return test_collision_with_entities(layer, collision_box, entity_to_check, entities_nearby);
 }
 
-bool Map::test_collision_with_entities_nearby(
+bool Map::test_collision_with_entities(
     int layer,
     const Rectangle& collision_box,
     Entity& entity_to_check,
@@ -927,7 +927,7 @@ bool Map::test_collision_with_entities_nearby(
   return false;
 }
 
-bool Map::test_collision_with_entities_nearby(
+bool Map::test_collision_with_entities(
     int layer,
     const Rectangle& collision_box,
     Entity& entity_to_check,
@@ -1020,7 +1020,7 @@ bool Map::test_collision_with_obstacles(
   }
 
   // No collision with the terrain: check collisions with dynamic entities.
-  return test_collision_with_entities_nearby(layer, collision_box, entity_to_check, entities_nearby);
+  return test_collision_with_entities(layer, collision_box, entity_to_check, entities_nearby);
 }
 
 /**
@@ -1160,7 +1160,7 @@ Ground Map::get_ground(
   const Rectangle box(xy, Size(1, 1));
   ConstEntityVector entities_nearby;
   get_entities().get_entities_in_rectangle_z_sorted(box, entities_nearby);
-  return get_ground_with_nearby_entities(layer, xy, entity_to_check, entities_nearby);
+  return get_ground(layer, xy, entity_to_check, entities_nearby);
 }
 
 /**
@@ -1174,7 +1174,7 @@ Ground Map::get_ground(
  * Used to make sure that the entity's own modified ground does not count.
  * \return The ground at this place.
  */
-Ground Map::get_ground_with_nearby_entities(
+Ground Map::get_ground(
     int layer,
     const Point& xy,
     const Entity* entity_to_check,

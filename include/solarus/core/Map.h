@@ -127,13 +127,13 @@ class SOLARUS_API Map: public ExportableToLua {
         const Rectangle& collision_box,
         Entity& entity_to_check
     );
-    bool test_collision_with_entities_nearby(
+    bool test_collision_with_entities(
         int layer,
         const Rectangle& collision_box,
         Entity& entity_to_check,
         const ConstEntityVector& entities_nearby
         ) const;
-    bool test_collision_with_entities_nearby(
+    bool test_collision_with_entities(
         int layer,
         const Rectangle& collision_box,
         Entity& entity_to_check,
@@ -171,7 +171,7 @@ class SOLARUS_API Map: public ExportableToLua {
         const Point& xy,
         const Entity* entity_to_check
     ) const;
-    Ground get_ground_with_nearby_entities(
+    Ground get_ground(
         int layer,
         const Point& xy,
         const Entity* entity_to_check,

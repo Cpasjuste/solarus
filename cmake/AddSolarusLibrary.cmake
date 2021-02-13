@@ -26,7 +26,6 @@ target_link_libraries(solarus
     Vorbis::File
     Ogg::Ogg
     ModPlug::ModPlug
-    easy_profiler
 )
 
 if(SOLARUS_PROFILING)

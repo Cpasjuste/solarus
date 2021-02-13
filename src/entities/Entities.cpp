@@ -58,6 +58,7 @@ class DrawingOrderComparator {
      * \return \c true if the first entity should be drawn before the secone one.
      */
     bool operator()(const EntityPtr& first, const EntityPtr& second) const {
+
       if (first->get_layer() < second->get_layer()) {
         return true;
       }
@@ -76,7 +77,6 @@ class DrawingOrderComparator {
         return false;
       }
 
-
       if (first->is_drawn_in_y_order()) {
         // Both entities are displayed in Y order.
         return first->get_y() < second->get_y();
@@ -85,6 +85,7 @@ class DrawingOrderComparator {
       // Both entities are displayed in Z order.
       return first->get_z() < second->get_z();
     }
+
 };
 
 }  // Anonymous namespace.
