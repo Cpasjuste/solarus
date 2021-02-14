@@ -46,7 +46,7 @@ class SOLARUS_API MainLoop {
     ~MainLoop();
 
     void run();
-    void step();
+    void step(uint32_t timestep);
 
     void set_exiting();
     bool is_exiting();
@@ -62,6 +62,9 @@ class SOLARUS_API MainLoop {
     LuaContext& get_lua_context();
 
   private:
+
+    void dynamic_run();
+    void fixed_run();
 
     void check_input();
     void notify_input(const InputEvent& event);

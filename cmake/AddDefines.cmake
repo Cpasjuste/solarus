@@ -32,3 +32,7 @@ endif()
 if(SOLARUS_PROFILING)
   add_definitions(-DSOLARUS_PROFILING)
 endif()
+
+if(SOLARUS_DYNAMIC_STEP)
+  add_definitions(-DSOLARUS_DYNAMIC_STEP)
+endif()

@@ -36,3 +36,6 @@ set(SOLARUS_FILE_LOGGING "ON" CACHE BOOL "Enable logging of errors to file.")
 
 # Profiling instrumentation
 set(SOLARUS_PROFILING "OFF" CACHE BOOL "Enable compiling with easy_profiler embedded")
+
+# Mainloop shape
+set(SOLARUS_DYNAMIC_STEP "OFF" CACHE BOOL "Enable a mainloop updating in sync with video output")

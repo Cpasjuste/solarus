@@ -36,7 +36,7 @@ class SOLARUS_API System {
 
     static void initialize(const Arguments& args);
     static void quit();
-    static void update();
+    static void update(uint32_t timestep);
 
     static std::string get_os();
 
@@ -44,7 +44,7 @@ class SOLARUS_API System {
     static uint32_t get_real_time();
     static void sleep(uint32_t duration);
 
-    static constexpr uint32_t timestep = 10;  /**< Timestep added to the simulated time at each update. */
+    static constexpr uint32_t fixed_timestep = 10;  /**< Timestep added to the simulated time at each update. */
 
   private:
 

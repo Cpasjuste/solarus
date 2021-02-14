@@ -59,7 +59,7 @@ void System::initialize(const Arguments& args) {
     sdl_video_wayland_wmclass = strdup(sdl_video_wayland_wmclass);
   }
 
-  // Set AppID that SDL should report on Wayland and X11.
+  // Set AppID that SDL should report on Wayland and X11.
   setenv("SDL_VIDEO_X11_WMCLASS", SOLARUS_APP_ID ".Runner", 1);
   setenv("SDL_VIDEO_WAYLAND_WMCLASS", SOLARUS_APP_ID ".Runner", 1);
 #endif
@@ -125,7 +125,7 @@ void System::quit() {
  *
  * It calls the update function of low-level systems that need it.
  */
-void System::update() {
+void System::update(uint32_t timestep) {
 
   // Use a constant timestep here to have deterministic updates.
   ticks += timestep;

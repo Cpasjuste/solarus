@@ -185,7 +185,7 @@ uint32_t TestEnvironment::now() {
  * \brief Simulates one tick of the main loop.
  */
 void TestEnvironment::step() {
-  get_main_loop().step();
+  get_main_loop().step(System::fixed_timestep);
 }
 
 }
