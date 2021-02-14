@@ -27,6 +27,7 @@
 #include "solarus/entities/EnemyReaction.h"
 #include "solarus/graphics/SpritePtr.h"
 #include "solarus/lua/ExportableToLua.h"
+#include "solarus/entities/EntityPtr.h"
 #include <list>
 #include <memory>
 #include <set>
@@ -325,6 +326,7 @@ class SOLARUS_API Entity: public ExportableToLua {
 
     // Being detected by other entities.
     void check_collision_with_detectors();
+    void check_collision_with_detectors(std::vector<EntityPtr>& entities_nearby);
     void check_collision_with_detectors(Sprite& sprite);
 
     virtual void check_position();

@@ -22,6 +22,7 @@
 #include "solarus/core/MainLoop.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/System.h"
+#include "solarus/core/Profiler.h"
 #include "solarus/entities/CollisionMode.h"
 #include "solarus/entities/Destructible.h"
 #include "solarus/entities/Door.h"
@@ -176,7 +177,7 @@ Ground Entity::get_modified_ground() const {
  * because this is necessary in case it just stopped being one.
  */
 void Entity::update_ground_observers() {
-
+  SOL_PFUN();
   // Update overlapping entities that are sensible to their ground.
   const Rectangle& box = get_bounding_box();
   std::vector<EntityPtr> entities_nearby;
@@ -220,7 +221,7 @@ Ground Entity::get_ground_below() const {
  * This function does nothing if the entity is not sensible to its ground.
  */
 void Entity::update_ground_below() {
-
+  SOL_PFUN();
   if (!is_ground_observer()) {
     // This entity does not care about the ground below it.
     return;
@@ -1840,18 +1841,23 @@ void Entity::notify_obstacle_reached() {
  * TODO only keep notify_bounding_box_changed()
  */
 void Entity::notify_position_changed() {
-
+  SOL_PFUN();
   // Notify the quadtree.
   notify_bounding_box_changed();
+
+  // Query the quadtree
+  Rectangle box = get_max_bounding_box().get_union(get_extended_bounding_box(8));
+  EntityVector entities_nearby;
+  get_map().get_entities().get_entities_in_rectangle_z_sorted(box, entities_nearby);
 
   if (is_detector()) {
     // Since this entity is a detector, all entities need to check
     // their collisions with it.
-    get_map().check_collision_from_detector(*this);
+    get_map().check_collision_from_detector(*this, entities_nearby);
   }
 
   // Check collisions between this entity and other detectors.
-  check_collision_with_detectors();
+  check_collision_with_detectors(entities_nearby);
 
   // Update the ground.
   if (is_ground_modifier()) {
@@ -2401,7 +2407,7 @@ void Entity::notify_collision(
  * enabled for some sprites of this entity.
  */
 void Entity::check_collision_with_detectors() {
-
+  SOL_PFUN();
   if (!is_on_map()) {
     // The entity is still being initialized.
     return;
@@ -2416,8 +2422,26 @@ void Entity::check_collision_with_detectors() {
     return;
   }
 
+  EntityVector entities_nearby;
+  Rectangle box = get_max_bounding_box().get_union(get_extended_bounding_box(8));
+  get_map().get_entities().get_entities_in_rectangle_z_sorted(box, entities_nearby);
+
+  check_collision_with_detectors(entities_nearby);
+}
+
+/**
+ * \brief Checks collisions between this entity and the detectors of the map.
+ *
+ * Simple collisions are checked, and then pixel-precise collisions if they are
+ * enabled for some sprites of this entity.
+ *
+ * \param entities_nearby entities_surrounding this entity
+ */
+void Entity::check_collision_with_detectors(EntityVector& entities_nearby) {
+  SOL_PFUN();
+
   // Detect simple collisions.
-  get_map().check_collision_with_detectors(*this);
+  get_map().check_collision_with_detectors(*this, entities_nearby);
 
   // Detect pixel-precise collisions.
   std::vector<NamedSprite> sprites = this->sprites;
@@ -2427,7 +2451,7 @@ void Entity::check_collision_with_detectors() {
     }
     Sprite& sprite = *named_sprite.sprite;
     if (sprite.are_pixel_collisions_enabled()) {
-      get_map().check_collision_with_detectors(*this, sprite);
+      get_map().check_collision_with_detectors(*this, sprite, entities_nearby);
     }
   }
 }

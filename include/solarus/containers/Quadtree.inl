@@ -19,6 +19,7 @@
 #include "solarus/graphics/Surface.h"
 #include <algorithm>
 #include <iterator>
+#include <random>
 #include <set>
 
 namespace Solarus {
@@ -40,9 +41,8 @@ Quadtree<T, Comparator>::Quadtree() :
  */
 template<typename T, typename Comparator>
 Quadtree<T, Comparator>::Quadtree(const Rectangle& space) :
-    elements(),
-    root(*this) {
-
+  space(space)
+{
     initialize(space);
 }
 
@@ -51,10 +51,10 @@ Quadtree<T, Comparator>::Quadtree(const Rectangle& space) :
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::clear() {
+  elements_nodes_storage.clear();
+  nodes.clear();
 
-  elements.clear();
-  elements_outside.clear();
-  root.clear();
+  free_node = -1;
 }
 
 /**
@@ -77,7 +77,10 @@ void Quadtree<T, Comparator>::initialize(const Rectangle& space) {
     square.set_width(square.get_height());
   }
 
-  root.initialize(square);
+  this->space = square;
+
+  //Allocate root node
+  nodes.resize(1);
 }
 
 /**
@@ -86,7 +89,7 @@ void Quadtree<T, Comparator>::initialize(const Rectangle& space) {
  */
 template<typename T, typename Comparator>
 Rectangle Quadtree<T, Comparator>::get_space() const {
-    return root.get_cell();
+    return space;
 }
 
 /**
@@ -101,25 +104,67 @@ Rectangle Quadtree<T, Comparator>::get_space() const {
  */
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::add(const T& element, const Rectangle& bounding_box) {
+  SOL_PBLOCK("Solarus::Quadtree::add");
 
-  if (contains(element)) {
-    // Element already in the quadtree.
+  auto it = elements_infos.find(element);
+
+  if(it != elements_infos.end()) {
+    move(element, bounding_box);
     return false;
   }
 
-  if (!bounding_box.overlaps(get_space())) {
-    // Out of the space of the quadtree.
-    elements_outside.insert(element);
-  }
-  else if (!root.add(element, bounding_box)) {
-    // Add failed.
-    return false;
-  }
+  int id = elements_nodes_storage.insert({0, bounding_box, element});
+  elements_infos.emplace(element, id);
 
-  ElementInfo info = { bounding_box };
-  elements.emplace(element, info);
-
+  node_add(0, QuadAxis(get_space()), id);
   return true;
+}
+
+/**
+ * @brief Adds an element to a node
+ * @param nodeid id of the node
+ * @param axis axis describing geometry of the node
+ * @param element element to add
+ * @return
+ */
+template<typename T, typename Comparator>
+bool Quadtree<T, Comparator>::node_add(int nodeid, QuadAxis axis, int element) {
+  const auto& elnode = elements_nodes_storage[element];
+  auto rect = elnode.rect;
+  auto center = rect.get_center();
+  auto curr = nodeid;
+  for(;;) {
+    auto* node = &nodes[curr];
+    if (node->is_leaf) {
+      // We are the main cell of this element: it counts in the total.
+      if (node->count >= max_in_cell &&
+          axis.qsize.width > min_cell_size && axis.qsize.height > min_cell_size) {
+        node_split(curr, axis);
+        node = &nodes[curr]; //Node might have been invalidated
+      }
+    }
+
+    // Count element in our total
+    node->count++;
+
+    if (node->is_leaf) {
+      // Add it to the current node.
+      if(node->first_child == -1) { //our first element
+        node->bounds = rect;
+      } else {
+        node->bounds |= rect; //extend our bounding box
+      }
+
+      element_list_add(node->first_child, element);
+      return true;
+    }
+
+    node->bounds |= rect; //Augment our quad with new element
+
+    Child dst = axis.where(center);
+    curr = node->first_child + static_cast<int>(dst);
+    axis = axis.child(dst);
+  }
 }
 
 /**
@@ -129,22 +174,45 @@ bool Quadtree<T, Comparator>::add(const T& element, const Rectangle& bounding_bo
  */
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::remove(const T& element) {
+  SOL_PBLOCK("Solarus::Quadtree::remove");
 
-  const auto& it = elements.find(element);
-  if (it == elements.end()) {
-    // Unknown element.
+  auto it = elements_infos.find(element);
+  // Normal case.
+  if(it == elements_infos.end()) {
     return false;
   }
 
-  Rectangle box = it->second.bounding_box;
-  elements.erase(element);
-  if (elements_outside.erase(element) > 0) {
-    // It was outside the quadtree space.
-    return true;
-  }
+  int id = it->second;
+  elements_infos.erase(element);
+  bool res = node_remove(0, QuadAxis(get_space()), id);
+  elements_nodes_storage.erase(id);
+  return res;
+}
 
-  // Normal case.
-  return root.remove(element, box);
+/**
+ * @brief Removes an element from a node
+ * @param nodeid the node id
+ * @param axis the axis describing the node geometry
+ * @param element the element to remove
+ * @return true if the element was removed
+ */
+template<typename T, typename Comparator>
+bool Quadtree<T, Comparator>::node_remove(int nodeid, QuadAxis axis, int element) {
+  const auto& elnode = elements_nodes_storage[element];
+  auto rect = elnode.rect;
+  auto center = rect.get_center();
+  auto curr = nodeid; //Root node is always at 0
+  for(;;) {
+    auto& node = nodes[curr];
+    node.count--;
+    if(node.is_leaf) {
+      return element_list_remove(node.first_child, element);
+    }
+
+    Child dst = axis.where(center);
+    curr = node.first_child + static_cast<int>(dst);
+    axis = axis.child(dst);
+  }
 }
 
 /**
@@ -163,28 +231,17 @@ bool Quadtree<T, Comparator>::remove(const T& element) {
  */
 template<typename T, typename Comparator>
 bool Quadtree<T, Comparator>::move(const T& element, const Rectangle& bounding_box) {
+  SOL_PBLOCK("Solarus::Quadtree::move");
 
-  const auto& it = elements.find(element);
-  if (it == elements.end()) {
-    // Not in the quadtree: error.
+  auto it = elements_infos.find(element);
+  // Normal case.
+  if(it == elements_infos.end()) {
     return false;
   }
-  else {
-    if (it->second.bounding_box == bounding_box) {
-      // Already in the quadtree and no change.
-      return true;
-    }
 
-    if (!remove(element)) {
-      // Failed to remove.
-      return false;
-    }
-  }
-
-  if (!add(element, bounding_box)) {
-    // Failed to add.
-    return false;
-  }
+  node_remove(0, QuadAxis(get_space()), it->second);
+  elements_nodes_storage[it->second].rect = bounding_box;
+  node_add(0, QuadAxis(get_space()), it->second);
   return true;
 }
 
@@ -195,7 +252,26 @@ bool Quadtree<T, Comparator>::move(const T& element, const Rectangle& bounding_b
  */
 template<typename T, typename Comparator>
 int Quadtree<T, Comparator>::get_num_elements() const {
-  return root.get_num_elements() + elements_outside.size();
+  return elements_infos.size();
+}
+
+/**
+ * @brief Does this quadtree contains given element
+ * @param element an element
+ * @return true if element is contained into this quadtree
+ */
+template<typename T, typename Comparator>
+bool Quadtree<T, Comparator>::contains(const T& element) const {
+  return elements_infos.find(element) != elements_infos.end();
+}
+
+/**
+ * @brief shrinks the quadtree nodes to better fit content, should be called periodically
+ */
+template<typename T, typename Comparator>
+void Quadtree<T, Comparator>::shrink_to_fit() {
+  SOL_PFUN("Quadtree::shrink_to_fit");
+  node_shrink(0);
 }
 
 /**
@@ -210,22 +286,43 @@ template<typename T, typename Comparator>
 std::vector<T> Quadtree<T, Comparator>::get_elements(
     const Rectangle& region
 ) const {
-  Set element_set;
-  root.get_elements(region, element_set);
-  return std::vector<T>(element_set.begin(), element_set.end());
+  QueryResult element_set;
+  raw_get_elements(region, std::back_inserter(element_set));
+  return element_set;
 }
 
 /**
- * \brief Returns whether an element is in the quadtree.
- * \param element The element to check.
- * \return \c true if it is in the quadtree, even if it is
- * outside the quadtree space.
+ * @brief Insert element overlaping the given region into the given inserter
+ * @param where region to query
+ * @param elements inserter
  */
 template<typename T, typename Comparator>
-bool Quadtree<T, Comparator>::contains(const T& element) const {
+template<typename C>
+void Quadtree<T, Comparator>::raw_get_elements(
+    const Rectangle& where,
+    std::back_insert_iterator<C> elements) const {
+  std::stack<int, std::vector<int>> nodestack;
+  nodestack.push(0); //Begin with rootnode
+  while(nodestack.size()) {
+    int current = nodestack.top();
+    nodestack.pop();
+    const Node& node = nodes[current];
+    if(!node.bounds.overlaps(where)) {
+      continue;
+    }
 
-  const auto& it = elements.find(element);
-  return it != elements.end();
+    if(node.is_leaf) {
+      foreach_element(node.first_child, [&](int, const ElementNode& node){
+        if(node.rect.overlaps(where)) {
+          elements = node.data; //Add all element overlapping
+        }
+      });
+    } else {
+      foreach_child(node.first_child, [&](int id, const Node&){
+        nodestack.push(id);
+      });
+    }
+  }
 }
 
 /**
@@ -235,8 +332,160 @@ bool Quadtree<T, Comparator>::contains(const T& element) const {
  */
 template<typename T, typename Comparator>
 void Quadtree<T, Comparator>::draw(const SurfacePtr& dst_surface, const Point& dst_position) {
+  std::mt19937 gen;
+  ColorGenerator dist(0,255);
 
-  root.draw(dst_surface, dst_position);
+  std::stack<std::pair<int, QuadAxis>, std::vector<std::pair<int, QuadAxis>>> nodestack;
+  nodestack.push({0, QuadAxis(get_space())}); //Begin with rootnode
+  while(nodestack.size()) {
+    auto [current, axis] = nodestack.top();
+    nodestack.pop();
+    const Node& node = nodes[current];
+
+    Color color(dist(gen), dist(gen), dist(gen));
+
+    draw_rectangle(node.bounds, color, dst_surface, dst_position);
+    draw_rectangle(Rectangle(axis.center-Point(axis.qsize), axis.qsize*2), color, dst_surface, dst_position);
+
+    if(node.is_leaf) {
+      foreach_element(node.first_child, [&](int, const ElementNode& node){
+        draw_rectangle(node.rect, color, dst_surface, dst_position);
+      });
+    } else {
+      for(int i = 0; i < 4; i++)
+      {
+        nodestack.push({node.first_child+i, axis.child(static_cast<Child>(i))});
+      }
+    }
+  }
+}
+
+/**
+ * @brief Allocate 4 nodes at once
+ * @return id of the first allocated node
+ */
+template<typename T, typename Comparator>
+int Quadtree<T, Comparator>::allocate_4nodes() {
+  if(free_node == -1) {
+    int first = static_cast<int>(nodes.size());
+    nodes.resize(first + 4); //Default construct 4 new nodes
+    return first;
+  } else {
+    int free = free_node;
+    free_node = nodes[free_node].first_child;
+    for(int i = 0; i < 4; i++) {
+      nodes[free+i] = {}; //Default init the four nodes
+    }
+    return free;
+  }
+}
+
+/**
+ * @brief Free 4 nodes at once
+ * @param first id of the first node to
+ */
+template<typename T, typename Comparator>
+void Quadtree<T, Comparator>::free_4nodes(int first) {
+  nodes[first].first_child = free_node;
+  free_node = first; //Do not de-init nodes more than that
+}
+
+/**
+ * @brief Add a node to an element list
+ * @param head_node ref to the head of the list
+ * @param element_node id of the node to add
+ */
+template<typename T, typename Comparator>
+void Quadtree<T, Comparator>::element_list_add(int& head_node, int element_node) {
+  elements_nodes_storage[element_node].next = head_node;
+  head_node = element_node;
+}
+
+/**
+ * @brief Remove a node from an element list
+ * @param head_node ref to the head of the list
+ * @param element_node id of the node to remove
+ * @return true if removal happend
+ */
+template<typename T, typename Comparator>
+bool Quadtree<T, Comparator>::element_list_remove(int& head_node, int element_node) {
+  int curr = head_node;
+
+  ElementNode& dnode = elements_nodes_storage[element_node];
+
+  //Search for the node that was pointing to our element
+  while(curr != -1) {
+    ElementNode& cnode = elements_nodes_storage[curr];
+    if(cnode.next == element_node) {
+      cnode.next = dnode.next;
+      return true; //Removed, bail out
+    }
+    curr = cnode.next;
+  }
+
+  //Head fixup
+  if(head_node == element_node) {
+    head_node = dnode.next;
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * @brief clear an element list
+ * @param head_node ref to the head of the list
+ */
+template<typename T, typename Comparator>
+void Quadtree<T, Comparator>::element_list_clear(int& head_node) {
+  head_node = -1;
+}
+
+/**
+ * @brief Constructs an axis from a rectangle
+ *
+ * Center is the center of the rectangle and the axis are half  of the rectangle size
+ *
+ * @param rect a rectangle
+ */
+template<typename T, typename Comparator>
+Quadtree<T, Comparator>::QuadAxis::QuadAxis(const Rectangle& rect) : center(rect.get_center()), qsize(rect.get_width() / 2, rect.get_height() / 2) {
+
+}
+
+/**
+ * @brief Constructs a quad axis from its center and size
+ * @param center the center
+ * @param qsize the size
+ */
+template<typename T, typename Comparator>
+Quadtree<T, Comparator>::QuadAxis::QuadAxis(Point center, Size qsize) : center(center), qsize(qsize) {
+
+}
+
+/**
+ * @brief tells in which quadrant of those axes the point lie
+ * @param point a point
+ * @return in which child quadrant the point lie
+ */
+template<typename T, typename Comparator>
+typename Quadtree<T, Comparator>::Child Quadtree<T, Comparator>::QuadAxis::where(Point point) const {
+  return static_cast<Child>((point.x > center.x) + 2*(point.y > center.y));
+}
+
+/**
+ * @brief Creates a child axes in the given quadrant
+ * @param c a child
+ * @return a new QuadAxis
+ */
+template<typename T, typename Comparator>
+typename Quadtree<T, Comparator>::QuadAxis Quadtree<T, Comparator>::QuadAxis::child(Child c) const {
+  Size newsize = qsize / 2;
+  int ic = static_cast<int>(c);
+  auto yoff = ic & 0b10 ? newsize.height : -newsize.height;
+  auto xoff = ic & 0b01 ? newsize.width : -newsize.width;
+  Point newcenter = Point(center.x + xoff, center.y + yoff);
+  return {newcenter, newsize};
 }
 
 /**
@@ -247,210 +496,99 @@ void Quadtree<T, Comparator>::draw(const SurfacePtr& dst_surface, const Point& d
  * \param quadtree The quadtree this node belongs to.
  */
 template<typename T, typename Comparator>
-Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree) :
-    Node(quadtree, Rectangle(0, 0, 256, 256)) {
+Quadtree<T, Comparator>::Node::Node() :
+    bounds(0,0,0,0), first_child(-1), is_leaf(true), count(0) {
 
 }
 
 /**
- * \brief Creates a node with the given coordinates.
- * \param quadtree The quadtree this node belongs to.
- * \param cell Cell coordinates of the node.
+ * @brief Iterates trough each element starting with first
+ * @param first the first element
+ * @param fun closure to apply
  */
 template<typename T, typename Comparator>
-Quadtree<T, Comparator>::Node::Node(const Quadtree& quadtree, const Rectangle& cell) :
-    quadtree(quadtree),
-    elements(),
-    children(),
-    cell(cell),
-    center(cell.get_center()),
-    color() {
-
-  initialize(cell);
-
-  if (debug_quadtrees) {
-    color = Color(Random::get_number(256), Random::get_number(256), Random::get_number(256));
+template <typename F>
+void Quadtree<T, Comparator>::foreach_element(int first, F fun) {
+  int curr = first;
+  while(curr != -1) {
+    ElementNode& node = elements_nodes_storage[curr];
+    int next = node.next;
+    fun(curr, node);
+    curr = next;
   }
 }
 
 /**
- * \brief Clears this node.
- *
- * Children nodes and their content are destroyed.
+ * @brief Iterates trough each child starting with first
+ * @param first the first child
+ * @param fun closure to apply
  */
 template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::clear() {
-
-  elements.clear();
-  std::fill(std::begin(children), std::end(children), nullptr);
+template <typename F>
+void Quadtree<T, Comparator>::foreach_child(int first, F fun) {
+  for(int32_t child = first; child < first + 4; child++) {
+    fun(child, nodes[child]);
+  }
 }
 
 /**
- * \brief Clears this node and initializes it with a new cell rectangle.
- * \param cell The new cell.
+ * @brief Iterates trough each element starting with first
+ * @param first the first element
+ * @param fun closure to apply
  */
 template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::initialize(const Rectangle& cell) {
-
-  clear();
-  this->cell = cell;
-  elements.reserve(max_in_cell);
+template <typename F>
+void Quadtree<T, Comparator>::foreach_element(int first, F fun) const {
+  int curr = first;
+  while(curr != -1) {
+    const ElementNode& node = elements_nodes_storage[curr];
+    int next = node.next;
+    fun(curr, node);
+    curr = next;
+  }
 }
 
 /**
- * \brief Returns the cell represented by this node.
- * \return The cell's rectangle.
+ * @brief Iterates trough each child starting with first
+ * @param first the first child
+ * @param fun closure to apply
  */
 template<typename T, typename Comparator>
-Rectangle Quadtree<T, Comparator>::Node::get_cell() const {
-  return cell;
+template <typename F>
+void Quadtree<T, Comparator>::foreach_child(int first, F fun) const {
+  for(int32_t child = first; child < first + 4; child++) {
+    fun(child, nodes[child]);
+  }
 }
 
-/**
- * \brief Returns the size of the cell represented by this node.
- * \return The cell size.
- */
-template<typename T, typename Comparator>
-Size Quadtree<T, Comparator>::Node::get_cell_size() const {
-    return get_cell().get_size();
-}
-
-/**
- * \brief Adds an element to this node if its bounding box intersects it.
- *
- * Splits the node if necessary when the threshold is exceeded.
- *
- * \param element The element to add.
- * \param bounding_box Bounding box of the element.
- * \return \c true in case of success.
- */
-template<typename T, typename Comparator>
-bool Quadtree<T, Comparator>::Node::add(
-    const T& element,
-    const Rectangle& bounding_box
-) {
-  if (!get_cell().overlaps(bounding_box)) {
-    // Nothing to do.
-    return false;
-  }
-
-  if (!is_split()) {
-
-    // See if it is time to split.
-    if (is_main_cell(bounding_box)) {
-      // We are the main cell of this element: it counts in the total.
-      if (get_num_elements() >= max_in_cell &&
-          get_cell_size().width > min_cell_size &&
-          get_cell_size().height > min_cell_size) {
-        split();
-      }
-    }
-  }
-
-  if (!is_split()) {
-    // Add it to the current node.
-    elements.emplace_back(element, bounding_box);
-    return true;
-  }
-
-  // Add it to children cells.
-  for (const std::unique_ptr<Node>& child : children) {
-    child->add(element, bounding_box);
-  }
-  return true;
-}
-
-/**
- * \brief Removes an element from this node if its bounding box intersects it.
- *
- * Merges nodes when necessary.
- *
- * \param element The element to remove.
- * \param bounding_box Bounding box of the element.
- * \return \c true in the element was found and removed.
- */
-template<typename T, typename Comparator>
-bool Quadtree<T, Comparator>::Node::remove(
-    const T& element,
-    const Rectangle& bounding_box
-) {
-  if (!get_cell().overlaps(bounding_box)) {
-    // Nothing to do.
-    return false;
-  }
-
-  if (!is_split()) {
-    // Remove from this cell.
-    const auto& it = std::find(elements.begin(), elements.end(), std::make_pair(element, bounding_box));
-    if (it == elements.end()) {
-      // The element was not here.
-      return false;
-    }
-    elements.erase(it);
-    return true;
-  }
-
-  // Remove from children cells.
-  bool removed = false;
-  for (const std::unique_ptr<Node>& child : children) {
-    removed |= child->remove(element, bounding_box);
-  }
-
-  if (removed &&
-      !children[0]->is_split()  // We are the parent node of where the element was removed.
-  ) {
-    // See if it is time to merge.
-    int num_elements_in_children = get_num_elements();
-    if (num_elements_in_children < min_in_4_cells) {
-      merge();
-    }
-  }
-  return removed;
-}
-
-/**
- * \brief Returns whether this node is split or is a leaf cell.
- * \return \c true if the node is split.
- */
-template<typename T, typename Comparator>
-bool Quadtree<T, Comparator>::Node::is_split() const {
-
-  return children[0] != nullptr;
-}
 
 /**
  * \brief Splits this cell in four parts and moves its elements to them.
  */
 template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::split() {
+void Quadtree<T, Comparator>::node_split(int node, const QuadAxis& axis) {
 
-  Debug::check_assertion(!is_split(), "Quadtree node already split");
+  auto& node_before = nodes[node];
 
-  // Create 4 children cells.
-  const Rectangle& cell = get_cell();
-  const Point& center = cell.get_center();
-  children[0] = std::unique_ptr<Node>(
-      new Node(quadtree, Rectangle(cell.get_top_left(), center))
-  );
-  children[1] = std::unique_ptr<Node>(
-      new Node(quadtree, Rectangle(Point(center.x, cell.get_top()), Point(cell.get_right(), center.y)))
-  );
-  children[2] = std::unique_ptr<Node>(
-      new Node(quadtree, Rectangle(Point(cell.get_left(), center.y), Point(center.x, cell.get_bottom())))
-  );
-  children[3] = std::unique_ptr<Node>(
-      new Node(quadtree, Rectangle(center, cell.get_bottom_right()))
-  );
+  //Save pointer to first element
+  int32_t element = node_before.first_child;
+
+  //allocate nodes
+  int first_child = allocate_4nodes(); //Nodes are correctly initialized
+
+  //node before invalid
+  auto& node_after = nodes[node];
+  node_after.first_child = first_child;
+
+  node_after.is_leaf = false;
 
   // Move existing elements into them.
-  for (const std::pair<T, Rectangle>& pair : elements) {
-    for (const std::unique_ptr<Node>& child : children) {
-      child->add(pair.first, pair.second);
-    }
-  }
-  elements.clear();
-
-  Debug::check_assertion(is_split(), "Quadtree node split failed");
+  foreach_element(element, [&](int nodeid, ElementNode& node){
+    auto center = node.rect.get_center();
+    Child c = axis.where(center);
+    //nodes[first_child+static_cast<int32_t>(c)].add(tree, axis.child(c), {center, node.rect, nodeid});
+    node_add(first_child+static_cast<int>(c), axis.child(c), nodeid);
+  });
 }
 
 /**
@@ -459,142 +597,79 @@ void Quadtree<T, Comparator>::Node::split() {
  * The children must already be leaves.
  */
 template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::merge() {
+void Quadtree<T, Comparator>::node_merge(int nodeid) {
+  auto& topnode = nodes[nodeid];
 
-  Debug::check_assertion(is_split(), "Quadtree node already merged");
+  int32_t first_element = -1;
+  for(int32_t i = 0; i < 4; i++) { //For each child node
+    auto child = topnode.first_child + i;
+    auto& node = nodes[child];
 
-  // We want to avoid duplicates while preserving a deterministic order.
-  Set merged_elements;
-  for (const std::unique_ptr<Node>& child : children) {
-    Debug::check_assertion(!child->is_split(), "Quadtree node child is not a leaf");
-    for (const std::pair<T, Rectangle>& pair : child->elements) {
-      const T& element = pair.first;
-      if (merged_elements.insert(element).second) {
-        elements.push_back(pair);
-      }
+    //First merge bellow if needed
+    if(!node.is_leaf) {
+      node_merge(child);
     }
+
+    foreach_element(node.first_child, [&](int elnode, ElementNode& /*element*/){
+      element_list_add(first_element, elnode);
+    });
   }
 
-  std::fill(std::begin(children), std::end(children), nullptr);
-
-  Debug::check_assertion(!is_split(), "Quadtree node merge failed");
+  free_4nodes(topnode.first_child);
+  topnode.first_child = first_element;
+  topnode.is_leaf = true;
 }
 
 /**
- * \brief Returns whether this cell contains a box and is also its main cell.
- *
- * The main cell is used to ensure uniqueness, for example when counting
- * elements.
+ * @brief Shrinks and/or merge the given node
+ * @param node_id the node to shrink
+ * @return some Rectangle if there are childs or element, else None
  */
 template<typename T, typename Comparator>
-bool Quadtree<T, Comparator>::Node::is_main_cell(const Rectangle& bounding_box) const {
+std::optional<Rectangle> Quadtree<T, Comparator>::node_shrink(int node_id) {
+  Node& node = nodes[node_id];
 
-  if (!get_cell().overlaps(bounding_box)) {
-    // Not overlapping this cell.
-    return false;
+  if(node.count == 0) {
+    return {}; //Do not return a rect if we are empty
   }
 
-  // The bounding box is in this cell. See if this is the main cell.
-  Point center = bounding_box.get_center();
+  //First merge if necessary
+  if(node.count <= min_in_4_cells && !node.is_leaf) {
+    node_merge(node_id);
+  }
 
-  // Clamp the center to the quadtree space,
-  // in case the center it actually outside.
-  const Rectangle& quadtree_space = quadtree.get_space();
-  center = {
-      std::max(quadtree_space.get_left(), std::min(quadtree_space.get_right() - 1, center.x)),
-      std::max(quadtree_space.get_top(), std::min(quadtree_space.get_bottom() - 1, center.y))
-  };
-
-  Debug::check_assertion(quadtree_space.contains(center), "Wrong center position");
-
-  return get_cell().contains(center);
-}
-
-/**
- * \brief Returns the number of elements whose center is under this node.
- * \return The number of elements under this node.
- */
-template<typename T, typename Comparator>
-int Quadtree<T, Comparator>::Node::get_num_elements() const {
-
-  int num_elements = 0;
-  if (!is_split()) {
-    // Some elements can overlap several cells.
-    // To avoid duplicates, we count an element if this cell is its main cell.
-    // TODO This information could be stored for better performance.
-    for (const std::pair<T, Rectangle>& pair : elements) {
-      const Rectangle& box = pair.second;
-      if (is_main_cell(box)) {
-        ++num_elements;
+  if(node.is_leaf) {
+    int current_id = node.first_child;
+    ElementNode& first = elements_nodes_storage[node.first_child];
+    node.bounds = first.rect;
+    while(current_id != -1) {
+      auto& anode = elements_nodes_storage[current_id];
+      node.bounds |= anode.rect;
+      current_id = anode.next;
+    }
+  } else {
+    int current_id = node.first_child;
+    auto res = node_shrink(current_id);
+    bool atleast = false;
+    if(res) {
+      node.bounds = *res;
+      atleast = true;
+    }
+    for(;current_id < node.first_child+4; current_id++){
+      auto ares = node_shrink(current_id);
+      if(ares) {
+        node.bounds |= *ares;
+        atleast |= true;
       }
     }
-  }
-  else {
-    // Ask children.
-    for (const std::unique_ptr<Node>& child : children) {
-      num_elements += child->get_num_elements();
+    if(atleast) {
+      return node.bounds;
+    } else {
+      return {};
     }
   }
-  return num_elements;
-}
 
-/**
- * \brief Gets the elements intersecting the given rectangle under this node.
- * \param[in] region The rectangle to check.
- * \param[in/out] result A set that will be filled with elements.
- */
-template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::get_elements(
-    const Rectangle& region,
-    Set& result
-) const {
-
-  if (!get_cell().overlaps(region)) {
-    // Nothing here.
-    return;
-  }
-
-  if (!is_split()) {
-    for (const std::pair<T, Rectangle>& pair : elements) {
-      if (pair.second.overlaps(region)) {
-        result.emplace(pair.first);
-      }
-    }
-  }
-  else {
-    // Get from from children cells.
-    for (const std::unique_ptr<Node>& child : children) {
-      child->get_elements(region, result);
-    }
-  }
-}
-
-/**
- * \brief Draws the node on a surface for debugging purposes.
- * \param dst_surface The destination surface.
- * \param dst_position Where to draw on that surface.
- */
-template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::draw(const SurfacePtr& dst_surface, const Point& dst_position) {
-
-  if (!is_split()) {
-    // Draw the rectangle of the node.
-    draw_rectangle(get_cell(), color, dst_surface, dst_position);
-
-    // Draw bounding boxes of elements.
-    for (const std::pair<T, Rectangle>& pair : elements) {
-      const Rectangle& bounding_box = pair.second;
-      if (is_main_cell(bounding_box)) {
-        draw_rectangle(bounding_box, color, dst_surface, dst_position);
-      }
-    }
-  }
-  else {
-    // Draw children nodes.
-    for (const std::unique_ptr<Node>& child : children) {
-      child->draw(dst_surface, dst_position);
-    }
-  }
+  return node.bounds;
 }
 
 /**
@@ -605,12 +680,12 @@ void Quadtree<T, Comparator>::Node::draw(const SurfacePtr& dst_surface, const Po
  * \param dst_position Where to draw on that surface.
  */
 template<typename T, typename Comparator>
-void Quadtree<T, Comparator>::Node::draw_rectangle(
+void Quadtree<T, Comparator>::draw_rectangle(
     const Rectangle& rectangle,
     const Color& line_color,
     const SurfacePtr& dst_surface,
     const Point& dst_position
-) {
+) const {
   // TODO remove this function when the draw line API is available
 
   Rectangle where = rectangle;

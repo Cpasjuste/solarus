@@ -456,6 +456,17 @@ inline Rectangle Rectangle::get_intersection(const Rectangle& other) const {
 }
 
 /**
+ * @brief Returns the union between this rectangle and another one
+ * @param other Another rectangle
+ * @return  The union of the rectangles
+ */
+inline Rectangle Rectangle::get_union(const Rectangle& other) const {
+  Rectangle result;
+  SDL_UnionRect(get_internal_rect(), other.get_internal_rect(), result.get_internal_rect());
+  return result;
+}
+
+/**
  * \brief Returns the intersection between this rectangle and another one.
  * \param other Another rectangle.
  * \return The intersection or an empty rectangle.

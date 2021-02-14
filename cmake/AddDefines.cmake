@@ -28,3 +28,7 @@ endif()
 if(SOLARUS_FILE_LOGGING)
   add_definitions(-DSOLARUS_FILE_LOGGING)
 endif()
+
+if(SOLARUS_PROFILING)
+  add_definitions(-DSOLARUS_PROFILING)
+endif()

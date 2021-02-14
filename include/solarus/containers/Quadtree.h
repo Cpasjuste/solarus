@@ -20,12 +20,14 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/core/Size.h"
+#include "solarus/core/Profiler.h"
 #include "solarus/graphics/Color.h"
 #include "solarus/graphics/SurfacePtr.h"
+#include "FreeList.h"
 #include <array>
-#include <map>
+#include <unordered_map>
 #include <memory>
-#include <set>
+#include <stack>
 #include <vector>
 
 namespace Solarus {
@@ -45,7 +47,7 @@ class Quadtree {
 
   public:
 
-    using Set = std::set<T, Comparator>;
+    using QueryResult = std::vector<T>;
 
     Quadtree();
     explicit Quadtree(const Rectangle& space);
@@ -63,13 +65,22 @@ class Quadtree {
         const Rectangle& where
     ) const;
 
+
+    template<typename C>
+    void raw_get_elements(
+        const Rectangle& where,
+        std::back_insert_iterator<C> elements
+    ) const;
+
     int get_num_elements() const;
     bool contains(const T& element) const;
+
+    void shrink_to_fit();
 
     void draw(const SurfacePtr& dst_surface, const Point& dst_position);
 
     static constexpr int
-        min_cell_size = 16;  /**< Don't split more if a cell is smaller than
+        min_cell_size = 32;  /**< Don't split more if a cell is smaller than
                               * this size. */
     static constexpr int
         max_in_cell = 8;     /**< A cell is split if it exceeds this number
@@ -83,72 +94,112 @@ class Quadtree {
 
   private:
 
-    class Node {
-
-      public:
-
-        explicit Node(const Quadtree& quadtree);
-        Node(const Quadtree& quadtree, const Rectangle& cell);
-
-        void clear();
-        void initialize(const Rectangle& cell);
-
-        Rectangle get_cell() const;
-        Size get_cell_size() const;
-
-        bool add(
-            const T& element,
-            const Rectangle& bounding_box
-        );
-        bool remove(
-            const T& element,
-            const Rectangle& bounding_box
-        );
-
-        void get_elements(
-            const Rectangle& region,
-            Set& result
-        ) const;
-
-        int get_num_elements() const;
-
-        void draw(
-            const SurfacePtr& dst_surface, const Point& dst_position
-        );
-        void draw_rectangle(
-            const Rectangle& rectangle,
-            const Color& line_color,
-            const SurfacePtr& dst_surface,
-            const Point& dst_position
-        );
-
-      private:
-
-        bool is_split() const;
-        void split();
-        void merge();
-        bool is_main_cell(const Rectangle& bounding_box) const;
-
-        const Quadtree& quadtree;
-        std::vector<std::pair<T, Rectangle>> elements;
-        std::array<std::unique_ptr<Node>, 4> children;
-        Rectangle cell;
-        Point center;
-        Color color;
-
+    //Enum class representing position (and indexes) of the children nodes
+    enum class Child {
+      TL, TR,
+      BL, BR
     };
 
-    struct ElementInfo {
-        Rectangle bounding_box;
+    /**
+     * @brief Helper struct easing the spliting of the space in quadrants
+     */
+    struct QuadAxis{
+        Point center;   /**< center point spliting the tree quad */
+        Size  qsize;    /**< size of a quadrant */
+
+        QuadAxis(const Rectangle& rect);
+        QuadAxis(Point center, Size qsize);
+        Child where(Point point) const;
+        QuadAxis child(Child c) const;
     };
 
-    std::map<T, ElementInfo> elements;      /**< Elements in the quadtree and
-                                             * intersecting its space. */
-    Set elements_outside;                   /**< Elements that were added to
-                                             * the quadtree but that are
-                                             * currently outside its space. */
-    Node root;                              /** The root node of the tree. */
+    /**
+     * @brief Container for all necessary information when inserting elements
+     * down the tree.
+     */
+    struct InsertInfo{
+        Point center;        /**< center of the element */
+        Rectangle bbox;      /**< bounding box of the element */
+        int element_node;    /**< id of the element being inserted */
+    };
 
+    using ColorGenerator = std::uniform_int_distribution<uint8_t>;
+
+    /**
+     * @brief Struct holding node geometry and links to element and other nodes
+     */
+    struct Node {
+        Node();
+        Rectangle bounds;         /**< bounding box of all node children (elements or nodes) */
+        int32_t first_child = -1; /**< first child of the node, or first element if it is a leaf */
+        bool is_leaf : 1;         /**< is this a leaf */
+        uint32_t count : 31;      /**< count of elements bellow this leaf */
+    };
+
+    static_assert (sizeof(Node) <= sizeof(int)*8, "Size of node should not be more than 8 ints");
+
+
+
+    // Node management
+    bool node_add(int node, QuadAxis axis, int element);
+    bool node_remove(int node, QuadAxis axis, int element);
+    void node_split(int node, const QuadAxis& axis);
+    void node_merge(int node);
+    std::optional<Rectangle> node_shrink(int node);
+
+    template <typename F>
+    void foreach_element(int first, F fun);
+
+    template <typename F>
+    void foreach_child(int first, F fun);
+
+    template <typename F>
+    void foreach_element(int first, F fun) const;
+
+    template <typename F>
+    void foreach_child(int first, F fun) const;
+
+
+    int allocate_4nodes();
+    void free_4nodes(int first);
+
+    // Elements management
+    void element_list_add(int& head_node, int element_node);
+    bool element_list_remove(int& head_node, int element_node);
+    void element_list_clear(int& head_node);
+
+
+    void draw_rectangle(
+        const Rectangle& rectangle,
+        const Color& line_color,
+        const SurfacePtr& dst_surface,
+        const Point& dst_position
+    ) const;
+
+    //Node& root();
+    //const Node& root() const;
+
+    /**
+    * @brief Holds the data at the same time as the linked list impl
+    */
+    struct ElementNode {
+      int next;          /**< next element in the linked list */
+      Rectangle rect;    /**< bounding box of this element */
+      T data;            /**< Data stored into the quadtree */
+    };
+
+    FreeList<ElementNode>
+      elements_nodes_storage;     /**< contiguous storage for element nodes */
+
+    std::vector<Node> nodes;      /**< contiguous storage for quadtree nodes */
+
+
+    int free_node = -1;           /**< first free group of four node or -1 if no free nodes */
+    Rectangle space;              /**< rectangle covered by this quadtree */
+
+
+    std::unordered_map<T, int>
+      elements_infos;             /**< mapping of element to element node id */
 };
 
 template<typename T>
