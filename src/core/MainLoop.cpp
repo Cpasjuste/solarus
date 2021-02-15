@@ -35,6 +35,7 @@
 
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
+#include "solarus/core/Profiler.h"
 
 #include <lua.hpp>
 #include <clocale>
@@ -377,6 +378,10 @@ int MainLoop::push_lua_command(const std::string& command) {
  * Does nothing if the quest is missing.
  */
 void MainLoop::run() {
+  SOL_MAIN_THREAD;
+#ifdef SOLARUS_PROFILING
+  profiler::startListen();
+#endif
 
   if (!QuestFiles::quest_exists()) {
     return;
@@ -394,7 +399,7 @@ void MainLoop::run() {
   // Each call to update() makes the simulated time advance one fixed step.
 
   while (!is_exiting()) {
-
+    SOL_PBLOCK("Solarus::MainLoop::Frame");
     // Measure the time of the last iteration.
     uint32_t now = System::get_real_time() - time_dropped;
     uint32_t last_frame_duration = now - last_frame_date;
@@ -442,12 +447,14 @@ void MainLoop::run() {
 
     // 4. Sleep if we have time, to save CPU and GPU cycles.
     if (debug_lag > 0 && !turbo && !is_suspended()) {
+      SOL_PBLOCK("Debug lag")
       // Extra sleep time for debugging, useful to simulate slower systems.
       System::sleep(debug_lag);
     }
 
     last_frame_duration = (System::get_real_time() - time_dropped) - last_frame_date;
     if (last_frame_duration < System::timestep && !turbo) {
+      SOL_PBLOCK("Timestep sleep");
       System::sleep(System::timestep - last_frame_duration);
     }
   }
@@ -462,6 +469,7 @@ void MainLoop::run() {
  * Otherwise, use run() to execute the standard main loop.
  */
 void MainLoop::step() {
+  SOL_PFUN();
   if (game != nullptr) {
     game->update();
   }
@@ -488,7 +496,7 @@ void MainLoop::step() {
  * \brief Detects whether there were input events and if yes, handles them.
  */
 void MainLoop::check_input() {
-
+  SOL_PFUN();
   // Check SDL events.
   for(std::unique_ptr<InputEvent> event =  InputEvent::get_event();
       event != nullptr;
@@ -642,7 +650,7 @@ void MainLoop::notify_control(const ControlEvent& event) {
  * This function is called repeatedly by the main loop.
  */
 void MainLoop::draw() {
-
+  SOL_PFUN();
   root_surface->clear();
 
   if (game != nullptr) {

@@ -23,6 +23,10 @@
 #include "solarus/graphics/Color.h"
 #include "solarus/graphics/Sprite.h"
 #include "solarus/graphics/Video.h"
+#if _POSIX_C_SOURCE >= 200112L
+#  include <stdlib.h>
+#  include <string.h>
+#endif
 #include <SDL.h>
 #ifdef SOLARUS_USE_APPLE_POOL
 #  include "lowlevel/apple/AppleInterface.h"
@@ -43,10 +47,46 @@ uint32_t System::ticks = 0;
  */
 void System::initialize(const Arguments& args) {
 
+#if _POSIX_C_SOURCE >= 200112L
+  // Back up state of environment variables about to be modified.
+  char* sdl_video_x11_wmclass = getenv("SDL_VIDEO_X11_WMCLASS");
+  if(sdl_video_x11_wmclass != NULL) {
+    sdl_video_x11_wmclass = strdup(sdl_video_x11_wmclass);
+  }
+
+  char* sdl_video_wayland_wmclass = getenv("SDL_VIDEO_WAYLAND_WMCLASS");
+  if(sdl_video_wayland_wmclass != NULL) {
+    sdl_video_wayland_wmclass = strdup(sdl_video_wayland_wmclass);
+  }
+
+  // Set AppID that SDL should report on Wayland and X11.
+  setenv("SDL_VIDEO_X11_WMCLASS", SOLARUS_APP_ID ".Runner", 1);
+  setenv("SDL_VIDEO_WAYLAND_WMCLASS", SOLARUS_APP_ID ".Runner", 1);
+#endif
+
   // initialize SDL
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC);
   initial_time = get_real_time();
   ticks = 0;
+
+#if _POSIX_C_SOURCE >= 200112L
+  // Restore environment variable state.
+  if(sdl_video_wayland_wmclass != NULL) {
+    setenv("SDL_VIDEO_WAYLAND_WMCLASS", sdl_video_wayland_wmclass, 1);
+    free(sdl_video_wayland_wmclass);
+    sdl_video_wayland_wmclass = NULL;
+  } else {
+    unsetenv("SDL_VIDEO_WAYLAND_WMCLASS");
+  }
+
+  if(sdl_video_x11_wmclass != NULL) {
+    setenv("SDL_VIDEO_X11_WMCLASS", sdl_video_x11_wmclass, 1);
+    free(sdl_video_x11_wmclass);
+    sdl_video_x11_wmclass = NULL;
+  } else {
+    unsetenv("SDL_VIDEO_X11_WMCLASS");
+  }
+#endif
 
   // audio
   Sound::initialize(args);

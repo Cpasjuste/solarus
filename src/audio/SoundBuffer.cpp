@@ -199,7 +199,6 @@ ALuint SoundBuffer::get_buffer() const {
   return buffer;
 }
 
-
 /**
  * \brief Loads the specified sound file and decodes its content into an OpenAL buffer.
  * \param file_name name of the file to open

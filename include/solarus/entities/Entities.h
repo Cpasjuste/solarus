@@ -75,18 +75,8 @@ class EntityZOrderComparator {
      * \param second Another entity.
      * \return \c true if the first entity's Z index is lower than the second one's.
      */
-    bool operator()(const ConstEntityPtr& first, const ConstEntityPtr& second) const {
-
-      if (first->get_layer() < second->get_layer()) {
-        return true;
-      }
-
-      if (first->get_layer() > second->get_layer()) {
-        return false;
-      }
-
-      // Same layer.
-     return first->get_z() < second->get_z();
+    inline bool operator()(const ConstEntityPtr& first, const ConstEntityPtr& second) const {
+      return std::tuple(first->get_layer(), first->get_z()) < std::tuple(second->get_layer(), second->get_z());
     }
 };
 
@@ -144,6 +134,9 @@ class SOLARUS_API Entities {
     // By coordinates.
     void get_entities_in_rectangle_z_sorted(const Rectangle& rectangle, ConstEntityVector& result) const;
     void get_entities_in_rectangle_z_sorted(const Rectangle& rectangle, EntityVector& result);
+    void get_entities_in_rectangle_raw(const Rectangle& rectangle, ConstEntityVector& result) const;
+    void get_entities_in_rectangle_raw(const Rectangle& rectangle, EntityVector& result);
+
 
     // By separator region.
     void get_entities_in_region_z_sorted(const Point& xy, EntityVector& result);
@@ -161,6 +154,8 @@ class SOLARUS_API Entities {
     void bring_to_back(Entity& entity);
     void set_entity_layer(Entity& entity, int layer);
     void notify_entity_bounding_box_changed(Entity& entity);
+    std::string ensure_unique_name(const std::string& candidate_name);
+    void set_entity_name(const EntityPtr& entity, const std::string& name);
 
     // Specific to some entity types.
     bool overlaps_raised_blocks(int layer, const Rectangle& rectangle) ;

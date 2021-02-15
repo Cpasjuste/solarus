@@ -134,7 +134,7 @@ class CustomState: public HeroState {
     void set_can_be_hurt(const ScopedLuaRef& can_be_hurt_callback);
     bool get_can_start_sword() const override;
     void set_can_start_sword(bool can_start_sword);
-    bool is_cutting_with_sword(Entity& entity) override;
+    bool is_cutting_with_sword(Destructible& destructible) override;
     bool get_can_cut(Entity* entity);
     void set_can_cut(bool can_cut);
     void set_can_cut(const ScopedLuaRef& can_cut_callback);

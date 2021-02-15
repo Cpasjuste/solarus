@@ -20,6 +20,7 @@
 #include "solarus/core/Geometry.h"
 #include "solarus/core/Map.h"
 #include "solarus/core/System.h"
+#include "solarus/entities/Destructible.h"
 #include "solarus/entities/Enemy.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/HeroSprites.h"
@@ -160,12 +161,12 @@ bool Hero::SwordTappingState::get_can_use_shield() const {
 /**
  * \copydoc Entity::State::is_cutting_with_sword
  */
-bool Hero::SwordTappingState::is_cutting_with_sword(Entity& entity) {
+bool Hero::SwordTappingState::is_cutting_with_sword(Destructible& destructible) {
 
   Hero& hero = get_entity();
-  return entity.is_obstacle_for(hero)         // only obstacle entities can be cut
-    && hero.get_facing_entity() == &entity    // only one entity at a time
-    && get_sprites().get_current_frame() >= 3;  // wait until the animation shows an appropriate frame
+  return destructible.is_obstacle_for(hero)         // only obstacle entities can be cut
+      && hero.get_facing_entity() == &destructible    // only one entity at a time
+      && get_sprites().get_current_frame() >= 3;      // wait until the animation shows an appropriate frame
 }
 
 /**

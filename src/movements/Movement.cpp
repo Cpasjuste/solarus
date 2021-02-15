@@ -207,7 +207,6 @@ void Movement::set_xy(int x, int y) {
  * \param xy The new coordinates.
  */
 void Movement::set_xy(const Point& xy) {
-
   if (entity != nullptr) {
     // The object controlled is a map entity.
     entity->set_xy(xy);

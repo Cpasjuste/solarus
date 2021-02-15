@@ -312,9 +312,8 @@ class LuaContext {
         Entity& entity,
         Camera& camera
     );
-    bool do_traversable_test_function(
-        const ScopedLuaRef& traversable_test_ref,
-        ExportableToLua& userdata,
+    bool do_traversable_test_function(const ScopedLuaRef& traversable_test_ref,
+        ExportableToLua &userdata,
         Entity& other_entity
     );
     bool do_custom_entity_collision_test_function(
@@ -620,6 +619,8 @@ class LuaContext {
       sound_api_create,
       sound_api_play,
       sound_api_stop,
+      sound_api_is_paused,
+      sound_api_set_paused,
 
       // Video API.
       video_api_get_window_title,
@@ -1034,6 +1035,7 @@ class LuaContext {
       entity_api_get_map,
       entity_api_get_game,
       entity_api_get_name,
+      entity_api_set_name,
       entity_api_exists,
       entity_api_remove,
       entity_api_is_enabled,
@@ -1094,6 +1096,10 @@ class LuaContext {
       hero_api_set_direction,
       hero_api_get_walking_speed,
       hero_api_set_walking_speed,
+      hero_api_get_push_delay,
+      hero_api_set_push_delay,
+      hero_api_get_carry_height,
+      hero_api_set_carry_height,
       hero_api_save_solid_ground,
       hero_api_reset_solid_ground,
       hero_api_get_solid_ground_position,
@@ -1235,6 +1241,8 @@ class LuaContext {
       destructible_api_set_destruction_sound,
       destructible_api_get_can_be_cut,
       destructible_api_set_can_be_cut,
+      destructible_api_get_cut_method,
+      destructible_api_set_cut_method,
       destructible_api_get_can_explode,
       destructible_api_set_can_explode,
       destructible_api_get_can_regenerate,
@@ -1251,6 +1259,8 @@ class LuaContext {
       carried_object_api_set_destruction_sound,
       carried_object_api_get_damage_on_enemies,
       carried_object_api_set_damage_on_enemies,
+      carried_object_api_get_object_height,
+      carried_object_api_set_object_height,
       enemy_api_get_breed,
       enemy_api_get_life,
       enemy_api_set_life,

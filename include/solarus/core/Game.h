@@ -181,6 +181,14 @@ private:
 
     void on_hero_map_prepare(const HeroPtr& hero, const CameraTeleportation &tp);
 
+    // update functions
+    void update_tilesets();
+    bool update_teleportation(CameraTeleportation &tp);
+    void update_teleportations();
+    void teleportation_change_map(CameraTeleportation &tp);
+    void update_gameover_sequence();
+    void notify_map_changed(Map& map, Camera &camera);
+
     // main objects
     MainLoop& main_loop;       /**< the main loop object */
     std::shared_ptr<Savegame>
@@ -215,15 +223,6 @@ private:
 
     // world (i.e. the current set of maps)
     bool crystal_state;        /**< indicates that a crystal has been enabled (i.e. the orange blocks are raised) */
-
-    // update functions
-    void update_tilesets();
-    bool update_teleportation(CameraTeleportation &tp);
-    void update_teleportations();
-    void teleportation_change_map(CameraTeleportation &tp);
-    void update_gameover_sequence();
-    void notify_map_changed(Map& map, Camera &camera);
-
 };
 
 }

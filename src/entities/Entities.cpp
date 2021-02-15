@@ -35,6 +35,7 @@
 #include "solarus/graphics/Color.h"
 #include "solarus/graphics/Surface.h"
 #include "solarus/lua/LuaContext.h"
+#include "solarus/core/Profiler.h"
 #include <sstream>
 #include <lua.hpp>
 
@@ -405,14 +406,11 @@ bool Entities::has_entity_with_prefix(const std::string& prefix) const {
 void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, ConstEntityVector& result
 ) const {
-
-  EntityVector non_const_result = quadtree->get_elements(rectangle);
-
-  result.reserve(non_const_result.size());
-  for (const ConstEntityPtr& entity : non_const_result) {
-      result.push_back(entity);
-  }
+  SOL_PFUN();
+  quadtree->raw_get_elements(rectangle, std::back_inserter(result));
+  std::sort(result.begin(), result.end(), EntityZOrderComparator());
 }
+
 
 /**
  * \overload Non-const version.
@@ -420,8 +418,36 @@ void Entities::get_entities_in_rectangle_z_sorted(
 void Entities::get_entities_in_rectangle_z_sorted(
     const Rectangle& rectangle, EntityVector& result
 ) {
+  SOL_PFUN();
+  quadtree->raw_get_elements(rectangle, std::back_inserter(result));
+  std::sort(result.begin(), result.end(), EntityZOrderComparator());
+}
 
-  result = quadtree->get_elements(rectangle);
+/**
+ * @brief Gets the entities whose bouding box overlap the queried rectangle
+ *
+ * This raw version returns directly the quadtree query result, unsorted
+ *
+ * @param rectangle the area to query
+ * @param result
+ */
+void Entities::get_entities_in_rectangle_raw(const Rectangle& rectangle, ConstEntityVector& result) const {
+  SOL_PFUN();
+  quadtree->raw_get_elements(rectangle, std::back_inserter(result));
+}
+
+
+/**
+ * @brief Gets the entities whose bouding box overlap the queried rectangle
+ *
+ * This raw version returns directly the quadtree query result, unsorted
+ *
+ * @param rectangle the area to query
+ * @param result
+ */
+void Entities::get_entities_in_rectangle_raw(const Rectangle& rectangle, EntityVector& result) {
+  SOL_PFUN();
+  quadtree->raw_get_elements(rectangle, std::back_inserter(result));
 }
 
 /**
@@ -993,40 +1019,7 @@ void Entities::add_entity(const EntityPtr& entity) {
   }
 
   // Rename the entity if there is already an entity with the same name.
-  std::string name = entity->get_name();
-  if (!name.empty()) {
-
-    if (named_entities.find(name) != named_entities.end()) {
-      // This name is already used by another entity. Add a suffix.
-      std::ostringstream oss;
-      std::istringstream iss;
-      int suffix_number = 1;
-      std::string prefix = name;
-      size_t index = name.rfind('_');
-      if (index != std::string::npos) {
-        // If there is already a numbered suffix, we will increment it.
-        const std::string& suffix = name.substr(index + 1);
-        iss.clear();
-        iss.str(suffix);
-        if (iss >> suffix_number) {
-          prefix = name.substr(0, index);
-        }
-      }
-
-      // Now we have the final prefix. Find the first available suffix.
-      do {
-        ++suffix_number;
-        oss.str("");
-        oss.clear();
-        oss << prefix << '_' << suffix_number;
-        name = oss.str();
-      }
-      while (named_entities.find(name) != named_entities.end());
-
-      entity->set_name(name);
-    }
-    named_entities[name] = entity;
-  }
+  set_entity_name(entity, entity->get_name());
 
   // Notify the entity.
   if (type != EntityType::HERO) {
@@ -1189,7 +1182,7 @@ void Entities::set_suspended(bool suspended) {
  * \brief Updates the position, movement and animation each entity.
  */
 void Entities::update() {
-
+  SOL_PFUN(profiler::colors::Red);
   Debug::check_assertion(map.is_started(), "The map is not started");
 
   // First update the hero.
@@ -1214,6 +1207,9 @@ void Entities::update() {
 
   // Remove the entities that have to be removed now.
   remove_marked_entities();
+
+  //Shrink the quadtree
+  quadtree->shrink_to_fit();
 }
 
 /**
@@ -1238,29 +1234,45 @@ void Entities::draw(Camera& camera) {
         ),
         camera.get_size() * 3
     );
-    get_entities_in_rectangle_z_sorted(around_camera, entities_in_camera);
+    //get_entities_in_rectangle_z_sorted(around_camera, entities_in_camera);
+    get_entities_in_rectangle_raw(around_camera, entities_in_camera);
 
-    for (const EntityPtr& entity : entities_in_camera) {
-      int layer = entity->get_layer();
-      Debug::check_assertion(map.is_valid_layer(layer), "Invalid layer");
-      entities_to_draw[layer].push_back(entity);
+    {
+      SOL_PBLOCK("Pushing entities.", profiler::colors::Green);
+      for (const EntityPtr& entity : entities_in_camera) {
+        int layer = entity->get_layer();
+        Debug::check_assertion(map.is_valid_layer(layer), "Invalid layer");
+        entities_to_draw[layer].push_back(entity);
+      }
     }
 
     // Add entities displayed even when out of the camera.
-    for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
-      for (const EntityPtr& entity : entities_drawn_not_at_their_position[layer]) {
-        entities_to_draw[layer].push_back(entity);
-      }
+    {
+      SOL_PBLOCK("Merging position independent and sorting", profiler::colors::Green);
+      for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
+        {
+          SOL_PBLOCK("Adding position independent");
+          for (const EntityPtr& entity : entities_drawn_not_at_their_position[layer]) {
+            entities_to_draw[layer].push_back(entity);
+          }
+        }
 
-      // Sort them and remove duplicates.
-      // Duplicate drawings are a problem for entities with semi-transparency.
-      // Using an std::set would be slower because duplicates are rare:
-      // there are not often a lot of dynamic entities displayed out of the camera.
-      std::sort(entities_to_draw[layer].begin(), entities_to_draw[layer].end(), DrawingOrderComparator());
-      entities_to_draw[layer].erase(
-            std::unique(entities_to_draw[layer].begin(), entities_to_draw[layer].end()),
-            entities_to_draw[layer].end()
-      );
+        {
+          SOL_PBLOCK("Sorting");
+          // Sort them and remove duplicates.
+          // Duplicate drawings are a problem for entities with semi-transparency.
+          // Using an std::set would be slower because duplicates are rare:
+          // there are not often a lot of dynamic entities displayed out of the camera.
+          std::sort(entities_to_draw[layer].begin(), entities_to_draw[layer].end(), DrawingOrderComparator());
+        }
+        {
+          SOL_PBLOCK("Dedup");
+          entities_to_draw[layer].erase(
+                std::unique(entities_to_draw[layer].begin(), entities_to_draw[layer].end()),
+                entities_to_draw[layer].end()
+          );
+        }
+      }
     }
 
   }
@@ -1271,29 +1283,40 @@ void Entities::draw(Camera& camera) {
     // in other words, draw all regions containing animated tiles
     // (and maybe more, but we don't care because non-animated tiles
     // will be drawn later).
-    for (const TilePtr& ptile : tiles_in_animated_regions[layer]) {
-      Tile& tile = *ptile;
-      if (tile.overlaps(camera) || !tile.is_drawn_at_its_position()) {
-        tile.draw(camera);
+    {
+      SOL_PBLOCK("Draw dynamic tiles", profiler::colors::Green);
+      for (const TilePtr& ptile : tiles_in_animated_regions[layer]) {
+        Tile& tile = *ptile;
+        if (tile.overlaps(camera) || !tile.is_drawn_at_its_position()) {
+          tile.draw(camera);
+        }
       }
     }
 
     // Draw the non-animated tiles (with transparent rectangles on the regions of animated tiles
     // since they are already drawn).
-    non_animated_regions[layer]->draw_on_map(camera);
+    {
+      SOL_PBLOCK("Draw non animated region", profiler::colors::Green)
+      non_animated_regions[layer]->draw_on_map(camera);
+    }
 
-    // Draw dynamic entities, ordered by their data structure.
-    for (const EntityPtr& entity: entities_to_draw[layer]) {
-      if (!entity->is_being_removed() &&
-          entity->is_enabled() &&
-          entity->is_visible()) {
-        entity->draw(camera);
+    {
+      SOL_PBLOCK("Draw entitites", profiler::colors::Green);
+      for (const EntityPtr& entity: entities_to_draw[layer]) {
+        if (!entity->is_being_removed() &&
+            entity->is_enabled() &&
+            entity->is_visible()) {
+          entity->draw(camera);
+        }
       }
     }
   }
 
   if (EntityTree::debug_quadtrees) {
+    SOL_PBLOCK("Quadtree debug draw", profiler::colors::DarkGreen);
+
     const SurfacePtr& camera_surface = camera.get_surface();
+
     // Draw the quadtree structure for debugging.
     quadtree->draw(camera_surface, -camera.get_top_left_xy());
   }
@@ -1348,7 +1371,7 @@ void Entities::set_entity_layer(Entity& entity, int layer) {
  * \param entity The entity modified.
  */
 void Entities::notify_entity_bounding_box_changed(Entity& entity) {
-
+  SOL_PFUN();
   // Update the quadtree.
 
   // Note that if the entity is not in the quadtree
@@ -1384,6 +1407,61 @@ bool Entities::overlaps_raised_blocks(int layer, const Rectangle& rectangle) {
   }
 
   return false;
+}
+
+/**
+ * \brief Computes a unique name for an entity on this map.
+ * \param candidate_name Candidate name.
+ * \return The same name, possibly with a numbered suffix.
+ */
+std::string Entities::ensure_unique_name(const std::string &candidate_name) {
+
+  std::string name = candidate_name;
+  if (named_entities.find(name) != named_entities.end()) {
+    // This name is already used by another entity. Add a suffix.
+    std::ostringstream oss;
+    std::istringstream iss;
+    int suffix_number = 1;
+    std::string prefix = name;
+    size_t index = name.rfind('_');
+    if (index != std::string::npos) {
+      // If there is already a numbered suffix, we will increment it.
+      const std::string& suffix = name.substr(index + 1);
+      iss.clear();
+      iss.str(suffix);
+      if (iss >> suffix_number) {
+        prefix = name.substr(0, index);
+      }
+    }
+
+    // Now we have the final prefix. Find the first available suffix.
+    do {
+      ++suffix_number;
+      oss.str("");
+      oss.clear();
+      oss << prefix << '_' << suffix_number;
+      name = oss.str();
+    }
+    while (named_entities.find(name) != named_entities.end());
+  }
+  return name;
+}
+
+/**
+ * \brief Changes the name of an entity on this map.
+ * \param entity The entity.
+ * \param name The new name, or an empty string to set no name.
+ */
+void Entities::set_entity_name(const EntityPtr& entity, const std::string &name) {
+
+  const std::string &old_name = entity->get_name();
+  named_entities.erase(old_name);
+  std::string new_name = name;
+  if (!new_name.empty()) {
+    new_name = ensure_unique_name(new_name);
+    named_entities[new_name] = entity;
+  }
+  entity->set_name(new_name);
 }
 
 /**

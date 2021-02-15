@@ -24,6 +24,7 @@
 #include "solarus/core/MainLoop.h"
 #include "solarus/core/Savegame.h"
 #include "solarus/core/Treasure.h"
+#include "solarus/core/Profiler.h"
 #include "solarus/entities/Destination.h"
 #include "solarus/entities/Entities.h"
 #include "solarus/entities/EntityState.h"
@@ -352,6 +353,9 @@ void Game::update_teleportations() {
  * Updates the map, the equipment, the HUD, etc.
  */
 void Game::update() {
+  SOL_PFUN(profiler::colors::Red);
+
+  //Update teleportations and transitions
   update_teleportations();
 
   if (restarting && cameras_teleportations.empty()) { //All transitions finished ! Restart !
@@ -535,6 +539,8 @@ void Game::teleportation_change_map(CameraTeleportation &tp) {
  * \param dst_surface The surface where the game will be drawn.
  */
 void Game::draw(const SurfacePtr& dst_surface) {
+
+  SOL_PFUN(profiler::colors::Green);
   /** Draw maps to their camera */
   for(const MapPtr& current_map : current_maps) {
     current_map->draw();

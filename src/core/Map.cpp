@@ -32,6 +32,7 @@
 #include "solarus/graphics/Surface.h"
 #include "solarus/graphics/Video.h"
 #include "solarus/lua/LuaContext.h"
+#include "solarus/core/Profiler.h"
 
 namespace Solarus {
 
@@ -516,7 +517,7 @@ bool Map::notify_control(const ControlEvent& event) {
  * \brief Updates the animation and the position of each map element, including the hero.
  */
 void Map::update() {
-
+  SOL_PFUN(profiler::colors::Red);
   // Detect whether the game has just been suspended or resumed.
   check_suspended();
 
@@ -553,7 +554,7 @@ void Map::check_suspended() {
  * \brief Draws the map with all its entities on the screen.
  */
 void Map::draw() {
-
+  SOL_PFUN(profiler::colors::Green);
   if (!is_loaded() || !is_started()) {
     return;
   }
@@ -817,12 +818,11 @@ bool Map::test_collision_with_border(const Rectangle& collision_box) const {
  * Your algorithm may decide to check more points if there is a diagonal wall.
  * \return \c true if this point is on an obstacle.
  */
-bool Map::test_collision_with_ground(
-    int layer,
+bool Map::test_collision_with_ground(int layer,
     int x,
     int y,
     const Entity& entity_to_check,
-    bool& found_diagonal_wall) const {
+    bool& found_diagonal_wall, const ConstEntityVector &entities_nearby) const {
 
   bool on_obstacle = false;
   int x_in_tile, y_in_tile;
@@ -833,7 +833,7 @@ bool Map::test_collision_with_ground(
   }
 
   // Get the ground property under this point.
-  Ground ground = get_ground(layer, x, y, &entity_to_check);
+  Ground ground = get_ground(layer, Point(x, y), &entity_to_check, entities_nearby);
   switch (ground) {
 
   case Ground::EMPTY:
@@ -903,15 +903,43 @@ bool Map::test_collision_with_entities(
     int layer,
     const Rectangle& collision_box,
     Entity& entity_to_check) {
-
+  SOL_PFUN();
   if (!is_loaded()) {
     return false;
   }
 
   EntityVector entities_nearby;
   get_entities().get_entities_in_rectangle_z_sorted(collision_box, entities_nearby);
-  for (const EntityPtr& entity_nearby: entities_nearby) {
+  return test_collision_with_entities(layer, collision_box, entity_to_check, entities_nearby);
+}
 
+bool Map::test_collision_with_entities(
+    int layer,
+    const Rectangle& collision_box,
+    Entity& entity_to_check,
+    const ConstEntityVector& entities_nearby
+    ) const {
+  for (const ConstEntityPtr& entity_nearby: entities_nearby) {
+    if (entity_nearby->overlaps(collision_box) &&
+        (entity_nearby->get_layer() == layer || entity_nearby->has_layer_independent_collisions()) &&
+        std::const_pointer_cast<Entity>(entity_nearby)->is_obstacle_for(entity_to_check, collision_box) &&
+        entity_nearby->is_enabled() &&
+        !entity_nearby->is_being_removed() &&
+        entity_nearby.get() != &entity_to_check) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool Map::test_collision_with_entities(
+    int layer,
+    const Rectangle& collision_box,
+    Entity& entity_to_check,
+    const EntityVector& entities_nearby
+    ) const {
+  for (const EntityPtr& entity_nearby: entities_nearby) {
     if (entity_nearby->overlaps(collision_box) &&
         (entity_nearby->get_layer() == layer || entity_nearby->has_layer_independent_collisions()) &&
         entity_nearby->is_obstacle_for(entity_to_check, collision_box) &&
@@ -938,7 +966,7 @@ bool Map::test_collision_with_obstacles(
     int layer,
     const Rectangle& collision_box,
     Entity& entity_to_check) {
-
+  SOL_PFUN();
   // This function is called very often.
   // For performance reasons, we only check the border of the of the collision box.
 
@@ -949,25 +977,28 @@ bool Map::test_collision_with_obstacles(
   const int y1 = collision_box.get_y();
   const int y2 = y1 + collision_box.get_height() - 1;
 
+  ConstEntityVector entities_nearby;
+  get_entities().get_entities_in_rectangle_z_sorted(collision_box, entities_nearby);
+
   // First, only check the terrain of both extremities of each 8-pixel
   // segment of the border.
   // This is enough for all terrains (except diagonal ones, see below)
   // because the tested collision box makes at least 8x8 pixels.
   bool found_diagonal_wall = false;
   for (int x = x1; x <= x2; x += 8) {
-    if (test_collision_with_ground(layer, x, y1, entity_to_check, found_diagonal_wall)
-        || test_collision_with_ground(layer, x, y2, entity_to_check, found_diagonal_wall)
-        || test_collision_with_ground(layer, x + 7, y1, entity_to_check, found_diagonal_wall)
-        || test_collision_with_ground(layer, x + 7, y2, entity_to_check, found_diagonal_wall)) {
+    if (test_collision_with_ground(layer, x, y1, entity_to_check, found_diagonal_wall, entities_nearby)
+        || test_collision_with_ground(layer, x, y2, entity_to_check, found_diagonal_wall, entities_nearby)
+        || test_collision_with_ground(layer, x + 7, y1, entity_to_check, found_diagonal_wall, entities_nearby)
+        || test_collision_with_ground(layer, x + 7, y2, entity_to_check, found_diagonal_wall, entities_nearby)) {
       return true;
     }
   }
 
   for (int y = y1; y <= y2; y += 8) {
-    if (test_collision_with_ground(layer, x1, y, entity_to_check, found_diagonal_wall)
-        || test_collision_with_ground(layer, x2, y, entity_to_check, found_diagonal_wall)
-        || test_collision_with_ground(layer, x1, y + 7, entity_to_check, found_diagonal_wall)
-        || test_collision_with_ground(layer, x2, y + 7, entity_to_check, found_diagonal_wall)) {
+    if (test_collision_with_ground(layer, x1, y, entity_to_check, found_diagonal_wall, entities_nearby)
+        || test_collision_with_ground(layer, x2, y, entity_to_check, found_diagonal_wall, entities_nearby)
+        || test_collision_with_ground(layer, x1, y + 7, entity_to_check, found_diagonal_wall, entities_nearby)
+        || test_collision_with_ground(layer, x2, y + 7, entity_to_check, found_diagonal_wall, entities_nearby)) {
       return true;
     }
   }
@@ -980,22 +1011,22 @@ bool Map::test_collision_with_obstacles(
     // box. Otherwise, walls with sharp angles like 'V' become
     // partially traversable.
     for (int x = x1; x <= x2; ++x) {
-      if (test_collision_with_ground(layer, x, y1, entity_to_check, found_diagonal_wall)
-          || test_collision_with_ground(layer, x, y2, entity_to_check, found_diagonal_wall)) {
+      if (test_collision_with_ground(layer, x, y1, entity_to_check, found_diagonal_wall, entities_nearby)
+          || test_collision_with_ground(layer, x, y2, entity_to_check, found_diagonal_wall, entities_nearby)) {
         return true;
       }
     }
 
     for (int y = y1; y <= y2; ++y) {
-      if (test_collision_with_ground(layer, x1, y, entity_to_check, found_diagonal_wall)
-          || test_collision_with_ground(layer, x2, y, entity_to_check, found_diagonal_wall)) {
+      if (test_collision_with_ground(layer, x1, y, entity_to_check, found_diagonal_wall, entities_nearby)
+          || test_collision_with_ground(layer, x2, y, entity_to_check, found_diagonal_wall, entities_nearby)) {
         return true;
       }
     }
   }
 
   // No collision with the terrain: check collisions with dynamic entities.
-  return test_collision_with_entities(layer, collision_box, entity_to_check);
+  return test_collision_with_entities(layer, collision_box, entity_to_check, entities_nearby);
 }
 
 /**
@@ -1017,7 +1048,7 @@ bool Map::test_collision_with_obstacles(
   bool is_diagonal_wall = false;
 
   // Test the terrain.
-  bool collision = test_collision_with_ground(layer, x, y, entity_to_check, is_diagonal_wall);
+  bool collision = test_collision_with_ground(layer, x, y, entity_to_check, is_diagonal_wall, {});
 
   // Test dynamic entities.
   if (!collision) {
@@ -1121,7 +1152,7 @@ Ground Map::get_ground(
     const Point& xy,
     const Entity* entity_to_check
 ) const {
-
+  SOL_PFUN();
   if (!is_loaded()) {
     return Ground::EMPTY;
   }
@@ -1135,7 +1166,27 @@ Ground Map::get_ground(
   const Rectangle box(xy, Size(1, 1));
   ConstEntityVector entities_nearby;
   get_entities().get_entities_in_rectangle_z_sorted(box, entities_nearby);
+  return get_ground(layer, xy, entity_to_check, entities_nearby);
+}
 
+/**
+ * \brief Returns the ground at the specified point.
+ *
+ * Static tiles and dynamic entities are all taken into account here.
+ *
+ * \param layer Layer of the point.
+ * \param xy Coordinates of the point.
+ * \param entity_to_check The entity you want to know the ground of (if any).
+ * Used to make sure that the entity's own modified ground does not count.
+ * \return The ground at this place.
+ */
+Ground Map::get_ground(
+    int layer,
+    const Point& xy,
+    const Entity* entity_to_check,
+    const ConstEntityVector& entities_nearby
+) const {
+  SOL_PFUN();
   const auto& rend = entities_nearby.rend();
   for (auto it = entities_nearby.rbegin(); it != rend; ++it) {
     const Entity& entity_nearby = *(*it);
@@ -1332,6 +1383,21 @@ void Map::check_collision_with_detectors(Entity& entity) {
   Rectangle box = entity.get_extended_bounding_box(8);
   std::vector<EntityPtr> entities_nearby;
   entities->get_entities_in_rectangle_z_sorted(box, entities_nearby);
+  check_collision_with_detectors(entity, entities_nearby);
+}
+
+/**
+ * @brief Checks the collisions between an entity and the detectors of the map. With prior knowledge of nearby entities
+ *
+ * This function is called by an entity sensitive to the entity detectors
+ * when this entity has just moved on the map, or when a detector
+ * wants to check this entity.
+ * We check whether or not the entity overlaps an entity detector.
+ * If the map is suspended, this function does nothing.
+ * @param entity The entity that just moved
+ * @param entities_nearby Entities surrounding the entity that should be checked for collision
+ */
+void Map::check_collision_with_detectors(Entity& entity, EntityVector& entities_nearby) {
   for (const EntityPtr& entity_nearby: entities_nearby) {
 
     if (entity.is_being_removed()) {
@@ -1361,7 +1427,7 @@ void Map::check_collision_with_detectors(Entity& entity) {
  * \param detector A detector.
  */
 void Map::check_collision_from_detector(Entity& detector) {
-
+  SOL_PFUN();
   if (suspended) {
     return;
   }
@@ -1371,20 +1437,34 @@ void Map::check_collision_from_detector(Entity& detector) {
     return;
   }
 
-  const Heroes& heroes = get_entities().get_heroes();
-  // First check the heroes.
-  for(const HeroPtr& hero : heroes) {
-    detector.check_collision(*hero);
-  }
-
   // Check each entity with this detector.
   Rectangle box = detector.get_extended_bounding_box(8);
   std::vector<EntityPtr> entities_nearby;
   entities->get_entities_in_rectangle_z_sorted(box, entities_nearby);
+  check_collision_from_detector(detector, entities_nearby);
+}
+
+/**
+ * \brief Checks the collisions between all entities and a detector.
+ *
+ * This function is called when a detector wants to check entities,
+ * typically when the detector has just moved.
+ * If the map is suspended, this function does nothing.
+ *
+ * \param detector A detector.
+ * \param entities_nearby Entities surrounding this detector
+ */
+void Map::check_collision_from_detector(Entity& detector, EntityVector& entities_nearby) {
   for (const EntityPtr& entity_nearby: entities_nearby) {
 
     if (detector.is_being_removed()) {
       return;
+    }
+
+    const Heroes& heroes = get_entities().get_heroes();
+    // First check the heroes.
+    for(const HeroPtr& hero : heroes) {
+      detector.check_collision(*hero);
     }
 
     if (entity_nearby->is_enabled() &&
@@ -1475,6 +1555,22 @@ void Map::check_collision_with_detectors(Entity& entity, Sprite& sprite) {
   Rectangle box = entity.get_max_bounding_box();
   std::vector<EntityPtr> entities_nearby;
   entities->get_entities_in_rectangle_z_sorted(box, entities_nearby);
+  check_collision_with_detectors(entity, sprite, entities_nearby);
+}
+
+/**
+ * @brief hecks the pixel-precise collisions between an entity and the
+ * detectors of the map.
+ *
+ * This function is called by an entity
+ * when the frame of one of its sprites has just changed.
+ * We check whether or not the sprite overlaps the detector.
+ * If the map is suspended, this function does nothing.
+ * @param entity A map entity
+ * @param sprite The sprite of this entity to check
+ * @param entities_nearby Entities that surround the checked entity
+ */
+void Map::check_collision_with_detectors(Entity& entity, Sprite& sprite, EntityVector& entities_nearby) {
   for (const EntityPtr& entity_nearby: entities_nearby) {
 
     if (entity.is_being_removed()) {

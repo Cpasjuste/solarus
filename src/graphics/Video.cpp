@@ -18,6 +18,7 @@
 #include "solarus/core/CurrentQuest.h"
 #include "solarus/core/Debug.h"
 #include "solarus/core/Logger.h"
+#include "solarus/core/Profiler.h"
 #include "solarus/core/PerfCounter.h"
 #include "solarus/core/QuestFiles.h"
 #include "solarus/core/Rectangle.h"
@@ -360,6 +361,7 @@ void hide_window() {
  * \param quest_surface The quest surface to render on the screen.
  */
 void render(const SurfacePtr& quest_surface) {
+  SOL_PFUN(profiler::colors::Green);
   if (context.pc_render) {
     PerfCounter::update("video-render");
   }
@@ -425,6 +427,7 @@ void render(const SurfacePtr& quest_surface) {
  * @brief present the final result to the screen
  */
 void finish() {
+  SOL_PBLOCK("Wait for vsync");
   context.renderer->present(context.main_window);
 }
 

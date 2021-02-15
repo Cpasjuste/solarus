@@ -122,13 +122,26 @@ class SOLARUS_API Map: public ExportableToLua {
         int x,
         int y,
         const Entity& entity_to_check,
-        bool& found_diagonal_wall
+        bool& found_diagonal_wall,
+        const ConstEntityVector& entities_nearby
     ) const;
     bool test_collision_with_entities(
         int layer,
         const Rectangle& collision_box,
         Entity& entity_to_check
     );
+    bool test_collision_with_entities(
+        int layer,
+        const Rectangle& collision_box,
+        Entity& entity_to_check,
+        const ConstEntityVector& entities_nearby
+        ) const;
+    bool test_collision_with_entities(
+        int layer,
+        const Rectangle& collision_box,
+        Entity& entity_to_check,
+        const EntityVector& entities_nearby
+        ) const;
     bool test_collision_with_obstacles(
         int layer,
         const Rectangle& collision_box,
@@ -161,13 +174,22 @@ class SOLARUS_API Map: public ExportableToLua {
         const Point& xy,
         const Entity* entity_to_check
     ) const;
+    Ground get_ground(
+        int layer,
+        const Point& xy,
+        const Entity* entity_to_check,
+        const ConstEntityVector& nearby_entities
+    ) const;
     Ground get_ground_from_entity(const Entity& entity, int x, int y) const;
     Ground get_ground_from_entity(const Entity& entity, const Point& xy) const;
 
     // collisions with detectors (checked after a move)
     void check_collision_with_detectors(Entity& entity);
     void check_collision_with_detectors(Entity& entity, Sprite& sprite);
+    void check_collision_with_detectors(Entity& entity, EntityVector& entities_nearby);
+    void check_collision_with_detectors(Entity& entity, Sprite& sprite, EntityVector& entities_nearby);
     void check_collision_from_detector(Entity& detector);
+    void check_collision_from_detector(Entity& detector, EntityVector& entities_nearby);
     void check_collision_from_detector(Entity& detector, Sprite& detector_sprite);
 
     // main loop

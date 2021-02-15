@@ -26,6 +26,8 @@
 #include "solarus/lua/LuaContext.h"
 #include "solarus/graphics/Shader.h"
 
+#include "solarus/core/Profiler.h"
+
 #include <algorithm>
 #include <iostream>
 #include <mutex>
@@ -175,7 +177,7 @@ SurfacePtr Surface::create(SDL_Surface_UniquePtr surf, bool premultiplied) {
  */
 SDL_Surface_UniquePtr Surface::create_sdl_surface_from_file(
     const std::string& file_name) {
-
+  SOL_PFUN(profiler::colors::Green);
   if (!QuestFiles::data_file_exists(file_name)) {
     return nullptr;
   }
@@ -222,6 +224,7 @@ SDL_Surface_UniquePtr Surface::create_sdl_surface_from_memory(
     void* data,
     size_t data_len
     ) {
+  SOL_PFUN(profiler::colors::Green);
   SDL_RWops* rw = SDL_RWFromMem(data, data_len);
   SDL_Surface* surface = IMG_Load_RW(rw, true);
   return SDL_Surface_UniquePtr{surface};
@@ -236,7 +239,7 @@ SDL_Surface_UniquePtr Surface::create_sdl_surface_from_memory(
 SurfaceImplPtr Surface::get_surface_from_file(
     const std::string& file_name,
     ImageDirectory base_directory) {
-
+  SOL_PFUN(profiler::colors::Green);
   std::string prefix;
   bool language_specific = false;
 
@@ -335,6 +338,7 @@ void Surface::set_pixels(const std::string& buffer) {
  * The opacity property of the surface is preserved.
  */
 void Surface::clear() {
+  SOL_PFUN(profiler::colors::Green);
   Video::get_renderer().clear(*internal_surface);
 }
 
@@ -347,6 +351,7 @@ void Surface::clear() {
  * \param where The rectangle to clear.
  */
 void Surface::clear(const Rectangle& where) { //TODO deprecate
+  SOL_PFUN(profiler::colors::Green);
   Video::get_renderer().fill(*internal_surface,Color::transparent,where,BlendMode::NONE);
 }
 
@@ -359,6 +364,7 @@ void Surface::clear(const Rectangle& where) { //TODO deprecate
  * \param color A color.
  */
 void Surface::fill_with_color(const Color& color) {
+  SOL_PFUN(profiler::colors::Green);
   fill_with_color(color,Rectangle(get_size()));
 }
 
@@ -372,6 +378,7 @@ void Surface::fill_with_color(const Color& color) {
  * \param where The rectangle to fill.
  */
 void Surface::fill_with_color(const Color& color, const Rectangle& where) {
+  SOL_PFUN(profiler::colors::Green);
   Video::get_renderer().fill(*internal_surface,color,where);
 }
 
@@ -381,6 +388,7 @@ void Surface::fill_with_color(const Color& color, const Rectangle& where) {
  * \param infos draw infos bundle
  */
 void Surface::raw_draw_region(Surface& dst_surface, const DrawInfos& infos) const {
+  SOL_PFUN(profiler::colors::Green);
   infos.proxy.draw(dst_surface,*this,infos);
 }
 
@@ -390,6 +398,7 @@ void Surface::raw_draw_region(Surface& dst_surface, const DrawInfos& infos) cons
  * \param infos draw infos bundle
  */
 void Surface::raw_draw(Surface& dst_surface, const DrawInfos& infos) const {
+  SOL_PFUN(profiler::colors::Green);
   infos.proxy.draw(dst_surface,*this,infos);
 }
 
@@ -420,6 +429,7 @@ void Surface::apply_pixel_filter(
  * \return \c true if the pixel is transparent.
  */
 bool Surface::is_pixel_transparent(int index) const {
+  SOL_PFUN(profiler::colors::Green);
   return internal_surface->is_pixel_transparent(index);
 }
 

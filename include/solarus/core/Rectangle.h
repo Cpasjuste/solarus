@@ -92,6 +92,7 @@ class Rectangle {
     bool overlaps(const Rectangle& other) const;
 
     Rectangle get_intersection(const Rectangle& other) const;
+    Rectangle get_union(const Rectangle& other) const;
     Rectangle positive() const;
 
 

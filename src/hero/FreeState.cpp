@@ -137,7 +137,7 @@ void Hero::FreeState::notify_obstacle_reached() {
 
     uint32_t now = System::now();
     if (pushing_direction4 == -1) {
-      start_pushing_date = now + 800;  // Start animation "pushing" after 800 ms.
+      start_pushing_date = now + hero.get_push_delay();  // Start state and animation "pushing" after a delay set by the hero's push_delay property.
       pushing_direction4 = hero.get_animation_direction();
     }
     else if (now >= start_pushing_date) {
