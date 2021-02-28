@@ -221,7 +221,7 @@ void Movement::set_xy(const Point& xy) {
   this->xy = xy;
 
   notify_position_changed();
-  last_move_date = System::now_ms();
+  last_move_date = System::now_ns();
 }
 
 /**
@@ -383,7 +383,7 @@ void Movement::set_suspended(bool suspended) {
   if (suspended != this->suspended) {
     this->suspended = suspended;
 
-    uint32_t now = System::now_ms();
+    uint64_t now = System::now_ns();
 
     if (suspended) {
       // the movement is being suspended
@@ -422,7 +422,7 @@ void Movement::set_ignore_suspend(bool ignore_suspend) {
  *
  * \return the date when this movement started to be suspended
  */
-uint32_t Movement::get_when_suspended() const {
+uint64_t Movement::get_when_suspended_ns() const {
   return when_suspended;
 }
 

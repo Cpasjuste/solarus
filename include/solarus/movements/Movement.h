@@ -108,7 +108,7 @@ class SOLARUS_API Movement: public ExportableToLua {
     explicit Movement(bool ignore_obstacles);
 
     // suspended
-    uint32_t get_when_suspended() const;
+    uint64_t get_when_suspended_ns() const;
 
     // obstacles (only when the movement is applied to an entity)
     void set_default_ignore_obstacles(bool ignore_obstacles);
@@ -120,13 +120,13 @@ class SOLARUS_API Movement: public ExportableToLua {
     Drawable* drawable;                          /**< The drawable controlled by this movement. */
     Point xy;                                    /**< Coordinates of the point controlled by this movement. */
 
-    uint32_t last_move_date;                     /**< Date of the last x or y move. */
+    uint64_t last_move_date;                     /**< Date of the last x or y move. */
     bool finished;                               /**< true if is_finished() returns true. */
     bool lua_notifications_enabled;              /**< Whether Lua events and callbacks should be called for this movement. */
 
     // suspended
     bool suspended;                              /**< Indicates whether the movement is suspended. */
-    uint32_t when_suspended;                     /**< Indicates when the movement was suspended. */
+    uint64_t when_suspended;                     /**< Indicates when the movement was suspended. */
     bool ignore_suspend;                         /**< Whether the movement continues when the game is suspended
                                                   * (for entity movements only). */
 

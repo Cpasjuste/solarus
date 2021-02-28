@@ -38,7 +38,7 @@ PixelMovement::PixelMovement(
     bool ignore_obstacles):
   Movement(ignore_obstacles),
   next_move_date(0),
-  delay(delay),
+  delay(delay*1000000),
   loop(loop),
   nb_steps_done(0),
   finished(false) {
@@ -106,7 +106,7 @@ void PixelMovement::set_trajectory(const std::string& trajectory_string) {
  * \return the delay between two moves, in milliseconds
  */
 uint32_t PixelMovement::get_delay() const {
-  return delay;
+  return delay / 1000000;
 }
 
 /**
@@ -114,7 +114,7 @@ uint32_t PixelMovement::get_delay() const {
  * \param delay the new delay, in milliseconds
  */
 void PixelMovement::set_delay(uint32_t delay) {
-  this->delay = delay;
+  this->delay = delay*1000000;
 }
 
 /**
@@ -156,7 +156,7 @@ void PixelMovement::restart() {
 
     if (next_move_date == 0) {
       // Keep the previous date if we just looped.
-      next_move_date = System::now_ms();
+      next_move_date = System::now_ns();
     }
     next_move_date += delay;
 
@@ -169,7 +169,7 @@ void PixelMovement::restart() {
  */
 void PixelMovement::update() {
 
-  uint32_t now = System::now_ms();
+  uint64_t now = System::now_ns();
 
   while (now >= next_move_date &&
       !is_suspended() &&
@@ -198,9 +198,9 @@ void PixelMovement::set_suspended(bool suspended) {
   Movement::set_suspended(suspended);
 
   if (!suspended
-      && get_when_suspended() != 0
+      && get_when_suspended_ns() != 0
       && next_move_date != 0) {
-    next_move_date += System::now_ms() - get_when_suspended();
+    next_move_date += System::now_ns() - get_when_suspended_ns();
   }
 }
 

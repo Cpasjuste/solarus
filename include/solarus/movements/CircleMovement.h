@@ -97,12 +97,12 @@ class CircleMovement: public Movement {
     int wanted_radius;                              /**< The current radius changes gradually towards this wanted value. */
     int previous_radius;                            /**< Radius before the movement stops. */
     int radius_increment;                           /**< Number of pixels to add when the radius is changing (1 or -1). */
-    uint32_t next_radius_change_date;               /**< Date of the next radius change. */
-    uint32_t radius_change_delay;                   /**< If not zero, time interval between two radius changes. */
+    uint64_t next_radius_change_date;               /**< Date of the next radius change. */
+    uint64_t radius_change_delay;                   /**< If not zero, time interval between two radius changes. */
 
     // Stop after an amount of time.
-    uint32_t duration;                              /**< If not zero, the movement will stop after this delay. */
-    uint32_t end_movement_date;                     /**< Date when the movement stops. */
+    uint64_t duration;                              /**< If not zero, the movement will stop after this delay. */
+    uint64_t end_movement_date;                     /**< Date when the movement stops. */
 
     // Stop after a number of rotations.
     int max_rotations;                              /**< If not zero, the movement will stop after this number of rotations are done. */
@@ -110,8 +110,8 @@ class CircleMovement: public Movement {
     int num_rotations;                              /**< Number of complete circles already done. */
 
     // Restart when stopped.
-    uint32_t loop_delay;                            /**< If not zero, when the movement finishes, it will start again after this delay. */
-    uint32_t restart_date;                          /**< Date when the movement restarts. */
+    uint64_t loop_delay;                            /**< If not zero, when the movement finishes, it will start again after this delay. */
+    uint64_t restart_date;                          /**< Date when the movement restarts. */
 
 };
 

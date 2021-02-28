@@ -410,41 +410,52 @@ void MainLoop::dynamic_run() {
 
   while (!is_exiting()) {
     SOL_PBLOCK("Solarus::MainLoop::Frame");
-    // Measure the time of the last iteration.
-    uint64_t now = System::get_real_time_ns();
-    int64_t last_frame_duration = now - last_frame_date;
-    last_frame_date = now;
-
-    int64_t perfect_frame_duration = Video::get_display_period_ns();
-
-    //Compute how much we spill from delta_buffer
-    int64_t spill = delta_buffer * delta_buffer_spill;
-
-    //Transfer time to smoothed duration
-    int64_t smoothed_duration = perfect_frame_duration + spill;
-    delta_buffer -= spill;
-
-    //Put current frame error in buffer
-    delta_buffer += last_frame_duration - smoothed_duration;
-
     // 1. Detect and handle input events.
     check_input();
 
-    // 2. Update the world once
-    step(smoothed_duration);
+    if (!is_exiting() && !is_suspended()) {
+      // Measure the time of the last iteration.
+      uint64_t now = System::get_real_time_ns();
+      int64_t last_frame_duration = now - last_frame_date;
+      int64_t used_last_frame_duration = last_frame_duration;
+      last_frame_date = now;
 
-    // 3. Draw
-    draw();
+      int64_t perfect_frame_duration = Video::get_display_period_ns();
 
-    //Debug
-    std::cout << perfect_frame_duration << " " << last_frame_duration << " " << smoothed_duration << " " << delta_buffer << " " << spill << std::endl;
+      if (last_frame_duration > perfect_frame_duration * 5) {
+        //Do not try to catch up more than 10 frames, pretend everything is fine
+        used_last_frame_duration = perfect_frame_duration;
+      }
+
+      //Compute how much we spill from delta_buffer
+      int64_t spill = delta_buffer * delta_buffer_spill;
+
+      //Transfer time to smoothed duration
+      int64_t smoothed_duration = perfect_frame_duration + spill;
+
+      //Put current frame error in buffer
+      delta_buffer += used_last_frame_duration - smoothed_duration;
+
+      // 2. Update the world once
+      step(smoothed_duration);
+
+      // 3. Draw
+      draw();
+
+      //Debug
+      //std::cout << perfect_frame_duration << " " << last_frame_duration << " " << smoothed_duration << " " << delta_buffer << " " << spill << std::endl;
+    }
+    else
+    {
+      System::sleep(System::fixed_timestep_ns / 1000000);
+    }
   }
 }
 
 void MainLoop::fixed_run() {
   uint64_t last_frame_date = System::get_real_time_ns();
-  uint64_t lag = 0;  // Lose time of the simulation to catch up.
-  uint64_t time_dropped = 0;  // Time that won't be caught up.
+  int64_t lag = 0;  // Lose time of the simulation to catch up.
+  int64_t time_dropped = 0;  // Time that won't be caught up.
 
   // The main loop basically repeats
   // check_input(), update(), draw() and sleep().
@@ -460,7 +471,7 @@ void MainLoop::fixed_run() {
     // At this point, lag represents how much late the simulated time with
     // compared to the real time.
 
-    if (lag >= 200) {
+    if (lag >= 200000000) {
       // Huge lag: don't try to catch up.
       // Maybe we have just made a one-time heavy operation like loading a
       // big file, or the process was just unsuspended.
@@ -483,11 +494,11 @@ void MainLoop::fixed_run() {
       ++num_updates;
     }
 
-    while (lag >= System::fixed_timestep_ns &&
+    while (lag >= static_cast<int64_t>(System::fixed_timestep_ns) &&
            num_updates < 10 && // To draw sometimes anyway on very slow systems.
            !is_exiting() && !is_suspended()
     ) {
-      step(System::fixed_timestep_ns*1000000);
+      step(System::fixed_timestep_ns);
       lag -= System::fixed_timestep_ns;
       ++num_updates;
     }
@@ -501,13 +512,13 @@ void MainLoop::fixed_run() {
     if (debug_lag > 0 && !turbo && !is_suspended()) {
       SOL_PBLOCK("Debug lag")
       // Extra sleep time for debugging, useful to simulate slower systems.
-      System::sleep(debug_lag);
+      System::sleep(debug_lag / 1000000);
     }
 
     last_frame_duration = (System::get_real_time_ms() - time_dropped) - last_frame_date;
     if (last_frame_duration < System::fixed_timestep_ns && !turbo) {
       SOL_PBLOCK("Timestep sleep");
-      System::sleep(System::fixed_timestep_ns - last_frame_duration);
+      System::sleep((System::fixed_timestep_ns - last_frame_duration) / 1000000);
     }
   }
 }
@@ -555,7 +566,7 @@ void MainLoop::check_input() {
   }
 
   // Check Lua requests.
-  if (!lua_commands.empty()) {
+  /*if (!lua_commands.empty()) {
     std::lock_guard<std::mutex> lock(lua_commands_mutex);
     for (const std::string& command : lua_commands) {
       std::cout << "\n";  // To make sure that the command delimiter starts on a new line.
@@ -572,7 +583,7 @@ void MainLoop::check_input() {
       ++num_lua_commands_done;
     }
     lua_commands.clear();
-  }
+  }*/
 }
 
 void MainLoop::setup_game_icon() {

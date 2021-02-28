@@ -164,7 +164,7 @@ void RandomMovement::set_suspended(bool suspended) {
   StraightMovement::set_suspended(suspended);
 
   if (!suspended) {
-    next_direction_change_date += System::now_ms() - get_when_suspended();
+    next_direction_change_date += System::now_ns() - get_when_suspended_ns();
   }
 }
 

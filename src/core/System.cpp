@@ -181,7 +181,7 @@ uint32_t System::now_ms() {
  *
  * This function is not deterministic, so use it at your own risks.
  *
- * \return The number of milliseconds elapsed since the initialization.
+ * \return The number of nanoseconds elapsed since the initialization.
  */
 uint64_t System::get_real_time_ns() {
   auto time = Clock::now();
