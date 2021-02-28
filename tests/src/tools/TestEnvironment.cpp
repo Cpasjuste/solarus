@@ -178,14 +178,14 @@ std::shared_ptr<Npc> TestEnvironment::make_entity<Npc>(
  * \return The simulated time in milliseconds.
  */
 uint32_t TestEnvironment::now() {
-  return System::now();
+  return System::now_ms();
 }
 
 /**
  * \brief Simulates one tick of the main loop.
  */
 void TestEnvironment::step() {
-  get_main_loop().step(System::fixed_timestep);
+  get_main_loop().step(System::fixed_timestep_ns);
 }
 
 }
