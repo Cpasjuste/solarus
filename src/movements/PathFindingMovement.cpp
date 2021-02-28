@@ -41,7 +41,7 @@ PathFindingMovement::PathFindingMovement(int speed):
 void PathFindingMovement::set_target(const EntityPtr& target) {
 
   this->target = target;
-  next_recomputation_date = System::now() + 100;
+  next_recomputation_date = System::now_ms() + 100;
 }
 
 /**
@@ -63,7 +63,7 @@ void PathFindingMovement::update() {
 
     // there was a collision or the path was made
     if (target != nullptr
-        && System::now() >= next_recomputation_date
+        && System::now_ms() >= next_recomputation_date
         && get_entity()->is_aligned_to_grid()) {
       recompute_movement();
     }
@@ -98,7 +98,7 @@ void PathFindingMovement::recompute_movement() {
     }
     // compute a new path every random delay to avoid
     // having all path-finding entities of the map compute a path at the same time
-    next_recomputation_date = System::now() + min_delay + Random::get_number(200);
+    next_recomputation_date = System::now_ms() + min_delay + Random::get_number(200);
 
     set_path(path);
   }

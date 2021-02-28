@@ -107,7 +107,7 @@ void TrackingState::update() {
   else {
     // The tracked entity is currently traversing a separator.
     // Update camera coordinates.
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
     bool finished = false;
     while (separator_next_scrolling_date != 0
         && now >= separator_next_scrolling_date) {
@@ -192,7 +192,7 @@ void TrackingState::traverse_separator(Separator& separator) {
   }
 
   separator.notify_activating(separator_scrolling_direction4);
-  separator_next_scrolling_date = System::now();
+  separator_next_scrolling_date = System::now_ms();
 
   // Move the tracked entity two pixels ahead to avoid to traverse the separator again.
   tracked_entity->set_xy(tracked_entity->get_xy() + 2 * separator_scrolling_delta);

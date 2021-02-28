@@ -37,8 +37,8 @@ StraightMovement::StraightMovement(bool ignore_obstacles, bool smooth):
   angle(0),
   x_speed(0),
   y_speed(0),
-  next_move_date_x(System::now()),
-  next_move_date_y(System::now()),
+  next_move_date_x(System::now_ms()),
+  next_move_date_y(System::now_ms()),
   x_delay(0),
   y_delay(0),
   x_move(0),
@@ -95,7 +95,7 @@ void StraightMovement::set_dim_speed(uint32_t& delay,
     target_speed = 0;
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   int64_t remaining = now < next_move_date ? static_cast<int64_t>(delay) - (static_cast<int64_t>(next_move_date) - static_cast<int64_t>(now)) : 0;
   //if(remaining < 0) return 0; //Don't counter compensate TODO check if to_go needs to be 0 in this case
@@ -189,7 +189,7 @@ void StraightMovement::stop() {
 void StraightMovement::set_next_move_date(uint32_t& current_next_move_date, uint32_t next_move_date) {
 
   if (is_suspended()) {
-    uint32_t delay = next_move_date - System::now();
+    uint32_t delay = next_move_date - System::now_ms();
     current_next_move_date = get_when_suspended() + delay;
   }
   else {
@@ -280,7 +280,7 @@ int StraightMovement::get_displayed_direction4() const {
  */
 bool StraightMovement::has_to_move_now() const {
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   return (x_move != 0 && now >= next_move_date_x)
     || (y_move != 0 && now >= next_move_date_y);
@@ -301,7 +301,7 @@ void StraightMovement::set_suspended(bool suspended) {
 
     // recalculate the next move date
     if (get_when_suspended() != 0) {
-      uint32_t diff = System::now() - get_when_suspended();
+      uint32_t diff = System::now_ms() - get_when_suspended();
       next_move_date_x += diff;
       next_move_date_y += diff;
     }
@@ -335,7 +335,7 @@ void StraightMovement::update_smooth_xy() {
   // Save the current coordinates.
   Point old_xy = get_xy();
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   bool x_move_now = x_move != 0 && now >= next_move_date_x;
   bool y_move_now = y_move != 0 && now >= next_move_date_y;
 
@@ -591,7 +591,7 @@ void StraightMovement::update_non_smooth_xy() {
   // Save the current coordinates.
   Point old_xy = get_xy();
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   bool x_move_now = x_move != 0 && now >= next_move_date_x;
   bool y_move_now = y_move != 0 && now >= next_move_date_y;
 
@@ -647,7 +647,7 @@ void StraightMovement::update() {
   SOL_PFUN();
   if (!is_suspended()) {
 
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
     bool x_move_now = x_move != 0 && now >= next_move_date_x;
     bool y_move_now = y_move != 0 && now >= next_move_date_y;
 
@@ -660,7 +660,7 @@ void StraightMovement::update() {
         update_non_smooth_xy();
       }
 
-      now = System::now();
+      now = System::now_ms();
 
       if (!finished &&
           max_distance != 0 &&

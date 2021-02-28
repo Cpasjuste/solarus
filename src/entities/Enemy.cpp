@@ -794,7 +794,7 @@ void Enemy::update() {
     return;
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   if (being_hurt) {
 
@@ -848,7 +848,7 @@ void Enemy::update() {
   }
 
   if (exploding) {
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
     if (now >= next_explosion_date) {
 
       // create an explosion
@@ -903,7 +903,7 @@ void Enemy::set_suspended(bool suspended) {
   Entity::set_suspended(suspended);
 
   if (!suspended) {
-    uint32_t diff = System::now() - get_when_suspended();
+    uint32_t diff = System::now_ms() - get_when_suspended();
     stop_hurt_date += diff;
     vulnerable_again_date += diff;
     if (can_attack_again_date != 0) {
@@ -1082,7 +1082,7 @@ void Enemy::attack_stopped_by_hero_shield() {
 
   Sound::play("shield", get_game().get_resource_provider());
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   can_attack = false;
   can_attack_again_date = now + 1000;
 
@@ -1187,7 +1187,7 @@ void Enemy::try_hurt(EnemyAttack attack, Entity& source, Sprite* this_sprite) {
       // Ideally, ReactionType::CUSTOM should not make the enemy invulnerable
       // either, but we don't want to break the behavior of existing scripts.
       invulnerable = true;
-      vulnerable_again_date = System::now() + 500;
+      vulnerable_again_date = System::now_ms() + 500;
   }
 
   switch (reaction.type) {
@@ -1293,7 +1293,7 @@ void Enemy::try_hurt(EnemyAttack attack, Entity& source, Sprite* this_sprite) {
  */
 void Enemy::hurt(Entity& source, Sprite* this_sprite) {
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   // update the enemy state
   set_movement_notifications_enabled(false);
@@ -1371,7 +1371,7 @@ void Enemy::kill() {
     // A boss: create some explosions.
     exploding = true;
     nb_explosions = 0;
-    next_explosion_date = System::now() + 2000;
+    next_explosion_date = System::now_ms() + 2000;
   }
   else {
     // Replace the enemy sprites.
@@ -1528,7 +1528,7 @@ bool Enemy::is_sprite_finished_or_looping() const {
 void Enemy::immobilize() {
 
   immobilized = true;
-  start_shaking_date = System::now() + 5000;
+  start_shaking_date = System::now_ms() + 5000;
 }
 
 /**

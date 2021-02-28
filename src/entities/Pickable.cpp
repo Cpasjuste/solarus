@@ -58,7 +58,7 @@ Pickable::Pickable(
   falling_height(FALLING_NONE),
   will_disappear(false),
   shadow_xy(xy),
-  appear_date(System::now()),
+  appear_date(System::now_ms()),
   allow_pick_date(0),
   can_be_picked(true),
   blink_date(0),
@@ -204,7 +204,7 @@ bool Pickable::initialize_sprites() {
   set_size(16, 16);
   set_origin(8, 13);
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   if (falling_height != FALLING_NONE) {
     allow_pick_date = now + 700;  // The player will be allowed to take the item after 0.7 seconds.
@@ -399,7 +399,7 @@ void Pickable::check_bad_ground() {
     return;
   }
 
-  if (System::now() <= appear_date + 200) {
+  if (System::now_ms() <= appear_date + 200) {
     // The pickable appeared very recently, let the user see it for
     // a short time at least.
     return;
@@ -514,7 +514,7 @@ void Pickable::set_suspended(bool suspended) {
   if (!suspended) {
     // suspend the timers
 
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
 
     if (!can_be_picked && get_when_suspended() != 0) {
       allow_pick_date = now + (allow_pick_date - get_when_suspended());
@@ -572,7 +572,7 @@ void Pickable::update() {
   if (!is_suspended()) {
 
     // check the timer
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
 
     // wait 0.7 second before allowing the hero to take the item
     if (!can_be_picked && now >= allow_pick_date) {

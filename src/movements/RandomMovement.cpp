@@ -129,7 +129,7 @@ void RandomMovement::set_next_direction() {
   }
   set_angle(angle);
 
-  next_direction_change_date = System::now() + 500 + Random::get_number(1500); // change again in 0.5 to 2 seconds
+  next_direction_change_date = System::now_ms() + 500 + Random::get_number(1500); // change again in 0.5 to 2 seconds
 
   notify_movement_changed();
 }
@@ -147,7 +147,7 @@ void RandomMovement::update() {
 
   if (!is_suspended()) {
 
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
 
     if (now >= next_direction_change_date) {
       set_next_direction();
@@ -164,7 +164,7 @@ void RandomMovement::set_suspended(bool suspended) {
   StraightMovement::set_suspended(suspended);
 
   if (!suspended) {
-    next_direction_change_date += System::now() - get_when_suspended();
+    next_direction_change_date += System::now_ms() - get_when_suspended();
   }
 }
 

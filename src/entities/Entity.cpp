@@ -3641,7 +3641,7 @@ void Entity::set_suspended(bool suspended) {
 
   // Remember the date if the entity is being suspended.
   if (suspended) {
-    when_suspended = System::now();
+    when_suspended = System::now_ms();
   }
 
   // Suspend/unsuspend sprite animations.

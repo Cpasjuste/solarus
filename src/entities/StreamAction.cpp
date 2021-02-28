@@ -41,7 +41,7 @@ StreamAction::StreamAction(Stream& stream, Entity& entity_moved):
 
   recompute_movement();
 
-  next_move_date = System::now();
+  next_move_date = System::now_ms();
 }
 
 /**
@@ -132,7 +132,7 @@ void StreamAction::recompute_movement() {
   if (sprite != nullptr &&
       sprite->get_nb_frames() > 1 &&
       delay == sprite->get_frame_delay() &&
-      sprite->get_next_frame_date() >= System::now() &&
+      sprite->get_next_frame_date() >= System::now_ms() &&
       next_move_date < sprite->get_next_frame_date()) {
     // The stream and its sprite happen to have exactly the same speed:
     // adjust the delay to synchronize them perfectly
@@ -215,7 +215,7 @@ void StreamAction::update() {
   // Update the position.
   recompute_movement();
   while (
-      System::now() >= next_move_date &&
+      System::now_ms() >= next_move_date &&
       is_active()
   ) {
     next_move_date += delay;
@@ -297,11 +297,11 @@ void StreamAction::set_suspended(bool suspended) {
 
   this->suspended = suspended;
   if (suspended) {
-    when_suspended = System::now();
+    when_suspended = System::now_ms();
   }
   else {
     if (when_suspended != 0) {
-      next_move_date += System::now() - when_suspended;
+      next_move_date += System::now_ms() - when_suspended;
     }
   }
 }

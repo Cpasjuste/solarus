@@ -104,7 +104,7 @@ void TransitionScrolling::start() {
   current_scrolling_position = previous_map_dst_position;
   current_scrolling_position.set_size(camera_size);
 
-  next_scroll_date = System::now();
+  next_scroll_date = System::now_ms();
 }
 
 /**
@@ -179,7 +179,7 @@ void TransitionScrolling::scroll() {
 void TransitionScrolling::notify_suspended(bool suspended) {
 
   if (!suspended) {
-    next_scroll_date += System::now() - get_when_suspended();
+    next_scroll_date += System::now_ms() - get_when_suspended();
   }
 }
 
@@ -194,7 +194,7 @@ void TransitionScrolling::update() {
     return;
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   while (now >= next_scroll_date && !is_finished()) {
     scroll();
     next_scroll_date += 10;

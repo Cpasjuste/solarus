@@ -85,7 +85,7 @@ void Hero::FreeState::set_suspended(bool suspended) {
   PlayerMovementState::set_suspended(suspended);
 
   if (!suspended) {
-    start_pushing_date += System::now() - get_when_suspended();
+    start_pushing_date += System::now_ms() - get_when_suspended();
   }
 }
 
@@ -135,7 +135,7 @@ void Hero::FreeState::notify_obstacle_reached() {
       equipment.has_ability(Ability::PUSH)    // He is able to push.
   ) {
 
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
     if (pushing_direction4 == -1) {
       start_pushing_date = now + hero.get_push_delay();  // Start state and animation "pushing" after a delay set by the hero's push_delay property.
       pushing_direction4 = hero.get_animation_direction();

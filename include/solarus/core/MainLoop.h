@@ -46,7 +46,7 @@ class SOLARUS_API MainLoop {
     ~MainLoop();
 
     void run();
-    void step(uint32_t timestep);
+    void step(uint64_t timestep_ns);
 
     void set_exiting();
     bool is_exiting();

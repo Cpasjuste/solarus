@@ -982,6 +982,12 @@ Point renderer_to_quest_coordinates(
   return renderer_xy; //TODO check if this is true now
 }
 
+uint64_t get_display_period_ns() {
+  SDL_DisplayMode mode;
+  SDL_GetWindowDisplayMode(context.main_window, &mode);
+  return 1000000000 / mode.refresh_rate;
+}
+
 }  // namespace Video
 
 }  // namespace Solarus

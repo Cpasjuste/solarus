@@ -70,7 +70,7 @@ Arrow::Arrow(const Hero& hero):
       path, 192, true, false, false
   ));
 
-  disappear_date = System::now() + 10000;
+  disappear_date = System::now_ms() + 10000;
   stop_now = false;
   entity_reached = nullptr;
 }
@@ -212,7 +212,7 @@ void Arrow::update() {
     return;
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   // stop the movement if necessary (i.e. stop() was called)
   if (stop_now) {
@@ -298,7 +298,7 @@ void Arrow::set_suspended(bool suspended) {
 
   if (!suspended) {
     // recalculate the timer
-    disappear_date += System::now() - get_when_suspended();
+    disappear_date += System::now_ms() - get_when_suspended();
   }
 }
 

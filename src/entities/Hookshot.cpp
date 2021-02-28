@@ -41,7 +41,7 @@ namespace Solarus {
  */
 Hookshot::Hookshot(const Hero& hero):
     Entity("", 0, hero.get_layer(), Point(0, 0), Size(0, 0)),
-    next_sound_date(System::now()),
+    next_sound_date(System::now_ms()),
     has_to_go_back(false),
     going_back(false),
     entity_reached(nullptr),
@@ -173,7 +173,7 @@ void Hookshot::update() {
     return;
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   if (now >= next_sound_date) {
     Sound::play("hookshot", get_game().get_resource_provider());
     next_sound_date = now + 150;

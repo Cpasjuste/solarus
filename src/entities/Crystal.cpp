@@ -39,7 +39,7 @@ namespace Solarus {
 Crystal::Crystal(const std::string& name, int layer, const Point& xy):
   Entity(name, 0, layer, xy, Size(16, 16)),
   state(false),
-  next_possible_hit_date(System::now()) {
+  next_possible_hit_date(System::now_ms()) {
 
   set_collision_modes(
       CollisionMode::COLLISION_SPRITE |
@@ -137,7 +137,7 @@ void Crystal::activate(Entity& entity_activating) {
     }
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   if (!recently_activated || now >= next_possible_hit_date) {
     Sound::play("switch", get_game().get_resource_provider());
     get_game().change_crystal_state();
@@ -174,7 +174,7 @@ void Crystal::update() {
       twinkle();
     }
 
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
     if (now >= next_possible_hit_date) {
       entities_activating.clear();
     }
@@ -192,7 +192,7 @@ void Crystal::set_suspended(bool suspended) {
   Entity::set_suspended(suspended);
 
   if (!suspended) {
-    next_possible_hit_date += System::now() - get_when_suspended();
+    next_possible_hit_date += System::now_ms() - get_when_suspended();
   }
 }
 

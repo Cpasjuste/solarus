@@ -20,6 +20,7 @@
 #include "solarus/core/Common.h"
 #include <cstdint>
 #include <string>
+#include <chrono>
 
 namespace Solarus {
 
@@ -31,25 +32,26 @@ class Arguments;
  * This class initializes all low-level features.
  */
 class SOLARUS_API System {
-
   public:
 
     static void initialize(const Arguments& args);
     static void quit();
-    static void update(uint32_t timestep);
+    static void update(uint64_t timestep);
 
     static std::string get_os();
 
-    static uint32_t now();
-    static uint32_t get_real_time();
+    static uint64_t now_ns();
+    static uint64_t get_real_time_ns();
+    static uint32_t now_ms();
+    static uint32_t get_real_time_ms();
     static void sleep(uint32_t duration);
 
-    static constexpr uint32_t fixed_timestep = 10;  /**< Timestep added to the simulated time at each update. */
+    static constexpr uint64_t fixed_timestep_ns = 10000000;  /**< Timestep added to the simulated time at each update. */
 
   private:
-
-    static uint32_t initial_time;         /**< Initial real time in milliseconds. */
-    static uint32_t ticks;                /**< Simulated time in milliseconds. */
+    using Clock = std::chrono::steady_clock;
+    static Clock::time_point initial_time;         /**< Initial real time. */
+    static uint64_t ticks;                         /**< Simulated time in nanoseconds. */
 
 };
 

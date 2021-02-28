@@ -380,7 +380,7 @@ void Chest::update() {
 
   if (is_open() && !is_suspended()) {
 
-    if (!treasure_given && treasure_date != 0 && System::now() >= treasure_date) {
+    if (!treasure_given && treasure_date != 0 && System::now_ms() >= treasure_date) {
 
       treasure_date = 0;
       treasure_given = true;
@@ -424,7 +424,7 @@ bool Chest::notify_action_command_pressed() {
     if (can_open()) {
       Sound::play("chest_open", get_game().get_resource_provider());
       set_open(true);
-      treasure_date = System::now() + 300;
+      treasure_date = System::now_ms() + 300;
 
       get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
       get_hero().start_frozen();
@@ -454,7 +454,7 @@ void Chest::set_suspended(bool suspended) {
 
   if (!suspended && treasure_date != 0) {
     // restore the timer
-    treasure_date = System::now() + (treasure_date - get_when_suspended());
+    treasure_date = System::now_ms() + (treasure_date - get_when_suspended());
   }
 }
 

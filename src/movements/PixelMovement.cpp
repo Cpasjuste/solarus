@@ -156,7 +156,7 @@ void PixelMovement::restart() {
 
     if (next_move_date == 0) {
       // Keep the previous date if we just looped.
-      next_move_date = System::now();
+      next_move_date = System::now_ms();
     }
     next_move_date += delay;
 
@@ -169,7 +169,7 @@ void PixelMovement::restart() {
  */
 void PixelMovement::update() {
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   while (now >= next_move_date &&
       !is_suspended() &&
@@ -200,7 +200,7 @@ void PixelMovement::set_suspended(bool suspended) {
   if (!suspended
       && get_when_suspended() != 0
       && next_move_date != 0) {
-    next_move_date += System::now() - get_when_suspended();
+    next_move_date += System::now_ms() - get_when_suspended();
   }
 }
 

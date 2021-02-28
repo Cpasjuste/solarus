@@ -605,7 +605,7 @@ int LuaContext::timer_api_get_remaining_time(lua_State* l) {
       lua_pushinteger(l, 0);
     }
     else {
-      int remaining_time = (int) timer->get_expiration_date() - (int) System::now();
+      int remaining_time = (int) timer->get_expiration_date() - (int) System::now_ms();
       if (remaining_time < 0) {
         remaining_time = 0;
       }
@@ -631,7 +631,7 @@ int LuaContext::timer_api_set_remaining_time(lua_State* l) {
     if (it != lua_context.timers.end() &&
         !it->second.callback_ref.is_empty()) {
       // The timer is still active.
-      const uint32_t now = System::now();
+      const uint32_t now = System::now_ms();
       const uint32_t expiration_date = now + remaining_time;
       timer->set_expiration_date(expiration_date);
       if (now >= expiration_date) {

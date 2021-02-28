@@ -404,7 +404,7 @@ int Sprite::get_current_frame() const {
 void Sprite::set_current_frame(int current_frame, bool notify_script) {
 
   finished = false;
-  next_frame_date = System::now() + get_frame_delay();
+  next_frame_date = System::now_ms() + get_frame_delay();
 
   if (current_frame != this->current_frame) {
     this->current_frame = current_frame;
@@ -508,7 +508,7 @@ void Sprite::set_suspended(bool suspended) {
 
     // compte next_frame_date if the animation is being resumed
     if (!suspended) {
-      uint32_t now = System::now();
+      uint32_t now = System::now_ms();
       next_frame_date = now + get_frame_delay();
       blink_next_change_date = now;
     }
@@ -562,7 +562,7 @@ void Sprite::set_paused(bool paused) {
 
     // compte next_frame_date if the animation is being resumed
     if (!paused) {
-      uint32_t now = System::now();
+      uint32_t now = System::now_ms();
       next_frame_date = now + get_frame_delay();
       blink_next_change_date = now;
     }
@@ -624,7 +624,7 @@ void Sprite::set_blinking(uint32_t blink_delay) {
 
   if (blink_delay > 0) {
     blink_is_sprite_visible = false;
-    blink_next_change_date = System::now();
+    blink_next_change_date = System::now_ms();
   }
 }
 
@@ -697,7 +697,7 @@ void Sprite::update() {
   LuaContext* lua_context = get_lua_context();
 
   frame_changed = false;
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   // Update the current frame.
   if (synchronize_to == nullptr

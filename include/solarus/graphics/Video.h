@@ -122,6 +122,7 @@ namespace Video {
     void invalidate(const SurfaceImpl &texture);
     SurfacePtr& get_screen_surface();
 
+    uint64_t get_display_period_ns();
 }  // namespace Video
 
 }  // namespace Solarus

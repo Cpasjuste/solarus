@@ -64,7 +64,7 @@ void Hero::SwordLoadingState::start(const State* previous_state) {
   }
   else {
     // Allowed after a delay.
-    sword_loaded_date = System::now() + spin_attack_delay;
+    sword_loaded_date = System::now_ms() + spin_attack_delay;
   }
 }
 
@@ -80,7 +80,7 @@ void Hero::SwordLoadingState::update() {
   }
 
   bool attack_pressed = get_commands().is_command_pressed(GameCommand::ATTACK);
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   // detect when the sword is loaded (i.e. ready for a spin attack)
   if (attack_pressed &&
@@ -116,7 +116,7 @@ void Hero::SwordLoadingState::set_suspended(bool suspended) {
   PlayerMovementState::set_suspended(suspended);
 
   if (!suspended) {
-    sword_loaded_date += System::now() - get_when_suspended();
+    sword_loaded_date += System::now_ms() - get_when_suspended();
   }
 }
 

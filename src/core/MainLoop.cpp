@@ -400,8 +400,10 @@ void MainLoop::run() {
 }
 
 void MainLoop::dynamic_run() {
-  uint32_t last_frame_date = System::get_real_time();
+  uint64_t last_frame_date = System::get_real_time_ns();
+  int64_t delta_buffer = 0; //Delta buffer is used to store difference between perfect timing and realtime
 
+  auto delta_buffer_spill = 0.01f; //The lower it is the smoother we are but the less efficiently we catch up time
   // The main loop basically repeats
   // check_input(), update(), draw() and sleep().
   // Each call to update() makes the simulated time advance until next frame.
@@ -409,25 +411,40 @@ void MainLoop::dynamic_run() {
   while (!is_exiting()) {
     SOL_PBLOCK("Solarus::MainLoop::Frame");
     // Measure the time of the last iteration.
-    uint32_t now = System::get_real_time();
-    uint32_t last_frame_duration = now - last_frame_date;
+    uint64_t now = System::get_real_time_ns();
+    int64_t last_frame_duration = now - last_frame_date;
     last_frame_date = now;
+
+    int64_t perfect_frame_duration = Video::get_display_period_ns();
+
+    //Compute how much we spill from delta_buffer
+    int64_t spill = delta_buffer * delta_buffer_spill;
+
+    //Transfer time to smoothed duration
+    int64_t smoothed_duration = perfect_frame_duration + spill;
+    delta_buffer -= spill;
+
+    //Put current frame error in buffer
+    delta_buffer += last_frame_duration - smoothed_duration;
 
     // 1. Detect and handle input events.
     check_input();
 
     // 2. Update the world once
-    step(last_frame_duration);
+    step(smoothed_duration);
 
     // 3. Draw
     draw();
+
+    //Debug
+    std::cout << perfect_frame_duration << " " << last_frame_duration << " " << smoothed_duration << " " << delta_buffer << " " << spill << std::endl;
   }
 }
 
 void MainLoop::fixed_run() {
-  uint32_t last_frame_date = System::get_real_time();
-  uint32_t lag = 0;  // Lose time of the simulation to catch up.
-  uint32_t time_dropped = 0;  // Time that won't be caught up.
+  uint64_t last_frame_date = System::get_real_time_ns();
+  uint64_t lag = 0;  // Lose time of the simulation to catch up.
+  uint64_t time_dropped = 0;  // Time that won't be caught up.
 
   // The main loop basically repeats
   // check_input(), update(), draw() and sleep().
@@ -436,8 +453,8 @@ void MainLoop::fixed_run() {
   while (!is_exiting()) {
     SOL_PBLOCK("Solarus::MainLoop::Frame");
     // Measure the time of the last iteration.
-    uint32_t now = System::get_real_time() - time_dropped;
-    uint32_t last_frame_duration = now - last_frame_date;
+    uint64_t now = System::get_real_time_ns() - time_dropped;
+    uint64_t last_frame_duration = now - last_frame_date;
     last_frame_date = now;
     lag += last_frame_duration;
     // At this point, lag represents how much late the simulated time with
@@ -448,9 +465,9 @@ void MainLoop::fixed_run() {
       // Maybe we have just made a one-time heavy operation like loading a
       // big file, or the process was just unsuspended.
       // Let's fake the real time instead.
-      time_dropped += lag - System::fixed_timestep;
-      lag = System::fixed_timestep;
-      last_frame_date = System::get_real_time() - time_dropped;
+      time_dropped += lag - System::fixed_timestep_ns;
+      lag = System::fixed_timestep_ns;
+      last_frame_date = System::get_real_time_ns() - time_dropped;
     }
 
     // 1. Detect and handle input events.
@@ -461,17 +478,17 @@ void MainLoop::fixed_run() {
     int num_updates = 0;
     if (turbo && !is_suspended()) {
       // Turbo mode: always update at least once.
-      step(System::fixed_timestep);
-      lag -= System::fixed_timestep;
+      step(System::fixed_timestep_ns);
+      lag -= System::fixed_timestep_ns;
       ++num_updates;
     }
 
-    while (lag >= System::fixed_timestep &&
+    while (lag >= System::fixed_timestep_ns &&
            num_updates < 10 && // To draw sometimes anyway on very slow systems.
            !is_exiting() && !is_suspended()
     ) {
-      step(System::fixed_timestep);
-      lag -= System::fixed_timestep;
+      step(System::fixed_timestep_ns*1000000);
+      lag -= System::fixed_timestep_ns;
       ++num_updates;
     }
 
@@ -487,10 +504,10 @@ void MainLoop::fixed_run() {
       System::sleep(debug_lag);
     }
 
-    last_frame_duration = (System::get_real_time() - time_dropped) - last_frame_date;
-    if (last_frame_duration < System::fixed_timestep && !turbo) {
+    last_frame_duration = (System::get_real_time_ms() - time_dropped) - last_frame_date;
+    if (last_frame_duration < System::fixed_timestep_ns && !turbo) {
       SOL_PBLOCK("Timestep sleep");
-      System::sleep(System::fixed_timestep - last_frame_duration);
+      System::sleep(System::fixed_timestep_ns - last_frame_duration);
     }
   }
 }
@@ -501,13 +518,13 @@ void MainLoop::fixed_run() {
  * You can use this function if you want to simulate step by step.
  * Otherwise, use run() to execute the standard main loop.
  */
-void MainLoop::step(uint32_t timestep) {
+void MainLoop::step(uint64_t timestep_ns) {
   SOL_PFUN();
   if (game != nullptr) {
     game->update();
   }
   lua_context->update();
-  System::update(timestep);
+  System::update(timestep_ns);
 
   // Go to another game?
   if (next_game != game.get()) {

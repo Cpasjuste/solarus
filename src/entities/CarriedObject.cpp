@@ -263,7 +263,7 @@ void CarriedObject::throw_item(int direction) {
   set_movement(movement);
 
   this->y_increment = -2;
-  this->next_down_date = System::now() + 40;
+  this->next_down_date = System::now_ms() + 40;
   this->item_height = item_height + hero->get_carry_height();
 
   get_lua_context()->carried_object_on_thrown(*this);
@@ -290,7 +290,7 @@ bool CarriedObject::is_being_thrown() const {
  * \return true if the item is about to explode
  */
 bool CarriedObject::will_explode_soon()  const{
-  return can_explode() && System::now() >= explosion_date - 1500;
+  return can_explode() && System::now_ms() >= explosion_date - 1500;
 }
 
 /**
@@ -432,7 +432,7 @@ void CarriedObject::set_suspended(bool suspended) {
 
   if (!suspended && get_when_suspended() != 0) {
     // recalculate the timers
-    uint32_t diff = System::now() - get_when_suspended();
+    uint32_t diff = System::now_ms() - get_when_suspended();
     if (is_throwing) {
       next_down_date += diff;
     }
@@ -473,7 +473,7 @@ void CarriedObject::update() {
   // when the item has finished flying, destroy it
   else if (can_explode() && !is_breaking) {
 
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
 
     if (now >= explosion_date) {
       break_item();
@@ -512,7 +512,7 @@ void CarriedObject::update() {
       break_item_on_ground();
     }
     else {
-      uint32_t now = System::now();
+      uint32_t now = System::now_ms();
       while (now >= next_down_date) {
         next_down_date += 40;
         item_height -= y_increment;

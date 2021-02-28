@@ -153,7 +153,7 @@ void Transition::set_suspended(bool suspended) {
   if (suspended != this->suspended) {
     this->suspended = suspended;
     if (suspended) {
-      when_suspended = System::now();
+      when_suspended = System::now_ms();
     }
     notify_suspended(suspended);
   }

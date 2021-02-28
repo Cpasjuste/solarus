@@ -390,7 +390,7 @@ bool Destructible::notify_action_command_pressed() {
 
     if (get_equipment().has_ability(Ability::LIFT, get_weight())) {
 
-      uint32_t explosion_date = get_can_explode() ? System::now() + 6000 : 0;
+      uint32_t explosion_date = get_can_explode() ? System::now_ms() + 6000 : 0;
       std::shared_ptr<CarriedObject> carried_object = std::make_shared<CarriedObject>(
           get_hero(),
           *this,
@@ -484,7 +484,7 @@ void Destructible::set_suspended(bool suspended) {
 
   if (!suspended && regeneration_date != 0) {
     // Recompute the date.
-    regeneration_date += System::now() - get_when_suspended();
+    regeneration_date += System::now_ms() - get_when_suspended();
   }
 }
 
@@ -511,12 +511,12 @@ void Destructible::update() {
     }
     else {
       is_being_cut = false;
-      regeneration_date = System::now() + 10000;
+      regeneration_date = System::now_ms() + 10000;
     }
   }
 
   else if (is_waiting_for_regeneration()
-      && System::now() >= regeneration_date
+      && System::now_ms() >= regeneration_date
       && !overlaps(get_hero())) {
 
     if (sprite != nullptr) {

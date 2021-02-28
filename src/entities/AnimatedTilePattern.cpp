@@ -44,7 +44,7 @@ AnimatedTilePattern::AnimatedTilePattern(
   mirror_loop(mirror_loop),
   parallax(parallax),
   frame_index(0),
-  next_frame_date(System::now() + frame_delay) {
+  next_frame_date(System::now_ms() + frame_delay) {
 
   Debug::check_assertion(!this->frames.empty(), "Missing frames for animated pattern");
 }
@@ -54,7 +54,7 @@ AnimatedTilePattern::AnimatedTilePattern(
  */
 void AnimatedTilePattern::update() {
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   while (now >= next_frame_date) {
     if (!mirror_loop) {
       frame_index = (frame_index + 1) % frames.size();

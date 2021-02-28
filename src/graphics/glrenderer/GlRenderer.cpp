@@ -513,7 +513,7 @@ void GlRenderer::set_state(const GlTexture *src, GlShader* shad, GlTexture* dst,
     }
     glUniform1i(
           current_shader->get_uniform_location(Shader::TIME_NAME),
-          System::now());
+          System::now_ms());
   }
 }
 

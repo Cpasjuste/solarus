@@ -42,7 +42,7 @@ namespace Solarus {
  */
 Bomb::Bomb(const std::string& name, int layer, const Point& xy):
   Entity(name, 0, layer, xy, Size(16, 16)),
-  explosion_date(System::now() + 6000) {
+  explosion_date(System::now_ms() + 6000) {
 
   set_collision_modes(CollisionMode::COLLISION_FACING);
   const SpritePtr& sprite = create_sprite("entities/bomb");
@@ -217,7 +217,7 @@ void Bomb::set_suspended(bool suspended) {
 
   if (!suspended && get_when_suspended() != 0) {
     // recalculate the timer
-    uint32_t diff = System::now() - get_when_suspended();
+    uint32_t diff = System::now_ms() - get_when_suspended();
     explosion_date += diff;
   }
 }
@@ -234,7 +234,7 @@ void Bomb::update() {
   }
 
   // check the explosion date
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   if (now >= explosion_date) {
     explode();
   }

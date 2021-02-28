@@ -163,7 +163,7 @@ void Hero::StairsState::update() {
   // first time: we play the sound and initialize
   if (phase == 0) {
     stairs->play_sound(way);
-    next_phase_date = System::now() + 450;
+    next_phase_date = System::now_ms() + 450;
     phase++;
   }
 
@@ -225,7 +225,7 @@ void Hero::StairsState::update() {
     }
     else { // movement not finished yet
 
-      uint32_t now = System::now();
+      uint32_t now = System::now_ms();
       if (now >= next_phase_date) {
         phase++;
         next_phase_date += 350;
@@ -275,7 +275,7 @@ void Hero::StairsState::set_suspended(bool suspended) {
   }
 
   if (!suspended) {
-    next_phase_date += System::now() - get_when_suspended();
+    next_phase_date += System::now_ms() - get_when_suspended();
   }
 }
 

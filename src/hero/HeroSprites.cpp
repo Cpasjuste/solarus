@@ -567,7 +567,7 @@ void HeroSprites::blink(uint32_t duration) {
     end_blink_date = 0;
   }
   else {
-    end_blink_date = System::now() + duration;
+    end_blink_date = System::now_ms() + duration;
   }
 }
 
@@ -803,7 +803,7 @@ void HeroSprites::update() {
   // Blinking.
   if (is_blinking()
       && end_blink_date != 0
-      && System::now() >= end_blink_date) {
+      && System::now_ms() >= end_blink_date) {
     stop_blinking();
   }
 
@@ -842,7 +842,7 @@ void HeroSprites::set_suspended(bool suspended) {
   hero.set_sprites_suspended(suspended);
 
   // Timer.
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   if (suspended) {
     when_suspended = now;
   }
