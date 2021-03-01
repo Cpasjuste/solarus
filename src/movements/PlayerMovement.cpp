@@ -42,8 +42,6 @@ PlayerMovement::PlayerMovement(int moving_speed):
  */
 void PlayerMovement::update() {
 
-  StraightMovement::update();
-
   const Entity* entity = get_entity();
   if (entity == nullptr || !entity->is_on_map()) {
     return; // the entity is not ready yet
@@ -77,6 +75,8 @@ void PlayerMovement::update() {
       compute_movement();
     }
   }
+
+  StraightMovement::update();
 }
 
 /**
