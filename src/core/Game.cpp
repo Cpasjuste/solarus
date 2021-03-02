@@ -591,7 +591,7 @@ void Game::update_commands_effects() {
  * \brief Draws the game.
  * \param dst_surface The surface where the game will be drawn.
  */
-void Game::draw(const SurfacePtr& dst_surface) {
+void Game::draw(const SurfacePtr& dst_surface, const SurfacePtr& screen_surface) {
   SOL_PFUN(profiler::colors::Green);
   if (current_map == nullptr) {
     // Nothing to do. The game is not fully initialized yet.
@@ -600,7 +600,9 @@ void Game::draw(const SurfacePtr& dst_surface) {
 
   // Draw the map.
   if (current_map->is_loaded()) {
+    #ifndef SOLARUS_SUBPIXEL_CAMERA
     dst_surface->fill_with_color(current_map->get_tileset().get_background_color());
+    #endif
     current_map->draw();
     const CameraPtr& camera = current_map->get_camera();
     if (camera != nullptr) {
@@ -612,7 +614,31 @@ void Game::draw(const SurfacePtr& dst_surface) {
                                              *transition);
 
       } else {
+#ifdef SOLARUS_SUBPIXEL_CAMERA
+        const ShaderPtr shader = camera_surface->get_shader();
+        const DrawProxy& proxy = shader ?
+              reinterpret_cast<const DrawProxy&>(*shader) :
+              Video::get_renderer().default_terminal();
+
+        //context.screen_surface->clear();
+        auto scale = Video::get_output_size_no_bars()/camera->get_size();
+        proxy.draw(
+              *screen_surface,
+              *camera_surface,
+              DrawInfos(
+                Rectangle(camera_surface->get_size()),
+                camera->get_position_on_screen(scale),
+                Point(),
+                BlendMode::BLEND,
+                255,0,
+                scale,
+                null_proxy));
+        //camera_surface->draw(screen_surface, camera->get_position_on_screen());
+
+        //Video::render(camera_surface);
+#else
         camera_surface->draw(dst_surface, camera->get_position_on_screen());
+#endif
       }
     }
 

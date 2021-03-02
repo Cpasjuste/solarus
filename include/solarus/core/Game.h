@@ -77,7 +77,7 @@ class SOLARUS_API Game {
     // functions called by the main loop
     bool notify_input(const InputEvent& event);
     void update();
-    void draw(const SurfacePtr& dst_surface);
+    void draw(const SurfacePtr& dst_surface, const SurfacePtr& screen_surface);
 
     // game controls
     void notify_command_pressed(GameCommand command);

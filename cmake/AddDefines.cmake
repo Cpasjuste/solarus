@@ -36,3 +36,7 @@ endif()
 if(SOLARUS_DYNAMIC_STEP)
   add_definitions(-DSOLARUS_DYNAMIC_STEP)
 endif()
+
+if(SOLARUS_SUBPIXEL_CAMERA)
+  add_definitions(-DSOLARUS_SUBPIXEL_CAMERA)
+endif()

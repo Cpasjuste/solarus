@@ -19,6 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/core/Rectangle.h"
+#include "solarus/core/Scale.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/EntityPtr.h"
 #include "solarus/graphics/SurfacePtr.h"
@@ -54,12 +55,18 @@ class Camera : public Entity {
     void notify_movement_started() override;
     void notify_size_changed() override;
     bool is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) override;
+#ifdef SOLARUS_SUBPIXEL_CAMERA
+    void update() override;
+    Point get_position_on_screen(Scale px_scale) const;
+#endif
 
     const SurfacePtr& get_surface() const;
 
     Point get_position_on_screen() const;
     void set_position_on_screen(const Point& position_on_screen);
     Point get_position_to_track(const Point& tracked_xy) const;
+
+
 
     void start_tracking(const EntityPtr& entity);
     void start_manual();
@@ -78,7 +85,9 @@ private:
 
     SurfacePtr surface;           /**< Surface where this camera draws its entities. */
     Point position_on_screen;     /**< Where to draw this camera on the screen. */
-
+#ifdef SOLARUS_SUBPIXEL_CAMERA
+    glm::vec2 smoothed_position;  /**< Smoothed camera entity position */
+#endif
 };
 
 }

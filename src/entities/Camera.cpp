@@ -551,4 +551,30 @@ Rectangle Camera::apply_separators_and_map_bounds(const Rectangle& area) const {
   return apply_map_bounds(apply_separators(area));
 }
 
+#ifdef SOLARUS_SUBPIXEL_CAMERA
+/**
+ * @brief Camera::update
+ */
+void Camera::update() {
+  Entity::update();
+
+  constexpr auto limit = 100;
+  constexpr auto keep_factor = 0.85f;
+  glm::vec2 true_position = get_bounding_box().get_top_left();
+
+  if(glm::distance(true_position, smoothed_position) > limit) {
+    smoothed_position = true_position;
+  } else {
+    smoothed_position = keep_factor * smoothed_position + (1.f - keep_factor) * true_position;
+  }
+}
+
+Point Camera::get_position_on_screen(Scale px_scale) const {
+  glm::vec2 true_position = get_bounding_box().get_top_left();
+  glm::vec2 delta = true_position - smoothed_position;
+  glm::vec2 screen_delta = delta * glm::vec2(px_scale);
+  return get_position_on_screen()*px_scale + Point(std::roundf(screen_delta.x), std::roundf(screen_delta.y));
+}
+
+#endif
 }

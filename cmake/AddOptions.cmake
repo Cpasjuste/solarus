@@ -39,3 +39,6 @@ set(SOLARUS_PROFILING "OFF" CACHE BOOL "Enable compiling with easy_profiler embe
 
 # Mainloop shape
 set(SOLARUS_DYNAMIC_STEP "OFF" CACHE BOOL "Enable a mainloop updating in sync with video output")
+
+# Subpixel camera movement emulation
+set(SOLARUS_SUBPIXEL_CAMERA "OFF" CACHE BOOL "Enable motion-compensation for the camera")

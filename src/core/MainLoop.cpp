@@ -669,9 +669,10 @@ void MainLoop::notify_input(const InputEvent& event) {
 void MainLoop::draw() {
   SOL_PFUN();
   root_surface->clear();
+  Video::get_screen_surface()->clear();
 
   if (game != nullptr) {
-    game->draw(root_surface);
+    game->draw(root_surface, Video::get_screen_surface());
   }
   lua_context->main_on_draw(root_surface);
   Video::render(root_surface);

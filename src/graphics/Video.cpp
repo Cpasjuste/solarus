@@ -398,7 +398,7 @@ void render(const SurfacePtr& quest_surface) {
         static_cast<const DrawProxy&>(*context.current_shader) :
         context.renderer->default_terminal();
 
-  context.screen_surface->clear();
+  //context.screen_surface->clear();
   proxy.draw(
         *context.screen_surface,
         *surface_to_render,
