@@ -77,6 +77,8 @@ class SOLARUS_API Movement: public ExportableToLua {
     virtual void notify_movement_changed();
     virtual void notify_movement_finished();
 
+    virtual glm::vec2 get_subpixel_offset() const;
+
     // movement
     bool is_stopped() const;
     virtual bool is_started() const;

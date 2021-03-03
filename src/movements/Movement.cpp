@@ -324,6 +324,14 @@ void Movement::notify_movement_finished() {
 }
 
 /**
+ * @brief get offset from current integer position to "should-be" subpixel position
+ * @return 2D offset in pixels of movement
+ */
+glm::vec2 Movement::get_subpixel_offset() const {
+  return {0.f,0.f};
+}
+
+/**
  * \brief Returns whether the movement is stopped.
  * \return true if the object is stopped, false otherwise
  */

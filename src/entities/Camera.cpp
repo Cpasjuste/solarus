@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <list>
+#include <iostream>
 
 namespace Solarus {
 
@@ -102,6 +103,13 @@ void TrackingState::update() {
 
     // Then apply constraints of both separators and map limits.
     camera.set_bounding_box(camera.apply_separators_and_map_bounds(next));
+
+    if(tracked_entity->get_movement() && camera.get_bounding_box() == next) {
+      camera.set_subpixel_offset(tracked_entity->get_movement()->get_subpixel_offset());
+    } else {
+      camera.set_subpixel_offset({0,0});
+    }
+
     camera.notify_bounding_box_changed();
   }
   else {
@@ -228,7 +236,8 @@ ManualState::ManualState(Camera& camera) :
 Camera::Camera(Map& map):
   Entity("", 0, map.get_max_layer(), Point(0, 0), Video::get_quest_size()),
   surface(nullptr),
-  position_on_screen(0, 0) {
+  position_on_screen(0, 0),
+  subpixel_offset{0.f,0.f} {
 
   create_surface();
   set_map(map);
@@ -555,25 +564,43 @@ Rectangle Camera::apply_separators_and_map_bounds(const Rectangle& area) const {
 /**
  * @brief Camera::update
  */
-void Camera::update() {
+/*void Camera::update() {
+  Point last_pos = get_bounding_box().get_top_left();
   Entity::update();
 
-  constexpr auto limit = 100;
-  constexpr auto keep_factor = 0.85f;
-  glm::vec2 true_position = get_bounding_box().get_top_left();
+  Point delta = get_bounding_box().get_top_left() - last_pos;
+  if(delta.x || delta.y) {
+    auto now = System::now_ns();
+    if(std::max(std::abs(delta.x), std::abs(delta.y)) > 20) {
+      subpixel_move_speed = {0.f,0.f};
+      last_move_time = now;
+    } else {
+      uint64_t dt = (now - last_move_time);
+      float dt_s = dt / 1000000000.f;
 
-  if(glm::distance(true_position, smoothed_position) > limit) {
-    smoothed_position = true_position;
-  } else {
-    smoothed_position = keep_factor * smoothed_position + (1.f - keep_factor) * true_position;
+      //Compute current subpixel pos
+      float to_go_s = (subpixel_move_target_time - now) / 1000000000.f;
+      glm::vec2 previous_delta = subpixel_move_target_time > now ? to_go_s * subpixel_move_speed : glm::vec2{0.f,0.f};
+
+      //Actual move
+      subpixel_move_speed = (glm::vec2(delta)+previous_delta) / dt_s;
+
+      std::cout << subpixel_move_speed.x << " " << subpixel_move_speed.y << std::endl;
+
+      subpixel_move_target_time = now+dt;
+      last_move_time = now;
+      last_pos = get_bounding_box().get_top_left();
+    }
   }
+}*/
+
+void Camera::set_subpixel_offset(const glm::vec2 &offset) {
+  subpixel_offset = offset;
 }
 
 Point Camera::get_position_on_screen(Scale px_scale) const {
-  glm::vec2 true_position = get_bounding_box().get_top_left();
-  glm::vec2 delta = true_position - smoothed_position;
-  glm::vec2 screen_delta = delta * glm::vec2(px_scale);
-  return get_position_on_screen()*px_scale + Point(std::roundf(screen_delta.x), std::roundf(screen_delta.y));
+  glm::vec2 delta = -subpixel_offset * glm::vec2(px_scale);
+  return get_position_on_screen()*px_scale + Point(std::roundf(delta.x), std::roundf(delta.y));
 }
 
 #endif

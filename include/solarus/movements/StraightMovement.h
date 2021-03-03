@@ -67,6 +67,8 @@ class StraightMovement: public Movement {
     void set_finished();
     virtual void stop() override;
 
+    glm::vec2 get_subpixel_offset() const override;
+
     const std::string& get_lua_type_name() const override;
 
   protected:
@@ -113,6 +115,8 @@ class StraightMovement: public Movement {
     bool smooth;                 /**< Makes the movement adjust its trajectory
                                   * when an obstacle is close */
 
+    bool x_blocked;
+    bool y_blocked;
 };
 
 }

@@ -182,6 +182,21 @@ void StraightMovement::stop() {
 }
 
 /**
+ * @copydoc Movement::get_subpixel_offset
+ * @return
+ */
+glm::vec2 StraightMovement::get_subpixel_offset() const {
+  auto now = System::now_ns();
+  auto remaining = [&](uint64_t /*delay*/, uint64_t next_move_date) {
+    return now < next_move_date ? static_cast<int64_t>(next_move_date) - static_cast<int64_t>(now) : 0;
+  };
+  return {
+    x_blocked ? 0.f : remaining(x_delay, next_move_date_x) * -1e-9f * x_move * std::abs(get_x_speed()),
+    y_blocked ? 0.f : remaining(y_delay, next_move_date_y) * -1e-9f * y_move * std::abs(get_y_speed())
+  };
+}
+
+/**
  * \brief Sets the date of the next change of the dim coordinate.
  * \param next_move_date_x the date in milliseconds
  */
@@ -410,10 +425,10 @@ void StraightMovement::update_smooth_x() {
       }
 
       translate_x(x_move);  // Make the move.
-
-
+      x_blocked = false;
     }
     else {
+      x_blocked = true;
       if (y_move == 0) {
         // The move on x is not possible and there is no y move:
         // let's try to add a move on y to make a diagonal move,
@@ -510,8 +525,10 @@ void StraightMovement::update_smooth_y() {
         increment_next_move_date(y_delay);
       }
       translate_y(y_move);  // Make the move.
+      y_blocked = false;
     }
     else {
+      y_blocked = true;
       if (x_move == 0) {
         // The move on y is not possible and there is no x move:
         // let's try to add a move on x to make a diagonal move,
