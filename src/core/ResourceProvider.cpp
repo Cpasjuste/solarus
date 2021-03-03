@@ -126,8 +126,8 @@ SoundBuffer& ResourceProvider::get_sound(const std::string& sound_id, bool /* la
   // TODO handle language
 
   std::shared_ptr<SoundBuffer> sound;
-  auto it = sound_cache.find(sound_id);
-  if (it->second != nullptr) {
+  const auto it = sound_cache.find(sound_id);
+  if (it != sound_cache.end()) {
     sound = it->second;
   }
   else {
