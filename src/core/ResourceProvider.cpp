@@ -92,8 +92,8 @@ void ResourceProvider::clear() {
 Tileset& ResourceProvider::get_tileset(const std::string& tileset_id) {
 
   std::shared_ptr<Tileset> tileset;
-  auto it = tileset_cache.find(tileset_id);
-  if (it->second != nullptr) {
+  const auto it = tileset_cache.find(tileset_id);
+  if (it != tileset_cache.end()) {
     tileset = it->second;
   }
   else {
