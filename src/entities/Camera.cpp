@@ -104,11 +104,15 @@ void TrackingState::update() {
     // Then apply constraints of both separators and map limits.
     camera.set_bounding_box(camera.apply_separators_and_map_bounds(next));
 
-    if(tracked_entity->get_movement() && camera.get_bounding_box() == next) {
-      camera.set_subpixel_offset(tracked_entity->get_movement()->get_subpixel_offset());
-    } else {
-      camera.set_subpixel_offset({0,0});
+    glm::vec2 offset = tracked_entity->get_movement() ? tracked_entity->get_movement()->get_subpixel_offset() : glm::vec2{0,0};
+
+    if(camera.get_bounding_box().get_left() != next.get_left()) {
+      offset.x = 0.f;
     }
+    if(camera.get_bounding_box().get_top() != next.get_top()){
+      offset.y = 0.f;
+    }
+    camera.set_subpixel_offset(offset);
 
     camera.notify_bounding_box_changed();
   }

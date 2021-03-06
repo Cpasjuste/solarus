@@ -129,6 +129,7 @@ void StraightMovement::set_dim_speed(uint64_t& delay,
  * \param x_speed the x speed of the object in pixels per second
  */
 void StraightMovement::set_x_speed(double x_speed, double keep_factor) {
+  x_blocked = true;
   set_dim_speed(x_delay, next_move_date_x, this->x_speed, x_move, x_speed, keep_factor);
 }
 
@@ -137,6 +138,7 @@ void StraightMovement::set_x_speed(double x_speed, double keep_factor) {
  * \param y_speed the y speed of the object in pixels per second
  */
 void StraightMovement::set_y_speed(double y_speed, double keep_factor) {
+  y_blocked = true;
   set_dim_speed(y_delay, next_move_date_y, this->y_speed, y_move, y_speed, keep_factor);
 }
 
