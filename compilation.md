@@ -26,7 +26,7 @@ called `data.solarus` or `data.solarus.zip` and containing all the data
 files of the quest (graphics, musics, sounds, scripts, dialogs, etc.).
 A short sample quest is provided in the directory `sample_quest`.
 
-Our quests can be found on the website: http://www.solarus-games.org
+Our quests can be found on the website: https://www.solarus-games.org
 
 The project is separated in two parts: **Solarus** and the **Solarus GUI**.
 
@@ -348,7 +348,7 @@ cmake \
 
 If you wish to deploy a quest on non-developer environment with a standalone
 bundle, the better way is to use the Solarus package provided on
-<http://www.solarus-games.org/> and use a post-build script to replace the
+<https://www.solarus-games.org/> and use a post-build script to replace the
 `Solarus-run.app/Contents/Resources/solarus-run` and
 `Solarus-run.app/Contents/Frameworks/libsolarus.dylib` files by the ones
 just compiled.
