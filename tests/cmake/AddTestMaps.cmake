@@ -163,6 +163,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1476_crash_command_binding"
   "bugs/1526_destructible_cut_method"
   "bugs/1533_savegame_write_escape"
+  "bugs/1534_unicode_filenames"
 )
 
 # Test that should not fail when there are errors
