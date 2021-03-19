@@ -162,6 +162,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1471_pickable_wrong_layer"
   "bugs/1476_crash_command_binding"
   "bugs/1526_destructible_cut_method"
+  "bugs/1533_savegame_write_escape"
 )
 
 # Test that should not fail when there are errors
