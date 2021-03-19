@@ -11,6 +11,7 @@
 * Fix TTF Fonts not rendering correctly (#1389).
 * Fix a possible crash when starting a timer on a removed entity (#1469).
 * Fix pickables not falling on negative layers.
+* Fix string literals in savegames not being properly escaped (#1533).
 
 ### Lua API changes
 
