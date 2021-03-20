@@ -23,6 +23,7 @@
 #include <map>
 #include <al.h>
 #include <alc.h>
+#include <alext.h>
 #include <vorbis/vorbisfile.h>
 
 namespace Solarus {
@@ -82,6 +83,8 @@ class SOLARUS_API Sound {
     ALuint decode_file(const std::string& file_name);
     bool update_playing();
 
+    static void update_device_connection();
+
     static ALCdevice* device;
     static ALCcontext* context;
 
@@ -91,9 +94,9 @@ class SOLARUS_API Sound {
     static std::list<Sound*> current_sounds;     /**< the sounds currently playing */
     static std::map<std::string, Sound> all_sounds;   /**< all sounds created before */
 
-    static bool initialized;                     /**< indicates that the audio system is initialized */
     static bool sounds_preloaded;                /**< true if load_all() was called */
     static float volume;                         /**< the volume of sound effects (0.0 to 1.0) */
+    static uint32_t next_device_connect_date;    /**< Date of the next attempt to connect to a device. */
 
     static bool pc_play;                         /**< Whether playing performance counter is used. */
 };

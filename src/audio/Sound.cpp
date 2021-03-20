@@ -31,12 +31,12 @@ namespace Solarus {
 
 ALCdevice* Sound::device = nullptr;
 ALCcontext* Sound::context = nullptr;
-bool Sound::initialized = false;
 bool Sound::sounds_preloaded = false;
 float Sound::volume = 1.0;
 bool Sound::pc_play = false;
 std::list<Sound*> Sound::current_sounds;
 std::map<std::string, Sound> Sound::all_sounds;
+uint32_t Sound::next_device_connect_date = 0;
 
 namespace {
 
@@ -194,28 +194,13 @@ void Sound::initialize(const Arguments& args) {
 
   // Initialize OpenAL.
 
-  device = alcOpenDevice(nullptr);
-  if (!device) {
-    Debug::error("Cannot open audio device");
-    return;
-  }
-
-  context = alcCreateContext(device, nullptr);
-  if (!context) {
-    Debug::error("Cannot create audio context");
-    alcCloseDevice(device);
-    return;
-  }
-  if (!alcMakeContextCurrent(context)) {
-    Debug::error("Cannot activate audio context");
-    alcDestroyContext(context);
-    alcCloseDevice(device);
+  update_device_connection();
+  if (device == nullptr) {
     return;
   }
 
   alGenBuffers(0, nullptr);  // Necessary on some systems to avoid errors with the first sound loaded.
 
-  initialized = true;
   set_volume(100);
 
   // initialize the music system
@@ -229,24 +214,76 @@ void Sound::initialize(const Arguments& args) {
  */
 void Sound::quit() {
 
-  if (is_initialized()) {
+  // uninitialize the music subsystem
+  Music::quit();
 
-    // uninitialize the music subsystem
-    Music::quit();
+  // clear the sounds
+  all_sounds.clear();
 
-    // clear the sounds
-    all_sounds.clear();
+  // uninitialize OpenAL
 
-    // uninitialize OpenAL
+  alcMakeContextCurrent(nullptr);
+  alcDestroyContext(context);
+  context = nullptr;
+  alcCloseDevice(device);
+  device = nullptr;
+  volume = 1.0;
+}
 
-    alcMakeContextCurrent(nullptr);
-    alcDestroyContext(context);
-    context = nullptr;
-    alcCloseDevice(device);
-    device = nullptr;
-    volume = 1.0;
+/**
+ * \brief Checks if the audio device is connected.
+ */
+void Sound::update_device_connection() {
 
-    initialized = false;
+  if (device != nullptr) {
+    // Check if the device is still connected.
+    ALCint is_connected = 0;
+    alcGetIntegerv(device, ALC_CONNECTED, 1, &is_connected);
+    if (!is_connected) {
+      Logger::info("Lost connection to audio device");
+      ALboolean success = alcMakeContextCurrent(nullptr);
+      if (!success) {
+        Debug::error("Failed to unset OpenAL context");
+      }
+      alcDestroyContext(context);
+      context = nullptr;
+      alcCloseDevice(device);
+      device = nullptr;
+      next_device_connect_date = System::now();
+      all_sounds.clear();
+      sounds_preloaded = false;
+      Music::notify_device_disconnected_all();
+    }
+  }
+
+  if (device == nullptr) {
+    if (System::now() >= next_device_connect_date) {
+      // Try to connect or reconnect to an audio device.
+      device = alcOpenDevice(nullptr);
+      if (device == nullptr) {
+        Debug::error("Cannot open audio device");
+      } else {
+        context = alcCreateContext(device, nullptr);
+        if (context == nullptr) {
+          Debug::error("Cannot create audio context");
+          alcCloseDevice(device);
+          device = nullptr;
+        } else if (!alcMakeContextCurrent(context)) {
+          Debug::error("Cannot activate audio context");
+          alcDestroyContext(context);
+          context = nullptr;
+          alcCloseDevice(device);
+          device = nullptr;
+        } else {
+          Logger::info("Connected to audio device");
+          Music::notify_device_reconnected_all();
+        }
+      }
+      if (device == nullptr) {
+        // The attempt failed: try again later.
+        next_device_connect_date = System::now() + 1000;
+      }
+    }
   }
 }
 
@@ -255,7 +292,7 @@ void Sound::quit() {
  * \return true if the audio (music and sound) system is initilialized
  */
 bool Sound::is_initialized() {
-  return initialized;
+  return device != nullptr;
 }
 
 /**
@@ -352,16 +389,21 @@ void Sound::set_volume(int volume) {
  */
 void Sound::update() {
 
-  // update the playing sounds
-  std::list<Sound*> sounds_to_remove;
-  for (Sound* sound: current_sounds) {
-    if (!sound->update_playing()) {
-      sounds_to_remove.push_back(sound);
-    }
-  }
+  update_device_connection();
 
-  for (Sound* sound: sounds_to_remove) {
-    current_sounds.remove(sound);
+  if (is_initialized()) {
+
+    // update the playing sounds
+    std::list<Sound*> sounds_to_remove;
+    for (Sound* sound: current_sounds) {
+      if (!sound->update_playing()) {
+        sounds_to_remove.push_back(sound);
+      }
+    }
+
+    for (Sound* sound: sounds_to_remove) {
+      current_sounds.remove(sound);
+    }
   }
 
   // also update the music
