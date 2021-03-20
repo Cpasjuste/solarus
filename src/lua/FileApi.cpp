@@ -18,6 +18,9 @@
 #include "solarus/core/QuestFiles.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <windows.h>
 #endif
@@ -73,21 +76,20 @@ int LuaContext::file_api_open(lua_State* l) {
     const std::string& file_name = LuaTools::check_string(l, 1);
     const std::string& mode = LuaTools::opt_string(l, 2, "r");
 
-    const bool writing = mode != "r" && mode != "rb";
+    const bool writing = not mode.rfind("r", 0) == 0;
 
     // file_name is relative to the data directory, the data archive or the
     // quest write directory.
-    // Let's determine the real file name and pass it to io.open().
-    std::string real_file_name;
+    // Let's determine the full file path to use when opening the file.
+    std::string file_path;
     if (writing) {
-
       // Writing a file.
       if (QuestFiles::get_quest_write_dir().empty()) {
         LuaTools::error(l,
-            "Cannot open file in writing: no write directory was specified in quest.dat");
+            "Cannot open file for writing: no write directory was specified in quest.dat");
       }
 
-      real_file_name = QuestFiles::get_full_quest_write_dir() + "/" + file_name;
+      file_path = QuestFiles::get_full_quest_write_dir() + "/" + file_name;
     }
     else {
       // Reading a file.
@@ -104,45 +106,65 @@ int LuaContext::file_api_open(lua_State* l) {
 
       case QuestFiles::DataFileLocation::LOCATION_WRITE_DIRECTORY:
         // Found in the quest write directory.
-        real_file_name = QuestFiles::get_full_quest_write_dir() + "/" + file_name;
+        file_path = QuestFiles::get_full_quest_write_dir() + "/" + file_name;
         break;
 
       case QuestFiles::DataFileLocation::LOCATION_DATA_DIRECTORY:
         // Found in the data directory.
-        real_file_name = QuestFiles::get_quest_path() + "/data/" + file_name;
+        file_path = QuestFiles::get_quest_path() + "/data/" + file_name;
         break;
 
       case QuestFiles::DataFileLocation::LOCATION_DATA_ARCHIVE:
       {
         // Found in the data archive.
-        // To call io.open(), we need a regular file, so let's create
+        // To open the file, we need it to be a regular file, so let's create
         // a temporary one.
         const std::string& buffer = QuestFiles::data_file_read(file_name);
-        real_file_name = QuestFiles::create_temporary_file(buffer);
+        file_path = QuestFiles::create_temporary_file(buffer);
         break;
       }
       }
     }
 
+    // Create a new file handle in the Lua stack to return
+    FILE **fh = (FILE **)lua_newuserdata(l, sizeof(FILE *));
+    *fh = nullptr;  /* file handle is currently 'closed' at this point */
+    luaL_getmetatable(l, LUA_FILEHANDLE);
+    lua_setmetatable(l, -2);
+
+    int _errno;  // Used to independently store 'errno' below.
 #if defined(_WIN32) || defined(__CYGWIN__)
-    // convert filename from UTF-8 to Windows Unicode
-    int size_needed = MultiByteToWideChar(CP_UTF8, 0, &real_file_name[0], -1, NULL, 0);
-    std::wstring converted(size_needed, 0);
-    MultiByteToWideChar(CP_UTF8, 0, &real_file_name[0], -1, &converted[0], size_needed);
-    real_file_name = std::string(converted.begin(), converted.end());
+    // In windows, open the file using _wfopen_s() for Unicode filenames support.
+    int wfp_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+        &file_path[0], file_path.length(), nullptr, 0);
+    int wmode_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+        &mode[0], mode.length(), nullptr, 0);
+    if (wfp_len > 0 && wmode_len > 0) {
+      wchar_t* wfp = static_cast<wchar_t*>(alloca(sizeof(wchar_t) * (wfp_len + 1)));
+      wchar_t* wmode = static_cast<wchar_t*>(alloca(sizeof(wchar_t) * (wmode_len + 1)));
+      wfp_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+          &file_path[0], file_path.length(), wfp, wfp_len);
+      wmode_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+          &mode[0], mode.length(), wmode, wmode_len);
+      if (wfp_len > 0 && wmode_len > 0) {
+        wfp[wfp_len] = 0;
+        wmode[wmode_len] = 0;
+        _errno = _wfopen_s(fh, wfp, wmode);
+      }
+    }
+#else
+    // In other platforms, open the file using fopen().
+    *fh = fopen(file_path.c_str(), mode.c_str());
+    _errno = errno;
 #endif
 
-    // Call io.open.
-    lua_getfield(l, LUA_REGISTRYINDEX, "io.open");
-    push_string(l, real_file_name);
-    push_string(l, mode);
-
-    bool called = LuaTools::call_function(l, 2, 2, "io.open");
-    if (!called) {
-      LuaTools::error(l, "Unexpected error: failed to call io.open()");
+    if (*fh == nullptr) {
+      lua_pushnil(l);
+      push_string(l, file_name + ": " + strerror(_errno));
+      lua_pushinteger(l, _errno);
+      return 3;
     }
-
-    return 2;
+    return 1;
   });
 }
 
