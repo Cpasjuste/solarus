@@ -276,6 +276,7 @@ void LuaContext::register_entity_module() {
   std::vector<luaL_Reg> destination_methods = {
       { "get_starting_location_mode", destination_api_get_starting_location_mode },
       { "set_starting_location_mode", destination_api_set_starting_location_mode },
+      { "is_default", destination_api_is_default },
   };
 
   destination_methods.insert(destination_methods.end(), common_methods.begin(), common_methods.end());
@@ -3391,6 +3392,21 @@ int LuaContext::destination_api_set_starting_location_mode(lua_State* l) {
 
     destination.set_starting_location_mode(mode);
     return 0;
+  });
+}
+
+/**
+ * \brief Implementation of destination:is_default().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::destination_api_is_default(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const Destination& destination = *check_destination(l, 1);
+
+    lua_pushboolean(l, destination.is_default());
+    return 1;
   });
 }
 

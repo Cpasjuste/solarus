@@ -1111,6 +1111,7 @@ class LuaContext {
       camera_api_get_surface,
       destination_api_get_starting_location_mode,
       destination_api_set_starting_location_mode,
+      destination_api_is_default,
       teletransporter_api_get_sound,
       teletransporter_api_set_sound,
       teletransporter_api_get_transition,
