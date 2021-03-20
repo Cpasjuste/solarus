@@ -2,11 +2,19 @@
 
 ## Solarus 1.7.0 (in progress)
 
+### Engine changes
+
 * Allow to stop or pause a sound effect (#1289).
 * Add functions sol.main.rawget/rawset() (#1424).
 * Add a method `entity:set_name()` (#1527).
 * Add methods `hero:get/set_push_delay()` (#1524).
 * Add methods `hero:get/set_carry_height()`.
+
+### Lua API changes
+
+This release adds new features but does not introduce any incompatibility.
+
+* Add method `destination:is_default()`.
 
 ## Solarus 1.6.5 (in progress)
 
