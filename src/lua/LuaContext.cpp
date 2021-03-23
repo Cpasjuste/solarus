@@ -905,10 +905,24 @@ void LuaContext::print_stack(lua_State* l) {
 
       case LUA_TUSERDATA:
       {
-        const ExportableToLuaPtr& userdata = *(static_cast<ExportableToLuaPtr*>(
-            lua_touserdata(l, i)));
-        const std::string& lua_type_name = userdata->get_lua_type_name();
-        oss << lua_type_name.substr(lua_type_name.find_last_of('.') + 1);
+        if (!lua_getmetatable(l, i)) {
+          // The userdata has no metatable.
+          oss << "userdata";
+        } else {
+          // Get the name of the Solarus type from this userdata.
+          lua_pushstring(l, "__solarus_type");
+          lua_rawget(l, -2);
+          if (!lua_isstring(l, -1)) {
+            // This is probably a userdata from some library other than Solarus.
+            oss << "userdata";
+          } else {
+            const ExportableToLuaPtr& userdata = *(static_cast<ExportableToLuaPtr*>(
+                lua_touserdata(l, i)));
+            const std::string& lua_type_name = userdata->get_lua_type_name();
+            oss << lua_type_name.substr(lua_type_name.find_last_of('.') + 1);
+          }
+          lua_pop(l, 2);
+        }
         break;
       }
 
