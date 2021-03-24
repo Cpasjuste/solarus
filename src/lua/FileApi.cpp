@@ -84,7 +84,7 @@ int LuaContext::file_api_open(lua_State* l) {
     const std::string& file_name = LuaTools::check_string(l, 1);
     const std::string& mode = LuaTools::opt_string(l, 2, "r");
 
-    const bool writing = not mode.rfind("r", 0) == 0;
+    const bool writing = not (mode.rfind("r", 0) == 0);
 
     // file_name is relative to the data directory, the data archive or the
     // quest write directory.
@@ -140,9 +140,9 @@ int LuaContext::file_api_open(lua_State* l) {
     luaL_getmetatable(l, LUA_FILEHANDLE);
     lua_setmetatable(l, -2);
 
-    int _errno;  // Used to independently store 'errno' below.
 #if defined(_WIN32) || defined(__CYGWIN__)
     // In windows, open the file using _wfopen_s() for Unicode filenames support.
+    errno = EINVAL;  // Assume an invalid argument initially.
     int wfp_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
         &file_path[0], file_path.length(), nullptr, 0);
     int wmode_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
@@ -157,18 +157,17 @@ int LuaContext::file_api_open(lua_State* l) {
       if (wfp_len > 0 && wmode_len > 0) {
         wfp[wfp_len] = 0;
         wmode[wmode_len] = 0;
-        _errno = _wfopen_s(fh, wfp, wmode);
+        *fh = _wfopen(wfp, wmode);
       }
     }
 #else
     // In other platforms, open the file using fopen().
     *fh = fopen(file_path.c_str(), mode.c_str());
-    _errno = errno;
 #endif
     if (*fh == nullptr) {
       lua_pushnil(l);
-      push_string(l, file_name + ": " + strerror(_errno));
-      lua_pushinteger(l, _errno);
+      push_string(l, file_name + ": " + strerror(errno));
+      lua_pushinteger(l, errno);
       return 3;
     }
 
