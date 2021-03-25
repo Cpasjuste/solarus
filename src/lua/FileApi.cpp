@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <cstring>
 #if defined(_WIN32) || defined(__CYGWIN__)
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 namespace Solarus {
@@ -51,26 +51,43 @@ void LuaContext::register_file_module() {
   }
   register_functions(file_module_name, functions);
 
-  // Our sol.file.open needs the same environment as io.open
-  // to make file:close() work.
-                                  // --
+#ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
+  if (!is_luajit()) {
+    // Our sol.file.open() needs the same environment as io.open
+    // to make file:close() work in case of vanilla Lua 5.1.
+                                    // --
+    lua_getglobal(current_l, "io");
+                                    // io
+    lua_getfield(current_l, -1, "open");
+                                    // io io.open
+    Debug::check_assertion(lua_isfunction(current_l, -1), "Could not find io.open");
+    lua_getglobal(current_l, "sol");
+                                    // io io.open sol
+    lua_getfield(current_l, -1, "file");
+                                    // io io.open sol sol.file
+    lua_getfield(current_l, -1, "open");
+                                    // io io.open sol sol.file sol.file.open
+    lua_getfenv(current_l, -4);
+                                    // io io.open sol sol.file sol.file.open env
+    lua_setfenv(current_l, -2);
+                                    // io io.open sol sol.file
+    lua_pop(current_l, 4);
+                                    // --
+  }
+#else
+  // Store the original io.open function in the registry.
+  // We will need to access it from sol.file.open().
+                                    // --
   lua_getglobal(current_l, "io");
-                                  // io
+                                    // io
   lua_getfield(current_l, -1, "open");
-                                  // io io.open
+                                    // io open
   Debug::check_assertion(lua_isfunction(current_l, -1), "Could not find io.open");
-  lua_getglobal(current_l, "sol");
-                                  // io io.open sol
-  lua_getfield(current_l, -1, "file");
-                                  // io io.open sol sol.file
-  lua_getfield(current_l, -1, "open");
-                                  // io io.open sol sol.file sol.file.open
-  lua_getfenv(current_l, -4);
-                                  // io io.open sol sol.file sol.file.open env
-  lua_setfenv(current_l, -2);
-                                  // io io.open sol sol.file
-  lua_pop(current_l, 4);
-                                  // --
+  lua_setfield(current_l, LUA_REGISTRYINDEX, "io.open");
+                                    // io
+  lua_pop(current_l, 1);
+                                    // --
+#endif
 }
 
 /**
@@ -134,13 +151,9 @@ int LuaContext::file_api_open(lua_State* l) {
       }
     }
 
-    // Create a new file handle in the Lua stack to return
-    FILE **fh = (FILE **)lua_newuserdata(l, sizeof(FILE *));
-    *fh = nullptr;  /* file handle is currently 'closed' at this point */
-    luaL_getmetatable(l, LUA_FILEHANDLE);
-    lua_setmetatable(l, -2);
+#ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
+    FILE*& file_handle = create_file_pointer(l);
 
-#if defined(_WIN32) || defined(__CYGWIN__)
     // In windows, open the file using _wfopen_s() for Unicode filenames support.
     errno = EINVAL;  // Assume an invalid argument initially.
     int wfp_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
@@ -157,21 +170,28 @@ int LuaContext::file_api_open(lua_State* l) {
       if (wfp_len > 0 && wmode_len > 0) {
         wfp[wfp_len] = 0;
         wmode[wmode_len] = 0;
-        *fh = _wfopen(wfp, wmode);
+        file_handle = _wfopen(wfp, wmode);
       }
     }
-#else
-    // In other platforms, open the file using fopen().
-    *fh = fopen(file_path.c_str(), mode.c_str());
-#endif
-    if (*fh == nullptr) {
+
+    if (file_handle == nullptr) {
       lua_pushnil(l);
       push_string(l, file_name + ": " + strerror(errno));
-      lua_pushinteger(l, errno);
-      return 3;
+      return 2;
     }
-
     return 1;
+#else
+    // Call io.open.
+    lua_getfield(l, LUA_REGISTRYINDEX, "io.open");
+    push_string(l, file_path);
+    push_string(l, mode);
+
+    bool called = LuaTools::call_function(l, 2, 2, "io.open");
+    if (!called) {
+      LuaTools::error(l, "Unexpected error: failed to call io.open()");
+    }
+    return 2;
+#endif
   });
 }
 
@@ -280,6 +300,58 @@ int LuaContext::file_api_list_dir(lua_State* l) {
 
     return 1;
   });
+}
+
+/**
+ * \brief Pushes a new nullptr FILE* userdata for a regular file.
+ *
+ * This function is a hack that only exists because all functions
+ * of the Lua API also open a file, which sometimes we want to do ourselves.
+ * The created userdata is a valid one for the Lua I/O API.
+ * This works with vanilla Lua 5.1 and with LuaJIT.
+ *
+ * \warning In the case of vanilla Lua 5.1, the current environment when
+ * calling this function is assumed to contain a "__close" field with the
+ * correct file closing function.
+ * Typically, such an environment can be set to the same as io.open().
+ *
+ * \param current_l The Lua context.
+ * \return Reference to the created file handle.
+ */
+FILE*& create_file_pointer(lua_State* current_l) {
+
+  FILE** file_handle = nullptr;
+  if (LuaContext::get().is_luajit()) {
+    // Mimic the userdata used in LuaJIT for FILE*.
+    // The following is highly specific to the LuaJIT internals, unfortunately.
+    // Tested with LuaJIT 2.1.0-beta3
+    struct LuaJitFileUserData {
+      FILE *file;
+      uint32_t type;
+    };
+
+    LuaJitFileUserData* userdata = static_cast<LuaJitFileUserData*>(lua_newuserdata(current_l, sizeof(LuaJitFileUserData)));
+    userdata->file = nullptr;
+    userdata->type = 0;  // Same as IOFILE_TYPE_FILE, meaning a regular file and not a pipe or stdin/stdout.
+    *file_handle = userdata->file;
+    // TODO
+
+  } else {
+    // In vanilla Lua 5.1, the userdata is a simple FILE*,
+    // and relies on its environment table to know the correct close function.
+    if (std::string(LUA_VERSION) != "Lua 5.1") {
+      // Lua versions more recent than 5.1 have a completely different
+      // FILE* userdata implementation.
+      // If one day we switch to a more recent version of Lua, we will need to update this code.
+      Debug::die("FILE* userdata creation in Solarus is only supported with Lua 5.1 or LuaJIT");
+    }
+
+    file_handle = static_cast<FILE**>(lua_newuserdata(current_l, sizeof(FILE*)));
+    *file_handle = nullptr;
+    luaL_getmetatable(current_l, LUA_FILEHANDLE);
+    lua_setmetatable(current_l, -2);
+  }
+  return *file_handle;
 }
 
 }

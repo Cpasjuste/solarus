@@ -192,8 +192,8 @@ class LuaContext {
     static void print_stack(lua_State* current_l);
 
     // Lua version.
-    bool is_luajit();
-    std::string get_lua_version();
+    bool is_luajit() const;
+    std::string get_lua_version() const;
 
     // Lua refs.
     ScopedLuaRef create_ref();

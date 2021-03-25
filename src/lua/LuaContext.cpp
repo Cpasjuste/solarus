@@ -74,7 +74,7 @@ LuaContext::~LuaContext() {
  * \return The LuaContext object encapsulating this Lua state.
  */
 LuaContext& LuaContext::get() {
-  Debug::check_assertion(lua_context,"No lua context available");
+  Debug::check_assertion(lua_context, "No lua context available");
   return *lua_context;
 }
 
@@ -941,7 +941,7 @@ void LuaContext::print_stack(lua_State* l) {
 /**
  * \brief Returns true if the Lua runtime is LuaJIT, false otherwise.
  */
-bool LuaContext::is_luajit() {
+bool LuaContext::is_luajit() const {
 
   return luajit;
 }
@@ -949,7 +949,7 @@ bool LuaContext::is_luajit() {
 /**
  * \brief Gets the version of the current Lua runtime.
  */
-std::string LuaContext::get_lua_version() {
+std::string LuaContext::get_lua_version() const {
 
   return lua_version;
 }
