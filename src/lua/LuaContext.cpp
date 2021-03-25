@@ -112,7 +112,9 @@ void LuaContext::initialize(const Arguments& args) {
   lua_atpanic(current_l, l_panic);
   luaL_openlibs(current_l);
 
-  print_lua_version();
+  // Lua version.
+  find_lua_version();
+  Logger::info(std::string("LuaJIT: ") + (luajit ? "yes" : "no") + " (" + lua_version + ")");
 
   // Associate this LuaContext object to the lua_State pointer.
   lua_context = this;
@@ -937,19 +939,36 @@ void LuaContext::print_stack(lua_State* l) {
 }
 
 /**
- * \brief Prints the version of Lua.
- *
- * This detects if LuaJIT is being used.
+ * \brief Returns true if the Lua runtime is LuaJIT, false otherwise.
  */
-void LuaContext::print_lua_version() {
+bool LuaContext::is_luajit() {
 
-  Debug::check_assertion(lua_gettop(current_l) == 0, "Non-empty Lua stack before print_lua_version()");
+  return luajit;
+}
+
+/**
+ * \brief Gets the version of the current Lua runtime.
+ */
+std::string LuaContext::get_lua_version() {
+
+  return lua_version;
+}
+
+/**
+ * \brief Finds the version of the Lua runtime.
+ *
+ * Also detects if LuaJIT is being used.
+ * The results are stored in the lua_version and luajit fields,
+ * that can also be obtained with get_lua_version() and is_luajit().
+ */
+void LuaContext::find_lua_version() {
+
+  Debug::check_assertion(lua_gettop(current_l) == 0, "Non-empty Lua stack before find_lua_version()");
 
   // _VERSION is the Lua language version, giving the same
   // result for vanilla Lua and LuaJIT.
   // But we want to tell the user if LuaJIT is being used.
   // To detect this, we can check the presence of the jit table.
-  std::string version;
                                   // -
   lua_getglobal(current_l, "jit");
                                   // jit/nil
@@ -958,21 +977,21 @@ void LuaContext::print_lua_version() {
                                   // nil
     lua_getglobal(current_l, "_VERSION");
                                   // nil version
-    version = LuaTools::check_string(current_l, -1);
+    lua_version = LuaTools::check_string(current_l, -1);
     lua_pop(current_l, 2);
                                   // -
-    Logger::info("LuaJIT: no (" + version + ")");
+    luajit = false;
   }
   else {
     // LuaJIT.
                                   // jit
-    version = LuaTools::check_string_field(current_l, -1, "version");
+    lua_version = LuaTools::check_string_field(current_l, -1, "version");
     lua_pop(current_l, 1);
                                   // -
-    Logger::info("LuaJIT: yes (" + version + ")");
+    luajit = true;
   }
 
-  Debug::check_assertion(lua_gettop(current_l) == 0, "Non-empty Lua stack after print_lua_version()");
+  Debug::check_assertion(lua_gettop(current_l) == 0, "Non-empty Lua stack after find_lua_version()");
 }
 
 /**
