@@ -96,7 +96,7 @@ class SOLARUS_API Sound {
 
     static bool sounds_preloaded;                /**< true if load_all() was called */
     static float volume;                         /**< the volume of sound effects (0.0 to 1.0) */
-    static uint32_t next_device_connect_date;    /**< Date of the next attempt to connect to a device. */
+    static uint32_t next_device_detection_date;  /**< Date of the next attempt to detect an audio device. */
 
     static bool pc_play;                         /**< Whether playing performance counter is used. */
 };

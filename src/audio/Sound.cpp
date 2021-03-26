@@ -36,7 +36,7 @@ float Sound::volume = 1.0;
 bool Sound::pc_play = false;
 std::list<Sound*> Sound::current_sounds;
 std::map<std::string, Sound> Sound::all_sounds;
-uint32_t Sound::next_device_connect_date = 0;
+uint32_t Sound::next_device_detection_date = 0;
 
 namespace {
 
@@ -124,6 +124,26 @@ long cb_tell(void* datasource) {
   return mem->position;
 }
 
+/**
+ * \brief Converts a list of strings separated by NULL characters to a vector.
+ * \param strings List of strings where each string is separated by a NULL character.
+ *
+ * The end of the list is marked by two consecutive NULL characters.
+ *
+ * \return The list of strings.
+ */
+/*
+std::vector<std::string> open_al_strings_to_vector(const ALchar* chars) {
+
+  std::vector<std::string> list;
+  while (*chars) {
+    std::string item = std::string(chars);
+    list.push_back(item);
+    chars += item.size() + 1;
+  }
+  return list;
+}
+*/
 }  // Anonymous namespace.
 
 ov_callbacks Sound::ogg_callbacks = {
@@ -193,7 +213,6 @@ void Sound::initialize(const Arguments& args) {
   pc_play = args.get_argument_value("-perf-sound-play") == "yes";
 
   // Initialize OpenAL.
-
   update_device_connection();
   if (device == nullptr) {
     return;
@@ -241,6 +260,22 @@ void Sound::update_device_connection() {
     alcGetIntegerv(device, ALC_CONNECTED, 1, &is_connected);
     if (!is_connected) {
       Logger::info("Lost connection to audio device");
+    } else {
+      if (System::now() >= next_device_detection_date) {
+        // Check if this device is still the default one.
+        const ALchar* current_device_name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
+        const ALchar* default_device_name = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+        if (current_device_name != nullptr &&
+            default_device_name != nullptr &&
+            std::strcmp(current_device_name, default_device_name)) {
+          // This device is no longer the default one.
+          Logger::info(std::string("Disconnecting from audio device '") + current_device_name +
+                       "' because the default device is now '" + default_device_name + "'");
+          is_connected = false;
+        }
+      }
+    }
+    if (!is_connected) {
       ALboolean success = alcMakeContextCurrent(nullptr);
       if (!success) {
         Debug::error("Failed to unset OpenAL context");
@@ -249,7 +284,7 @@ void Sound::update_device_connection() {
       context = nullptr;
       alcCloseDevice(device);
       device = nullptr;
-      next_device_connect_date = System::now();
+      next_device_detection_date = System::now();
       all_sounds.clear();
       sounds_preloaded = false;
       Music::notify_device_disconnected_all();
@@ -257,7 +292,7 @@ void Sound::update_device_connection() {
   }
 
   if (device == nullptr) {
-    if (System::now() >= next_device_connect_date) {
+    if (System::now() >= next_device_detection_date) {
       // Try to connect or reconnect to an audio device.
       device = alcOpenDevice(nullptr);
       if (device == nullptr) {
@@ -275,13 +310,14 @@ void Sound::update_device_connection() {
           alcCloseDevice(device);
           device = nullptr;
         } else {
-          Logger::info("Connected to audio device");
+          const ALchar* current_device_name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
+          Logger::info(std::string("Connected to audio device: ") + (current_device_name ? current_device_name : ""));
           Music::notify_device_reconnected_all();
         }
       }
       if (device == nullptr) {
         // The attempt failed: try again later.
-        next_device_connect_date = System::now() + 1000;
+        next_device_detection_date = System::now() + 1000;
       }
     }
   }
