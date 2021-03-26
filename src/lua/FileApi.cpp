@@ -60,7 +60,7 @@ void LuaContext::register_file_module() {
 
 #ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
     // Our sol.file.open() needs the same environment as io.open
-    // to make file:close() work in case of vanilla Lua 5.1.
+    // to initialize the userdata correctly.
                                   // --
     lua_getglobal(current_l, "io");
                                   // io
@@ -79,7 +79,7 @@ void LuaContext::register_file_module() {
                                   // io io.open sol sol.file
     lua_pop(current_l, 4);
                                   // --
-#endif
+#else
 
   // Store the original io.open function in the registry.
   // We will need to access it from sol.file.open().
@@ -93,6 +93,7 @@ void LuaContext::register_file_module() {
                                   // io
   lua_pop(current_l, 1);
                                   // --
+#endif
 }
 
 /**
@@ -178,6 +179,9 @@ int LuaContext::file_api_open(lua_State* l) {
         file_handle = _wfopen(wfp, wmode);
       }
     }
+
+    // Note: on UTF-8 file systems we would just do
+    // file_handle = fopen(file_path.c_str(), mode.c_str());
 
     if (file_handle == nullptr) {
       lua_pushnil(l);
@@ -345,7 +349,7 @@ FILE*& create_file_pointer(lua_State* l) {
   } else {
     // Mimic the userdata used in LuaJIT for FILE*.
     // The following is highly specific to LuaJIT internals, unfortunately.
-    // Tested with LuaJIT 2.1.0-beta3
+    // Tested with LuaJIT 2.1.0-beta3.
     struct SolarusLuaJit_IOFileUD {
       FILE *file;
       uint32_t type;
@@ -386,15 +390,11 @@ FILE*& create_file_pointer(lua_State* l) {
     );
     gc_udata->udtype = 1;  // Same as UDTYPE_IO_FILE.
 
-    // Set the metatable of the userdata.
+    // Set the metatable of the userdata to the current environment.
                                   // ... file
-    lua_getfield(l, LUA_REGISTRYINDEX, "io.open");
-                                  // ... file io.open
-    lua_getfenv(l, -2);
-                                  // ... file io.open env
-    lua_setmetatable(l, -3);
-                                  // ... file io.open
-    lua_pop(l, 1);
+    lua_getfenv(l, -1);
+                                  // ... file env
+    lua_setmetatable(l, -2);
                                   // ... file
   }
   return *file_handle;
