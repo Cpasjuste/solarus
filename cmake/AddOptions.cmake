@@ -38,5 +38,4 @@ set(SOLARUS_FILE_LOGGING "ON" CACHE BOOL "Enable logging of errors to file.")
 # for Unicode filenames support.
 # This setting only has an effet on Windows.
 # Systems other that Windows don't need this and can just call fopen() with UTF-8.
-set(SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND ON BOOL "Enable workaround to make Lua open filenames with Unicode on Windows")
-
+set(SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND "ON" CACHE BOOL "Enable workaround to make Lua open filenames with Unicode on Windows")
