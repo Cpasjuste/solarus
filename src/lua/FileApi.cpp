@@ -28,6 +28,12 @@
 
 namespace Solarus {
 
+#ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
+namespace {
+FILE*& create_file_pointer(lua_State* l);
+}
+#endif
+
 /**
  * Name of the Lua table representing the file module.
  */
@@ -53,7 +59,6 @@ void LuaContext::register_file_module() {
   register_functions(file_module_name, functions);
 
 #ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
-  if (!is_luajit()) {
     // Our sol.file.open() needs the same environment as io.open
     // to make file:close() work in case of vanilla Lua 5.1.
                                   // --
@@ -74,8 +79,8 @@ void LuaContext::register_file_module() {
                                   // io io.open sol sol.file
     lua_pop(current_l, 4);
                                   // --
-  }
 #endif
+
   // Store the original io.open function in the registry.
   // We will need to access it from sol.file.open().
                                   // --
@@ -177,7 +182,8 @@ int LuaContext::file_api_open(lua_State* l) {
     if (file_handle == nullptr) {
       lua_pushnil(l);
       push_string(l, file_name + ": " + strerror(errno));
-      return 2;
+      lua_pushinteger(l, errno);
+      return 3;
     }
     return 1;
 #else
@@ -302,6 +308,9 @@ int LuaContext::file_api_list_dir(lua_State* l) {
   });
 }
 
+#ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
+namespace {
+
 /**
  * \brief Pushes a new nullptr FILE* userdata for a regular file.
  *
@@ -310,31 +319,29 @@ int LuaContext::file_api_list_dir(lua_State* l) {
  * The created userdata is a valid one for the Lua I/O API.
  * This works with vanilla Lua 5.1 and with LuaJIT.
  *
- * \warning In the case of vanilla Lua 5.1, the current environment when
- * calling this function is assumed to contain a "__close" field with the
- * correct file closing function.
- * Typically, such an environment can be set to the same as io.open().
+ * \warning The current environment when calling this function
+ * is assumed to be the same as the one of io.open().
  *
- * \param current_l The Lua context.
+ * \param l The Lua context.
  * \return Reference to the created file handle.
  */
-FILE*& create_file_pointer(lua_State* current_l) {
+FILE*& create_file_pointer(lua_State* l) {
 
   FILE** file_handle = nullptr;
   if (!LuaContext::get().is_luajit()) {
     // In vanilla Lua 5.1, the userdata is a simple FILE*,
     // and relies on its environment table to know the correct close function.
-    if (std::string(LUA_VERSION) != "Lua 5.1") {
+    if (LuaContext::get().get_lua_version() != "Lua 5.1") {
       // Lua versions more recent than 5.1 have a completely different
       // FILE* userdata implementation.
       // If one day we switch to a more recent version of Lua, we will need to update this code.
       Debug::die("FILE* userdata creation in Solarus is only supported with Lua 5.1 or LuaJIT");
     }
 
-    file_handle = static_cast<FILE**>(lua_newuserdata(current_l, sizeof(FILE*)));
+    file_handle = static_cast<FILE**>(lua_newuserdata(l, sizeof(FILE*)));
     *file_handle = nullptr;
-    luaL_getmetatable(current_l, LUA_FILEHANDLE);
-    lua_setmetatable(current_l, -2);
+    luaL_getmetatable(l, LUA_FILEHANDLE);
+    lua_setmetatable(l, -2);
   } else {
     // Mimic the userdata used in LuaJIT for FILE*.
     // The following is highly specific to LuaJIT internals, unfortunately.
@@ -344,8 +351,11 @@ FILE*& create_file_pointer(lua_State* current_l) {
       uint32_t type;
     };
 
-#if defined(__x86_64__) || defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
+#if defined(__i386) || defined(__i386__) || defined(_M_IX86)
+#elif defined(__x86_64__) || defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
 #define SOLARUS_LUAJIT_GC64 1
+#else
+#  error No Lua file hack for this architecture
 #endif
 
 #ifdef SOLARUS_LUAJIT_GC64
@@ -366,15 +376,10 @@ FILE*& create_file_pointer(lua_State* current_l) {
       uint32_t align1;
     };
 
-    struct SolarusLuaJit_AllocatedUdata {
-      SolarusLuaJit_GCudata gc_udata;
-      SolarusLuaJit_IOFileUD file_udata;
-    };
-
-    SolarusLuaJit_IOFileUD* file_udata = static_cast<SolarusLuaJit_IOFileUD*>(lua_newuserdata(current_l, sizeof(SolarusLuaJit_IOFileUD)));
+    SolarusLuaJit_IOFileUD* file_udata = static_cast<SolarusLuaJit_IOFileUD*>(lua_newuserdata(l, sizeof(SolarusLuaJit_IOFileUD)));
     file_udata->file = nullptr;
     file_udata->type = 0;  // Same as IOFILE_TYPE_FILE, meaning a regular file and not a pipe or stdin/stdout.
-    *file_handle = file_udata->file;
+    file_handle = &file_udata->file;
 
     SolarusLuaJit_GCudata* gc_udata = reinterpret_cast<SolarusLuaJit_GCudata*>(
           reinterpret_cast<char*>(file_udata) - sizeof(SolarusLuaJit_GCudata)
@@ -382,17 +387,20 @@ FILE*& create_file_pointer(lua_State* current_l) {
     gc_udata->udtype = 1;  // Same as UDTYPE_IO_FILE.
 
     // Set the metatable of the userdata.
-                                  // file
-    lua_getfield(current_l, LUA_REGISTRYINDEX, "io.open");
-                                  // file io.open
-    lua_getfenv(current_l, -1);
-                                  // file io.open env
-    lua_setmetatable(current_l, -3);
-                                  // file io.open
-    lua_pop(current_l, 1);
-                                  // file
+                                  // ... file
+    lua_getfield(l, LUA_REGISTRYINDEX, "io.open");
+                                  // ... file io.open
+    lua_getfenv(l, -2);
+                                  // ... file io.open env
+    lua_setmetatable(l, -3);
+                                  // ... file io.open
+    lua_pop(l, 1);
+                                  // ... file
   }
   return *file_handle;
 }
+
+}  // Anonymous namespace.
+#endif
 
 }
