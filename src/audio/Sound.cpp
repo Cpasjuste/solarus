@@ -124,26 +124,6 @@ long cb_tell(void* datasource) {
   return mem->position;
 }
 
-/**
- * \brief Converts a list of strings separated by NULL characters to a vector.
- * \param strings List of strings where each string is separated by a NULL character.
- *
- * The end of the list is marked by two consecutive NULL characters.
- *
- * \return The list of strings.
- */
-/*
-std::vector<std::string> open_al_strings_to_vector(const ALchar* chars) {
-
-  std::vector<std::string> list;
-  while (*chars) {
-    std::string item = std::string(chars);
-    list.push_back(item);
-    chars += item.size() + 1;
-  }
-  return list;
-}
-*/
 }  // Anonymous namespace.
 
 ov_callbacks Sound::ogg_callbacks = {
