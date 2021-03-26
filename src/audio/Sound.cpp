@@ -29,6 +29,7 @@
 
 namespace Solarus {
 
+bool Sound::audio_enabled = false;
 ALCdevice* Sound::device = nullptr;
 ALCcontext* Sound::context = nullptr;
 bool Sound::sounds_preloaded = false;
@@ -157,7 +158,7 @@ Sound::Sound(const std::string& sound_id):
  */
 Sound::~Sound() {
 
-  if (is_initialized() && buffer != AL_NONE) {
+  if (device != nullptr && buffer != AL_NONE) {
 
     // stop the sources where this buffer is attached
     for (ALuint source: sources) {
@@ -184,8 +185,8 @@ Sound::~Sound() {
 void Sound::initialize(const Arguments& args) {
 
   // Check the -no-audio option.
-  const bool disable = args.has_argument("-no-audio");
-  if (disable) {
+  audio_enabled = !args.has_argument("-no-audio");
+  if (!audio_enabled) {
     return;
   }
 
@@ -213,6 +214,10 @@ void Sound::initialize(const Arguments& args) {
  */
 void Sound::quit() {
 
+  if (!is_initialized()) {
+    return;
+  }
+
   // uninitialize the music subsystem
   Music::quit();
 
@@ -227,6 +232,7 @@ void Sound::quit() {
   alcCloseDevice(device);
   device = nullptr;
   volume = 1.0;
+  audio_enabled = false;
 }
 
 /**
@@ -243,6 +249,7 @@ void Sound::update_device_connection() {
     } else {
       if (System::now() >= next_device_detection_date) {
         // Check if this device is still the default one.
+        next_device_detection_date = System::now() + 1000;
         const ALchar* current_device_name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
         const ALchar* default_device_name = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
         if (current_device_name != nullptr &&
@@ -305,10 +312,10 @@ void Sound::update_device_connection() {
 
 /**
  * \brief Returns whether the audio (music and sound) system is initialized.
- * \return true if the audio (music and sound) system is initilialized
+ * \return \c true if the audio (music and sound) system is initilialized.
  */
 bool Sound::is_initialized() {
-  return device != nullptr;
+  return audio_enabled;
 }
 
 /**
@@ -316,7 +323,7 @@ bool Sound::is_initialized() {
  */
 void Sound::load_all() {
 
-  if (is_initialized() && !sounds_preloaded) {
+  if (device != nullptr && !sounds_preloaded) {
 
     const std::map<std::string, std::string>& sound_elements =
         CurrentQuest::get_resources(ResourceType::SOUND);
@@ -405,9 +412,13 @@ void Sound::set_volume(int volume) {
  */
 void Sound::update() {
 
+  if (!is_initialized()) {
+    return;
+  }
+
   update_device_connection();
 
-  if (is_initialized()) {
+  if (device != nullptr) {
 
     // update the playing sounds
     std::list<Sound*> sounds_to_remove;
@@ -476,48 +487,50 @@ void Sound::load() {
  */
 bool Sound::start() {
 
+  if (device == nullptr) {
+    return false;
+  }
+
   bool success = false;
 
-  if (is_initialized()) {
+  if (buffer == AL_NONE) { // first time: load and decode the file
+    load();
+  }
 
-    if (buffer == AL_NONE) { // first time: load and decode the file
-      load();
+  if (buffer != AL_NONE) {
+
+    // create a source
+    ALuint source;
+    alGenSources(1, &source);
+    alSourcei(source, AL_BUFFER, buffer);
+    alSourcef(source, AL_GAIN, volume);
+
+    // play the sound
+    int error = alGetError();
+    if (error != AL_NO_ERROR) {
+      std::ostringstream oss;
+      oss << "Cannot attach buffer " << buffer
+          << " to the source to play sound '" << id << "': error " << error;
+      Debug::error(oss.str());
+      alDeleteSources(1, &source);
     }
-
-    if (buffer != AL_NONE) {
-
-      // create a source
-      ALuint source;
-      alGenSources(1, &source);
-      alSourcei(source, AL_BUFFER, buffer);
-      alSourcef(source, AL_GAIN, volume);
-
-      // play the sound
-      int error = alGetError();
+    else {
+      sources.push_back(source);
+      current_sounds.remove(this); // to avoid duplicates
+      current_sounds.push_back(this);
+      alSourcePlay(source);
+      error = alGetError();
       if (error != AL_NO_ERROR) {
         std::ostringstream oss;
-        oss << "Cannot attach buffer " << buffer
-            << " to the source to play sound '" << id << "': error " << error;
+        oss << "Cannot play sound '" << id << "': error " << error;
         Debug::error(oss.str());
-        alDeleteSources(1, &source);
       }
       else {
-        sources.push_back(source);
-        current_sounds.remove(this); // to avoid duplicates
-        current_sounds.push_back(this);
-        alSourcePlay(source);
-        error = alGetError();
-        if (error != AL_NO_ERROR) {
-          std::ostringstream oss;
-          oss << "Cannot play sound '" << id << "': error " << error;
-          Debug::error(oss.str());
-        }
-        else {
-          success = true;
-        }
+        success = true;
       }
     }
   }
+
   return success;
 }
 
@@ -527,7 +540,7 @@ bool Sound::start() {
  */
 void Sound::set_paused(bool pause) {
 
-  if (!is_initialized()) {
+  if (device == nullptr) {
     return;
   }
 

@@ -85,8 +85,9 @@ class SOLARUS_API Sound {
 
     static void update_device_connection();
 
-    static ALCdevice* device;
-    static ALCcontext* context;
+    static bool audio_enabled;                   /**< \c true unless -no-audio was passed. */
+    static ALCdevice* device;                    /**< OpenAL device, nullptr if disconnected. */
+    static ALCcontext* context;                  /**< OpenAL context. */
 
     std::string id;                              /**< id of this sound */
     ALuint buffer;                               /**< the OpenAL buffer containing the PCM decoded data of this sound */
