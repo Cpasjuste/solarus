@@ -13,6 +13,7 @@
 * Fix a possible crash when starting a timer on a removed entity (#1469).
 * Fix pickables not falling on negative layers.
 * Fix string literals in savegames not being properly escaped (#1533).
+* Fix Unicode filename support on Windows.
 
 ### Lua API changes
 
