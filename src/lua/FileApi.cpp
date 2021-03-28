@@ -18,19 +18,18 @@
 #include "solarus/core/QuestFiles.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
-#include <cerrno>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#if defined(_WIN32) || defined(__CYGWIN__)
+#ifdef SOLARUS_LUA_WIN_UNICODE_WORKAROUND
+#  include <cerrno>
+#  include <cstdio>
+#  include <cstring>
 #  include <windows.h>
 #endif
 
 namespace Solarus {
 
-#ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
+#ifdef SOLARUS_LUA_WIN_UNICODE_WORKAROUND
 namespace {
-FILE*& create_file_pointer(lua_State* l);
+  FILE*& create_file_pointer(lua_State* l);
 }
 #endif
 
@@ -58,7 +57,7 @@ void LuaContext::register_file_module() {
   }
   register_functions(file_module_name, functions);
 
-#ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
+#ifdef SOLARUS_LUA_WIN_UNICODE_WORKAROUND
     // Our sol.file.open() needs the same environment as io.open
     // to initialize the userdata correctly.
                                   // --
@@ -157,11 +156,11 @@ int LuaContext::file_api_open(lua_State* l) {
       }
     }
 
-#ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
+#ifdef SOLARUS_LUA_WIN_UNICODE_WORKAROUND
     FILE*& file_handle = create_file_pointer(l);
 
-    // In windows, open the file using _wfopen_s() for Unicode filenames support.
-    errno = EINVAL;  // Assume an invalid argument initially.
+    // In windows, open the file using _wfopen() for Unicode filenames support.
+    errno = EINVAL;  // Start by assuming an invalid argument.
     int wfp_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
         &file_path[0], file_path.length(), nullptr, 0);
     int wmode_len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
@@ -191,7 +190,8 @@ int LuaContext::file_api_open(lua_State* l) {
     }
     return 1;
 #else
-    // Call io.open.
+
+    // In other than Windows, just call io.open() in Lua.
     lua_getfield(l, LUA_REGISTRYINDEX, "io.open");
     push_string(l, file_path);
     push_string(l, mode);
@@ -312,7 +312,7 @@ int LuaContext::file_api_list_dir(lua_State* l) {
   });
 }
 
-#ifdef SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND
+#ifdef SOLARUS_LUA_WIN_UNICODE_WORKAROUND
 namespace {
 
 /**
@@ -321,7 +321,8 @@ namespace {
  * This function is a hack that only exists because all functions
  * of the Lua API also open a file, which sometimes we want to do ourselves.
  * The created userdata is a valid one for the Lua I/O API.
- * This works with vanilla Lua 5.1 and with LuaJIT.
+ *
+ * \warning This has been tested only with vanilla Lua 5.1 and LuaJIT 2.1.0-beta3.
  *
  * \warning The current environment when calling this function
  * is assumed to be the same as the one of io.open().
@@ -333,7 +334,7 @@ FILE*& create_file_pointer(lua_State* l) {
 
   FILE** file_handle = nullptr;
   if (!LuaContext::get().is_luajit()) {
-    // In vanilla Lua 5.1, the userdata is a simple FILE*,
+    // In vanilla Lua 5.1, the userdata is a simple FILE* pointer,
     // and relies on its environment table to know the correct close function.
     if (LuaContext::get().get_lua_version() != "Lua 5.1") {
       // Lua versions more recent than 5.1 have a completely different
@@ -347,9 +348,9 @@ FILE*& create_file_pointer(lua_State* l) {
     luaL_getmetatable(l, LUA_FILEHANDLE);
     lua_setmetatable(l, -2);
   } else {
-    // Mimic the userdata used in LuaJIT for FILE*.
+    // Mimic the userdata used in LuaJIT for hanlding FILE* pointers.
     // The following is highly specific to LuaJIT internals, unfortunately.
-    // Tested with LuaJIT 2.1.0-beta3.
+    // Tested only with LuaJIT 2.1.0-beta3.
     struct SolarusLuaJit_IOFileUD {
       FILE *file;
       uint32_t type;
@@ -359,7 +360,7 @@ FILE*& create_file_pointer(lua_State* l) {
 #elif defined(__x86_64__) || defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
 #define SOLARUS_LUAJIT_GC64 1
 #else
-#  error No Lua file hack for this architecture
+#  error No Lua file hack for this architecture is available
 #endif
 
 #ifdef SOLARUS_LUAJIT_GC64

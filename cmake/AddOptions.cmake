@@ -34,8 +34,7 @@ set(SOLARUS_GL_ES "OFF" CACHE BOOL "Use OpenGL ES implementation.")
 # Enable logging of errors to file.
 set(SOLARUS_FILE_LOGGING "ON" CACHE BOOL "Enable logging of errors to file.")
 
-# Hack to make Lua open files with _wfopen_s() instead of fopen() on Windows
-# for Unicode filenames support.
-# This setting only has an effet on Windows.
-# Systems other that Windows don't need this and can just call fopen() with UTF-8.
-set(SOLARUS_LUA_WINDOWS_WFOPEN_WORKAROUND "ON" CACHE BOOL "Enable workaround to make Lua open filenames with Unicode on Windows")
+# Workaround for Lua to open files using _wfopen() instead of fopen() on Windows
+# for Unicode filenames support. Systems other than Windows do not need this and
+# can just call fopen() directly with UTF-8 filenames.
+set(SOLARUS_LUA_WIN_UNICODE_WORKAROUND "ON" CACHE BOOL "Enable Lua workaround for opening Unicode filenames on Windows")
