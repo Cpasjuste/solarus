@@ -298,7 +298,7 @@ void Sound::update_device_connection() {
           device = nullptr;
         } else {
           const ALchar* current_device_name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
-          Logger::info(std::string("Connected to audio device: ") + (current_device_name ? current_device_name : ""));
+          Logger::info(std::string("Connected to audio device '") + (current_device_name ? current_device_name : "") + "'");
           Music::notify_device_reconnected_all();
         }
       }
