@@ -517,6 +517,78 @@ Rectangle Entities::get_region_box(const Point& point) const {
 }
 
 /**
+ * \brief Check to see if two points are in the same region.
+ *
+ * Regions are defined by the position of separators on the map and
+ * are assumed to be rectangular (convex: no "L" shape).
+ *
+ * \param point_a A point.
+ * \param point_b A point.
+ * \return True if the points are in the same region, false otherwise.
+ */
+bool Entities::are_in_same_region(
+    const Point& point_a, const Point& point_b) const {
+
+  /* Here is how the problem is actually solved:
+   *
+   * Two points are in the same region if and only if there does not
+   * exist a seperator that overlaps with the axis-aligned rectangle
+   * defined by the two points. This is because all regions are also
+   * axis-aligned rectangles and may not contain a seperator.
+   *
+   * And remember if a point is on the "far" (away from 0) edge of a
+   * seperator then it is actually on the far side of it. After that
+   * you just have to see if the seperator overlaps on both axis and
+   * that comes down to some range checks. It actually checks if the
+   * separator is not between the two points on either axis.
+   */
+
+  const std::set<ConstSeparatorPtr>& separators =
+      get_entities_by_type<Separator>();
+  for (const ConstSeparatorPtr& separator : separators) {
+
+    if (separator->is_vertical()) {
+      // Wide Axis Near Check:
+      const int top_left_y = separator->get_top_left_y();
+      if (point_a.y < top_left_y && point_b.y < top_left_y) {
+        continue;
+      }
+      // Wide Axis Far Check:
+      const int bottom_right_y = separator->get_bottom_right_y();
+      if (point_a.y >= bottom_right_y && point_b.y >= bottom_right_y) {
+        continue;
+      }
+      // Narrow Axis Check:
+      // Because there is no middle and (m < n) != (m >= n) we can optimize.
+      const int separation_x = separator->get_center_point().x;
+      if ((point_a.x < separation_x) == (point_b.x < separation_x)) {
+        continue;
+      }
+    } else {
+      // Wide Axis Near Check:
+      const int top_left_x = separator->get_top_left_x();
+      if (point_a.x < top_left_x && point_b.x < top_left_x) {
+        continue;
+      }
+      // Wide Axis Far Check:
+      const int bottom_right_x = separator->get_bottom_right_x();
+      if (point_a.x >= bottom_right_x && point_b.x >= bottom_right_x) {
+        continue;
+      }
+      // Narrow Axis Check:
+      const int separation_y = separator->get_center_point().y;
+      if ((point_a.y < separation_y) == (point_b.y < separation_y)) {
+        continue;
+      }
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * \brief Returns all entities in the same separator region as the given point.
  *
  * Regions are assumed to be rectangular (convex: no "L" shape).

@@ -170,6 +170,9 @@ class SOLARUS_API Entity: public ExportableToLua {
     void set_top_left_y(int y);
     void set_top_left_xy(int x, int y);
     void set_top_left_xy(const Point& xy);
+    int get_bottom_right_x() const;
+    int get_bottom_right_y() const;
+    Point get_bottom_right_xy() const;
 
     virtual Point get_facing_point() const;
     Point get_touching_point(int direction) const;

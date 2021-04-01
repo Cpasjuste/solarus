@@ -140,6 +140,7 @@ class SOLARUS_API Entities {
     // By separator region.
     void get_entities_in_region_z_sorted(const Point& xy, EntityVector& result);
     Rectangle get_region_box(const Point& point) const;
+    bool are_in_same_region(const Point& point_a, const Point& point_b) const;
 
     // Handle entities.
     void create_entities(const MapData& data);

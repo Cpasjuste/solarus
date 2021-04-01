@@ -1,0 +1,90 @@
+properties{
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  min_layer = 0,
+  max_layer = 2,
+  tileset = "castle",
+}
+
+destination{
+  name = "destination",
+  layer = 0,
+  x = 40,
+  y = 45,
+  direction = 1,
+}
+
+dynamic_tile{
+  name = "tile_a",
+  layer = 0,
+  x = 0,
+  y = 0,
+  width = 48,
+  height = 32,
+  pattern = "1",
+}
+
+dynamic_tile{
+  name = "tile_b",
+  layer = 0,
+  x = 272,
+  y = 0,
+  width = 48,
+  height = 32,
+  pattern = "1",
+}
+
+dynamic_tile{
+  name = "tile_c",
+  layer = 0,
+  x = 0,
+  y = 208,
+  width = 48,
+  height = 32,
+  pattern = "1",
+}
+
+dynamic_tile{
+  name = "tile_d",
+  layer = 0,
+  x = 272,
+  y = 208,
+  width = 48,
+  height = 32,
+  pattern = "1",
+}
+
+separator{
+  layer = 0,
+  x = 160,
+  y = 0,
+  width = 16,
+  height = 112,
+}
+
+separator{
+  layer = 0,
+  x = 160,
+  y = 112,
+  width = 16,
+  height = 128,
+}
+
+separator{
+  layer = 0,
+  x = 0,
+  y = 112,
+  width = 176,
+  height = 16,
+}
+
+separator{
+  layer = 0,
+  x = 176,
+  y = 112,
+  width = 144,
+  height = 16,
+}
+
