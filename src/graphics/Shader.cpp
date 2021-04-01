@@ -52,6 +52,10 @@ void Shader::setup_version_string() {
           return "100";
         case 30:
           return "300 es";
+        case 31:
+          return "310 es";
+        case 32:
+          return "320 es";
         default:
           return "100";
       }
