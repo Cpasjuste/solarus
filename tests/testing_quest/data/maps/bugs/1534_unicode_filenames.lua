@@ -11,6 +11,11 @@ function map:on_started()
   for _, pattern in ipairs(patterns) do
     local path = "1534_" .. pattern
 
+    if sol.file.exists(path) then
+      -- The file can exist in case the test failed in a previous execution.
+      sol.file.remove(path)
+    end
+
     assert(not sol.file.exists(path), "path already exists: " .. path)
 
     local f, err = sol.file.open(path, "w")

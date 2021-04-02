@@ -18,6 +18,7 @@
 #include "solarus/core/QuestFiles.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
+#include "solarus/core/Logger.h"
 #ifdef SOLARUS_LUA_WIN_UNICODE_WORKAROUND
 #  include <cerrno>
 #  include <cstdio>
@@ -179,7 +180,7 @@ int LuaContext::file_api_open(lua_State* l) {
       }
     }
 
-    // Note: on UTF-8 file systems we would just do
+    // Note: if you want to test the hack on non-Windows systems you can just do
     // file_handle = fopen(file_path.c_str(), mode.c_str());
 
     if (file_handle == nullptr) {
@@ -315,6 +316,71 @@ int LuaContext::file_api_list_dir(lua_State* l) {
 #ifdef SOLARUS_LUA_WIN_UNICODE_WORKAROUND
 namespace {
 
+// Mimic the userdata used in LuaJIT for handling FILE* pointers.
+// The following is highly specific to LuaJIT internals, unfortunately.
+// Tested only with LuaJIT 2.1.0-beta3.
+struct SolarusLuaJit_IOFileUD {
+  FILE *file;
+  uint32_t type;
+};
+
+// GCudata definition without LJ_GC64.
+struct SolarusLuaJit_GCudata32 {
+  uint32_t nextgc;
+  uint8_t marked;
+  uint8_t gct;
+  uint8_t udtype;
+  uint8_t unused2;
+  uint32_t env;
+  uint32_t len;
+  uint32_t metatable;
+  uint32_t align1;
+};
+
+// GCudata definition in case of LJ_GC64.
+struct SolarusLuaJit_GCudata64 {
+  uint64_t nextgc;
+  uint8_t marked;
+  uint8_t gct;
+  uint8_t udtype;
+  uint8_t unused2;
+  uint64_t env;
+  uint32_t len;
+  uint64_t metatable;
+  uint32_t align1;
+};
+
+/**
+ * \brief Detects if LuaJIT was compiled with the LJ_GC64 option.
+ *
+ * We need to detect it at runtime for ABI compatibility and because
+ * there is no way to be sure at compilation time.
+ *
+ * \param l The Lua state.
+ * \return \c true if LuaJIT uses 64 bit pointers for garbage collection info.
+ */
+bool detect_luajit_gc64(lua_State* l) {
+
+  SolarusLuaJit_IOFileUD* file_udata = static_cast<SolarusLuaJit_IOFileUD*>(lua_newuserdata(l, sizeof(SolarusLuaJit_IOFileUD)));
+  file_udata->file = nullptr;
+  file_udata->type = 0;  // Same as IOFILE_TYPE_FILE, meaning a regular file and not a pipe or stdin/stdout.
+
+  // At this point, LuaJIT has internally allocated a memory buffer of size GCudata + IOFileUD.
+  SolarusLuaJit_GCudata64* gc_udata64 = reinterpret_cast<SolarusLuaJit_GCudata64*>(
+        reinterpret_cast<char*>(file_udata) - sizeof(SolarusLuaJit_GCudata64)
+  );
+
+  Debug::check_assertion(lua_objlen(l, -1) == sizeof(SolarusLuaJit_IOFileUD), "Unexpected userdata size");
+  // Check the len field. It should be the size of our userdata if LJ_GC64 is set,
+  // otherwise is it the env field (a pointer value).
+  const bool gc64 = gc_udata64->len == sizeof(SolarusLuaJit_IOFileUD);
+  Logger::debug("LuaJIT GC64 detection: " + std::to_string(gc64));
+
+  lua_pop(l, 1);
+
+  return gc64;
+}
+
 /**
  * \brief Pushes a new nullptr FILE* userdata for a regular file.
  *
@@ -327,7 +393,7 @@ namespace {
  * \warning The current environment when calling this function
  * is assumed to be the same as the one of io.open().
  *
- * \param l The Lua context.
+ * \param l The Lua state.
  * \return Reference to the created file handle.
  */
 FILE*& create_file_pointer(lua_State* l) {
@@ -348,48 +414,23 @@ FILE*& create_file_pointer(lua_State* l) {
     luaL_getmetatable(l, LUA_FILEHANDLE);
     lua_setmetatable(l, -2);
   } else {
-    // Mimic the userdata used in LuaJIT for hanlding FILE* pointers.
-    // The following is highly specific to LuaJIT internals, unfortunately.
-    // Tested only with LuaJIT 2.1.0-beta3.
-    struct SolarusLuaJit_IOFileUD {
-      FILE *file;
-      uint32_t type;
-    };
-
-#if defined(__i386) || defined(__i386__) || defined(_M_IX86)
-#elif defined(__x86_64__) || defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
-#define SOLARUS_LUAJIT_GC64 1
-#else
-#  error No Lua file hack for this architecture is available
-#endif
-
-#ifdef SOLARUS_LUAJIT_GC64
-    using SolarusLuaJitGcPtr = uint64_t;
-#else
-    using SolarusLuaJitGcPtr = uint32_t;
-#endif
-
-    struct SolarusLuaJit_GCudata {
-      SolarusLuaJitGcPtr nextgc;
-      uint8_t marked;
-      uint8_t gct;
-      uint8_t udtype;
-      uint8_t unused2;
-      SolarusLuaJitGcPtr env;
-      uint32_t len;
-      SolarusLuaJitGcPtr metatable;
-      uint32_t align1;
-    };
-
     SolarusLuaJit_IOFileUD* file_udata = static_cast<SolarusLuaJit_IOFileUD*>(lua_newuserdata(l, sizeof(SolarusLuaJit_IOFileUD)));
     file_udata->file = nullptr;
     file_udata->type = 0;  // Same as IOFILE_TYPE_FILE, meaning a regular file and not a pipe or stdin/stdout.
     file_handle = &file_udata->file;
 
-    SolarusLuaJit_GCudata* gc_udata = reinterpret_cast<SolarusLuaJit_GCudata*>(
-          reinterpret_cast<char*>(file_udata) - sizeof(SolarusLuaJit_GCudata)
-    );
-    gc_udata->udtype = 1;  // Same as UDTYPE_IO_FILE.
+    static bool luajit_gc64 = detect_luajit_gc64(l);
+    if (luajit_gc64) {
+      SolarusLuaJit_GCudata64* gc_udata = reinterpret_cast<SolarusLuaJit_GCudata64*>(
+            reinterpret_cast<char*>(file_udata) - sizeof(SolarusLuaJit_GCudata64)
+      );
+      gc_udata->udtype = 1;  // Same as UDTYPE_IO_FILE.
+    } else {
+      SolarusLuaJit_GCudata32* gc_udata = reinterpret_cast<SolarusLuaJit_GCudata32*>(
+            reinterpret_cast<char*>(file_udata) - sizeof(SolarusLuaJit_GCudata32)
+      );
+      gc_udata->udtype = 1;  // Same as UDTYPE_IO_FILE.
+    }
 
     // Set the metatable of the userdata to the current environment.
                                   // ... file
