@@ -374,7 +374,7 @@ bool detect_luajit_gc64(lua_State* l) {
   // Check the len field. It should be the size of our userdata if LJ_GC64 is set,
   // otherwise is it the env field (a pointer value).
   const bool gc64 = gc_udata64->len == sizeof(SolarusLuaJit_IOFileUD);
-  Logger::debug("Enabled LuaJIT Unicode filenames workaround. GC64: " + (gc64 ? "yes" : "no"));
+  Logger::debug("Enabled LuaJIT Unicode filenames workaround. GC64: " + std::string(gc64 ? "yes" : "no"));
 
   lua_pop(l, 1);
 
