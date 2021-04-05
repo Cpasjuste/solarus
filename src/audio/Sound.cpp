@@ -240,18 +240,29 @@ void Sound::quit() {
  */
 void Sound::update_device_connection() {
 
+#if SOLARUS_OPENAL_EXTENSIONS_RECONNECT
+#define SOLARUS_OPENAL_DEVICE_SPECIFIER ALC_ALL_DEVICES_SPECIFIER
+#else
+#define SOLARUS_OPENAL_DEVICE_SPECIFIER ALC_DEVICE_SPECIFIER
+#endif
+
   if (device != nullptr) {
     // Check if the device is still connected.
     ALCint is_connected = 0;
+#ifdef SOLARUS_OPENAL_EXTENSIONS_RECONNECT
     alcGetIntegerv(device, ALC_CONNECTED, 1, &is_connected);
+#else
+    is_connected = device != nullptr;
+#endif
     if (!is_connected) {
       Logger::info("Lost connection to audio device");
     } else {
       if (System::now() >= next_device_detection_date) {
         // Check if this device is still the default one.
         next_device_detection_date = System::now() + 1000;
-        const ALchar* current_device_name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
-        const ALchar* default_device_name = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+
+        const ALchar* current_device_name = alcGetString(device, SOLARUS_OPENAL_DEVICE_SPECIFIER);
+        const ALchar* default_device_name = alcGetString(nullptr, SOLARUS_OPENAL_DEVICE_SPECIFIER);
         if (current_device_name != nullptr &&
             default_device_name != nullptr &&
             std::strcmp(current_device_name, default_device_name)) {
@@ -297,7 +308,7 @@ void Sound::update_device_connection() {
           alcCloseDevice(device);
           device = nullptr;
         } else {
-          const ALchar* current_device_name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
+          const ALchar* current_device_name = alcGetString(device, SOLARUS_OPENAL_DEVICE_SPECIFIER);
           Logger::info(std::string("Connected to audio device '") + (current_device_name ? current_device_name : "") + "'");
           Music::notify_device_reconnected_all();
         }

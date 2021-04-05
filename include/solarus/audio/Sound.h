@@ -23,7 +23,9 @@
 #include <map>
 #include <al.h>
 #include <alc.h>
-#include <alext.h>
+#ifdef SOLARUS_OPENAL_EXTENSIONS_RECONNECT
+#  include <alext.h>
+#endif
 #include <vorbis/vorbisfile.h>
 
 namespace Solarus {
