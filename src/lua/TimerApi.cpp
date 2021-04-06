@@ -158,6 +158,9 @@ void LuaContext::add_timer(
         // Entities are more complex: they also get suspended when disabled.
         if (is_entity(current_l, context_index)) {
           EntityPtr entity = check_entity(current_l, context_index);
+
+          Debug::check_assertion(!entity->is_being_removed(), "Cannot add timer: this entity is being removed");
+
           initially_suspended = entity->is_suspended() || !entity->is_enabled();
         } else {  // State.
           std::shared_ptr<CustomState> state = check_state(current_l, context_index);
@@ -192,9 +195,10 @@ void LuaContext::remove_timer(const TimerPtr& timer) {
  * \param context_index Index of a table or userdata containing timers.
  */
 void LuaContext::remove_timers(int context_index) {
+
   for (auto& kvp: timers) {
     const TimerPtr& timer = kvp.first;
-    if (kvp.second.context.equals(current_l,context_index)) {
+    if (kvp.second.context.equals(current_l, context_index)) {
       kvp.second.callback_ref.clear();
       timers_to_remove.push_back(timer);
     }
@@ -416,6 +420,13 @@ int LuaContext::timer_api_start(lua_State *l) {
       lua_insert(l, 1);
     }
     // Now the first parameter is the context.
+
+    if (is_entity(l, 1)) {
+      const Entity& entity = *check_entity(l, 1);
+      if (entity.is_being_removed()) {
+        LuaTools::arg_error(l, 1, "Cannot start a timer on an entity that was removed");
+      }
+    }
 
     uint32_t delay = uint32_t(LuaTools::check_int(l, 2));
     const ScopedLuaRef& callback_ref = LuaTools::check_function(l, 3);

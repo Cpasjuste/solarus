@@ -61,10 +61,13 @@ class SOLARUS_API Sound {
     ~Sound();
     void load();
     bool start();
+    void set_paused(bool pause);
 
     static void load_all();
     static bool exists(const std::string& sound_id);
     static void play(const std::string& sound_id);
+    static void pause_all();
+    static void resume_all();
 
     static void initialize(const Arguments& args);
     static void quit();
@@ -79,8 +82,11 @@ class SOLARUS_API Sound {
     ALuint decode_file(const std::string& file_name);
     bool update_playing();
 
-    static ALCdevice* device;
-    static ALCcontext* context;
+    static void update_device_connection();
+
+    static bool audio_enabled;                   /**< \c true unless -no-audio was passed. */
+    static ALCdevice* device;                    /**< OpenAL device, nullptr if disconnected. */
+    static ALCcontext* context;                  /**< OpenAL context. */
 
     std::string id;                              /**< id of this sound */
     ALuint buffer;                               /**< the OpenAL buffer containing the PCM decoded data of this sound */
@@ -88,9 +94,9 @@ class SOLARUS_API Sound {
     static std::list<Sound*> current_sounds;     /**< the sounds currently playing */
     static std::map<std::string, Sound> all_sounds;   /**< all sounds created before */
 
-    static bool initialized;                     /**< indicates that the audio system is initialized */
     static bool sounds_preloaded;                /**< true if load_all() was called */
     static float volume;                         /**< the volume of sound effects (0.0 to 1.0) */
+    static uint32_t next_device_detection_date;  /**< Date of the next attempt to detect an audio device. */
 
     static bool pc_play;                         /**< Whether playing performance counter is used. */
 };

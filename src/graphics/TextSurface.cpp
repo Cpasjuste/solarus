@@ -29,6 +29,7 @@
 #include "solarus/lua/LuaTools.h"
 #include <lua.hpp>
 #include <memory>
+#include <SDL_ttf.h>
 
 namespace Solarus {
 
@@ -238,6 +239,50 @@ void TextSurface::set_font_size(int font_size) {
 }
 
 /**
+ * \brief Returns the font hinting setting.
+ * \return The font hinting setting.
+ */
+TextSurface::HintingSetting TextSurface::get_font_hinting() const {
+  return font_hinting;
+}
+
+/**
+ * \brief Sets the font hinting setting.
+ * \param hinting The font hinting setting.
+ */
+void TextSurface::set_font_hinting(TextSurface::HintingSetting font_hinting) {
+
+  if (font_hinting == this->font_hinting) {
+    return;
+  }
+
+  this->font_hinting = font_hinting;
+  rebuild();
+}
+
+/**
+ * \brief Returns if font kerning is enabled or disabled.
+ * \return The font kerning state.
+ */
+bool TextSurface::is_font_kerning() const {
+  return font_kerning;
+}
+
+/**
+ * \brief Sets the font kerning state (enabled or disabled).
+ * \param font_kerning The font kerning state.
+ */
+void TextSurface::set_font_kerning(bool font_kerning) {
+
+  if (font_kerning == this->font_kerning) {
+    return;
+  }
+
+  this->font_kerning = font_kerning;
+  rebuild();
+}
+
+/**
  * \brief Sets the position of the text on the destination surface.
  * \param x X position of the text on the destination surface.
  * \param y Y position of the text on the destination surface.
@@ -312,7 +357,7 @@ bool TextSurface::is_empty() const {
 
 /**
  * \brief Returns the text currently displayed.
- * \return the text currently displayed, or nullptr if there is no text
+ * \return The text currently displayed.
  */
 const std::string& TextSurface::get_text() const {
   return text;
@@ -323,7 +368,7 @@ const std::string& TextSurface::get_text() const {
  *
  * If the specified string is the same than the current text, nothing is done.
  *
- * \param text the text to display (cannot be nullptr)
+ * \param text The text to display.
  */
 void TextSurface::set_text(const std::string& text) {
 
@@ -503,7 +548,7 @@ void TextSurface::rebuild_ttf() {
 
   // create the text surface
 
-  TTF_Font& internal_font = FontResource::get_outline_font(font_id, font_size);
+  TTF_Font& internal_font = FontResource::get_outline_font(font_id, font_size, font_hinting, font_kerning);
   SDL_Color internal_color;
   text_color.get_components(
       internal_color.r, internal_color.g, internal_color.b, internal_color.a);
@@ -532,9 +577,8 @@ void TextSurface::rebuild_ttf() {
        format->Gmask,
        format->Bmask,
        format->Amask));
-  SDL_FillRect(full.get(),nullptr,0x00FFFFFF);
   SDL_BlitSurface(surface.get(),nullptr,full.get(),nullptr);
-  this->surface = Surface::create(std::move(full));
+  this->surface = Surface::create(std::move(full), true);
 }
 
 /**

@@ -674,6 +674,7 @@ void set_default_video_mode() {
   Debug::check_assertion(context.default_video_mode != nullptr,
                          "Default video mode was not initialized");
 
+  SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
   set_fullscreen(false);
   set_video_mode(*context.default_video_mode);
 }

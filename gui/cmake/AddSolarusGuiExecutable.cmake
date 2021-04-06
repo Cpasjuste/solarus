@@ -22,4 +22,5 @@ endif()
 target_link_libraries(solarus-launcher
   PUBLIC
     solarus-gui
+    SDL2::Main
 )

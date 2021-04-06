@@ -311,6 +311,30 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
       }
     }
 
+    // React to joystick connect and disconnect events
+    else if (internal_event.type == SDL_JOYDEVICEADDED) {
+      if (joystick == nullptr and joypad_enabled) {
+        // We had no joystick and one was connected! Try to open it.
+        joystick = SDL_JoystickOpen(internal_event.jdevice.which);
+        if (joystick == nullptr) {
+          Logger::error("Failed to open joystick");
+        } else {
+          const char* joystick_name = SDL_JoystickName(joystick);
+          Logger::info("Using joystick: '" + std::string(joystick_name ? joystick_name : "") + "'");
+        }
+      }
+    } else if (internal_event.type == SDL_JOYDEVICEREMOVED) {
+      if (joystick != nullptr and joypad_enabled) {
+        // A joystick is disconnected, maybe it was our
+        Sint32 id = internal_event.jdevice.which;
+        if (SDL_JoystickInstanceID(joystick) == id) {
+          Logger::info("Joystick disconnected");
+          SDL_JoystickClose(joystick);
+          joystick = nullptr;
+        }
+      }
+    }
+
     // Always return a Solarus event if an SDL event occurred, so that
     // multiple SDL events in the same frame are all treated.
     result = new InputEvent(internal_event);
@@ -936,9 +960,12 @@ void InputEvent::set_joypad_enabled(bool joypad_enabled) {
       jbuttons_pressed.clear();
     }
 
-    if (joypad_enabled && SDL_NumJoysticks() > 0) {
+    if (joypad_enabled) {
         SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-        joystick = SDL_JoystickOpen(0);
+        SDL_JoystickEventState(SDL_ENABLE);
+        if(SDL_NumJoysticks() > 0) {
+          joystick = SDL_JoystickOpen(0);
+        }
     }
     else {
       SDL_JoystickEventState(SDL_IGNORE);
@@ -1497,6 +1524,24 @@ bool InputEvent::is_window_closing() const {
  */
 bool InputEvent::is_window_resizing() const {
   return internal_event.type == SDL_WINDOWEVENT && internal_event.window.event == SDL_WINDOWEVENT_RESIZED;
+}
+
+/**
+ * @brief Returns wheter this event corresponds to
+ * the window loosing focus.
+ * @return true if this is a window focus lost event
+ */
+bool InputEvent::is_window_focus_lost() const {
+  return internal_event.type == SDL_WINDOWEVENT && internal_event.window.event == SDL_WINDOWEVENT_FOCUS_LOST;
+}
+
+/**
+ * @brief Returns wheter this event corresponds to
+ * the window gaining focus.
+ * @return true if this is a window focus gained event
+ */
+bool InputEvent::is_window_focus_gained() const {
+  return internal_event.type == SDL_WINDOWEVENT && internal_event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED;
 }
 
 /**

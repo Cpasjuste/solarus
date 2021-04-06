@@ -139,7 +139,7 @@ bool Hero::SpinAttackState::get_can_be_hurt(Entity* /* attacker */) {
 /**
  * \copydoc Entity::State::is_cutting_with_sword
  */
-bool Hero::SpinAttackState::is_cutting_with_sword(Entity& /* entity */) {
+bool Hero::SpinAttackState::is_cutting_with_sword(Destructible& /* destructible */) {
 
   // during a spin attack, any sprite collision can cut things
   return true;

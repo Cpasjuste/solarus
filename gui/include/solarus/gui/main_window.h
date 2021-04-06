@@ -50,6 +50,7 @@ private slots:
   void on_action_stop_quest_triggered();
   void on_action_fullscreen_triggered();
   void on_action_force_software_triggered();
+  void on_action_suspend_unfocused_triggered();
   void on_action_zoom_x1_triggered();
   void on_action_zoom_x2_triggered();
   void on_action_zoom_x3_triggered();
@@ -70,6 +71,7 @@ private:
   void update_menus();
   void update_fullscreen_action();
   void update_force_software_action();
+  void update_suspend_unfocused_action();
   bool add_quest(QString quest_path);
 
   Ui::MainWindow ui;         /**< The widgets. */

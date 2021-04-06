@@ -1161,8 +1161,8 @@ void CustomState::set_can_be_hurt(const ScopedLuaRef& can_be_hurt) {
 /**
  * \copydoc Entity::State::is_cutting_with_sword
  */
-bool CustomState::is_cutting_with_sword(Entity& entity) {
-  return get_can_cut(&entity);
+bool CustomState::is_cutting_with_sword(Destructible& destructible) {
+  return get_can_cut(&destructible);
 }
 
 /**
