@@ -25,6 +25,9 @@
 #include "solarus/core/String.h"
 #include "solarus/audio/Music.h"
 #include "solarus/audio/Sound.h"
+#ifdef SOLARUS_OPENAL_EXTENSIONS_RECONNECT
+#  include <alext.h>
+#endif
 #include <cstdio>
 
 namespace Solarus {
