@@ -1,13 +1,13 @@
 # Changelog
 
-## Solarus 1.6.5 (in progress)
+## Solarus 1.6.5 (2010-04-06)
 
 ### Engine changes
 
 * Add support for suspending the simulation on Window Focus events (#1536).
 * Reconnect to another audio device after a device disconnection (#1499).
-* Fix crash when calling command functions before the game is started (#1476).
 * Fix joystick hot-plug/unplug (#1501, #1387).
+* Fix crash when calling command functions before the game is started (#1476).
 * Fix shader compilation on OpenGL ES 3.10 and 3.20 (#1537).
 * Fix TTF fonts using wrong color for antialiasing (#1390).
 * Fix TTF Fonts not rendering correctly (#1389).
