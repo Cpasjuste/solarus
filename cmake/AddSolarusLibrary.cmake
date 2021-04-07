@@ -28,15 +28,16 @@ target_link_libraries(solarus
     ModPlug::ModPlug
 )
 
-if(SOLARUS_PROFILING)
-  target_link_libraries(solarus
-    PUBLIC
-      easy_profiler
-  )
-
-  target_compile_definitions(solarus PUBLIC -DBUILD_WITH_EASY_PROFILER=1)
+# Add dynamic loader library if required
+if(CMAKE_DL_LIBS)
+  target_link_libraries(solarus PUBLIC ${CMAKE_DL_LIBS})
 endif()
 
+# Add profiler library if enabled
+if(SOLARUS_PROFILING)
+  target_link_libraries(solarus PUBLIC easy_profiler)
+  target_compile_definitions(solarus PUBLIC -DBUILD_WITH_EASY_PROFILER=1)
+endif()
 
 # Add OpenGL imported target to "solarus" declared dependencies
 if(OPENGL_FOUND)
