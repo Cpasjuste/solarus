@@ -25,16 +25,21 @@
 #include "solarus/core/String.h"
 #include "solarus/lua/LuaContext.h"
 #include <algorithm>
-#include <cstdio>
+#ifdef SOLARUS_OPENAL_EXTENSIONS_RECONNECT
+#  include <alext.h>
+#endif
+#include <cstdlib>
+#include <cstring>
 
 namespace Solarus {
 
+bool Sound::audio_enabled = false;
 ALCdevice* Sound::device = nullptr;
 ALCcontext* Sound::context = nullptr;
-bool Sound::initialized = false;
 float Sound::volume = 1.0;
 bool Sound::pc_play = false;
 std::list<SoundPtr> Sound::current_sounds;
+uint32_t Sound::next_device_detection_date = 0;
 bool Sound::paused_by_system = false;
 
 /**
@@ -52,7 +57,7 @@ Sound::Sound(const SoundBuffer& data):
  */
 Sound::~Sound() {
 
-  if (is_initialized() && source != AL_NONE) {
+  if (device != nullptr && source != AL_NONE) {
     stop_source();
   }
 }
@@ -80,8 +85,8 @@ SoundPtr Sound::create(const SoundBuffer& data) {
 void Sound::initialize(const Arguments& args) {
 
   // Check the -no-audio option.
-  const bool disable = args.has_argument("-no-audio");
-  if (disable) {
+  audio_enabled = !args.has_argument("-no-audio");
+  if (!audio_enabled) {
     return;
   }
 
@@ -89,29 +94,13 @@ void Sound::initialize(const Arguments& args) {
   pc_play = args.get_argument_value("-perf-sound-play") == "yes";
 
   // Initialize OpenAL.
-
-  device = alcOpenDevice(nullptr);
-  if (!device) {
-    Debug::error("Cannot open audio device");
-    return;
-  }
-
-  context = alcCreateContext(device, nullptr);
-  if (!context) {
-    Debug::error("Cannot create audio context");
-    alcCloseDevice(device);
-    return;
-  }
-  if (!alcMakeContextCurrent(context)) {
-    Debug::error("Cannot activate audio context");
-    alcDestroyContext(context);
-    alcCloseDevice(device);
+  update_device_connection();
+  if (device == nullptr) {
     return;
   }
 
   alGenBuffers(0, nullptr);  // Necessary on some systems to avoid errors with the first sound loaded.
 
-  initialized = true;
   set_volume(100);
 
   // initialize the music system
@@ -125,30 +114,113 @@ void Sound::initialize(const Arguments& args) {
  */
 void Sound::quit() {
 
-  if (is_initialized()) {
+  if (!is_initialized()) {
+    return;
+  }
 
-    // uninitialize the music subsystem
-    Music::quit();
+  // uninitialize the music subsystem
+  Music::quit();
 
-    // uninitialize OpenAL
+  // uninitialize OpenAL
+  alcMakeContextCurrent(nullptr);
+  alcDestroyContext(context);
+  context = nullptr;
+  alcCloseDevice(device);
+  device = nullptr;
+  volume = 1.0;
+  audio_enabled = false;
+}
 
-    alcMakeContextCurrent(nullptr);
-    alcDestroyContext(context);
-    context = nullptr;
-    alcCloseDevice(device);
-    device = nullptr;
-    volume = 1.0;
+/**
+ * \brief Checks if the audio device is connected.
+ */
+void Sound::update_device_connection() {
 
-    initialized = false;
+#if SOLARUS_OPENAL_EXTENSIONS_RECONNECT
+#define SOLARUS_OPENAL_DEVICE_SPECIFIER ALC_ALL_DEVICES_SPECIFIER
+#else
+#define SOLARUS_OPENAL_DEVICE_SPECIFIER ALC_DEVICE_SPECIFIER
+#endif
+
+  if (device != nullptr) {
+    // Check if the device is still connected.
+    ALCint is_connected = 0;
+#ifdef SOLARUS_OPENAL_EXTENSIONS_RECONNECT
+    alcGetIntegerv(device, ALC_CONNECTED, 1, &is_connected);
+#else
+    is_connected = device != nullptr;
+#endif
+    if (!is_connected) {
+      Logger::info("Lost connection to audio device");
+    } else {
+      if (System::now() >= next_device_detection_date) {
+        // Check if this device is still the default one.
+        next_device_detection_date = System::now() + 1000;
+
+        const ALchar* current_device_name = alcGetString(device, SOLARUS_OPENAL_DEVICE_SPECIFIER);
+        const ALchar* default_device_name = alcGetString(nullptr, SOLARUS_OPENAL_DEVICE_SPECIFIER);
+        if (current_device_name != nullptr &&
+            default_device_name != nullptr &&
+            std::strcmp(current_device_name, default_device_name)) {
+          // This device is no longer the default one.
+          Logger::info(std::string("Disconnecting from audio device '") + current_device_name +
+                       "' because the default device is now '" + default_device_name + "'");
+          is_connected = false;
+        }
+      }
+    }
+    if (!is_connected) {
+      ALboolean success = alcMakeContextCurrent(nullptr);
+      if (!success) {
+        Debug::error("Failed to unset OpenAL context");
+      }
+      alcDestroyContext(context);
+      context = nullptr;
+      alcCloseDevice(device);
+      device = nullptr;
+      next_device_detection_date = System::now();
+      Music::notify_device_disconnected_all();
+    }
+  }
+
+  if (device == nullptr) {
+    if (System::now() >= next_device_detection_date) {
+      // Try to connect or reconnect to an audio device.
+      device = alcOpenDevice(nullptr);
+      if (device == nullptr) {
+        Debug::error("Cannot open audio device");
+      } else {
+        context = alcCreateContext(device, nullptr);
+        if (context == nullptr) {
+          Debug::error("Cannot create audio context");
+          alcCloseDevice(device);
+          device = nullptr;
+        } else if (!alcMakeContextCurrent(context)) {
+          Debug::error("Cannot activate audio context");
+          alcDestroyContext(context);
+          context = nullptr;
+          alcCloseDevice(device);
+          device = nullptr;
+        } else {
+          const ALchar* current_device_name = alcGetString(device, SOLARUS_OPENAL_DEVICE_SPECIFIER);
+          Logger::info(std::string("Connected to audio device '") + (current_device_name ? current_device_name : "") + "'");
+          Music::notify_device_reconnected_all();
+        }
+      }
+      if (device == nullptr) {
+        // The attempt failed: try again later.
+        next_device_detection_date = System::now() + 1000;
+      }
+    }
   }
 }
 
 /**
  * \brief Returns whether the audio (music and sound) system is initialized.
- * \return true if the audio (music and sound) system is initilialized
+ * \return \c true if the audio (music and sound) system is initilialized.
  */
 bool Sound::is_initialized() {
-  return initialized;
+  return audio_enabled;
 }
 
 /**
@@ -212,16 +284,25 @@ void Sound::set_volume(int volume) {
  */
 void Sound::update() {
 
-  // update the playing sounds
-  std::list<SoundPtr> sounds_to_remove;
-  for (const SoundPtr& sound: current_sounds) {
-    if (!sound->update_playing()) {
-      sounds_to_remove.push_back(sound);
-    }
+  if (!is_initialized()) {
+    return;
   }
 
-  for (const SoundPtr& sound: sounds_to_remove) {
-    current_sounds.remove(sound);
+  update_device_connection();
+
+  if (device != nullptr) {
+
+    // update the playing sounds
+    std::list<SoundPtr> sounds_to_remove;
+    for (const SoundPtr& sound: current_sounds) {
+      if (!sound->update_playing()) {
+        sounds_to_remove.push_back(sound);
+      }
+    }
+
+    for (const SoundPtr& sound: sounds_to_remove) {
+      current_sounds.remove(sound);
+    }
   }
 
   // also update the music
@@ -257,7 +338,7 @@ bool Sound::update_playing() {
  */
 bool Sound::start() {
 
-  if (!is_initialized()) {
+  if (device == nullptr) {
     // Sound might be disabled.
     return false;
   }
@@ -310,7 +391,7 @@ bool Sound::start() {
  */
 void Sound::stop() {
 
-  if (!is_initialized()) {
+  if (device == nullptr) {
     return;
   }
 
@@ -358,7 +439,7 @@ void Sound::stop_source() {
  */
 bool Sound::is_paused() const {
 
-  if (!is_initialized()) {
+  if (device == nullptr || source == AL_NONE) {
     return false;
   }
 
@@ -373,7 +454,7 @@ bool Sound::is_paused() const {
  */
 void Sound::set_paused(bool paused) {
 
-  if (!is_initialized() || source == AL_NONE) {
+  if (device == nullptr || source == AL_NONE) {
     return;
   }
 

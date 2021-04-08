@@ -166,6 +166,8 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1524_push_delay"
   "bugs/1526_destructible_cut_method"
   "bugs/1527_entity_set_name"
+  "bugs/1533_savegame_write_escape"
+  "bugs/1534_unicode_filenames"
 )
 
 # Test that should not fail when there are errors

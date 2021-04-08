@@ -193,6 +193,10 @@ class LuaContext {
     );
     static void print_stack(lua_State* current_l);
 
+    // Lua version.
+    bool is_luajit() const;
+    std::string get_lua_version() const;
+
     // Lua refs.
     ScopedLuaRef create_ref();
     static void push_ref(lua_State* current_l, const ScopedLuaRef& ref);
@@ -1317,6 +1321,11 @@ class LuaContext {
 
   private:
 
+    // Lua version.
+    bool luajit;               /**< True if the Lua runtime is LuaJIT, false otherwise. */
+    std::string lua_version;   /**< Holds the version of the current Lua runtime. */
+    void find_lua_version();
+
     /**
      * \brief Data associated to any Lua menu.
      */
@@ -1346,7 +1355,6 @@ class LuaContext {
         const ExportableToLua& userdata, const char* key) const;
     bool find_method(int index, const char* function_name);
     bool find_method(const char* function_name);
-    void print_lua_version();
 
     // Initialization of modules.
     void register_functions(

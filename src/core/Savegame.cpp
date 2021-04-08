@@ -21,6 +21,7 @@
 #include "solarus/core/Savegame.h"
 #include "solarus/core/SavegameConverterV1.h"
 #include "solarus/lua/LuaContext.h"
+#include "solarus/lua/LuaData.h"
 #include "solarus/lua/LuaTools.h"
 #include <lua.hpp>
 #include <sstream>
@@ -325,7 +326,7 @@ void Savegame::save() {
       oss << value.int_data;
     }
     else {  // String.
-      oss << "\"" << value.string_data << "\"";
+      oss << "\"" << LuaData::escape_string(value.string_data) << "\"";
     }
     oss << "\n";
   }
