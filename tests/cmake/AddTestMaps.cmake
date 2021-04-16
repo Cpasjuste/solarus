@@ -150,6 +150,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1395_large_map_memory_leak"
   "bugs/1416_state_set_affected_by_ground_speed"
   "bugs/1418_state_set_can_be_hurt"
+  "bugs/1419_crash_teletransporting_to_invalid_layer/map_1"
   "bugs/1423_crash_carried_without_shadow"
   "bugs/1424_rawget_rawset"
   "bugs/1428_movement_blocking"
@@ -170,7 +171,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1534_unicode_filenames"
 )
 
-# Test that should not fail when there are errors
+# Test that should succeed when there are non-fatal errors
 list(APPEND LUA_TEST_MAPS_NON_FATAL
   "bugs/1015_crash_scrolling_to_invalid_layer/map_1"
   "bugs/1299_crash_invalid_tile_pattern"

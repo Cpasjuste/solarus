@@ -4,6 +4,8 @@
 
 ### Engine changes
 
+* Fix crash when teletransporting to a map without the same layer (#1419).
+
 ### Lua API changes
 
 This release adds new features but does not introduce any incompatibility.
