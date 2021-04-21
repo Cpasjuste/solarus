@@ -270,8 +270,11 @@ bool Camera::can_be_drawn() const {
  * This function should be called when the camera size is changed.
  */
 void Camera::create_surface() {
-
+#ifdef SOLARUS_SUBPIXEL_CAMERA
+  surface = Surface::create(get_size(), true, margin);
+#else
   surface = Surface::create(get_size());
+#endif
 }
 
 /**

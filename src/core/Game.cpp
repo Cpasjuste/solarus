@@ -621,13 +621,16 @@ void Game::draw(const SurfacePtr& dst_surface, const SurfacePtr& screen_surface)
               Video::get_renderer().default_terminal();
 
         //context.screen_surface->clear();
-        auto scale = Video::get_output_size_no_bars()/camera->get_size();
+        //auto camera_size = camera_surface->get_size();
+        auto scale = Video::get_output_size_no_bars()/Video::get_quest_size();
+        auto pixel_scale = Video::get_output_size_no_bars()/camera_surface->get_size();
+
         proxy.draw(
               *screen_surface,
               *camera_surface,
               DrawInfos(
-                Rectangle(camera_surface->get_size()),
-                camera->get_position_on_screen(scale),
+                Rectangle(Point(-Camera::margin,-Camera::margin), camera_surface->get_size() + Size(Camera::margin*2, Camera::margin*2)),
+                camera->get_position_on_screen(pixel_scale) - Point(Camera::margin, Camera::margin)*pixel_scale,
                 Point(),
                 BlendMode::BLEND,
                 255,0,

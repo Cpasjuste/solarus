@@ -90,7 +90,7 @@ MessageCallback( GLenum source,
 
 GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
   sdl_gl_context(sdl_ctx),
-  screen_fbo{0,glm::mat4(1.f)}
+  screen_fbo{0,glm::mat4(1.f),{1,1}}
 {
 
   Debug::check_assertion(!instance,"Creating two GL renderer");
@@ -177,8 +177,8 @@ RendererPtr GlRenderer::create(SDL_Window* window, bool force_software) {
   return RendererPtr(new GlRenderer(sdl_ctx));
 }
 
-SurfaceImplPtr GlRenderer::create_texture(int width, int height) {
-  auto simpl = new GlTexture(width,height);
+SurfaceImplPtr GlRenderer::create_texture(int width, int height, int margin) {
+  auto simpl = new GlTexture(width, height, false, margin);
   clear(*simpl);
   return SurfaceImplPtr(simpl);
 }
@@ -206,8 +206,8 @@ void GlRenderer::set_render_target(GlTexture* target) {
     if(fbo->id) { //Render to Texture
       glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,target->get_texture(),0);
       glViewport(0,0,
-                 target->get_width(),
-                 target->get_height());
+                 fbo->viewport.x,
+                 fbo->viewport.y);
 #ifndef SOLARUS_GL_ES
       Debug::check_assertion(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"glFrameBufferTexture2D failed");
 #endif
@@ -368,11 +368,15 @@ GlRenderer::~GlRenderer() {
  * @param screen desired buffer is the screen buffer?
  * @return a struct with the view matrix integrated
  */
-GlRenderer::Fbo* GlRenderer::get_fbo(int width, int height, bool screen) {
+GlRenderer::Fbo* GlRenderer::get_fbo(int width, int height, bool screen, int margin) {
   if(screen) return &screen_fbo;
-  uint_fast64_t key =  (static_cast<uint_fast64_t>(width) << 32) | static_cast<uint_fast64_t>(height);
-  int rw = key >> 32;
-  int rh = key & 0xFFFFFFFF;
+  uint_fast64_t key =  (static_cast<uint_fast64_t>(margin) << 48) |
+      (static_cast<uint_fast64_t>(width) << 24) |
+      static_cast<uint_fast64_t>(height);
+  int rm = key >> 48;
+  int rw = (key >> 24) & 0xFFFFFF;
+  int rh = key & 0xFFFFFF;
+  Debug::check_assertion(rm == margin, "recovered margin does not match");
   Debug::check_assertion(rw == width,"recovered width does not match");
   Debug::check_assertion(rh == height,"recovered height does not match");
   auto it = fbos.find(key);
@@ -381,8 +385,8 @@ GlRenderer::Fbo* GlRenderer::get_fbo(int width, int height, bool screen) {
   }
   GLuint fbo;
   glGenFramebuffers(1,&fbo);
-  glm::mat4 view = glm::ortho<float>(0,width,0,height);
-  return &fbos.insert({key,{fbo,view}}).first->second;
+  glm::mat4 view = glm::ortho<float>(-margin,width+margin,-margin,height+margin);
+  return &fbos.insert({key,{fbo,view,glm::ivec2(width+margin*2, height+margin*2)}}).first->second;
 }
 
 /**

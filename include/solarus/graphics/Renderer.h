@@ -24,7 +24,7 @@ public:
    * @param height texture height
    * @return the surface impl
    */
-  virtual SurfaceImplPtr create_texture(int width, int height) = 0;
+  virtual SurfaceImplPtr create_texture(int width, int height, int margin) = 0;
 
   /**
    * @brief Create a surface implementation as static texture

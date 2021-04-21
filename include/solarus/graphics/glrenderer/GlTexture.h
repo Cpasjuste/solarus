@@ -17,7 +17,7 @@ class GlTexture : public SurfaceImpl
 {
   friend class GlRenderer;
 public:
-  GlTexture(int width, int height, bool screen_tex = false);
+  GlTexture(int width, int height, bool screen_tex = false, int margin = 0);
   GlTexture(SDL_Surface_UniquePtr surface);
 
   GLuint get_texture() const;
