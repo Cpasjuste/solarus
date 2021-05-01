@@ -811,7 +811,7 @@ void Entity::set_top_left_xy(const Point& xy) {
  * \return The position of the entity's right side.
  */
 int Entity::get_bottom_right_x() const {
-  return bounding_box.get_x() + bounding_box.get_width();
+  return bounding_box.get_right();
 }
 
 /**
@@ -819,7 +819,7 @@ int Entity::get_bottom_right_x() const {
  * \return The position of the entity's bottom side.
  */
 int Entity::get_bottom_right_y() const {
-  return bounding_box.get_y() + bounding_box.get_height();
+  return bounding_box.get_bottom();
 }
 
 /**
@@ -827,7 +827,7 @@ int Entity::get_bottom_right_y() const {
  * \return The position of the entity's bottom-right corner.
  */
 Point Entity::get_bottom_right_xy() const {
-  return { get_bottom_right_x(), get_bottom_right_y() };
+  return bounding_box.get_bottom_right();
 }
 
 /**
