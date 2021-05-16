@@ -281,7 +281,7 @@ void Map::unload() {
 void Map::load(Game& game) {
 
   background_surface = Surface::create(
-      Video::get_quest_size()
+      Video::get_quest_size() + Size(Camera::margin*2,Camera::margin*2)
   );
 
   // Read the map data file.
@@ -580,7 +580,7 @@ void Map::build_background_surface() {
  * \param dst_surface The surface where to draw.
  */
 void Map::draw_background(const SurfacePtr& dst_surface) {
-  background_surface->draw(dst_surface);
+  background_surface->draw(dst_surface, -Camera::margin,-Camera::margin);
 }
 
 /**

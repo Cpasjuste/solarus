@@ -54,8 +54,8 @@ class Camera : public Entity {
     void notify_movement_started() override;
     void notify_size_changed() override;
     bool is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) override;
-#ifdef SOLARUS_SUBPIXEL_CAMERA
     static constexpr int margin = 1;
+#ifdef SOLARUS_SUBPIXEL_CAMERA
     void set_subpixel_offset(const glm::vec2& offset);
     Point get_position_on_screen(Scale px_scale) const;
 #endif
