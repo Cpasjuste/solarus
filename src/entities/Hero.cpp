@@ -240,7 +240,7 @@ void Hero::update_direction() {
  */
 void Hero::update_movement() {
 
-  if (!get_map().is_loaded()) {
+  if (!is_on_map()) {
     // Can happen during transitions.
     return;
   }
@@ -790,6 +790,7 @@ void Hero::place_on_destination(Map& map, const Rectangle& previous_map_location
       }
       else {
         // Normal case.
+        set_layer(destination->get_layer());
         place_on_map(map);
         if (destination->get_direction() != -1) {
           sprites->set_animation_direction(destination->get_direction());

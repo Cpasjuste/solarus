@@ -92,6 +92,8 @@ class SOLARUS_API Music {
     static const std::string& get_current_music_id();
     static void pause_playing();
     static void resume_playing();
+    static void notify_device_disconnected_all();
+    static void notify_device_reconnected_all();
 
   private:
 
@@ -113,6 +115,8 @@ class SOLARUS_API Music {
     void decode_ogg(ALuint destination_buffer, ALsizei nb_samples);
 
     bool update_playing();
+    void notify_device_disconnected();
+    void notify_device_reconnected();
 
     std::string id;                              /**< id of this music */
     std::string file_name;                       /**< name of the file to play */
@@ -121,6 +125,7 @@ class SOLARUS_API Music {
     ScopedLuaRef callback_ref;                   /**< Lua ref to a function to call when the music finishes. */
 
     static constexpr int nb_buffers = 8;
+    static constexpr int buffer_size = 4096;
     ALuint buffers[nb_buffers];                  /**< multiple buffers used to stream the music */
     ALuint source;                               /**< the OpenAL source streaming the buffers */
 

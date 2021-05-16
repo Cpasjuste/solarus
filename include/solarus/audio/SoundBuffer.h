@@ -37,7 +37,7 @@ public:
    * \brief Buffer containing an encoded sound file.
    */
   struct SoundFromMemory {
-    std::string data;         /**< The OGG encded data. */
+    std::string data;         /**< The OGG encoded data. */
     size_t position;          /**< Current position in the buffer. */
     bool loop;                /**< \c true to restart the sound if it finishes. */
   };

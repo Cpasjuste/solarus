@@ -83,15 +83,16 @@ class SOLARUS_API Sound: public ExportableToLua {
     static bool paused_by_system;                /**< Whether sounds are currently paused by the main loop,
                                                   * e.g. when losing focus */
 
-    static ALCdevice* device;
-    static ALCcontext* context;
+    static void update_device_connection();
 
+    static bool audio_enabled;                   /**< \c true unless -no-audio was passed. */
+    static ALCdevice* device;                    /**< OpenAL device, nullptr if disconnected. */
+    static ALCcontext* context;                  /**< OpenAL context. */
     static std::list<SoundPtr>
         current_sounds;                          /**< The sounds currently playing. */
 
-    static bool initialized;                     /**< Indicates that the audio system is initialized. */
-    static float volume;                         /**< The volume of sound effects (0.0 to 1.0). */
-
+    static float volume;                         /**< the volume of sound effects (0.0 to 1.0) */
+    static uint32_t next_device_detection_date;  /**< Date of the next attempt to detect an audio device. */
     static bool pc_play;                         /**< Whether playing performance counter is used. */
 };
 

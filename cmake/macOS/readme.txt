@@ -20,7 +20,7 @@ This macOS package contains:
   and almost nothing to do, but you can run it or edit it.
 - Solarus Quest Editor (Solarus Quest Editor.app): An editor that helps you
   create maps and tilesets for your quest.
-  See http://www.solarus-games.org/doc/latest/ to know how to create a quest.
+  See https://www.solarus-games.org/doc/latest/ to know how to create a quest.
 
 See our website www.solarus-games.org for more information, to get help or to
 download our games or the source code of the engine.

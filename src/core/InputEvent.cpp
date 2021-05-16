@@ -323,21 +323,19 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
         jbuttons_pressed.erase(internal_event.jbutton.button);
         break;
       }
-
       case SDL_MOUSEBUTTONDOWN:
         // Capture mouse movements outside the window
         // only while dragging.
         SDL_CaptureMouse(SDL_TRUE);
         break;
-
       case SDL_MOUSEBUTTONUP:
       {
         Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
         if (buttons == 0) {
           SDL_CaptureMouse(SDL_FALSE);  // No more buttons pressed.
         }
-      }
         break;
+      }
     }
 
     // Always return a Solarus event if an SDL event occurred, so that

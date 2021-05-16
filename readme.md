@@ -13,7 +13,7 @@ You'll find more information about Solarus on <https://www.solarus-games.org>, s
 
 ![Sample quest screenshot](images/solarus_screenshot.png)
 
-Solarus has a CLI, `solarus-run` and a GUI launcher, [Solarus Launcher](https://gitlab.com/solarus-games/solarus/gui).
+Solarus has a CLI, `solarus-run` and a GUI launcher, [Solarus Launcher](gui/).
 
 Solarus also features a graphical game creation editor called [Solarus Quest Editor](https://gitlab.com/solarus-games/solarus-quest-editor), that allows you to create maps, sprites and scripts with ease.
 

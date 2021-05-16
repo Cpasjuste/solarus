@@ -956,7 +956,7 @@ void Entities::add_entity(const EntityPtr& entity) {
   }
 
   Debug::check_assertion(map.is_valid_layer(entity->get_layer()),
-      "No such layer on this map");
+      "No such layer on this map: " + std::to_string(entity->get_layer()));
 
   const EntityType type = entity->get_type();
   if (type != EntityType::TILE) {  // Tiles are optimized specifically.
