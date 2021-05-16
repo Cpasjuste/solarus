@@ -75,6 +75,8 @@ map{ id = "bugs/1392_carried_object_directions", description = "#1392: Allow car
 map{ id = "bugs/1395_large_map_memory_leak", description = "#1395: Memory leak when traversing a large map" }
 map{ id = "bugs/1416_state_set_affected_by_ground_speed", description = "#1416: state:set_affected_by_ground() not working on grounds that alter the speed" }
 map{ id = "bugs/1418_state_set_can_be_hurt", description = "#1418: state:set_can_be_hurt() not working with touching attack mode" }
+map{ id = "bugs/1419_crash_teletransporting_to_invalid_layer/map_1" }
+map{ id = "bugs/1419_crash_teletransporting_to_invalid_layer/map_2" }
 map{ id = "bugs/1423_crash_carried_without_shadow", description = "#1423: Crash when carrying an object without shadow sprite" }
 map{ id = "bugs/1424_rawget_rawset", description = "#1424: Add a rawget() function that works on Solarus userdata" }
 map{ id = "bugs/1428_movement_blocking", description = "#1428: straight movements blocking" }
@@ -91,6 +93,8 @@ map{ id = "bugs/1508_carried_object_height", description = "#1508 Acessing the i
 map{ id = "bugs/1524_push_delay", description = "!1359 Push state delay" }
 map{ id = "bugs/1526_destructible_cut_method", description = "#1526: destructible:get/set_cut_method()" }
 map{ id = "bugs/1527_entity_set_name", description = "#1527: entity:set_name()" }
+map{ id = "bugs/1533_savegame_write_escape", description = "#1533: Keyboard key binds are not escaped properly when savegame file is written" }
+map{ id = "bugs/1534_unicode_filenames", description = "#1534: Cyrillic or Chinese characters in filepath cause sol.file.open to return nil" }
 map{ id = "bugs/486_diagonal_dynamic_tiles", description = "#486: Wrong obstacles with diagonal dynamic tiles" }
 map{ id = "bugs/496_stream_speed_0", description = "#496: Allow streams to have a speed of zero" }
 map{ id = "bugs/526_get_entities_same_region", description = "#526: map:get_entities_in_same_region()" }
@@ -211,8 +215,10 @@ sprite{ id = "enemies/enemy_killed", description = "Enemy killed" }
 sprite{ id = "enemies/slime_green", description = "Green Slime" }
 sprite{ id = "enemies/test_enemy", description = "Test enemy" }
 sprite{ id = "entities/arrow", description = "Arrow" }
+sprite{ id = "entities/block", description = "Block (grey)" }
 sprite{ id = "entities/bomb", description = "Bomb" }
 sprite{ id = "entities/boomerang1", description = "Boomerang 1" }
+sprite{ id = "entities/chest", description = "Chest (brown)" }
 sprite{ id = "entities/crystal", description = "Crystal" }
 sprite{ id = "entities/crystal_block", description = "Crystal block" }
 sprite{ id = "entities/explosion", description = "Explosion" }
@@ -559,6 +565,10 @@ file{ path = "maps/bugs/1416_state_set_affected_by_ground_speed.dat", author = "
 file{ path = "maps/bugs/1416_state_set_affected_by_ground_speed.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1418_state_set_can_be_hurt.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1418_state_set_can_be_hurt.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1419_crash_teletransporting_to_invalid_layer/map_1.dat", author = "Christopho", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1419_crash_teletransporting_to_invalid_layer/map_1.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1419_crash_teletransporting_to_invalid_layer/map_2.dat", author = "Christopho", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1419_crash_teletransporting_to_invalid_layer/map_2.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1423_crash_carried_without_shadow.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1423_crash_carried_without_shadow.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1424_rawget_rawset.dat", author = "Cluedrew", license = "CC BY-SA 4.0" }
@@ -591,6 +601,10 @@ file{ path = "maps/bugs/1526_destructible_cut_method.dat", author = "Christopho"
 file{ path = "maps/bugs/1526_destructible_cut_method.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/1527_entity_set_name.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1527_entity_set_name.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/bugs/1533_savegame_write_escape.dat", author = "hhromic", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1533_savegame_write_escape.lua", author = "hhromic", license = "GPL v3" }
+file{ path = "maps/bugs/1534_unicode_filenames.dat", author = "hhromic", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1534_unicode_filenames.lua", author = "hhromic", license = "GPL v3" }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/496_stream_speed_0.dat", author = "Christopho", license = "CC BY-SA 4.0" }
@@ -939,8 +953,10 @@ file{ path = "sprites/enemies/test_enemy.dat", author = "Christopho", license = 
 file{ path = "sprites/entities", license = "CC BY-SA 4.0" }
 file{ path = "sprites/entities/arrow.dat", author = "Diarandor", license = "CC BY-SA 4.0" }
 file{ path = "sprites/entities/arrow.png", author = "Diarandor", license = "CC BY-SA 4.0" }
+file{ path = "sprites/entities/block.dat", author = "Diarandor", license = "CC BY-SA 4.0" }
 file{ path = "sprites/entities/bomb.dat", author = "Bertram, hyptosis", license = "CC BY-SA 4.0" }
 file{ path = "sprites/entities/boomerang1.dat", author = "Diarandor", license = "CC BY-SA 4.0" }
+file{ path = "sprites/entities/chest.dat", author = "Diarandor", license = "CC BY-SA 4.0" }
 file{ path = "sprites/entities/crystal.dat", author = "Alex Gleason", license = "CC BY-SA 4.0" }
 file{ path = "sprites/entities/crystal_block.dat", author = "Alex Gleason", license = "CC BY-SA 4.0" }
 file{ path = "sprites/entities/dark0.png", author = "Bertram", license = "CC BY-SA 4.0" }

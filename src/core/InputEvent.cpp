@@ -311,18 +311,23 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
       }
     }
 
-    //React to joystick connect and disconnect events
+    // React to joystick connect and disconnect events
     else if (internal_event.type == SDL_JOYDEVICEADDED) {
-      if(!joystick and joypad_enabled) {
+      if (joystick == nullptr and joypad_enabled) {
         // We had no joystick and one was connected! Try to open it.
         joystick = SDL_JoystickOpen(internal_event.jdevice.which);
-        Logger::info("Using joystick: \"" + std::string(SDL_JoystickName(joystick)) + "\"");
+        if (joystick == nullptr) {
+          Logger::error("Failed to open joystick");
+        } else {
+          const char* joystick_name = SDL_JoystickName(joystick);
+          Logger::info("Using joystick: '" + std::string(joystick_name ? joystick_name : "") + "'");
+        }
       }
     } else if (internal_event.type == SDL_JOYDEVICEREMOVED) {
-      if(joystick and joypad_enabled) {
+      if (joystick != nullptr and joypad_enabled) {
         // A joystick is disconnected, maybe it was our
         Sint32 id = internal_event.jdevice.which;
-        if(SDL_JoystickInstanceID(joystick) == id) {
+        if (SDL_JoystickInstanceID(joystick) == id) {
           Logger::info("Joystick disconnected");
           SDL_JoystickClose(joystick);
           joystick = nullptr;

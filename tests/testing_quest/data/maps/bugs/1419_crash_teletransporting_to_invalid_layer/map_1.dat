@@ -1,0 +1,37 @@
+properties{
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  min_layer = -1,
+  max_layer = 0,
+  tileset = "castle",
+}
+
+tile{
+  layer = -1,
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  pattern = "3",
+}
+
+teletransporter{
+  layer = -1,
+  x = 48,
+  y = 16,
+  width = 16,
+  height = 16,
+  transition = "immediate",
+  destination_map = "bugs/1419_crash_teletransporting_to_invalid_layer/map_2",
+}
+
+destination{
+  name = "destination",
+  layer = -1,
+  x = 24,
+  y = 29,
+  direction = 1,
+}
+

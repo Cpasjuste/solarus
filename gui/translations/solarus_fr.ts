@@ -113,54 +113,68 @@
     <message>
         <location filename="../src/main_window.ui" line="144"/>
         <location filename="../src/main_window.ui" line="147"/>
-        <location filename="../src/main_window.ui" line="704"/>
+        <location filename="../src/main_window.ui" line="705"/>
         <source>Remove quest</source>
         <translation>Retirer la quête</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="718"/>
+        <location filename="../src/main_window.ui" line="637"/>
+        <source>Options</source>
+        <translation>Options</translation>
+    </message>
+    <message>
+        <location filename="../src/main_window.ui" line="719"/>
         <source>Sound volume</source>
         <translation>Volume du son</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="723"/>
+        <location filename="../src/main_window.ui" line="724"/>
         <source>Music volume</source>
         <translation>Volume de la musique</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="731"/>
+        <location filename="../src/main_window.ui" line="732"/>
         <source>Fullscreen</source>
         <translation>Plein écran</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="734"/>
+        <location filename="../src/main_window.ui" line="735"/>
         <source>F11</source>
         <translation>F11</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="739"/>
+        <location filename="../src/main_window.ui" line="740"/>
         <source>x1</source>
         <translation>x1</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="744"/>
+        <location filename="../src/main_window.ui" line="745"/>
         <source>x2</source>
         <translation>x2</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="749"/>
+        <location filename="../src/main_window.ui" line="750"/>
         <source>x3</source>
         <translation>x3</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="754"/>
+        <location filename="../src/main_window.ui" line="755"/>
         <source>x4</source>
         <translation>x4</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="775"/>
-        <source>Force Software</source>
+        <location filename="../src/main_window.ui" line="763"/>
+        <source>Suspend when unfocused</source>
+        <translation>Suspendre si la fenêtre perd le focus</translation>
+    </message>
+    <message>
+        <location filename="../src/main_window.ui" line="784"/>
+        <source>Force software rendering</source>
         <translation>Forcer le rendu software</translation>
+    </message>
+    <message>
+        <source>Force Software</source>
+        <translation type="vanished">Forcer le rendu software</translation>
     </message>
     <message>
         <source>None</source>
@@ -187,18 +201,18 @@
         <translation type="vanished">Accélération 2D</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="762"/>
+        <location filename="../src/main_window.ui" line="771"/>
         <source>Mute</source>
         <translation>Muet</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="767"/>
+        <location filename="../src/main_window.ui" line="776"/>
         <source>About</source>
         <translation>À propos</translation>
     </message>
     <message>
         <location filename="../src/main_window.ui" line="398"/>
-        <location filename="../src/main_window.ui" line="692"/>
+        <location filename="../src/main_window.ui" line="693"/>
         <source>Play</source>
         <translation>Jouer</translation>
     </message>
@@ -223,14 +237,13 @@
     </message>
     <message>
         <location filename="../src/main_window.ui" line="112"/>
-        <location filename="../src/main_window.ui" line="678"/>
+        <location filename="../src/main_window.ui" line="679"/>
         <source>Add quest...</source>
         <translation>Ajouter une quête...</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="637"/>
         <source>Video</source>
-        <translation>Vidéo</translation>
+        <translation type="vanished">Vidéo</translation>
     </message>
     <message>
         <location filename="../src/main_window.ui" line="641"/>
@@ -242,27 +255,27 @@
         <translation type="vanished">Filtre vidéo</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="654"/>
+        <location filename="../src/main_window.ui" line="655"/>
         <source>Audio</source>
         <translation>Audio</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="662"/>
+        <location filename="../src/main_window.ui" line="663"/>
         <source>Help</source>
         <translation>Aide</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="683"/>
+        <location filename="../src/main_window.ui" line="684"/>
         <source>Exit</source>
         <translation>Quitter</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="695"/>
+        <location filename="../src/main_window.ui" line="696"/>
         <source>F5</source>
         <translation>F5</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="713"/>
+        <location filename="../src/main_window.ui" line="714"/>
         <source>Stop</source>
         <translation>Arrêter</translation>
     </message>
@@ -271,22 +284,22 @@
         <translation type="vanished">Solarus %1</translation>
     </message>
     <message>
-        <location filename="../src/main_window.cpp" line="250"/>
+        <location filename="../src/main_window.cpp" line="261"/>
         <source>A quest is playing</source>
         <translation>Une quête est en cours</translation>
     </message>
     <message>
-        <location filename="../src/main_window.cpp" line="251"/>
+        <location filename="../src/main_window.cpp" line="262"/>
         <source>A quest is playing. Do you really want to exit Solarus?</source>
         <translation>Une quête est en cours. Voulez-vous vraiment quitter Solarus ?</translation>
     </message>
     <message>
-        <location filename="../src/main_window.cpp" line="278"/>
+        <location filename="../src/main_window.cpp" line="289"/>
         <source>Select archive or quest.dat</source>
         <translation>Sélectionnez une archive ou quest.dat</translation>
     </message>
     <message>
-        <location filename="../src/main_window.cpp" line="286"/>
+        <location filename="../src/main_window.cpp" line="297"/>
         <source>No quest was found in this directory</source>
         <translation>Aucune quête n&apos;a été trouvée dans ce dossier</translation>
     </message>
@@ -306,12 +319,12 @@
 <context>
     <name>SolarusGui::QuestRunner</name>
     <message>
-        <location filename="../src/quest_runner.cpp" line="159"/>
+        <location filename="../src/quest_runner.cpp" line="165"/>
         <source>Failed to run quest</source>
         <translation>Le lancement de la quête a échoué</translation>
     </message>
     <message>
-        <location filename="../src/quest_runner.cpp" line="160"/>
+        <location filename="../src/quest_runner.cpp" line="166"/>
         <source>Cannot start quest process: no program name</source>
         <translation>Impossible de démarrer le processus de la quête : nom du programme manquant</translation>
     </message>

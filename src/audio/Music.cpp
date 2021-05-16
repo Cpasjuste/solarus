@@ -29,6 +29,7 @@
 namespace Solarus {
 
 constexpr int Music::nb_buffers;
+constexpr int Music::buffer_size;
 std::unique_ptr<SpcDecoder> Music::spc_decoder = nullptr;
 std::unique_ptr<ItDecoder> Music::it_decoder = nullptr;
 std::unique_ptr<OggDecoder> Music::ogg_decoder = nullptr;
@@ -155,7 +156,7 @@ void Music::set_volume(int volume) {
   volume = std::min(100, std::max(0, volume));
   Music::volume = volume / 100.0;
 
-  if (current_music != nullptr) {
+  if (current_music != nullptr && current_music->source != AL_NONE) {
     alSourcef(current_music->source, AL_GAIN, Music::volume);
   }
 }
@@ -411,6 +412,11 @@ void Music::update() {
  */
 bool Music::update_playing() {
 
+  if (alcGetCurrentContext() == nullptr) {
+    // Device disconnected.
+    return true;
+  }
+
   // Get the empty buffers.
   ALint nb_empty;
   alGetSourcei(source, AL_BUFFERS_PROCESSED, &nb_empty);
@@ -424,15 +430,15 @@ bool Music::update_playing() {
     switch (format) {
 
       case SPC:
-        decode_spc(buffer, 16384);
+        decode_spc(buffer, buffer_size);
         break;
 
       case IT:
-        decode_it(buffer, 16384);
+        decode_it(buffer, buffer_size);
         break;
 
       case OGG:
-        decode_ogg(buffer, 16384);
+        decode_ogg(buffer, buffer_size);
         break;
 
       case NO_FORMAT:
@@ -453,6 +459,71 @@ bool Music::update_playing() {
 
   alGetSourcei(source, AL_SOURCE_STATE, &status);
   return status == AL_PLAYING;
+}
+
+/**
+ * \brief Notifies the music system that the audio device was disconnected.
+ */
+void Music::notify_device_disconnected_all() {
+
+  if (current_music != nullptr) {
+    current_music->notify_device_disconnected();
+  }
+}
+
+/**
+ * \brief Notifies this music system that the audio device was disconnected.
+ */
+void Music::notify_device_disconnected() {
+
+  // All sources and buffers are already destroyed by OpenAL at this point.
+  source = AL_NONE;
+  for (int i = 0; i < nb_buffers; ++i) {
+    buffers[i] = AL_NONE;
+  }
+}
+
+/**
+ * \brief Notifies the music system that an audio device was reconnected.
+ */
+void Music::notify_device_reconnected_all() {
+
+  if (current_music != nullptr) {
+    current_music->notify_device_reconnected();
+  }
+}
+
+void Music::notify_device_reconnected() {
+
+  if (buffers[0] == AL_NONE) {
+    // Recreate a source and buffers.
+    alGenBuffers(nb_buffers, buffers);
+    alGenSources(1, &source);
+    alSourcef(source, AL_GAIN, volume);
+
+    // Continue playing music.
+    // Buffer data that was already decoded to buffers before the
+    // disconnection is lost, so we actually skipped a short period of time.
+    for (int i = 0; i < nb_buffers; i++) {
+      ALuint buffer = buffers[i];
+      switch (format) {
+        case SPC:
+          decode_spc(buffer, buffer_size);
+          break;
+        case IT:
+          decode_it(buffer, buffer_size);
+          break;
+        case OGG:
+          decode_ogg(buffer, buffer_size);
+          break;
+        case NO_FORMAT:
+          Debug::die("Invalid music format");
+          break;
+      }
+      alSourceQueueBuffers(source, 1, &buffer);
+    }
+    alSourcePlay(source);
+  }
 }
 
 /**
@@ -560,7 +631,7 @@ bool Music::start() {
       spc_decoder->load((int16_t*) sound_buffer.data(), sound_buffer.size());
 
       for (int i = 0; i < nb_buffers; i++) {
-        decode_spc(buffers[i], 16384);
+        decode_spc(buffers[i], buffer_size);
       }
       break;
 
@@ -572,7 +643,7 @@ bool Music::start() {
       it_decoder->load(sound_buffer);
 
       for (int i = 0; i < nb_buffers; i++) {
-        decode_it(buffers[i], 16384);
+        decode_it(buffers[i], buffer_size);
       }
       break;
 
@@ -584,7 +655,7 @@ bool Music::start() {
       success = ogg_decoder->load(std::move(sound_buffer), this->loop);
       if (success) {
         for (int i = 0; i < nb_buffers; i++) {
-          decode_ogg(buffers[i], 16384);
+          decode_ogg(buffers[i], buffer_size);
         }
       }
       break;
@@ -639,7 +710,6 @@ void Music::stop() {
   for (int i = 0; i < nb_queued; i++) {
     alSourceUnqueueBuffers(source, 1, &buffer);
   }
-  alSourcei(source, AL_BUFFER, 0);
 
   // delete the source
   alDeleteSources(1, &source);
@@ -712,4 +782,3 @@ void Music::set_callback(const ScopedLuaRef& callback_ref) {
 }
 
 }
-

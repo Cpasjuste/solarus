@@ -26,7 +26,7 @@ called `data.solarus` or `data.solarus.zip` and containing all the data
 files of the quest (graphics, musics, sounds, scripts, dialogs, etc.).
 A short sample quest is provided in the directory `sample_quest`.
 
-Our quests can be found on the website: http://www.solarus-games.org
+Our quests can be found on the website: https://www.solarus-games.org
 
 The project is separated in two parts: **Solarus** and the **Solarus GUI**.
 
@@ -64,7 +64,7 @@ probably with other recent compilers (please let us know).
 
 The following libraries are required to compile and execute Solarus:
 
-- SDL2 (2.0.6 or greater)
+- SDL2 (2.0.6 or greater, but 2.0.10 should be avoided)
 - SDL2main
 - SDL2_image
 - SDL2_ttf
@@ -82,8 +82,12 @@ an SPC (Nintendo SNES) music decoding library.
 
 #### About SDL2
 
-SDL 2.0.2 is buggy (you will get broken graphics or even a black screen).
+SDL 2.0.2 is buggy, you will get broken graphics or even a black screen.
 You need at least SDL 2.0.6.
+
+SDL 2.0.10 is also buggy, you will get PNG file transparency issues.
+It is highly recommended to avoid it.
+More info [here](https://discourse.libsdl.org/t/will-be-solved-in-2-0-11-png-w-transparency-breaks-in-sdl-2-0-10-but-works-in-sdl-2-0-9).
 
 #### About Qt5
 
@@ -348,7 +352,7 @@ cmake \
 
 If you wish to deploy a quest on non-developer environment with a standalone
 bundle, the better way is to use the Solarus package provided on
-<http://www.solarus-games.org/> and use a post-build script to replace the
+<https://www.solarus-games.org/> and use a post-build script to replace the
 `Solarus-run.app/Contents/Resources/solarus-run` and
 `Solarus-run.app/Contents/Frameworks/libsolarus.dylib` files by the ones
 just compiled.
