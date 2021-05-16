@@ -640,6 +640,7 @@ void Game::draw(const SurfacePtr& dst_surface, const SurfacePtr& screen_surface)
 
         //Video::render(camera_surface);
 #else
+        (void)screen_surface;
         camera_surface->draw(dst_surface, camera->get_position_on_screen());
 #endif
       }

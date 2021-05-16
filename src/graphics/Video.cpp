@@ -346,6 +346,15 @@ void hide_window() {
 }
 
 /**
+ * @brief Clear the clean surface if any
+ */
+void clear_screen_surface() {
+  if(!context.disable_window) {
+    context.screen_surface->clear();
+  }
+}
+
+/**
  * \brief Draws the quest surface on the screen with the current video mode.
  * \param quest_surface The quest surface to render on the screen.
  */
@@ -985,6 +994,9 @@ Point renderer_to_quest_coordinates(
 uint64_t get_display_period_ns() {
   SDL_DisplayMode mode;
   SDL_GetWindowDisplayMode(context.main_window, &mode);
+  if(mode.refresh_rate == 0) {
+    return 1000000000 / 60;
+  }
   return 1000000000 / mode.refresh_rate;
 }
 

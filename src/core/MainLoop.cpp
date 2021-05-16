@@ -669,7 +669,7 @@ void MainLoop::notify_input(const InputEvent& event) {
 void MainLoop::draw() {
   SOL_PFUN();
   root_surface->clear();
-  Video::get_screen_surface()->clear();
+  Video::clear_screen_surface();
 
   if (game != nullptr) {
     game->draw(root_surface, Video::get_screen_surface());

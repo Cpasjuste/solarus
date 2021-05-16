@@ -567,40 +567,6 @@ Rectangle Camera::apply_separators_and_map_bounds(const Rectangle& area) const {
   return apply_map_bounds(apply_separators(area));
 }
 
-#ifdef SOLARUS_SUBPIXEL_CAMERA
-/**
- * @brief Camera::update
- */
-/*void Camera::update() {
-  Point last_pos = get_bounding_box().get_top_left();
-  Entity::update();
-
-  Point delta = get_bounding_box().get_top_left() - last_pos;
-  if(delta.x || delta.y) {
-    auto now = System::now_ns();
-    if(std::max(std::abs(delta.x), std::abs(delta.y)) > 20) {
-      subpixel_move_speed = {0.f,0.f};
-      last_move_time = now;
-    } else {
-      uint64_t dt = (now - last_move_time);
-      float dt_s = dt / 1000000000.f;
-
-      //Compute current subpixel pos
-      float to_go_s = (subpixel_move_target_time - now) / 1000000000.f;
-      glm::vec2 previous_delta = subpixel_move_target_time > now ? to_go_s * subpixel_move_speed : glm::vec2{0.f,0.f};
-
-      //Actual move
-      subpixel_move_speed = (glm::vec2(delta)+previous_delta) / dt_s;
-
-      std::cout << subpixel_move_speed.x << " " << subpixel_move_speed.y << std::endl;
-
-      subpixel_move_target_time = now+dt;
-      last_move_time = now;
-      last_pos = get_bounding_box().get_top_left();
-    }
-  }
-}*/
-
 void Camera::set_subpixel_offset(const glm::vec2 &offset) {
   subpixel_offset = offset;
 }
@@ -610,5 +576,4 @@ Point Camera::get_position_on_screen(Scale px_scale) const {
   return get_position_on_screen()*px_scale + Point(std::roundf(delta.x), std::roundf(delta.y));
 }
 
-#endif
 }

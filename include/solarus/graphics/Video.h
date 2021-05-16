@@ -116,6 +116,7 @@ namespace Video {
     Point output_to_quest_coordinates(const Point& output_xy);
     Point renderer_to_quest_coordinates(const Point& renderer_xy);
 
+    void clear_screen_surface();
     void render(const SurfacePtr& quest_surface);
     void finish();
 
