@@ -1,4 +1,0 @@
-shader{
-  vertex_file = "6xbrz.vert.glsl",
-  fragment_file = "6xbrz.frag.glsl",
-}
