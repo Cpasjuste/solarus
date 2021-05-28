@@ -46,7 +46,7 @@ TransitionScrolling::TransitionScrolling(Transition::Direction direction):
 Rectangle TransitionScrolling::get_previous_map_dst_position(
     int scrolling_direction) {
 
-  const Surface* previous_map_surface = get_previous_surface();
+  const SurfacePtr& previous_map_surface = get_previous_surface();
   Debug::check_assertion(previous_map_surface != nullptr, "Missing previous surface for scrolling");
   const Size& camera_size = previous_map_surface->get_size();
 
@@ -72,15 +72,11 @@ void TransitionScrolling::start() {
     return;
   }
 
-  const Game* game = get_game();
-  Debug::check_assertion(game != nullptr, "Missing game for scrolling transition");
-  const Surface* previous_map_surface = get_previous_surface();
+  const SurfacePtr& previous_map_surface = get_previous_surface();
   Debug::check_assertion(previous_map_surface != nullptr, "Missing previous surface for scrolling");
 
-  const Map& map = get_game()->get_current_map();
-
   // get the scrolling direction
-  scrolling_direction = (map.get_destination_side() + 2) % 4;
+  scrolling_direction = (get_destination_side() + 2) % 4;
 
   const int scrolling_step = 5;
 
@@ -211,9 +207,15 @@ void TransitionScrolling::draw(Surface& dst_surface, const Surface &src_surface,
     return;
   }
 
-  Surface* previous_surface = get_previous_surface();
+  const SurfacePtr& previous_surface = get_previous_surface();
   Debug::check_assertion(previous_surface != nullptr,
       "No previous surface defined for scrolling");
+
+  Rectangle dst = infos.dst_rectangle();
+
+  Rectangle previous_viewport = dst_surface.get_viewport();
+
+  dst_surface.set_viewport(dst);
 
   // draw the old map
   infos.proxy.draw(dst_surface,*previous_surface,
@@ -226,5 +228,7 @@ void TransitionScrolling::draw(Surface& dst_surface, const Surface &src_surface,
                    DrawInfos(infos,
                              Rectangle(Point(),src_surface.get_size()),
                              current_map_dst_position.get_xy()-current_scrolling_position.get_xy()));
+
+  dst_surface.set_viewport(previous_viewport);
 }
 }

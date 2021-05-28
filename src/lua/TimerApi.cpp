@@ -412,7 +412,7 @@ int LuaContext::timer_api_start(lua_State *l) {
 
       Game* game = lua_context.get_main_loop().get_game();
       if (game != nullptr && game->has_current_map()) {
-        push_map(l, game->get_current_map());
+        push_map(l, game->get_default_map()); //TODO verify is default map is okay....
       }
       else {
         push_main(l);
@@ -580,7 +580,7 @@ int LuaContext::timer_api_set_suspended_with_map(lua_State* l) {
         game->has_current_map() &&
         suspended_with_map) {
       // If the game is running, suspend/resume the timer like the map.
-      timer->set_suspended(game->get_current_map().is_suspended());
+      timer->set_suspended(game->is_suspended()); //TODO check if correct
     }
 
     return 0;

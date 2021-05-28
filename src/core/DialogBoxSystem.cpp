@@ -148,13 +148,13 @@ void DialogBoxSystem::open(
 
       // Determine the position.
       bool top = false;
-      const CameraPtr& camera = game.get_current_map().get_camera();
+      /*const CameraPtr& camera = game.get_current_map().get_camera();
       if (camera != nullptr) {
         const Rectangle& camera_position = camera->get_bounding_box();
         if (game.get_hero()->get_y() >= camera_position.get_y() + 130) {
           top = true;
         }
-      }
+      }*/ //TODO redo this for multiples heroes !!
 
       const Size& quest_size = Video::get_quest_size();
       int x = quest_size.width / 2 - 110;
@@ -267,7 +267,7 @@ void DialogBoxSystem::show_more_lines() {
  * \return \c true if the command was handled (that is, if the dialog box
  * is active and is the built-in one).
  */
-bool DialogBoxSystem::notify_command_pressed(GameCommand command) {
+bool DialogBoxSystem::notify_command_pressed(CommandId command) {
 
   if (!is_enabled()) {
     return false;
@@ -278,10 +278,10 @@ bool DialogBoxSystem::notify_command_pressed(GameCommand command) {
     return false;
   }
 
-  if (command == GameCommand::ACTION) {
+  if (command == CommandId::ACTION) {
     show_more_lines();
   }
-  else if (command == GameCommand::UP || command == GameCommand::DOWN) {
+  else if (command == CommandId::UP || command == CommandId::DOWN) {
     if (is_question && !has_more_lines()) {
       // Switch the selected answer.
       selected_first_answer = !selected_first_answer;

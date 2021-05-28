@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2018-2020 std::gregwar, Solarus - http://www.solarus-games.org
+ *
+ * Solarus is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Solarus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #pragma once
 
 #include <solarus/graphics/Renderer.h>
@@ -51,6 +67,7 @@ public:
   void draw(SurfaceImpl& dst, const SurfaceImpl& src, const DrawInfos& infos) override;
   void clear(SurfaceImpl& dst) override;
   void fill(SurfaceImpl& dst, const Color& color, const Rectangle& where, BlendMode mode = BlendMode::BLEND) override;
+  void notify_target_changed(const SurfaceImpl& surf) override;
   void invalidate(const SurfaceImpl& surf) override;
   std::string get_name() const override;
   void present(SDL_Window* window) override;
@@ -90,8 +107,11 @@ private:
   size_t buffered_indices() const;
   size_t buffered_vertices() const;
   Fbo* get_fbo(int width, int height, bool screen = false);
+  void setup_viewport(GlTexture* target);
 
   void shader_about_to_change(GlShader* shader);
+
+  const glm::mat4& dst_mvp(GlTexture* dst) const;
 
   static GlRenderer* instance;
   SDL_GLContext sdl_gl_context;

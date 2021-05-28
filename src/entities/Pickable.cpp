@@ -234,8 +234,10 @@ void Pickable::notify_created() {
   notify_ground_below_changed();  // Necessary if on empty ground.
 
   // This entity and the map are now both ready. Notify the Lua item.
-  EquipmentItem& item = get_equipment().get_item(treasure.get_item_name());
-  item.notify_pickable_appeared(*this);
+  for_each_hero([&](const HeroPtr& hero) {
+    EquipmentItem& item = hero->get_equipment().get_item(treasure.get_item_name());
+    item.notify_pickable_appeared(*this);
+  });
 }
 
 /**
@@ -300,7 +302,7 @@ bool Pickable::is_stream_obstacle(Stream& /* stream */) {
 void Pickable::notify_collision(Entity& entity_overlapping, CollisionMode /* collision_mode */) {
 
   if (entity_overlapping.is_hero()) {
-    try_give_item_to_player();
+    try_give_item_to_player(entity_overlapping.as<Hero>());
   }
   else if (entity_followed == nullptr) {
 
@@ -347,9 +349,9 @@ void Pickable::notify_collision(
 
   // Taking the item with the sword.
   if (other_entity.is_hero()) {
-    Hero& hero = static_cast<Hero&>(other_entity);
+    Hero& hero = other_entity.as<Hero>();
     if (other_sprite.get_animation_set_id() == hero.get_hero_sprites().get_sword_sprite_id()) {
-      try_give_item_to_player();
+      try_give_item_to_player(hero);
     }
   }
 }
@@ -442,14 +444,14 @@ void Pickable::check_bad_ground() {
 /**
  * \brief Gives the item to the player.
  */
-void Pickable::try_give_item_to_player() {
+void Pickable::try_give_item_to_player(Hero& hero) {
 
   EquipmentItem& item = treasure.get_item();
 
   if (!can_be_picked
       || given_to_player
       || get_game().is_dialog_enabled()
-      || !get_hero().can_pick_treasure(item)) {
+      || !hero.can_pick_treasure(item)) {
     return;
   }
 
@@ -467,7 +469,7 @@ void Pickable::try_give_item_to_player() {
   if (item.get_brandish_when_picked()) {
     // The treasure is brandished.
     // on_obtained() will be called after the dialog.
-    get_hero().start_treasure(treasure, ScopedLuaRef());
+    hero.start_treasure(treasure, ScopedLuaRef());
   }
   else {
     treasure.give_to_player();
@@ -560,8 +562,11 @@ void Pickable::update() {
         entity_followed->get_type() == EntityType::HOOKSHOT) {
       // The pickable may have been dropped by the boomerang/hookshot
       // not exactly on the hero so let's fix this.
-      if (get_distance(get_hero()) < 16) {
-        try_give_item_to_player();
+      auto res = find_hero([&](const HeroPtr& hero){
+        return get_distance(*hero) < 16;
+      });
+      if (res.first) {
+        try_give_item_to_player(**res.second);
       }
     }
     entity_followed = nullptr;
@@ -578,7 +583,9 @@ void Pickable::update() {
     if (!can_be_picked && now >= allow_pick_date) {
       can_be_picked = true;
       falling_height = FALLING_NONE;
-      get_hero().check_collision_with_detectors();
+      for(const HeroPtr& hero: get_heroes()) {
+        hero->check_collision_with_detectors();
+      }
     }
     else {
       // make the item blink and then disappear

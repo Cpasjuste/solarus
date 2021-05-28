@@ -178,6 +178,12 @@ map{ id = "custom_state/pushing", description = "get/set_can_push(), get/set_pus
 map{ id = "custom_state/reuse_state", description = "Using the same state object a second time" }
 map{ id = "dynamic_tile_tests", description = "Dynamic tile tests" }
 map{ id = "jumper_tests", description = "Jumper tests" }
+map{ id = "multiplayer/cameras", description = "Test multi cameras" }
+map{ id = "multiplayer/cameras2", description = "Second map for the cameras" }
+map{ id = "multiplayer/friendly_fire", description = "Friendly Fire" }
+map{ id = "multiplayer/heroes", description = "Multiple heroes test" }
+map{ id = "multiplayer/heroes2", description = "Second heroes map" }
+map{ id = "multiplayer/heroes_game_over", description = "Heroes Transitions" }
 map{ id = "oriented_collisions", description = "Test rotation and scaled collisions" }
 map{ id = "surface_tests", description = "Surface tests" }
 map{ id = "teletransportation_tests/main", description = "Main map" }
@@ -772,6 +778,18 @@ file{ path = "maps/dynamic_tile_tests.dat", author = "Christopho", license = "CC
 file{ path = "maps/dynamic_tile_tests.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/jumper_tests.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/jumper_tests.lua", author = "Christopho", license = "GPL v3" }
+file{ path = "maps/multiplayer/cameras.dat", author = "stdgregwar", license = "CC BY-SA" }
+file{ path = "maps/multiplayer/cameras.lua", author = "stdgregwar", license = "CC BY-SA" }
+file{ path = "maps/multiplayer/cameras2.dat", author = "stdgregwar", license = "CC BY-SA 4.0" }
+file{ path = "maps/multiplayer/cameras2.lua", author = "stdgregwar", license = "CC BY-SA 4.0" }
+file{ path = "maps/multiplayer/friendly_fire.dat", author = "std::gregwar", license = "GPLv3" }
+file{ path = "maps/multiplayer/friendly_fire.lua", author = "std::gregwar", license = "GPLv3" }
+file{ path = "maps/multiplayer/heroes.dat", author = "stdgregwar", license = "CC BY-SA" }
+file{ path = "maps/multiplayer/heroes.lua", author = "stdgregwar", license = "CC BY-SA" }
+file{ path = "maps/multiplayer/heroes2.dat", author = "stdgregwar", license = "CC-BY-SA" }
+file{ path = "maps/multiplayer/heroes2.lua", author = "stdgregwar", license = "CC-BY-SA" }
+file{ path = "maps/multiplayer/heroes_game_over.dat", author = "stdgregwar", license = "CC by SA" }
+file{ path = "maps/multiplayer/heroes_game_over.lua", author = "stdgregwar", license = "CC by SA" }
 file{ path = "maps/oriented_collisions.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/oriented_collisions.lua", author = "std::gregwar", license = "GPL v3" }
 file{ path = "maps/surface_tests.dat", author = "Christopho", license = "CC BY-SA 4.0" }

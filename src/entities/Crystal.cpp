@@ -108,19 +108,19 @@ void Crystal::notify_collision(Entity& other_entity, Sprite& this_sprite, Sprite
 /**
  * \copydoc Entity::notify_action_command_pressed
  */
-bool Crystal::notify_action_command_pressed() {
+bool Crystal::notify_action_command_pressed(Hero& hero) {
 
-  if (get_hero().is_free() &&
-      get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_LOOK
+  if (hero.is_free() &&
+      hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_LOOK
   ) {
-    get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
+    hero.get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
 
     // start a dialog
     get_game().start_dialog("_crystal", ScopedLuaRef(), ScopedLuaRef());
     return true;
   }
 
-  return Entity::notify_action_command_pressed();
+  return Entity::notify_action_command_pressed(hero);
 }
 
 /**

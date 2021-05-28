@@ -140,14 +140,14 @@ bool EntityTypeInfo::can_be_created_from_lua_api(EntityType type) {
   case EntityType::SWITCH:
   case EntityType::TELETRANSPORTER:
   case EntityType::WALL:
+  case EntityType::HERO:
     // These ones can be created by scripts.
     return true;
 
   case EntityType::ARROW:
   case EntityType::BOOMERANG:
-  case EntityType::CAMERA:
   case EntityType::CARRIED_OBJECT:
-  case EntityType::HERO:
+  case EntityType::CAMERA:
   case EntityType::HOOKSHOT:
   case EntityType::TILE:
     // These ones are only created by the engine.

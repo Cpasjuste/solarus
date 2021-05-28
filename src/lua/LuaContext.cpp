@@ -1116,6 +1116,8 @@ void LuaContext::register_modules() {
   register_menu_module();
   register_language_module();
   register_state_module();
+  register_joypad_module();
+  register_controls_module();
 
   Debug::check_assertion(lua_gettop(current_l) == 0,
       "Lua stack is not empty after modules initialization");
@@ -1601,6 +1603,7 @@ void LuaContext::check_callback_thread() const {
   Debug::check_assertion(current_l == main_l, "Events should be called in the main Lua thread");
 }
 
+
 /**
  * \brief Calls the on_started() method of the object on top of the stack.
  */
@@ -1754,10 +1757,15 @@ void LuaContext::on_dialog_finished(const Dialog& dialog) {
 /**
  * \brief Calls the on_game_over_started() method of the object on top of the stack.
  */
-bool LuaContext::on_game_over_started() {
+bool LuaContext::on_game_over_started(const HeroPtr& hero) {
   check_callback_thread();
   if (find_method("on_game_over_started")) {
-    call_function(1, 0, "on_game_over_started");
+    if(hero) {
+      push_hero(current_l, *hero);
+    } else {
+      lua_pushnil(current_l);
+    }
+    call_function(2, 0, "on_game_over_started");
     return true;
   }
   return false;
@@ -1766,10 +1774,15 @@ bool LuaContext::on_game_over_started() {
 /**
  * \brief Calls the on_game_over_finished() method of the object on top of the stack.
  */
-void LuaContext::on_game_over_finished() {
+void LuaContext::on_game_over_finished(const HeroPtr& hero) {
   check_callback_thread();
   if (find_method("on_game_over_finished")) {
-    call_function(1, 0, "on_game_over_finished");
+    if(hero) {
+      push_hero(current_l, *hero);
+    } else {
+      lua_pushnil(current_l);
+    }
+    call_function(2, 0, "on_game_over_finished");
   }
 }
 
@@ -1954,10 +1967,11 @@ bool LuaContext::on_joypad_button_pressed(const InputEvent& event) {
   check_callback_thread();
   bool handled = false;
   if (find_method("on_joypad_button_pressed")) {
-    int button = event.get_joypad_button();
+    JoyPadButton button = event.get_joypad_button();
 
-    lua_pushinteger(current_l, button);
-    bool success = call_function(2, 1, "on_joypad_button_pressed");
+    push_string(current_l, enum_to_name(button));
+    push_joypad(current_l, *event.get_joypad());
+    bool success = call_function(3, 1, "on_joypad_button_pressed");
     if (!success) {
       // Something was wrong in the script: don't propagate the input to other objects.
       handled = true;
@@ -1980,10 +1994,11 @@ bool LuaContext::on_joypad_button_released(const InputEvent& event) {
   check_callback_thread();
   bool handled = false;
   if (find_method("on_joypad_button_released")) {
-    int button = event.get_joypad_button();
+    JoyPadButton button = event.get_joypad_button();
 
-    lua_pushinteger(current_l, button);
-    bool success = call_function(2, 1, "on_joypad_button_released");
+    push_string(current_l, enum_to_name(button));
+    push_joypad(current_l, *event.get_joypad());
+    bool success = call_function(3, 1, "on_joypad_button_released");
     if (!success) {
       // Something was wrong in the script: don't propagate the input to other objects.
       handled = true;
@@ -2006,12 +2021,13 @@ bool LuaContext::on_joypad_axis_moved(const InputEvent& event) {
   check_callback_thread();
   bool handled = false;
   if (find_method("on_joypad_axis_moved")) {
-    int axis = event.get_joypad_axis();
-    int state = event.get_joypad_axis_state();
+    JoyPadAxis axis = event.get_joypad_axis();
+    double state = event.get_joypad_axis_state();
 
-    lua_pushinteger(current_l, axis);
-    lua_pushinteger(current_l, state);
-    bool success = call_function(3, 1, "on_joypad_axis_moved");
+    push_string(current_l, enum_to_name(axis));
+    lua_pushnumber(current_l, state);
+    push_joypad(current_l, *event.get_joypad());
+    bool success = call_function(4, 1, "on_joypad_axis_moved");
     if (!success) {
       // Something was wrong in the script: don't propagate the input to other objects.
       handled = true;
@@ -2039,7 +2055,8 @@ bool LuaContext::on_joypad_hat_moved(const InputEvent& event) {
 
     lua_pushinteger(current_l, hat);
     lua_pushinteger(current_l, direction8);
-    bool success = call_function(3, 1, "on_joypad_hat_moved");
+    push_joypad(current_l, *event.get_joypad());
+    bool success = call_function(4, 1, "on_joypad_hat_moved");
     if (!success) {
       // Something was wrong in the script: don't propagate the input to other objects.
       handled = true;
@@ -2229,37 +2246,22 @@ bool LuaContext::on_finger_moved(const InputEvent& event) {
 }
 
 /**
- * \brief Calls the on_command_pressed() method of the object on top of the stack.
- * \param command The game command just pressed.
+ * @brief Notify the object on top of the stack that a command event happended
+ * @param event the command event
+ * @return
  */
-bool LuaContext::on_command_pressed(GameCommand command) {
+bool LuaContext::on_command(const ControlEvent& event) {
   check_callback_thread();
   bool handled = false;
-  if (find_method("on_command_pressed")) {
-    push_string(current_l, GameCommands::get_command_name(command));
-    bool success = call_function(2, 1, "on_command_pressed");
-    if (!success) {
-      // Something was wrong in the script: don't propagate the command to other objects.
-      handled = true;
-    }
-    else {
-      handled = lua_toboolean(current_l, -1);
-      lua_pop(current_l, 1);
-    }
-  }
-  return handled;
-}
+  if (find_method(event.event_name())) {
+    push_string(current_l, event.get_command_or_axis_name());
 
-/**
- * \brief Calls the on_command_released() method of the object on top of the stack.
- * \param command The game command just pressed.
- */
-bool LuaContext::on_command_released(GameCommand command) {
-  check_callback_thread();
-  bool handled = false;
-  if (find_method("on_command_released")) {
-    push_string(current_l, GameCommands::get_command_name(command));
-    bool success = call_function(2, 1, "on_command_released");
+    if(event.is_moved()) {
+        lua_pushnumber(current_l, event.get_axis_state());
+    }
+
+    push_controls(current_l, *event.emitter); //Push emmiting commands as well
+    bool success = call_function(event.is_moved() ? 4 : 3, 1, event.event_name());
     if (!success) {
       // Something was wrong in the script: don't propagate the command to other objects.
       handled = true;
@@ -2495,10 +2497,15 @@ void LuaContext::on_activating(int direction) {
 /**
  * \brief Calls the on_activated() method of the object on top of the stack.
  */
-void LuaContext::on_activated() {
+void LuaContext::on_activated(Entity *opt_entity) {
   check_callback_thread();
   if (find_method("on_activated")) {
-    call_function(1, 0, "on_activated");
+      if(opt_entity) {
+          push_entity(current_l, *opt_entity);
+      } else {
+          lua_pushnil(current_l);
+      }
+      call_function(2, 0, "on_activated");
   }
 }
 
@@ -2517,30 +2524,41 @@ void LuaContext::on_activated(int direction) {
 /**
  * \brief Calls the on_inactivated_repeat() method of the object on top of the stack.
  */
-void LuaContext::on_activated_repeat() {
+void LuaContext::on_activated_repeat(Entity& entity) {
   check_callback_thread();
   if (find_method("on_activated_repeat")) {
-    call_function(1, 0, "on_activated_repeat");
+    push_entity(current_l, entity);
+    call_function(2, 0, "on_activated_repeat");
   }
 }
 
 /**
  * \brief Calls the on_inactivated() method of the object on top of the stack.
  */
-void LuaContext::on_inactivated() {
+void LuaContext::on_inactivated(Entity* opt_entity) {
   check_callback_thread();
   if (find_method("on_inactivated")) {
-    call_function(1, 0, "on_inactivated");
+    if(opt_entity) {
+        push_entity(current_l, *opt_entity);
+    } else {
+        lua_pushnil(current_l);
+    }
+    call_function(2, 0, "on_inactivated");
   }
 }
 
 /**
  * \brief Calls the on_left() method of the object on top of the stack.
  */
-void LuaContext::on_left() {
+void LuaContext::on_left(Entity* opt_entity) {
   check_callback_thread();
   if (find_method("on_left")) {
-    call_function(1, 0, "on_left");
+      if(opt_entity) {
+          push_entity(current_l, *opt_entity);
+      } else {
+          lua_pushnil(current_l);
+      }
+    call_function(2, 0, "on_left");
   }
 }
 
@@ -2757,11 +2775,13 @@ void LuaContext::on_moved() {
  * \brief Calls the on_map_changed() method of the object on top of the stack.
  * \param map The new active map.
  */
-void LuaContext::on_map_changed(Map& map) {
+void LuaContext::on_map_changed(Map& map, Camera& camera) {
   check_callback_thread();
+
   if (find_method("on_map_changed")) {
     push_map(current_l, map);
-    call_function(2, 0, "on_map_changed");
+    push_camera(current_l, camera);
+    call_function(3, 0, "on_map_changed");
   }
 }
 

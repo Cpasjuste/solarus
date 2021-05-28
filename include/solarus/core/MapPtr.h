@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
+ * Copyright (C) 2018-2020 std::gregwar, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,31 +14,14 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef SOLARUS_GAME_COMMAND_H
-#define SOLARUS_GAME_COMMAND_H
+#pragma once
 
-#include "solarus/core/Common.h"
+#include <memory>
 
 namespace Solarus {
 
-/**
- * \brief The built-in commands recognized by the engine during a game.
- *
- * These high-level commands can be mapped onto the keyboard and the joypad.
- */
-enum class GameCommand {
-  NONE = -1,
-  ACTION,
-  ATTACK,
-  ITEM_1,
-  ITEM_2,
-  PAUSE,
-  RIGHT,
-  UP,
-  LEFT,
-  DOWN
-};
+class Map;
+
+using MapPtr = std::shared_ptr<Map>;
 
 }
-
-#endif

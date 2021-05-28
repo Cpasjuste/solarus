@@ -20,6 +20,7 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/entities/Ground.h"
+#include "solarus/entities/Camera.h"
 #include "solarus/graphics/SpritePtr.h"
 #include "solarus/lua/ScopedLuaRef.h"
 #include <memory>
@@ -50,7 +51,7 @@ class HeroSprites {
     HeroSprites(Hero& hero, Equipment& equipment);
 
     void update();
-    void draw_on_map();
+    void draw_on_map(Camera &camera);
     void set_suspended(bool suspended);
     void rebuild_equipment();
     void notify_creating();

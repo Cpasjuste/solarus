@@ -19,6 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/core/ResourceProvider.h"
+#include "solarus/core/ControlsDispatcher.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include <atomic>
 #include <memory>
@@ -59,12 +60,16 @@ class SOLARUS_API MainLoop {
     ResourceProvider& get_resource_provider();
     int push_lua_command(const std::string& command);
 
+    void notify_control(const ControlEvent& event);
+
     LuaContext& get_lua_context();
 
   private:
 
     void check_input();
     void notify_input(const InputEvent& event);
+
+
     void draw();
     void update();
 
@@ -72,6 +77,8 @@ class SOLARUS_API MainLoop {
     void load_quest_properties();
     void initialize_lua_console();
     void quit_lua_console();
+
+    void make_root_surface();
 
     std::unique_ptr<LuaContext>
         lua_context;              /**< The Lua world where scripts are run. */
@@ -96,7 +103,8 @@ class SOLARUS_API MainLoop {
         lua_commands_mutex;       /**< Lock for the list of scheduled Lua commands. */
     int num_lua_commands_pushed;  /**< Counter of Lua commands requested. */
     int num_lua_commands_done;    /**< Counter of Lua commands executed. */
-
+    ControlsDispatcher
+        commands_dispatcher;      /**< Commands mappings disptatcher. */
 };
 
 }

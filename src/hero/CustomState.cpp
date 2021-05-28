@@ -355,17 +355,23 @@ bool CustomState::notify_input(const InputEvent& event) {
   return get_lua_context().state_on_input(*this, event);
 }
 
-/**
- * \copydoc Entity::State::notify_command_pressed
- */
-void CustomState::notify_command_pressed(GameCommand command) {
-
-  // See if the state script handles the command.
-  if (get_lua_context().state_on_command_pressed(*this, command)) {
+void CustomState::notify_control(const ControlEvent& event) {
+  if (get_lua_context().state_on_command(*this, event)) {
     return;
   }
 
-  if (command == GameCommand::ACTION) {
+  Entity::State::notify_control(event);
+}
+
+/**
+ * \copydoc Entity::State::notify_command_pressed
+ */
+void CustomState::notify_command_pressed(Command command) {
+
+  // See if the state script handles the command.
+
+
+  if (command == Command(CommandId::ACTION)) {
     Hero& hero = get_entity();
     Entity* facing_entity = hero.get_facing_entity();
     bool facing_entity_interaction = false;
@@ -375,7 +381,7 @@ void CustomState::notify_command_pressed(GameCommand command) {
           get_commands_effects().is_action_key_acting_on_facing_entity()
       ) {
         // Action on the facing entity.
-        facing_entity_interaction = facing_entity->notify_action_command_pressed();
+        facing_entity_interaction = facing_entity->notify_action_command_pressed(hero);
       }
     }
 
@@ -395,28 +401,13 @@ void CustomState::notify_command_pressed(GameCommand command) {
 }
 
 /**
- * \copydoc Entity::State::notify_command_released
- */
-void CustomState::notify_command_released(GameCommand command) {
-
-  // See if the state script handles the command.
-  if (get_lua_context().state_on_command_released(*this, command)) {
-    return;
-  }
-
-  Entity::State::notify_command_released(command);
-}
-
-/**
  * \copydoc Entity::State::draw_on_map
  */
-void CustomState::draw_on_map() {
-
-  Camera& camera = *get_entity().get_map().get_camera();
+void CustomState::draw_on_map(Camera &camera) {
   get_lua_context().state_on_pre_draw(*this, camera);
   if (draw_override.is_empty()) {
     // Use the built-in default state draw.
-    HeroState::draw_on_map();
+    HeroState::draw_on_map(camera);
   }
   else {
     get_lua_context().do_state_draw_override_function(draw_override, *this, camera);
@@ -518,7 +509,7 @@ int CustomState::get_wanted_movement_direction8() const {
     return -1;
   }
 
-  const GameCommands& commands = get_commands();
+  const Controls& commands = get_commands();
   return commands.get_wanted_direction8();
 }
 
@@ -553,7 +544,8 @@ void CustomState::start_player_movement() {
 
   Hero& hero = get_entity();
   player_movement = std::make_shared<PlayerMovement>(
-      hero.get_walking_speed()
+      hero.get_walking_speed(),
+      hero.get_controls()
   );
   hero.set_movement(player_movement);
 }

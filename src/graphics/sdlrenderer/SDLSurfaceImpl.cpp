@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2018-2020 std::gregwar, Solarus - http://www.solarus-games.org
+ *
+ * Solarus is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Solarus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "solarus/graphics/sdlrenderer/SDLSurfaceImpl.h"
 #include "solarus/graphics/sdlrenderer/SDLRenderer.h"
 #include "solarus/core/Debug.h"
@@ -23,7 +39,9 @@ SDL_Texture* create_texture_from_renderer(SDL_Renderer* renderer, int width, int
   return tex;
 }
 
-SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer *renderer, int width, int height, bool screen_tex) : target(true) {
+SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer *renderer, int width, int height, bool screen_tex) :
+  SurfaceImpl({width, height}),
+  target(true) {
   texture.reset(screen_tex ? nullptr : create_texture_from_renderer(renderer,width,height));
 
   SDL_PixelFormat* format = Video::get_pixel_format();
@@ -42,7 +60,8 @@ SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer *renderer, int width, int height, bo
 }
 
 SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer* renderer, SDL_Surface_UniquePtr surface)
-  : target(false), surface(std::move(surface)) {
+  : SurfaceImpl({surface->w, surface->h}),
+    target(false), surface(std::move(surface)) {
   SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, this->surface.get());
   Debug::check_assertion(tex != nullptr,
         std::string("Failed to convert surface to texture") + SDL_GetError());
@@ -103,20 +122,6 @@ SDLSurfaceImpl& SDLSurfaceImpl::targetable()  {
     texture.reset(tex);
   }
   return *this;
-}
-
-/**
- * \copydoc SurfaceImpl::get_width
- */
-int SDLSurfaceImpl::get_width() const {
-    return surface->w;
-}
-
-/**
- * \copydoc SurfaceImpl::get_height
- */
-int SDLSurfaceImpl::get_height() const {
-    return surface->h;
 }
 
 }

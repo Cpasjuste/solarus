@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2018-2020 std::gregwar, Solarus - http://www.solarus-games.org
+ *
+ * Solarus is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Solarus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <solarus/graphics/glrenderer/GlRenderer.h>
 #include <solarus/graphics/glrenderer/GlTexture.h>
 #include <solarus/graphics/glrenderer/GlShader.h>
@@ -203,9 +219,7 @@ void GlRenderer::set_render_target(GlTexture* target) {
     glBindFramebuffer(GL_FRAMEBUFFER,fbo->id);
     if(fbo->id) { //Render to Texture
       glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,target->get_texture(),0);
-      glViewport(0,0,
-                 target->get_width(),
-                 target->get_height());
+      setup_viewport(target);
 #ifndef SOLARUS_GL_ES
       Debug::check_assertion(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"glFrameBufferTexture2D failed");
 #endif
@@ -217,6 +231,17 @@ void GlRenderer::set_render_target(GlTexture* target) {
     }
     current_target = target;
   }
+}
+
+void GlRenderer::setup_viewport(GlTexture* target) {
+  const auto& viewport = target->get_view().get_viewport();
+
+  GLint x = viewport.left * target->get_width();
+  GLint y = viewport.top * target->get_height();
+  GLsizei w = viewport.width * target->get_width();
+  GLsizei h = viewport.height * target->get_height();
+
+  glViewport(x, y, w, h);
 }
 
 void GlRenderer::bind_as_gl_target(SurfaceImpl& surf) {
@@ -311,6 +336,18 @@ void GlRenderer::fill(SurfaceImpl& dst, const Color& color, const Rectangle& whe
                color,
                null_proxy
                ));
+}
+
+void GlRenderer::notify_target_changed(const SurfaceImpl& surf) {
+    const GlTexture* tex = &surf.as<GlTexture>();
+    if(tex == current_target) {
+        restart_batch();
+        current_target = nullptr; //Force update of the target properties
+    }
+
+    if(tex == current_texture) {
+        restart_batch();
+    }
 }
 
 void GlRenderer::invalidate(const SurfaceImpl& surf) {
@@ -491,7 +528,7 @@ void GlRenderer::set_state(const GlTexture *src, GlShader* shad, GlTexture* dst,
     glUniformMatrix4fv(current_shader->get_uniform_location(Shader::MVP_MATRIX_NAME),
                        1,
                        GL_FALSE,
-                       glm::value_ptr(dst->fbo->view));
+                       glm::value_ptr(dst_mvp(dst)));
     if(current_texture) {
       glUniformMatrix3fv(current_shader->get_uniform_location(Shader::UV_MATRIX_NAME),
                          1,
@@ -514,6 +551,14 @@ void GlRenderer::set_state(const GlTexture *src, GlShader* shad, GlTexture* dst,
     glUniform1i(
           current_shader->get_uniform_location(Shader::TIME_NAME),
           System::now());
+  }
+}
+
+const glm::mat4& GlRenderer::dst_mvp(GlTexture* dst) const {
+  if(dst->fbo->id) {
+    return dst->get_view().get_transform();
+  } else {
+    return screen_fbo.view;
   }
 }
 
@@ -659,7 +704,7 @@ void GlRenderer::add_sprite(const DrawInfos& infos) {
   vec2 br = (otobr) * scale;
   vec2 tr = vec2(otobr.x,ototl.y) * scale;
   if(infos.should_use_ex()) {
-    float alpha = infos.rotation;
+    float alpha = static_cast<float>(infos.rotation);
     mat2 rot = mat2(cos(alpha),-sin(alpha),sin(alpha),cos(alpha));
     tl = rot * tl;
     bl = rot * bl;

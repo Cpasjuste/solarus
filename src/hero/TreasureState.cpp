@@ -74,7 +74,7 @@ void Hero::TreasureState::start(const State* previous_state) {
   // Show a dialog (Lua does the job after this).
   ScopedLuaRef callback_ref = this->callback_ref;
   this->callback_ref.clear();
-  get_lua_context().notify_hero_brandish_treasure(treasure, callback_ref);
+  get_lua_context().notify_hero_brandish_treasure(get_entity(), treasure, callback_ref);
 }
 
 /**
@@ -103,21 +103,17 @@ void Hero::TreasureState::update() {
 /**
  * \brief Draws this state.
  */
-void Hero::TreasureState::draw_on_map() {
+void Hero::TreasureState::draw_on_map(Camera &camera) {
 
-  HeroState::draw_on_map();
+  HeroState::draw_on_map(camera);
 
   const Hero& hero = get_entity();
   int x = hero.get_x();
   int y = hero.get_y();
 
-  const CameraPtr& camera = get_map().get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-  treasure_sprite->draw(get_map().get_camera_surface(),
-      x - camera->get_top_left_x(),
-      y - 24 - camera->get_top_left_y());
+  treasure_sprite->draw(camera.get_surface(),
+      x,// - camera.get_top_left_x(),
+      y - 24);// - camera.get_top_left_y());
 }
 
 /**

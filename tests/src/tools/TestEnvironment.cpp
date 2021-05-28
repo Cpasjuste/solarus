@@ -90,7 +90,7 @@ Map& TestEnvironment::get_map() {
     Debug::check_assertion(get_game().has_current_map(), "Missing map");
   }
 
-  return get_game().get_current_map();
+  return get_game().get_default_map();
 }
 
 /**

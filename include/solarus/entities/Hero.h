@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2006-2019 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
@@ -22,6 +22,11 @@
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/Ground.h"
 #include "solarus/hero/HeroSprites.h"
+#include "solarus/core/ControlsPtr.h"
+#include "solarus/entities/CameraPtr.h"
+#include "solarus/core/Equipment.h"
+#include "solarus/core/SavegamePtr.h"
+
 #include <memory>
 #include <string>
 
@@ -29,8 +34,6 @@ namespace Solarus {
 
 class CustomState;
 class CarriedObject;
-class Equipment;
-class EquipmentItem;
 class EquipmentItemUsage;
 class HeroSprites;
 class HeroState;
@@ -53,7 +56,7 @@ class Hero: public Entity {
     /**
      * \name Creation and destruction.
      */
-    explicit Hero(Equipment& equipment);
+    explicit Hero(const EquipmentPtr &equipment, const std::string& name);
 
     /**
      * \name Features.
@@ -72,8 +75,7 @@ class Hero: public Entity {
     void built_in_draw(Camera& camera) override;
     void set_suspended(bool suspended) override;
     bool notify_input(const InputEvent& event);
-    void notify_command_pressed(GameCommand command) override;
-    void notify_command_released(GameCommand command) override;
+    bool notify_control(const ControlEvent& event) override;
 
     /**
      * \name Sprites.
@@ -97,11 +99,14 @@ class Hero: public Entity {
     void notify_creating() override;
     void notify_map_starting(Map& map, const std::shared_ptr<Destination>& destination) override;
     void notify_map_started(Map& map, const std::shared_ptr<Destination>& destination) override;
-    void notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination) override;
-    void notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination) override;
+    //void notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination) override;
+    void notify_map_opening_transition_finishing(Map& map, const std::string& destination_name, const HeroPtr& hero) override;
+    void notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination, const HeroPtr &hero) override;
     void notify_map_finished() override;
     void notify_tileset_changed() override;
-    void place_on_destination(Map& map, const Rectangle& previous_map_location);
+    void place_on_destination(Map& map, const Rectangle& previous_map_location, const std::string &destination_name);
+
+    void notify_being_removed() override;
 
     /**
      * \name Position.
@@ -206,6 +211,7 @@ class Hero: public Entity {
      * Handle collisions between the hero and other entities.
      */
     void check_position() override;
+    void notify_collision(Entity& other, Sprite& this_sprite, Sprite& other_sprite) override;
     void notify_collision_with_destructible(Destructible& destructible, CollisionMode collision_mode) override;
     void notify_collision_with_enemy(Enemy& enemy, CollisionMode) override;
     void notify_collision_with_enemy(Enemy& enemy, Sprite& this_sprite, Sprite& enemy_sprite) override;
@@ -222,6 +228,7 @@ class Hero: public Entity {
     void notify_collision_with_block(Block& block) override;
     void notify_collision_with_separator(Separator& separator, CollisionMode collision_mode) override;
     void notify_collision_with_explosion(Explosion& explosion, Sprite& sprite_overlapping) override;
+    void notify_collision_with_hero(Hero& hero, Sprite& this_sprite, Sprite& hero_sprite) override;
     void avoid_collision(Entity& entity, int direction);
     bool is_cutting_with_sword(Destructible& destructible) const;
 
@@ -314,6 +321,19 @@ class Hero: public Entity {
     void start_state_from_ground();
     void start_custom_state(const std::shared_ptr<CustomState>& custom_state);
 
+    const ControlsPtr &get_controls() const;
+    const CommandsEffects& get_commands_effects() const;
+    CommandsEffects& get_commands_effects();
+
+    void set_controls(const ControlsPtr& controls);
+
+
+    Equipment& get_equipment();
+    const Equipment& get_equipment() const;
+
+    void place_on_map(Map& map);
+    const CameraPtr& get_linked_camera() const;
+    void set_linked_camera(const CameraPtr& camera);
   private:
 
     // state
@@ -348,7 +368,6 @@ class Hero: public Entity {
                                      * including an instruction from the script */
 
     // position
-    void place_on_map(Map& map);
     void update_direction();
     void update_movement();
     void try_snap_to_facing_entity();
@@ -363,6 +382,12 @@ class Hero: public Entity {
     // life
     void check_gameover();
     void update_invincibility();
+
+    // commands
+    void update_commands_effects();
+
+    // friendly fire
+    void attack_hero(Hero& hero, Sprite* this_sprite);
 
     // state
     bool invincible;                       /**< Whether the hero is temporarily invincible. */
@@ -389,6 +414,7 @@ class Hero: public Entity {
     // ground
     Point last_solid_ground_coords;        /**< coordinates of the last hero position on a ground
                                             * where he can walk (e.g. before jumping or falling into a hole) */
+
     int last_solid_ground_layer;           /**< layer of the last hero position on a solid ground */
     ScopedLuaRef
         target_solid_ground_callback;      /**< Function that gives the position where the hero will go back if he falls
@@ -399,9 +425,14 @@ class Hero: public Entity {
     int ice_movement_direction8;           /**< wanted movement direction a while ago */
     Point ground_dxy;                      /**< additional movement with special ground (hole or ice) */
 
+
+    ControlsPtr controls;                  /**< Controls controlling this hero */
+    CameraPtr linked_camera;               /**< Camera linked with this hero */
+
+    EquipmentPtr equipment;                /**< Equipement of this hero */
+
     // behavior
     int push_delay;                        /**< delay before going into pushing state */
-
 };
 
 }

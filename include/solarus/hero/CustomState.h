@@ -54,9 +54,9 @@ class CustomState: public HeroState {
     void update() override;
     void set_suspended(bool suspended) override;
     bool notify_input(const InputEvent& event) override;
-    void notify_command_pressed(GameCommand command) override;
-    void notify_command_released(GameCommand command) override;
-    void draw_on_map() override;
+    void notify_control(const ControlEvent& event) override;
+    void notify_command_pressed(Command command) override;
+    void draw_on_map(Camera& camera) override;
 
     const std::string& get_description() const;
     void set_description(const std::string& description);
@@ -239,7 +239,7 @@ class CustomState: public HeroState {
     uint32_t jumper_delay;                 /**< Delay before a jumper activates. */
     CarriedObject::Behavior
         previous_carried_object_behavior;  /**< What happens during this state to an object that
-                                            * was carried in the previous state. */    
+                                            * was carried in the previous state. */
     std::shared_ptr<CarriedObject>
         carried_object;                    /**< Object carried by the entity if any. */
     TraversableInfo

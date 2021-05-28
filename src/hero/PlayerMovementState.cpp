@@ -82,7 +82,8 @@ void Hero::PlayerMovementState::start(const State* previous_state) {
   Hero& hero = get_entity();
 
   player_movement = std::make_shared<PlayerMovement>(
-      hero.get_walking_speed()
+      hero.get_walking_speed(),
+      hero.get_controls()
   );
   hero.set_movement(player_movement);
 

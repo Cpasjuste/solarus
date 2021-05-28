@@ -167,7 +167,11 @@ const Game& Entity::State::get_game() const {
  * \return the equipment
  */
 Equipment& Entity::State::get_equipment() {
-  return get_game().get_equipment();
+  if(has_entity() && entity->is_hero()) {
+    return entity->as<Hero>().get_equipment();
+  } else {
+    return get_game().get_equipment();
+  }
 }
 
 /**
@@ -175,31 +179,11 @@ Equipment& Entity::State::get_equipment() {
  * \return the equipment
  */
 const Equipment& Entity::State::get_equipment() const {
-  return get_game().get_equipment();
-}
-
-/**
- * \brief Returns the keys effect manager.
- * \return the keys effect
- */
-CommandsEffects& Entity::State::get_commands_effects() {
-  return get_game().get_commands_effects();
-}
-
-/**
- * \brief Returns the game commands.
- * \return The commands.
- */
-GameCommands& Entity::State::get_commands() {
-  return get_game().get_commands();
-}
-
-/**
- * \brief Returns the game commands.
- * \return The commands.
- */
-const GameCommands& Entity::State::get_commands() const {
-  return get_game().get_commands();
+  if(has_entity() && entity->is_hero()) {
+    return entity->as<Hero>().get_equipment();
+  } else {
+    return get_game().get_equipment();
+  }
 }
 
 /**
@@ -267,7 +251,7 @@ void Entity::State::update() {
  * The default implementation does nothing.
  * If your state needs to draw additional elements, you can redefine this function.
  */
-void Entity::State::draw_on_map() {
+void Entity::State::draw_on_map(Camera& /*camera*/) {
 
 }
 
@@ -314,48 +298,56 @@ bool Entity::State::notify_input(const InputEvent& /* event */) {
   return false;
 }
 
+void Entity::State::notify_control(const ControlEvent& event) {
+  if(event.is_pressed()) {
+    notify_command_pressed(event.get_command());
+  } else if(event.is_released()){
+    notify_command_released(event.get_command());
+  }
+}
+
 /**
  * \brief This function is called when a game command is pressed and the game
  * is not suspended.
  * \param command The command pressed.
  */
-void Entity::State::notify_command_pressed(GameCommand command) {
+void Entity::State::notify_command_pressed(Command command) {
 
-  switch (command) {
+  switch (ControlEvent::command_to_id(command)) {
 
     // action key
-  case GameCommand::ACTION:
+  case CommandId::ACTION:
     notify_action_command_pressed();
     break;
 
     // sword key
-  case GameCommand::ATTACK:
+  case CommandId::ATTACK:
     notify_attack_command_pressed();
     break;
 
     // move the entity
-  case GameCommand::RIGHT:
+  case CommandId::RIGHT:
     notify_direction_command_pressed(0);
     break;
 
-  case GameCommand::UP:
+  case CommandId::UP:
     notify_direction_command_pressed(1);
     break;
 
-  case GameCommand::LEFT:
+  case CommandId::LEFT:
     notify_direction_command_pressed(2);
     break;
 
-  case GameCommand::DOWN:
+  case CommandId::DOWN:
     notify_direction_command_pressed(3);
     break;
 
     // use an equipment item
-  case GameCommand::ITEM_1:
+  case CommandId::ITEM_1:
     notify_item_command_pressed(1);
     break;
 
-  case GameCommand::ITEM_2:
+  case CommandId::ITEM_2:
     notify_item_command_pressed(2);
     break;
 
@@ -369,39 +361,39 @@ void Entity::State::notify_command_pressed(GameCommand command) {
  * not suspended.
  * \param command The command released.
  */
-void Entity::State::notify_command_released(GameCommand command) {
+void Entity::State::notify_command_released(Command command) {
 
-  switch (command) {
+  switch (ControlEvent::command_to_id(command)) {
 
-  case GameCommand::ACTION:
+  case CommandId::ACTION:
     notify_action_command_released();
     break;
 
-  case GameCommand::ATTACK:
+  case CommandId::ATTACK:
     notify_attack_command_released();
     break;
 
-  case GameCommand::RIGHT:
+  case CommandId::RIGHT:
     notify_direction_command_released(0);
     break;
 
-  case GameCommand::UP:
+  case CommandId::UP:
     notify_direction_command_released(1);
     break;
 
-  case GameCommand::LEFT:
+  case CommandId::LEFT:
     notify_direction_command_released(2);
     break;
 
-  case GameCommand::DOWN:
+  case CommandId::DOWN:
     notify_direction_command_released(3);
     break;
 
-  case GameCommand::ITEM_1:
+  case CommandId::ITEM_1:
     notify_item_command_released(0);
     break;
 
-  case GameCommand::ITEM_2:
+  case CommandId::ITEM_2:
     notify_item_command_released(1);
     break;
 

@@ -98,7 +98,7 @@ class Destructible: public Entity {
         Sprite& other_sprite
     ) override;
     void notify_collision_with_hero(Hero& hero, CollisionMode collision_mode);
-    virtual bool notify_action_command_pressed() override;
+    virtual bool notify_action_command_pressed(Hero& hero) override;
 
     // Game loop.
     virtual void set_suspended(bool suspended) override;

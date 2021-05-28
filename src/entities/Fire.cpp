@@ -27,8 +27,8 @@ namespace Solarus {
  * \param layer layer of the fire entity to create
  * \param xy coordinates of the fire
  */
-Fire::Fire(const std::string& name, int layer, const Point& xy):
-  Entity(name, 0, layer, xy, Size(16, 16)) {
+Fire::Fire(const std::string& name, int layer, const Point& xy, const HeroPtr &author):
+  Entity(name, 0, layer, xy, Size(16, 16)), author(author) {
 
   // initialize the entity
   set_collision_modes(CollisionMode::COLLISION_OVERLAPPING | CollisionMode::COLLISION_SPRITE);
@@ -72,6 +72,14 @@ void Fire::notify_collision(
     Sprite& other_sprite
 ) {
   other_entity.notify_collision_with_fire(*this, other_sprite);
+}
+
+/**
+ * @brief Gets the author of this fire
+ * @return
+ */
+const HeroPtr& Fire::get_author() const {
+  return author;
 }
 
 }

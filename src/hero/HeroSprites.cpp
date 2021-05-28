@@ -818,15 +818,11 @@ void HeroSprites::update() {
  * \brief Called after sprites of the hero were drawn on the camera.
  * \param camera The camera where to draw.
  */
-void HeroSprites::draw_on_map() {
+void HeroSprites::draw_on_map(Camera& camera) {
+  hero.draw_sprites(camera, clipping_rectangle);
 
-  const CameraPtr& camera = hero.get_map().get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-  hero.draw_sprites(*camera, clipping_rectangle);
   if (lifted_item != nullptr) {
-    lifted_item->draw(*camera);
+    lifted_item->draw(camera);
   }
 }
 

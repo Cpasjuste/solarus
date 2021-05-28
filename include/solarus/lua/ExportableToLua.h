@@ -33,7 +33,6 @@ class LuaContext;
  */
 class ExportableToLua:
     public std::enable_shared_from_this<ExportableToLua> {
-
   public:
 
     ExportableToLua();
@@ -45,8 +44,17 @@ class ExportableToLua:
     void set_known_to_lua(bool known_to_lua);
     bool is_with_lua_table() const;
     void set_with_lua_table(bool with_lua_table);
-    virtual const std::string& get_lua_type_name() const;
 
+    template<class T>
+    /**
+     * @brief helper method to directly cast the shared_from_this result
+     * @return
+     */
+    inline const std::shared_ptr<T> shared_from_this_cast(){
+      return std::static_pointer_cast<T>(shared_from_this());
+    }
+
+    virtual const std::string& get_lua_type_name() const;
   private:
 
     LuaContext* lua_context;     /**< The Solarus Lua API, or nullptr if

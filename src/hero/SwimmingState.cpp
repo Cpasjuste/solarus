@@ -134,7 +134,7 @@ void Hero::SwimmingState::notify_action_command_pressed() {
         get_commands_effects().is_action_key_acting_on_facing_entity()
     ) {
       // Action on the facing entity.
-      facing_entity_interaction = facing_entity->notify_action_command_pressed();
+      facing_entity_interaction = facing_entity->notify_action_command_pressed(hero);
     }
   }
 

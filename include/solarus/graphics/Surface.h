@@ -119,6 +119,13 @@ class Surface: public Drawable {
     const std::string& get_lua_type_name() const override;
 
     static void empty_cache();
+
+    void set_view(const View& view);
+    const View& get_view() const;
+    View& get_view();
+
+    void set_viewport(const Rectangle& viewport);
+    Rectangle get_viewport() const;
   private:
     static SurfaceImplPtr get_surface_from_file(
         const std::string& file_name,

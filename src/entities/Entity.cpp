@@ -262,19 +262,10 @@ bool Entity::can_be_drawn() const {
 }
 
 /**
- * \brief This function is called when a game command is pressed
- * and the game is not suspended.
- * \param command The command pressed.
+ * @brief Notify this entity that a command event happend
  */
-void Entity::notify_command_pressed(GameCommand /* game_command */) {
-}
-
-/**
- * \brief This function is called when a game command is released
- * if the game is not suspended.
- * \param command The command released.
- */
-void Entity::notify_command_released(GameCommand /* game_command */) {
+bool Entity::notify_control(const ControlEvent& /*event*/) {
+  return false;
 }
 
 /**
@@ -299,7 +290,8 @@ void Entity::set_map(Map& map) {
   this->main_loop = &map.get_game().get_main_loop();
   this->map = &map;
   set_lua_context(&main_loop->get_lua_context());
-  if (get_game().has_current_map() && &get_game().get_current_map() == &map) {
+
+  if (get_game().is_current_map(map)) {
     notify_tileset_changed();
   }
 
@@ -310,6 +302,37 @@ void Entity::set_map(Map& map) {
     // In this case, we are ready to finish the initialization right now.
     finish_initialization();
   }
+
+  being_removed = false; //Ensure this entity restarts after being removed from another map
+}
+
+/**
+ * \brief Puts the entity on a map.
+ *
+ * This function is called when the current map is changed.
+ * Does nothing if the hero is already on this map.
+ *
+ * \param map The map.
+ */
+void Entity::place_on_map(Map& map) {
+
+  if (is_on_map() &&
+      &get_map() == &map
+  ) {
+    // No change.
+    return;
+  }
+
+  // Add the entity to the map.
+  const EntityPtr& shared_entity = std::static_pointer_cast<Entity>(shared_from_this());
+  map.get_entities().add_entity(shared_entity);
+
+  if(get_state())
+    get_state()->set_map(map);
+
+  Entity::set_map(map);
+
+  being_removed = false;
 }
 
 /**
@@ -412,7 +435,7 @@ void Entity::notify_map_started(
  * \param destination Destination entity where the hero is placed or nullptr.
  */
 void Entity::notify_map_opening_transition_finishing(
-    Map& /* map */, const std::shared_ptr<Destination>& /* destination */) {
+    Map& /* map */, const std::string& /* destination_name */, const HeroPtr& /*hero*/) {
 
   if (is_ground_observer()) {
     update_ground_below();
@@ -429,7 +452,7 @@ void Entity::notify_map_opening_transition_finishing(
  * \param destination Destination entity where the hero is placed or nullptr.
  */
 void Entity::notify_map_opening_transition_finished(
-    Map& /* map */, const std::shared_ptr<Destination>& /* destination */) {
+    Map& /* map */, const std::shared_ptr<Destination>& /* destination */, const HeroPtr& /*hero*/) {
 }
 
 /**
@@ -494,38 +517,6 @@ Entities& Entity::get_entities() {
 }
 
 /**
- * \brief Returns the current equipment.
- * \return The equipment.
- */
-Equipment& Entity::get_equipment() {
-  return get_game().get_equipment();
-}
-
-/**
- * \brief Returns the current equipment.
- * \return The equipment.
- */
-const Equipment& Entity::get_equipment() const {
-  return get_game().get_equipment();
-}
-
-/**
- * \brief Returns the keys effect manager.
- * \return the keys effect
- */
-CommandsEffects& Entity::get_commands_effects() {
-  return get_game().get_commands_effects();
-}
-
-/**
- * \brief Returns the game commands.
- * \return The commands.
- */
-GameCommands& Entity::get_commands() {
-  return get_game().get_commands();
-}
-
-/**
  * \brief Returns the savegame.
  * \return The savegame.
  */
@@ -545,8 +536,16 @@ const Savegame& Entity::get_savegame() const {
  * \brief Returns the hero
  * \return The hero.
  */
-Hero& Entity::get_hero() {
-  return get_entities().get_hero();
+Hero& Entity::get_default_hero() {
+  return get_entities().get_default_hero();
+}
+
+/**
+ * @brief Returns the list of heroes on the map of this entity
+ * @return The heroes.
+ */
+const Heroes& Entity::get_heroes() const {
+  return get_entities().get_heroes();
 }
 
 /**
@@ -580,8 +579,10 @@ void Entity::notify_being_removed() {
     update_ground_observers();
   }
 
-  if (get_hero().get_facing_entity() == this) {
-    get_hero().set_facing_entity(nullptr);
+  for(const HeroPtr& hero : get_heroes()) {
+    if (hero->get_facing_entity() == this) {
+      hero->set_facing_entity(nullptr);
+    }
   }
 }
 
@@ -1947,10 +1948,10 @@ void Entity::set_layer_independent_collisions(bool independent) {
 /**
  * \brief Returns whether the hero can lift this entity.
  */
-bool Entity::can_be_lifted() const {
+bool Entity::can_be_lifted(Hero& hero) const {
 
   return get_weight() >= 0 &&
-      get_equipment().has_ability(Ability::LIFT, get_weight());
+      hero.get_equipment().has_ability(Ability::LIFT, get_weight());
 }
 
 /**
@@ -3500,6 +3501,15 @@ void Entity::notify_collision_with_enemy(Enemy& /* enemy */, Sprite& /* this_spr
 }
 
 /**
+ * @brief This function is called when a hero's sprite collides with a sprite of this entity.
+ * @param hero the hero
+ * @param this_sprite this entity's sprite that overlaps the hero sprite
+ * @param hero_sprite the hero's sprite that overlaps a sprite of this entity
+ */
+void Entity::notify_collision_with_hero(Hero& /*hero*/, Sprite& /*this_sprite*/, Sprite& /*hero_sprite*/) {
+}
+
+/**
  * \brief Notifies this entity that it has just attacked an enemy.
  *
  * This function is called even if this attack was not successful.
@@ -3537,34 +3547,32 @@ void Entity::notify_attacked_enemy(
  *
  * \return \c true if an interaction happened.
  */
-bool Entity::notify_action_command_pressed() {
+bool Entity::notify_action_command_pressed(Hero& hero) {
 
-  if (!can_be_lifted()) {
+  if (!can_be_lifted(hero)) {
     return false;
   }
 
-  CommandsEffects::ActionKeyEffect effect = get_commands_effects().get_action_key_effect();
-  if (effect == CommandsEffects::ACTION_KEY_LIFT &&
-      get_hero().get_facing_entity() == this &&
-      get_hero().is_facing_point_in(get_bounding_box())) {
-
+  if(hero.get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_LIFT &&
+     hero.get_facing_entity() == this &&
+     hero.is_facing_point_in(get_bounding_box())) {
     std::string sprite_id;
     if (has_sprite()) {
       sprite_id = get_sprite()->get_animation_set_id();
     }
     std::shared_ptr<CarriedObject> carried_object = std::make_shared<CarriedObject>(
-        get_hero(),
+        hero,
         *this,
         sprite_id,
         "stone",
         1,  // damage_on_enemies
         0   // explosion_date
     );
-    get_hero().start_lifting(carried_object);
+    hero.start_lifting(carried_object);
 
     Sound::play("lift", get_game().get_resource_provider());
     remove_from_map();
-    get_lua_context()->entity_on_lifting(*this, get_hero(), *carried_object);
+    get_lua_context()->entity_on_lifting(*this, hero, *carried_object);
     return true;
   }
 
@@ -3601,7 +3609,7 @@ bool Entity::notify_interaction_with_item(EquipmentItem& /* item */) {
  *
  * \return \c true if this entity was pushed or pulled successfully.
  */
-bool Entity::start_movement_by_hero() {
+bool Entity::start_movement_by_hero(Hero& /*hero*/) {
   return false;
 }
 
@@ -3859,10 +3867,12 @@ void Entity::built_in_draw(Camera& camera) {
  * \param clipping_area Rectangle of the map where the drawing will be
  * restricted. A flat rectangle means no restriction.
  */
-void Entity::draw_sprites(Camera& /* camera */, const Rectangle& clipping_area) {
 
+void Entity::draw_sprites(Camera& camera , const Rectangle& /*clipping_area*/) {
   const Point& xy = get_displayed_xy();
   const Size& size = get_size();
+
+  const auto& surface = camera.get_surface();
 
   // Draw the sprites.
   for (const NamedSprite& named_sprite: sprites) {
@@ -3872,7 +3882,8 @@ void Entity::draw_sprites(Camera& /* camera */, const Rectangle& clipping_area) 
     Sprite& sprite = *named_sprite.sprite;
 
     if (!is_tiled()) {
-      get_map().draw_visual(sprite, xy, clipping_area);
+      //get_map().draw_visual(sprite, xy);
+      sprite.draw(surface, xy); //, clipping_area); TODO!
     }
     else {
       // Repeat the sprite with tiling.
@@ -3884,7 +3895,8 @@ void Entity::draw_sprites(Camera& /* camera */, const Rectangle& clipping_area) 
 
       for (int y = y1; y < y2; y += sprite_size.height) {
         for (int x = x1; x < x2; x += sprite_size.width) {
-          get_map().draw_visual(sprite, x, y, clipping_area);
+          //get_map().draw_visual(sprite, x, y);
+          sprite.draw(surface, {x,y}); //TODO clipping area !
         }
       }
     }

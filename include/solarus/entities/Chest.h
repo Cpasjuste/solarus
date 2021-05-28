@@ -59,7 +59,7 @@ class Chest: public Entity {
 
     bool is_open() const;
     void set_open(bool open);
-    bool can_open();
+    bool can_open(Hero &hero);
 
     OpeningMethod get_opening_method() const;
     void set_opening_method(OpeningMethod opening_method);
@@ -74,7 +74,7 @@ class Chest: public Entity {
     virtual void notify_collision(Entity& entity_overlapping, CollisionMode collision_mode) override;
     virtual void notify_enabled(bool enabled) override;
     virtual void update() override;
-    virtual bool notify_action_command_pressed() override;
+    virtual bool notify_action_command_pressed(Hero& hero) override;
     virtual void set_suspended(bool suspended) override;
 
     static const std::map<OpeningMethod, std::string> opening_method_names;
@@ -100,7 +100,7 @@ class Chest: public Entity {
                                         * should be consumed when opening the chesty. */
     std::string cannot_open_dialog_id; /**< Dialog to show if the chesty cannot be opened,
                                         * or an empty string. */
-
+    HeroPtr opening_hero;               /**< Hero opening the chest*/
 };
 
 }

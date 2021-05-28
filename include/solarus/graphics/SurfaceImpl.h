@@ -1,8 +1,25 @@
+/*
+ * Copyright (C) 2018-2020 std::gregwar, Solarus - http://www.solarus-games.org
+ *
+ * Solarus is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Solarus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #pragma once
 
 #include "solarus/core/Rectangle.h"
 #include "solarus/core/Point.h"
 #include "solarus/graphics/SoftwarePixelFilter.h"
+#include "solarus/graphics/View.h"
 
 #include <SDL_render.h>
 #include <memory>
@@ -19,6 +36,9 @@ class Surface;
 class SurfaceImpl
 {
 public:
+
+  SurfaceImpl(const Size& size);
+
   /**
      * @brief get the synchronised SDL_Surface
      *
@@ -35,17 +55,11 @@ public:
    */
   virtual void upload_surface() = 0;
 
-  /**
-     * @brief get texture width
-     * @return width
-     */
-  virtual int get_width() const = 0;
+  int get_width() const;
 
-  /**
-     * @brief get texture height
-     * @return height
-     */
-  virtual int get_height() const = 0;
+  int get_height() const;
+
+  const Size& get_size() const;
 
 
   /**
@@ -104,8 +118,14 @@ public:
   template<class T> const T& as() const {
     return *static_cast<const T*>(this);
   }
+
+  void set_view(const View& view);
+  const View& get_view() const;
+  View& get_view();
 private:
+  Size size;
   bool premultiplied = false;
+  View view;
 };
 
 using SurfaceImplPtr = std::shared_ptr<SurfaceImpl>;

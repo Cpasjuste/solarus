@@ -80,8 +80,8 @@ class SOLARUS_API Map: public ExportableToLua {
     bool is_valid_layer(int layer) const;
 
     // camera
-    const CameraPtr& get_camera() const;
-    SurfacePtr get_camera_surface();  // TODO remove
+    CameraPtr get_camera() const;
+    void notify_window_size_changed(const Size& new_size);
 
     // loading
     bool is_loaded() const;
@@ -93,7 +93,9 @@ class SOLARUS_API Map: public ExportableToLua {
     LuaContext& get_lua_context();
     virtual const std::string& get_lua_type_name() const override;
 
-    void notify_opening_transition_finished();
+    //Events
+    void notify_opening_transition_finished(const std::string &destination_name, const HeroPtr &opt_hero);
+    bool notify_control(const ControlEvent& event);
 
     // entities
     Entities& get_entities();
@@ -101,14 +103,15 @@ class SOLARUS_API Map: public ExportableToLua {
 
     // presence of the hero
     bool is_started() const;
-    void start();
+    void start(const std::string &destination_name);
     void leave();
+    bool has_cameras() const;
+
+    Hero& get_default_hero();
 
     // current destination point
-    void set_destination(const std::string& destination_name);
-    const std::string& get_destination_name() const;
-    std::shared_ptr<Destination> get_destination();
-    int get_destination_side() const;
+    std::shared_ptr<Destination> get_destination(const std::string &destination_name);
+    int get_destination_side(const std::string &destination_name) const;
 
     // collisions with obstacles (checked before a move)
     bool test_collision_with_border(int x, int y) const;
@@ -195,6 +198,7 @@ class SOLARUS_API Map: public ExportableToLua {
     bool is_suspended() const;
     void check_suspended();
     void draw();
+
     void draw_visual(Drawable& drawable, const Point& xy,
                      const Rectangle& clipping_area);
     void draw_visual(Drawable& drawable, const Point& xy);
@@ -205,7 +209,6 @@ class SOLARUS_API Map: public ExportableToLua {
   private:
 
     void set_suspended(bool suspended);
-    void build_background_surface();
     void build_foreground_surface();
     void draw_background(const SurfacePtr& dst_surface);
     void draw_foreground(const SurfacePtr& dst_surface);
@@ -238,20 +241,12 @@ class SOLARUS_API Map: public ExportableToLua {
                                    * indicate the map size in pixel, and the x and y field indicate the position.
                                    * This is used to correctly scroll between adjacent maps. */
 
-    // Quest screen
-    SurfacePtr
-        background_surface;       /**< A surface filled with the background color of the tileset. */
     SurfacePtr
         foreground_surface;       /**< A surface with black bars when the map is smaller than the screen. */
 
     // map state
     bool loaded;                  /**< Whether the loading phase is done. */
     bool started;                 /**< Whether this map is the current map. */
-    std::string destination_name; /**< Current destination point on the map,
-                                   * or "_same" to keep the hero's coordinates,
-                                   * or "_side0", "_side1", "_side2" or "_side3"
-                                   * to place the hero on a side of the map,
-                                   * or an empty string to use the one saved. */
 
     std::unique_ptr<Entities>
         entities;                 /**< The entities on the map. */
@@ -315,7 +310,7 @@ inline Entities& Map::get_entities() {
  * \brief Returns the camera of the map.
  * \return The camera, or nullptr if there is no camera.
  */
-inline const CameraPtr& Map::get_camera() const {
+inline CameraPtr Map::get_camera() const {
 
   return get_entities().get_camera();
 }

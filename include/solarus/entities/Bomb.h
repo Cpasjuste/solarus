@@ -47,7 +47,7 @@ class Bomb: public Entity {
     void notify_collision_with_explosion(Explosion& explosion, Sprite& sprite_overlapping) override;
     void notify_collision_with_stream(Stream& stream, int dx, int dy) override;
     void notify_position_changed() override;
-    bool notify_action_command_pressed() override;
+    bool notify_action_command_pressed(Hero& hero) override;
     void set_suspended(bool suspended) override;
     void update() override;
 

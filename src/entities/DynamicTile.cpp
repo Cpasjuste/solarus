@@ -126,8 +126,8 @@ void DynamicTile::built_in_draw(Camera& camera) {
   if (tile_pattern != nullptr) {
     const Rectangle& camera_position = camera.get_bounding_box();
 
-    Rectangle dst_position(get_top_left_x() - camera_position.get_x(),
-        get_top_left_y() - camera_position.get_y(),
+    Rectangle dst_position(get_top_left_x(),
+        get_top_left_y(),
         get_width(), get_height());
 
     const Tileset* tileset = this->tileset != nullptr ? this->tileset : &get_map().get_tileset();

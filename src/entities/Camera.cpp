@@ -46,6 +46,9 @@ public:
   void update() override;
   bool is_traversing_separator() const;
   void traverse_separator(Separator& separator);
+  void start(const State* previous) override;
+  bool belongs_to_camera(const Camera& camera) const;
+  void undo_hero_linking() const;
 
   const EntityPtr& get_tracked_entity() const;
 
@@ -59,7 +62,6 @@ private:
   int separator_scrolling_direction4;     /**< Direction when scrolling. */
   std::shared_ptr<Separator>
       separator_traversed;                /**< Separator currently being traversed or nullptr. */
-
 };
 
 /**
@@ -94,15 +96,7 @@ void TrackingState::update() {
 
   Camera& camera = get_entity<Camera>();
   if (separator_next_scrolling_date == 0) {
-    // Normal case: not traversing a separator.
-
-    // First compute camera coordinates ignoring map limits and separators.
-    Rectangle next = camera.get_bounding_box();
-    next.set_center(tracked_entity->get_center_point());
-
-    // Then apply constraints of both separators and map limits.
-    camera.set_bounding_box(camera.apply_separators_and_map_bounds(next));
-    camera.notify_bounding_box_changed();
+    camera.track_position(tracked_entity->get_center_point() + camera.get_origin());
   }
   else {
     // The tracked entity is currently traversing a separator.
@@ -200,6 +194,48 @@ void TrackingState::traverse_separator(Separator& separator) {
 }
 
 /**
+ * @brief Undo the linking of this camera to the hero it was potentialy tracking
+ */
+void TrackingState::undo_hero_linking() const {
+    EntityPtr entity = get_tracked_entity();
+    if(entity->get_type() == EntityType::HERO) {
+        //Was tracking a hero, unregister this camera as linked-one
+        Hero& hero = entity->as<Hero>();
+        CameraPtr old_cam = hero.get_linked_camera();
+        if(old_cam and belongs_to_camera(*old_cam)){
+            hero.set_linked_camera(nullptr);
+        }
+    }
+}
+
+/**
+ * @brief Check if this tracking state is the one of a particular camera
+ * @param acamera camera to test
+ * @return true if camera belongs to this State
+ */
+bool TrackingState::belongs_to_camera(const Camera& acamera) const {
+    const Camera& cam = get_entity().as<Camera>();
+    return &cam == &acamera;
+}
+
+/**
+ * @brief Called when this states starts, unlink the hero from previous camera
+ * @param previous
+ */
+void TrackingState::start(const State* previous) {
+    Entity::State::start(previous);
+    if (previous && previous->get_name() == "tracking") {
+        static_cast<const TrackingState*>(previous)->undo_hero_linking();
+    }
+
+    EntityPtr entity = get_tracked_entity();
+    if(entity->get_type() == EntityType::HERO) {
+        entity->as<Hero>().set_linked_camera(get_entity().shared_from_this_cast<Camera>());
+    }
+}
+
+
+/**
  * \brief State of the camera when controlled by scripts.
  */
 class ManualState: public Entity::State {
@@ -207,6 +243,7 @@ class ManualState: public Entity::State {
 public:
 
   explicit ManualState(Camera& camera);
+  void start(const State* previous) override;
 
 };
 
@@ -219,19 +256,33 @@ ManualState::ManualState(Camera& camera) :
   set_entity(camera);
 }
 
+
+/**
+ * @brief Called when this states starts, unlink the hero from previous camera
+ * @param previous
+ */
+void ManualState::start(const State* previous) {
+    Entity::State::start(previous);
+    if (previous && previous->get_name() == "tracking") {
+        static_cast<const TrackingState*>(previous)->undo_hero_linking();
+    }
+}
+
 }  // Anonymous namespace.
 
 /**
  * \brief Creates a camera.
  * \param map The map.
  */
-Camera::Camera(Map& map):
-  Entity("", 0, map.get_max_layer(), Point(0, 0), Video::get_quest_size()),
+Camera::Camera(const std::string &name):
+  Entity(name, 0, 0, Point(0, 0), Video::get_quest_size()),
   surface(nullptr),
-  position_on_screen(0, 0) {
+  position_on_screen(0, 0),
+  viewport(0.f, 0.f, 1.f, 1.f) {
 
-  create_surface();
-  set_map(map);
+  create_surface(get_size());
+  //set_map(map);
+  notify_window_size_changed(Video::get_window_size());
 }
 
 /**
@@ -256,9 +307,9 @@ bool Camera::can_be_drawn() const {
  *
  * This function should be called when the camera size is changed.
  */
-void Camera::create_surface() {
+void Camera::create_surface(const Size& size) {
 
-  surface = Surface::create(get_size());
+  surface = Surface::create(size);
 }
 
 /**
@@ -275,8 +326,9 @@ const SurfacePtr& Camera::get_surface() const {
 void Camera::notify_size_changed() {
 
   // The size thas changed: rebuild the surface.
-  if (surface == nullptr || get_size() != surface->get_size()) {
-    create_surface();
+  if(Video::get_geometry_mode() == Video::GeometryMode::LETTER_BOXING &&
+     (surface == nullptr || get_size() != surface->get_size())) {
+    create_surface(get_size());
   }
 }
 
@@ -536,6 +588,150 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
 }
 
 /**
+ * @brief Camera::notify_window_size_changed
+ * @param new_size
+ */
+void Camera::notify_window_size_changed(const Size& /*new_size*/) {
+  Rectangle vrect = get_viewport_rectangle();
+  int x = vrect.get_left();
+  int y = vrect.get_top();
+  int w = vrect.get_width();
+  int h = vrect.get_height();
+  switch (Video::get_geometry_mode()) {
+  case Video::GeometryMode::DYNAMIC_QUEST_SIZE:
+  case Video::GeometryMode::DYNAMIC_ABSOLUTE:
+    set_position_on_screen({x, y});
+    create_surface({w, h});
+    surface->set_scale(Scale(1,1)); //Draw the surface 1:1 on screen
+    update_view({w,h});
+    break;
+  default:
+    break;
+  }
+}
+
+/**
+ * @brief Camera::update_view
+ */
+void Camera::update_view(const Size& viewport_size) {
+  int w = viewport_size.width;
+  int h = viewport_size.height;
+  switch (Video::get_geometry_mode()) {
+  case Video::GeometryMode::DYNAMIC_QUEST_SIZE:{
+    Size quest_size = Video::get_quest_size();
+    float qratio = quest_size.width / static_cast<float>(quest_size.height);
+    float wratio = w / static_cast<float>(h);
+
+    //Compute wanted size
+    float cw = quest_size.width;
+    float ch = quest_size.width/wratio;
+    if(qratio < wratio) {
+      ch = quest_size.height;
+      cw = quest_size.height*wratio;
+    }
+
+    //Apply zoom
+    cw /= zoom.x;
+    ch /= zoom.y;
+
+    int icw = cw;
+    int ich = ch;
+
+    zoom_corr.x = icw/cw;
+    zoom_corr.y = ich/ch;
+
+    position_offset = {(cw*0.5f-icw/2), (ch*0.5f-ich/2)};
+
+    set_size(Size(icw, ich));
+    break;
+  }
+  case Video::GeometryMode::DYNAMIC_ABSOLUTE: {
+    // Apply zoom
+    float cw = w / zoom.x;
+    float ch = h / zoom.y;
+
+    int icw = cw;
+    int ich = ch;
+
+    zoom_corr.x = icw/cw;
+    zoom_corr.y = ich/ch;
+
+
+
+    set_size({icw, ich});
+    break;
+  }
+  default:
+    break;
+  }
+}
+
+/**
+ * @brief Camera::get_viewport_rectangle
+ * @return
+ */
+Rectangle Camera::get_viewport_rectangle() const {
+  Size wsize = Video::get_window_size();
+  return Rectangle(
+    wsize.width * viewport.left,
+    wsize.height * viewport.top,
+    std::ceil(wsize.width * viewport.width),
+    std::ceil(wsize.height * viewport.height)
+  );
+}
+
+/**
+ * @brief set the fraction of the screen occupied by this camera
+ * @param viewport
+ */
+void Camera::set_viewport(const FRectangle& viewport) {
+  this->viewport = viewport;
+  notify_window_size_changed(Video::get_window_size());
+}
+
+/**
+ * @brief get the fraction of the screen occupied by this camera
+ * @return
+ */
+const FRectangle& Camera::get_viewport() const {
+  return viewport;
+}
+
+/**
+ * @brief Camera::set_zoom
+ * @param zoom
+ */
+void Camera::set_zoom(const Scale& zoom) {
+  this->zoom = zoom;
+  update_view(get_viewport_rectangle().get_size());
+}
+
+/**
+ * @brief Camera::get_zoom
+ * @return
+ */
+const Scale& Camera::get_zoom() const {
+  return zoom;
+}
+
+/**
+ * @brief Camera::set_rotation
+ * @param rotation
+ */
+void Camera::set_rotation(float rotation) {
+  this->rotation = rotation;
+  update_view(get_viewport_rectangle().get_size());
+}
+
+/**
+ * @brief Camera::get_rotation
+ * @return
+ */
+float Camera::get_rotation() const {
+  return rotation;
+}
+
+/**
  * \brief Ensures that a rectangle does not cross separators nor map bounds.
  * \param area The rectangle to check.
  * It is the responsibility of quest makers to put enough space between
@@ -549,6 +745,86 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
  */
 Rectangle Camera::apply_separators_and_map_bounds(const Rectangle& area) const {
   return apply_map_bounds(apply_separators(area));
+}
+
+/**
+ * @brief Sets the surface's view to the default one
+ */
+void Camera::reset_view() {
+  surface->get_view().reset(Rectangle(surface->get_size()));
+}
+
+/**
+ * @brief Compute and apply the view of this camera to its surface
+ */
+void Camera::apply_view() {
+  //TODO add rotation and zoom
+  surface->get_view().reset(get_bounding_box());
+
+
+  surface->get_view().move(position_offset);
+  surface->get_view().zoom(zoom_corr);
+  //Just move the view enough to compensate for the rounding
+  surface->get_view().rotate(rotation);
+}
+
+/**
+ * @brief Sets the transition of this camera
+ * @param transition
+ */
+void Camera::set_transition(std::unique_ptr<Transition> transition) {
+  this->transition = std::move(transition);
+}
+
+/**
+ * @brief Gets the transition associated with this camera
+ * @return
+ */
+std::unique_ptr<Transition>& Camera::get_transition() {
+ return transition;
+}
+
+/**
+ * @copydoc Entity::notify_being_removed
+ */
+void Camera::notify_being_removed() {
+  Entity::notify_being_removed();
+}
+
+/**
+ * @brief Displace this camera to track the given center point
+ *
+ * Map bounds are taken into account
+ *
+ * @param center
+ */
+void Camera::track_position(const Point& center) {
+    // Normal case: not traversing a separator.
+
+    // First compute camera coordinates ignoring map limits and separators.
+    Rectangle next = get_bounding_box();
+    next.set_center(center);
+
+    // Then apply constraints of both separators and map limits.
+    set_bounding_box(apply_separators_and_map_bounds(next));
+    notify_bounding_box_changed();
+}
+
+/**
+ * @brief Draw the content of this camera to a surface
+ * @param dst_surface a surface
+ */
+void Camera::draw(const SurfacePtr& dst_surface) const {
+  const auto& surf = get_surface();
+  if(transition){
+    surf->draw_with_transition(
+          Rectangle(surf->get_size()),
+          dst_surface,
+          get_position_on_screen(),
+          *transition);
+  } else {
+    surf->draw(dst_surface, get_position_on_screen());
+  }
 }
 
 }

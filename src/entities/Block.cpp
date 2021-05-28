@@ -208,25 +208,23 @@ void Block::notify_collision_with_switch(Switch& sw, CollisionMode /* collision_
 /**
  * \copydoc Entity::notify_action_command_pressed
  */
-bool Block::notify_action_command_pressed() {
-
-  if (get_commands_effects().get_action_key_effect() == CommandsEffects::ACTION_KEY_GRAB &&
-      get_hero().can_grab()
-  ) {
-    get_hero().start_grabbing();
-    return true;
+bool Block::notify_action_command_pressed(Hero &hero) {
+  bool handled = false;
+  if(hero.get_commands_effects().get_action_key_effect()
+     == CommandsEffects::ACTION_KEY_GRAB &&
+     hero.can_grab()) {
+    hero.start_grabbing();
+    handled = true;
   }
 
-  return Entity::notify_action_command_pressed();
+  return handled or Entity::notify_action_command_pressed(hero);
 }
 
 /**
  * \brief This function is called when the player tries to push or pull this block.
  * \return true if the player is allowed to move this block
  */
-bool Block::start_movement_by_hero() {
-
-  Hero& hero = get_hero();
+bool Block::start_movement_by_hero(Hero& hero) {
   bool pulling = hero.is_grabbing_or_pulling();
   int allowed_direction = get_direction();
   int hero_direction = hero.get_animation_direction();
@@ -248,13 +246,13 @@ bool Block::start_movement_by_hero() {
   int dy = get_y() - hero.get_y();
 
   set_movement(std::make_shared<RelativeMovement>(
-      std::static_pointer_cast<Hero>(hero.shared_from_this()),
+      hero.shared_from_this_cast<Entity>(),
       dx,
       dy,
       false
   ));
   sound_played = false;
-
+  moving_hero = hero.shared_from_this_cast<Hero>();
   return true;
 }
 
@@ -280,7 +278,9 @@ void Block::notify_position_changed() {
 void Block::notify_obstacle_reached() {
 
   // The block is stopped by an obstacle while being pushed or pulled.
-  get_hero().notify_grabbed_entity_collision();
+  if(moving_hero) {
+    moving_hero->notify_grabbed_entity_collision();
+  }
 
   Entity::notify_obstacle_reached();
 }

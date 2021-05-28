@@ -81,7 +81,6 @@ class EntityZOrderComparator {
 };
 
 using EntityTree = Quadtree<EntityPtr, EntityZOrderComparator>;
-
 /**
  * \brief Manages the whole content of a map.
  *
@@ -99,8 +98,10 @@ class SOLARUS_API Entities {
     ~Entities();
 
     // Get entities.
-    Hero& get_hero();
-    const CameraPtr& get_camera() const;
+    Hero& get_default_hero();
+    const Heroes& get_heroes() const;
+    const CameraPtr get_camera() const;
+    const Cameras& get_cameras() const;
     Ground get_tile_ground(int layer, int x, int y) const;
     EntityVector get_entities();
     const std::shared_ptr<Destination>& get_default_destination();
@@ -162,15 +163,15 @@ class SOLARUS_API Entities {
     // Map events.
     void notify_map_starting(Map& map, const std::shared_ptr<Destination>& destination);
     void notify_map_started(Map& map, const std::shared_ptr<Destination>& destination);
-    void notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination);
-    void notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination);
+    void notify_map_opening_transition_finishing(Map& map, const std::string &destination_name, const HeroPtr &opt_hero);
+    void notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination, const HeroPtr &opt_hero);
     void notify_tileset_changed();
     void notify_map_finished();
 
     // Game loop.
     void set_suspended(bool suspended);
     void update();
-    void draw();
+    void draw(Camera &camera);
 
   private:
 
@@ -194,8 +195,6 @@ class SOLARUS_API Entities {
 
         ZOrderInfo();
 
-        void add(const EntityPtr& entity);
-        void remove(const EntityPtr& entity);
         void bring_to_front(const EntityPtr& entity);
         void bring_to_back(const EntityPtr& entity);
 
@@ -230,9 +229,12 @@ class SOLARUS_API Entities {
         tiles_in_animated_regions;                  /**< For each layer, animated tiles and tiles overlapping them. */
 
     // dynamic entities
-    HeroPtr hero;                                   /**< The hero, also stored in Game because
+    /*HeroPtr hero;  */                                   /**< The hero, also stored in Game because
                                                      * it is kept when changing maps. */
-    CameraPtr camera;                               /**< The visible area of the map. */
+    std::vector<HeroPtr> heroes;
+
+    //CameraPtr camera;                               /**< The visible area of the map. */
+    Cameras cameras;                                /**< The visibles area of the map. */
 
     std::map<std::string, EntityPtr>
         named_entities;                             /**< Entities identified by a name. */
@@ -279,9 +281,20 @@ inline Ground Entities::get_tile_ground(int layer, int x, int y) const {
  * \brief Returns the camera of the map.
  * \return The camera, or nullptr if there is no camera.
  */
-inline const CameraPtr& Entities::get_camera() const {
+inline const CameraPtr Entities::get_camera() const {
+  if(cameras.size()) {
+    return cameras.front();
+  } else {
+    return nullptr;
+  }
+}
 
-  return camera;
+/**
+ * \brief Returns the cameras of the map.
+ * \return The cameras
+ */
+inline const Cameras& Entities::get_cameras() const {
+  return cameras;
 }
 
 /**

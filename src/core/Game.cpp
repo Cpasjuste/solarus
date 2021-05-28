@@ -19,9 +19,9 @@
 #include "solarus/core/CurrentQuest.h"
 #include "solarus/core/Debug.h"
 #include "solarus/core/Equipment.h"
+#include "solarus/core/Map.h"
 #include "solarus/core/Game.h"
 #include "solarus/core/MainLoop.h"
-#include "solarus/core/Map.h"
 #include "solarus/core/Savegame.h"
 #include "solarus/core/Treasure.h"
 #include "solarus/core/Profiler.h"
@@ -47,7 +47,7 @@ namespace Solarus {
  * \param main_loop The Solarus root object.
  * \param savegame The saved data of this game.
  */
-Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
+Game::Game(MainLoop& main_loop, const SavegamePtr& savegame):
   main_loop(main_loop),
   savegame(savegame),
   pause_allowed(true),
@@ -57,22 +57,20 @@ Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
   suspended_by_script(false),
   started(false),
   restarting(false),
-  commands_effects(),
-  current_map(nullptr),
-  next_map(nullptr),
-  previous_map_surface(nullptr),
-  current_transition_style(Transition::Style::IMMEDIATE),
-  transition(nullptr),
   crystal_state(false) {
 
   // notify objects
   savegame->set_game(this);
 
   // initialize members
-  commands = std::unique_ptr<GameCommands>(new GameCommands(*this));
-  hero = std::make_shared<Hero>(get_equipment());
-  hero->start_free();
-  update_commands_effects();
+  controls = ControlsDispatcher::get().create_commands_from_game(*this); //TODO differentiate commands from hero to hero
+
+  default_hero = std::make_shared<Hero>(savegame->get_default_equipment(), "hero");
+  CameraPtr default_camera = create_camera("main_camera");
+
+  default_hero->set_controls(controls);
+  default_hero->start_free();
+  default_hero->set_linked_camera(default_camera);
 
   // Maybe we are restarting after a game-over sequence.
   if (get_equipment().get_life() <= 0) {
@@ -110,7 +108,8 @@ Game::Game(MainLoop& main_loop, const std::shared_ptr<Savegame>& savegame):
     starting_destination_name = "";  // Default destination.
   }
 
-  set_current_map(starting_map_id, starting_destination_name, get_default_transition_style());
+
+  teleport_hero(get_hero(), starting_map_id, starting_destination_name, Transition::Style::FADE);
 }
 
 /**
@@ -125,7 +124,8 @@ void Game::start() {
   }
 
   started = true;
-  get_savegame().notify_game_started();
+  get_hero()->get_equipment().notify_game_started();
+  //Update teleportations a first time so that cameras are added to first map
   get_lua_context().game_on_started(*this);
 }
 
@@ -140,23 +140,24 @@ void Game::stop() {
     return;
   }
 
-  if (current_map != nullptr) {
-
-    if (hero->is_on_map()) {
-      // The hero was initialized.
-      hero->notify_being_removed();
+  for_each_hero([](Hero& hero){
+    if(hero.is_on_map()) {
+      hero.notify_being_removed();
     }
+    hero.get_equipment().notify_game_finished();
+  });
+
+  // Unload each map
+  for(const MapPtr& current_map : current_maps) {
 
     if (current_map->is_started()) {
       current_map->leave();
     }
-    if (current_map->is_loaded()) {
-      current_map->unload();
-    }
+
+    current_map->unload();
   }
 
   get_lua_context().game_on_finished(*this);
-  get_savegame().notify_game_finished();
   get_savegame().set_game(nullptr);
 
   Music::stop_playing();
@@ -192,24 +193,24 @@ ResourceProvider& Game::get_resource_provider() {
  * \brief Returns the hero.
  * \return the hero
  */
-const HeroPtr& Game::get_hero() {
-  return hero;
+const HeroPtr& Game::get_hero() const {
+  return default_hero;
 }
 
 /**
  * \brief Returns the game commands mapped to the keyboard and the joypad.
  * \return The game commands.
  */
-GameCommands& Game::get_commands() {
-  return *commands;
+Controls& Game::get_controls() {
+  return *controls;
 }
 
 /**
  * \brief Returns the game commands mapped to the keyboard and the joypad.
  * \return The game commands.
  */
-const GameCommands& Game::get_commands() const {
-  return *commands;
+const Controls& Game::get_controls() const {
+  return *controls;
 }
 
 /**
@@ -217,7 +218,7 @@ const GameCommands& Game::get_commands() const {
  * \return the current effect of the main keys
  */
 CommandsEffects& Game::get_commands_effects() {
-  return commands_effects;
+  return get_controls().get_effects();
 }
 
 /**
@@ -244,7 +245,7 @@ const Savegame& Game::get_savegame() const {
  * \return The equipment.
  */
 Equipment& Game::get_equipment() {
-  return get_savegame().get_equipment();
+  return get_hero()->get_equipment();
 }
 
 /**
@@ -255,7 +256,7 @@ Equipment& Game::get_equipment() {
  * \return The equipment.
  */
 const Equipment& Game::get_equipment() const {
-  return get_savegame().get_equipment();
+  return get_hero()->get_equipment();
 }
 
 /**
@@ -265,50 +266,56 @@ const Equipment& Game::get_equipment() const {
  */
 bool Game::notify_input(const InputEvent& event) {
 
-  if (current_map != nullptr && current_map->is_loaded()) {
-    bool handled = get_lua_context().game_on_input(*this, event);
-    if (!handled) {
-      handled = current_map->notify_input(event);
-      if (!handled) {
-        handled = hero->notify_input(event);
-        if (!handled) {
-          // Built-in behavior:
-          // the GameCommands object will transform the low-level input event into
-          // a high-level game command event (i.e. a command_pressed event or
-          // a command_released event).
-          commands->notify_input(event);
-        }
+  if(current_maps.empty()) {
+    // no maps, game is not started yet
+
+    return true; // pretend we handled the event
+  }
+
+  // propagate input to each map
+
+  //TODO check if at least one map must be loaded (is_loaded)
+  bool handled = get_lua_context().game_on_input(*this, event);
+
+  if(!handled) {
+    for(const MapPtr& current_map : current_maps) {
+      if (current_map != nullptr && current_map->is_loaded()) {
+        handled |= current_map->notify_input(event);
       }
     }
   }
-  return true;
+
+  return handled;
 }
 
 /**
- * \brief This function is called when a game command is pressed.
+ * \brief This function is called when a game commend event is raised.
  * \param command A game command.
  */
-void Game::notify_command_pressed(GameCommand command) {
+void Game::notify_control(const ControlEvent& event) {
 
+  bool is_pressed = event.is_pressed();
   // Is a built-in dialog box being shown?
-  if (is_dialog_enabled()) {
-    if (dialog_box.notify_command_pressed(command)) {
+  if (is_dialog_enabled() and is_pressed) {
+    if (dialog_box.notify_command_pressed(event.get_command_id())) {
       return;
     }
   }
 
   // See if the game script handles the command.
-  if (get_lua_context().game_on_command_pressed(*this, command)) {
+  if (get_lua_context().game_on_control(*this, event)) {
     return;
   }
 
-  // See if the map script handled the command.
-  if (get_lua_context().map_on_command_pressed(get_current_map(), command)) {
-    return;
+  // See if the map scripts handled the command.
+  for(const MapPtr& map : current_maps) {
+    if(map->notify_control(event)) {
+      return;
+    }
   }
 
   // Lua scripts did not override the command: do the built-in behavior.
-  if (command == GameCommand::PAUSE) {
+  if (is_pressed and event.get_command_id() == CommandId::PAUSE) {
     if (is_paused()) {
       if (can_unpause()) {
         set_paused(false);
@@ -320,34 +327,24 @@ void Game::notify_command_pressed(GameCommand command) {
       }
     }
   }
-
-  else if (!is_suspended()) {
-    // When the game is not suspended, all other commands apply to the hero.
-    hero->notify_command_pressed(command);
-  }
 }
 
 /**
- * \brief This function is called when a game command is released.
- * \param command A game command.
+ * @brief Update teleportations of cameras
  */
-void Game::notify_command_released(GameCommand command) {
-
-  bool handled = get_lua_context().game_on_command_released(*this, command);
-
-  if (!handled) {
-
-    handled = get_lua_context().map_on_command_released(get_current_map(), command);
-
-    if (!handled) {
-      // The Lua script did not override the command: do the built-in behavior.
-
-      if (!is_suspended()) {
-        // When the game is not suspended, the command apply to the hero.
-        hero->notify_command_released(command);
-      }
-    }
+void Game::update_teleportations() {
+  // Update the transitions between maps.
+  for(auto& ct : cameras_teleportations) {
+    ct.removed = update_teleportation(ct);
   }
+
+  cameras_teleportations.erase(
+        std::remove_if(cameras_teleportations.begin(), cameras_teleportations.end(),
+                 [](CameraTeleportation& ht){
+          return ht.removed;
+        }),
+        cameras_teleportations.end()
+  );
 }
 
 /**
@@ -357,23 +354,52 @@ void Game::notify_command_released(GameCommand command) {
  */
 void Game::update() {
   SOL_PFUN(profiler::colors::Red);
-  // Update the transitions between maps.
-  update_transitions();
 
-  if (restarting || !started) {
+  //Update teleportations and transitions
+  update_teleportations();
+
+  if (restarting && cameras_teleportations.empty()) { //All transitions finished ! Restart !
+    stop();
+    MainLoop& main_loop = get_main_loop();
+    main_loop.set_game(new Game(main_loop, savegame));
+    this->savegame = nullptr;
+    return;
+  }
+
+  //If we are not doing any teleportation
+  if(cameras_teleportations.empty()) {
+    //Remove map that must be unloaded
+    for(const MapPtr& map : maps_to_unload) {
+      map->leave(); // Leave the map
+      map->unload();
+
+      current_maps.erase(std::remove(current_maps.begin(),
+                                     current_maps.end(),
+                                     map),
+                         current_maps.end());
+    }
+    maps_to_unload.clear(); //Done removing maps
+  }
+
+  if(restarting or not started) {
     return;
   }
 
   // Update the map.
   update_tilesets();
-  current_map->update();
+
+  for(const MapPtr& current_map : current_maps) {
+    if(current_map->is_started()) {
+      current_map->update();
+    }
+  }
 
   // Call game:on_update() in Lua.
   get_lua_context().game_on_update(*this);
 
   // Update the equipment and HUD.
-  get_equipment().update();
-  update_commands_effects();
+  get_equipment().update(); //TODO move equipement update were equipement is located
+  //update_commands_effects();
 }
 
 /**
@@ -395,196 +421,117 @@ void Game::update_tilesets() {
  * transitions between the two maps. This function is called
  * by the update() function.
  * Note that the two maps can actually be the same.
+ * \returns true if the transition has succeeded and needs to be removed
  */
-void Game::update_transitions() {
-
-  Rectangle previous_map_location;
-  std::string previous_world;
-  if (current_map != nullptr) {
-    previous_map_location = current_map->get_location();
-    previous_world = current_map->get_world();
+bool Game::update_teleportation(CameraTeleportation& tp) {
+  if(tp.removed) {
+    return true; //Set this tp to be really removed
   }
+
+  MapPtr& next_map = tp.next_map;
+  const auto& camera = tp.camera;
+  auto& transition = camera->get_transition();
 
   if (transition != nullptr) {
     transition->update();
-  }
-
-  // if the map has just changed, close the current map if any and play an out transition
-  if (next_map != nullptr && transition == nullptr) { // the map has changed (i.e. set_current_map has been called)
-
-    if (current_map == nullptr) { // special case: no map was playing, so we don't have any out transition to do
-      current_map = next_map;
-      next_map = nullptr;
-    }
-    else { // normal case: stop the control and play an out transition before leaving the current map
-      transition = std::unique_ptr<Transition>(Transition::create(
-          current_transition_style,
-          Transition::Direction::CLOSING,
-          this
-      ));
-      transition->start();
-    }
+  } else {
+    return true; //Transition has died
   }
 
   // if a transition was playing and has just been finished
   if (transition != nullptr && transition->is_finished()) {
 
     Transition::Direction transition_direction = transition->get_direction();
-    bool needs_previous_surface = transition->needs_previous_surface();
     transition = nullptr;
 
-    MainLoop& main_loop = get_main_loop();
     if (restarting) {
-      stop();
-      main_loop.set_game(new Game(main_loop, savegame));
-      this->savegame = nullptr;  // The new game is the owner.
+      return true; //We are done closing let's restart or kill the camera!
+    }
+    else if(next_map == nullptr) {
+        //Camera leave the map before dying...
+        leave_map(camera, tp.current_map);
+
+        //Transition to nowhere, camera is to be removed
+        cameras.erase(std::remove(
+                          cameras.begin(),
+                          cameras.end(),
+                          camera), cameras.end());
+        return true;
     }
     else if (transition_direction == Transition::Direction::CLOSING) {
       // The closing transition has just finished.
-
-      bool world_changed = next_map != current_map &&
-          (!next_map->has_world() || next_map->get_world() != previous_world);
-
-      if (world_changed) {
-        // Reset the crystal blocks.
-        crystal_state = false;
-      }
-
-      // Determine the destination to use and its name.
-      std::string destination_name = next_map->get_destination_name();
-      bool special_destination = destination_name == "_same" ||
-          destination_name.substr(0,5) == "_side";
-      StartingLocationMode starting_location_mode = StartingLocationMode::NO;
-      if (!special_destination) {
-        EntityPtr destination;
-        if (destination_name.empty()) {
-          std::shared_ptr<Destination> default_destination = next_map->get_entities().get_default_destination();
-          if (default_destination != nullptr) {
-            destination = default_destination;
-            destination_name = destination->get_name();
-          }
-        }
-        else {
-          destination = next_map->get_entities().find_entity(destination_name);
-        }
-        if (destination != nullptr && destination->get_type() == EntityType::DESTINATION) {
-          starting_location_mode =
-              std::static_pointer_cast<Destination>(destination)->get_starting_location_mode();
-        }
-      }
-
-      bool save_starting_location = false;
-      switch (starting_location_mode) {
-
-      case StartingLocationMode::YES:
-        save_starting_location = true;
-        break;
-
-      case StartingLocationMode::NO:
-        save_starting_location = false;
-        break;
-
-      case StartingLocationMode::WHEN_WORLD_CHANGES:
-        save_starting_location = world_changed;
-        break;
-      }
-
-      // Save the location if needed, except if this is a special destination.
-      if (save_starting_location && !special_destination) {
-        get_savegame().set_string(Savegame::KEY_STARTING_MAP, next_map->get_id());
-        get_savegame().set_string(Savegame::KEY_STARTING_POINT, destination_name);
-      }
-
-      // before closing the map, draw it on a backup surface for transition effects
-      // that want to display both maps at the same time
-      if (needs_previous_surface && current_map->get_camera() != nullptr) {
-        previous_map_surface = Surface::create(
-            current_map->get_camera()->get_size()
-        );
-        current_map->draw();
-        current_map->get_camera_surface()->draw(previous_map_surface);
-      }
-
-      if (next_map == current_map) {
-        // same map
-        hero->place_on_destination(*current_map, previous_map_location);
-        transition = std::unique_ptr<Transition>(Transition::create(
-            current_transition_style,
-            Transition::Direction::OPENING,
-            this
-        ));
-        if (needs_previous_surface) {
-          transition->set_previous_surface(previous_map_surface.get());
-        }
-        transition->start();
-        next_map = nullptr;
-      }
-      else {
-        // change the map
-        current_map->leave();
-
-        // set the next map
-        current_map->unload();
-
-        current_map = next_map;
-        next_map = nullptr;
-      }
+      teleportation_change_map(tp);
     }
-    else {
-      current_map->notify_opening_transition_finished();
-      previous_map_surface = nullptr;
+    else { //The opening transition has finished
+      next_map->notify_opening_transition_finished(tp.destination_name, tp.opt_hero);
+      return true; // This teleportation has come to an end
     }
   }
 
-  // if a map has just been set as the current map, start it and play the in transition
-  if (started && !current_map->is_started()) {
-    Debug::check_assertion(current_map->is_loaded(), "This map is not loaded");
-    transition = std::unique_ptr<Transition>(Transition::create(
-        current_transition_style,
-        Transition::Direction::OPENING,
-        this
-    ));
-
-    if (previous_map_surface != nullptr) {
-      // some transition effects need to display both maps simultaneously
-      transition->set_previous_surface(previous_map_surface.get());
-    }
-
-    set_suspended_by_script(false);
-
-    hero->place_on_destination(*current_map, previous_map_location);
-    transition->start();
-    current_map->start();
-    notify_map_changed();
-
-    std::string new_world = current_map->get_world();
-    if (previous_world.empty() || new_world.empty() || new_world != previous_world) {
-      get_lua_context().game_on_world_changed(*this, previous_world, new_world);
-    }
-  }
+  return false; //This transition is not yet finished
 }
 
 /**
- * \brief Makes sure the keys effects are coherent with the hero's equipment and abilities.
+ * @brief Called when in middle of the teleportation
+ * @param tp the teleportation struct
  */
-void Game::update_commands_effects() {
+void Game::teleportation_change_map(CameraTeleportation &tp) {
+  MapPtr& current_map = tp.current_map;
+  MapPtr& next_map = tp.next_map;
 
-  // when the game is paused or a dialog box is shown, the sword key is not the usual one
-  if (is_paused() || is_dialog_enabled()) {
-    return; // if the game is interrupted for some other reason (e.g. a transition), let the normal sword icon
+  auto& transition_style = tp.transition_style;
+  const auto& camera = tp.camera;
+  auto& transition = camera->get_transition();
+  //Create opening transition
+  transition = std::unique_ptr<Transition>(Transition::create(
+      transition_style,
+      Transition::Direction::OPENING
+  ));
+  bool needs_previous_surface = transition->needs_previous_surface();
+
+  // before closing the map, draw it on a backup surface for transition effects
+  // that want to display both maps at the same time
+  if (needs_previous_surface) {
+    const SurfacePtr& previous_map_surface = Surface::create(
+        camera->get_size()
+    );
+    current_map->draw();
+    camera->get_surface()->draw(previous_map_surface);
+    transition->set_previous_surface(previous_map_surface);
   }
 
-  // make sure the sword key is coherent with having a sword
-  if (get_equipment().has_ability(Ability::SWORD)
-      && commands_effects.get_sword_key_effect() != CommandsEffects::ATTACK_KEY_SWORD) {
+  transition->set_destination_side(next_map->get_destination_side(tp.destination_name));
+  transition->start(); //Start opening transition
 
-    commands_effects.set_sword_key_effect(CommandsEffects::ATTACK_KEY_SWORD);
-  }
-  else if (!get_equipment().has_ability(Ability::SWORD)
-      && commands_effects.get_sword_key_effect() == CommandsEffects::ATTACK_KEY_SWORD) {
+  if (next_map != current_map) {
+    if(current_map) {
+      leave_map(camera, current_map);
+    }
 
-    commands_effects.set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
+    //Go to the new map
+    camera->place_on_map(*next_map);
   }
+
+  if(tp.opt_hero) {
+      on_hero_map_prepare(tp.opt_hero, tp);
+  } else {
+      EntityPtr destination = next_map->get_entities().find_entity(tp.destination_name);
+
+      if(destination) {
+        camera->track_position(destination->get_center_point());
+      }
+  }
+
+  notify_map_changed(*next_map, *camera);
+  //All entities should be there, start the map if necessary
+  if(!next_map->is_started()) {
+    Debug::check_assertion(next_map->is_loaded(), "This map is not loaded");
+    next_map->start(tp.destination_name);
+  }
+
+  if(tp.opt_hero) {
+      on_hero_map_change(tp.opt_hero, tp);
+  } //Call the on_map_changed after map start
 }
 
 /**
@@ -592,37 +539,52 @@ void Game::update_commands_effects() {
  * \param dst_surface The surface where the game will be drawn.
  */
 void Game::draw(const SurfacePtr& dst_surface) {
+
   SOL_PFUN(profiler::colors::Green);
-  if (current_map == nullptr) {
-    // Nothing to do. The game is not fully initialized yet.
-    return;
+  /** Draw maps to their camera */
+  for(const MapPtr& current_map : current_maps) {
+    current_map->draw();
   }
 
-  // Draw the map.
-  if (current_map->is_loaded()) {
-    dst_surface->fill_with_color(current_map->get_tileset().get_background_color());
-    current_map->draw();
-    const CameraPtr& camera = current_map->get_camera();
-    if (camera != nullptr) {
-      const SurfacePtr& camera_surface = camera->get_surface();
-      if (transition != nullptr) {
-        camera_surface->draw_with_transition(Rectangle(camera_surface->get_size()),
-                                             dst_surface,
-                                             camera->get_position_on_screen(),
-                                             *transition);
+  //Draw cameras to screen
+  for(const CameraPtr& camera : cameras) {
+    camera->draw(dst_surface);
+  }
 
-      } else {
-        camera_surface->draw(dst_surface, camera->get_position_on_screen());
-      }
-    }
-
+  if(current_maps.size() > 0) {
     // Draw the built-in dialog box if any.
     if (is_dialog_enabled()) {
       dialog_box.draw(dst_surface);
     }
-  }
 
-  get_lua_context().game_on_draw(*this, dst_surface);
+    //TODO check if this is at the right place
+    get_lua_context().game_on_draw(*this, dst_surface);
+  }
+}
+
+
+/**
+ * @brief Called by the main loop when the window size changed
+ *
+ * Propagate window size change events
+ *
+ * @param size the new window size
+ */
+void Game::notify_window_size_changed(const Size& size) {
+  for(const MapPtr& current_map : current_maps) {
+     current_map->notify_window_size_changed(size);
+  }
+}
+
+/**
+ * @brief get the first map in this game
+ *
+ * Serve for retro compatibility
+ *
+ * @return
+ */
+Map& Game::get_default_map() {
+  return *current_maps.front();
 }
 
 /**
@@ -634,15 +596,103 @@ void Game::draw(const SurfacePtr& dst_surface) {
  * \return true if there is a map
  */
 bool Game::has_current_map() const {
-  return current_map != nullptr;
+  return current_maps.size() > 0;
 }
 
 /**
  * \brief Returns the current map.
  * \return the current map
  */
-Map& Game::get_current_map() {
-  return *current_map;
+Map& Game::get_current_map(const HeroPtr &hero) {
+  return hero->get_map();
+}
+
+void Game::on_hero_map_change(const HeroPtr& hero, const CameraTeleportation& tp) {
+    const auto& current_map = tp.current_map;
+    const auto& next_map = tp.next_map;
+    const auto& a_destination_name = tp.destination_name;
+
+    std::string previous_world;
+    if (current_map != nullptr) {
+      previous_world = current_map->get_world();
+    }
+
+    bool world_changed = current_map && next_map != current_map &&
+        (!next_map->has_world() || next_map->get_world() != previous_world);
+
+    if (world_changed) {
+      // Reset the crystal blocks.
+      crystal_state = false;
+    }
+
+    // Determine the destination to use and its name.
+    std::string destination_name = a_destination_name;
+    bool special_destination = destination_name == "_same" ||
+        destination_name.substr(0,5) == "_side";
+    StartingLocationMode starting_location_mode = StartingLocationMode::NO;
+    if (!special_destination) {
+      EntityPtr destination;
+      if (destination_name.empty()) {
+        std::shared_ptr<Destination> default_destination = next_map->get_entities().get_default_destination();
+        if (default_destination != nullptr) {
+          destination = default_destination;
+          destination_name = destination->get_name();
+        }
+      }
+      else {
+        destination = next_map->get_entities().find_entity(destination_name);
+      }
+      if (destination != nullptr && destination->get_type() == EntityType::DESTINATION) {
+        starting_location_mode =
+            std::static_pointer_cast<Destination>(destination)->get_starting_location_mode();
+        get_lua_context().destination_on_activated(static_cast<Destination&>(*destination), *hero);
+      }
+    }
+
+    bool save_starting_location = false;
+    switch (starting_location_mode) {
+
+    case StartingLocationMode::YES:
+      save_starting_location = true;
+      break;
+
+    case StartingLocationMode::NO:
+      save_starting_location = false;
+      break;
+
+    case StartingLocationMode::WHEN_WORLD_CHANGES:
+      save_starting_location = world_changed;
+      break;
+    }
+
+    // Save the location if needed, except if this is a special destination.
+    if (save_starting_location && !special_destination) {
+      get_savegame().set_string(Savegame::KEY_STARTING_MAP, next_map->get_id());
+      get_savegame().set_string(Savegame::KEY_STARTING_POINT, destination_name);
+    }
+
+    std::string new_world = next_map->get_world();
+    if (previous_world.empty() || new_world.empty() || new_world != previous_world) {
+     get_lua_context().game_on_world_changed(*this, previous_world, new_world);
+    }
+}
+
+void Game::on_hero_map_prepare(const HeroPtr& hero, const CameraTeleportation &tp) {
+    const auto& current_map = tp.current_map;
+    const auto& next_map = tp.next_map;
+    const auto& a_destination_name = tp.destination_name;
+
+    Rectangle previous_map_location;
+    if (current_map != nullptr) {
+      previous_map_location = current_map->get_location();
+    }
+
+    if(current_map and current_map != next_map) {
+      leave_map(hero, current_map);
+    }
+
+    hero->place_on_destination(*next_map, previous_map_location, a_destination_name);
+    hero->get_linked_camera()->start_tracking(hero); //TODO verify if necessary
 }
 
 /**
@@ -658,46 +708,222 @@ Map& Game::get_current_map() {
  * to place the hero on a side of the map.
  * \param transition_style Type of transition between the two maps.
  */
-void Game::set_current_map(
+void Game::teleport_hero(
+    const HeroPtr& hero,
     const std::string& map_id,
-    const std::string& destination_name,
+    const std::string& a_destination_name,
     Transition::Style transition_style) {
 
-  if (current_map != nullptr) {
-    // stop the hero's movement
-    hero->reset_movement();
+  if(hero->get_linked_camera()) {
+    teleport_camera(hero->get_linked_camera(),
+                    map_id,
+                    a_destination_name,
+                    transition_style,
+                    hero);
+  } else if(is_map_loaded(map_id)) {
+    MapPtr current_map = hero->get_map().shared_from_this_cast<Map>();
+    MapPtr next_map = prepare_map(map_id);
+    hero->place_on_destination(*next_map, current_map->get_location(), a_destination_name);
+  } else {
+    Debug::error("Teleporting a hero without camera to unloaded map \"" + map_id + "\"");
+  }
+}
+
+/**
+ * @brief Tells if the map with this id is loaded
+ * @param map_id
+ * @return
+ */
+bool Game::is_map_loaded(const std::string& map_id) const {
+    auto it = std::find_if(current_maps.begin(), current_maps.end(), [&](const MapPtr& map) {
+        return map->get_id() == map_id && map->is_loaded();
+    });
+    return it != current_maps.end();
+}
+
+/**
+ * @brief Teleports camera to a new map
+ * @param camera
+ * @param map_id
+ * @param destination_name
+ * @param transition_style
+ */
+void Game::teleport_camera(const CameraPtr& camera,
+                     const std::string map_id,
+                     const std::string& destination_name,
+                     Transition::Style transition_style,
+                     const HeroPtr &opt_hero) {
+
+  //Verify if there is already a teleportation for this camera
+  auto it = std::find_if(cameras_teleportations.begin(),
+                         cameras_teleportations.end(),
+                         [&](const CameraTeleportation& ct){
+    return ct.camera == camera;
+  });
+
+  // Set the old tp to be removed
+  if(it != cameras_teleportations.end()) {
+    it->removed = true;
+  }
+
+  CameraTeleportation ct;
+
+  ct.camera = camera;
+  ct.opt_hero = opt_hero;
+
+  if(camera->is_on_map()) {
+    ct.current_map = camera->get_map().shared_from_this_cast<Map>();
   }
 
   // prepare the next map
-  if (current_map == nullptr || map_id != current_map->get_id()) {
-    // another map
-    next_map = std::make_shared<Map>(map_id);
-    next_map->load(*this);
-    next_map->check_suspended();
-  }
-  else {
-    // same map
-    next_map = current_map;
+  if(map_id.empty()) {
+    ct.next_map = nullptr;
+  } else {
+    ct.next_map = prepare_map(map_id);
   }
 
-  if (current_map != nullptr) {
-    current_map->check_suspended();
+  if (ct.current_map != nullptr) {
+    ct.current_map->check_suspended();
   }
 
-  next_map->set_destination(destination_name);
+  ct.destination_name = destination_name;
+  ct.transition_style = transition_style;
+
+  //Setup the transition
+  auto transition = std::unique_ptr<Transition>(Transition::create(
+                                                  transition_style,
+                                                  Transition::Direction::CLOSING
+                                              ));
+
+  transition->start();
+  ct.camera->set_transition(std::move(transition));
+
+  //Camera teleported without hero, stop tracking
+  if(!opt_hero) {
+      camera->start_manual();
+  }
+
+  // Add the teleportation details to the list of current teleportations
+  cameras_teleportations.emplace_back(std::move(ct));
+
+  if(!camera->is_on_map()) {
+    //Fast forward to opening transition
+    teleportation_change_map(cameras_teleportations.back());
+  }
+}
+
+/**
+ * @brief Create a camera object with the given id
+ * @param id
+ * @return
+ */
+CameraPtr Game::create_camera(const std::string& id) {
+    CameraPtr camera = std::make_shared<Camera>(id);
+    cameras.push_back(camera);
+    return camera;
+}
+
+/**
+ * @brief remove a camera from the running game
+ *
+ * Removing a camera is equivalent to teleporting it to nowhere
+ *
+ * @param camera
+ * @param transition_style
+ */
+void Game::remove_camera(const CameraPtr& camera, Transition::Style transition_style)
+{
+    //Make it transition to nowhere
+    teleport_camera(camera, "", "", transition_style, nullptr);
+}
+
+/**
+ * @brief Get the living cameras of this game
+ * @return
+ */
+const std::vector<CameraPtr>& Game::get_cameras() const {
+    return cameras;
+}
+
+/**
+ * @brief Tells if the given map is current in this game
+ * @param map
+ */
+bool Game::is_current_map(Map& map) const {
+  return std::find(current_maps.begin(),
+                   current_maps.end(),
+                   map.shared_from_this()) != current_maps.end();
+}
+
+/**
+ * @brief Tells if this game is running multiple maps
+ * @return true if the games is multi-map
+ */
+bool Game::has_multiple_maps() const {
+  return current_maps.size() > 1;
+}
+
+const MapPtr& Game::prepare_map(const std::string& map_id) {
+  const auto it = std::find_if(current_maps.begin(), current_maps.end(),
+                               [&](const MapPtr& map){
+    return map->get_id() == map_id;
+  });
+
+  //If map is already loaded, return it immediatly
+  if(it != current_maps.end()) {
+    return *it;
+  }
+
+  // Load map and add it to the list
+  MapPtr map = std::make_shared<Map>(map_id);
+  map->load(*this);
+  map->check_suspended();
+
+  auto emp_it = current_maps.emplace(current_maps.begin(), map); //Emplace front to have default map being the new one
+  return *emp_it;
+}
+
+
+/**
+ * @brief Remove an entity from a map and ensure the map is unloaded if necessary
+ * @param leaving the entity leaving the map
+ * @param map the map
+ */
+void Game::leave_map(const EntityPtr &leaving, const MapPtr& map) {
+
+  //Remove the hero from the map
+  map->get_entities().remove_entity(*leaving);
+
+  //check if map is empty
+  if(!map->has_cameras()) {
+    // unload the map on next tick
+    maps_to_unload.insert(map);
+  }
+
+
+  /*next_map->set_destination(destination_name);
   this->current_transition_style = transition_style;
+*/
+}
+
+/**
+ * @brief Get the maps running in this game
+ * @return a collection of maps
+ */
+const std::vector<MapPtr>& Game::get_maps() const {
+    return current_maps;
 }
 
 /**
  * \brief Notifies the game objects that the another map has just become active.
  */
-void Game::notify_map_changed() {
+void Game::notify_map_changed(Map &map, Camera& camera) {
 
   // Call game:on_map_changed() in Lua.
-  get_lua_context().game_on_map_changed(*this, *current_map);
+  get_lua_context().game_on_map_changed(*this, map, camera);
 
   // Notify the equipment.
-  get_equipment().notify_map_changed(*current_map);
+  get_equipment().notify_map_changed(map, camera);
 }
 
 /**
@@ -747,7 +973,13 @@ bool Game::is_paused() const {
  * \return true if there is a transition
  */
 bool Game::is_playing_transition() const {
-  return transition != nullptr || next_map != nullptr;
+  //return cameras_teleportations.size() > 0;
+
+  return std::find_if(cameras_teleportations.begin(),
+                      cameras_teleportations.end(),
+                      [](const CameraTeleportation& tp){
+    return !tp.is_finished();
+  }) != cameras_teleportations.end();
 }
 
 /**
@@ -765,7 +997,7 @@ bool Game::is_playing_transition() const {
  */
 bool Game::is_suspended() const {
 
-  return current_map == nullptr ||
+  return !has_current_map() ||
       is_paused() ||
       is_dialog_enabled() ||
       is_playing_transition() ||
@@ -866,7 +1098,7 @@ bool Game::is_pause_allowed() const {
 void Game::set_pause_allowed(bool pause_allowed) {
 
   this->pause_allowed = pause_allowed;
-  commands_effects.set_pause_key_enabled(pause_allowed);
+  get_commands_effects().set_pause_key_enabled(pause_allowed);
 }
 
 /**
@@ -879,18 +1111,18 @@ void Game::set_paused(bool paused) {
 
     this->paused = paused;
     if (paused) {
-      commands_effects.save_action_key_effect();
-      commands_effects.set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
-      commands_effects.save_sword_key_effect();
-      commands_effects.set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
-      commands_effects.set_pause_key_effect(CommandsEffects::PAUSE_KEY_RETURN);
+      get_commands_effects().save_action_key_effect();
+      get_commands_effects().set_action_key_effect(CommandsEffects::ACTION_KEY_NONE);
+      get_commands_effects().save_sword_key_effect();
+      get_commands_effects().set_sword_key_effect(CommandsEffects::ATTACK_KEY_NONE);
+      get_commands_effects().set_pause_key_effect(CommandsEffects::PAUSE_KEY_RETURN);
       get_lua_context().game_on_paused(*this);
     }
     else {
       get_lua_context().game_on_unpaused(*this);
-      commands_effects.restore_action_key_effect();
-      commands_effects.restore_sword_key_effect();
-      commands_effects.set_pause_key_effect(CommandsEffects::PAUSE_KEY_PAUSE);
+      get_commands_effects().restore_action_key_effect();
+      get_commands_effects().restore_sword_key_effect();
+      get_commands_effects().set_pause_key_effect(CommandsEffects::PAUSE_KEY_PAUSE);
     }
   }
 }
@@ -901,13 +1133,19 @@ void Game::set_paused(bool paused) {
  */
 bool Game::is_suspended_by_camera() const {
 
-  if (current_map == nullptr) {
+  if (!has_current_map()) {
     return false;
   }
 
-  // The game is suspended when the camera is scrolling on a separator.
-  const CameraPtr& camera = current_map->get_camera();
-  return camera->is_traversing_separator();
+  // The game is suspended when any camera is scrolling on a separator. //TODO avoid this
+  for(const MapPtr& map : current_maps) {
+    for(const CameraPtr& cam : map->get_entities().get_cameras()) {
+      if(cam->is_traversing_separator()) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -931,15 +1169,24 @@ void Game::set_suspended_by_script(bool suspended) {
  * \brief Restarts the game with the current savegame state.
  */
 void Game::restart() {
-
-  if (current_map != nullptr) {
-    transition = std::unique_ptr<Transition>(Transition::create(
-        get_default_transition_style(),
-        Transition::Direction::CLOSING,
-        this
-    ));
-    transition->start();
+  //Transition each hero out of their map
+  for(const CameraPtr& camera : cameras) {
+    if(camera->is_on_map()) {
+      CameraTeleportation ht;
+      ht.camera = camera;
+      ht.current_map = camera->get_map().shared_from_this_cast<Map>();
+      auto transition = std::unique_ptr<Transition>(Transition::create(
+                                                  Transition::Style::FADE,
+                                                  Transition::Direction::CLOSING
+                                              ));
+      transition->start();
+      camera->set_transition(std::move(transition));
+      cameras_teleportations.emplace_back(std::move(ht));
+    }
   }
+
+  //TODO !
+
   restarting = true;
 }
 
@@ -954,35 +1201,66 @@ bool Game::is_showing_game_over() const {
 /**
  * \brief Launches the game-over sequence.
  */
-void Game::start_game_over() {
+void Game::start_game_over(const HeroPtr& hero) {
 
   Debug::check_assertion(!is_showing_game_over(),
       "The game-over sequence is already active");
 
   showing_game_over = true;
 
-  if (!get_lua_context().game_on_game_over_started(*this)) {
+  if (!get_lua_context().game_on_game_over_started(*this, hero)) {
     // The script does not define a game-over sequence:
     // then, the built-in behavior is to restart the game.
-    restart();
-    stop_game_over();
+    if(hero && hero->is_on_map()) {
+      hero->get_map().get_entities().remove_entity(*hero); //Remove the dead hero from the map
+
+      //Remove linked camera if any
+      auto cam = hero->get_linked_camera();
+      if(cam) {
+        remove_camera(cam, get_default_transition_style());
+      }
+    }
+
+    //Check for remaining heroes
+    auto still_some_heroes = false;
+    for(const MapPtr& current_map : current_maps) {
+      if(current_map->get_entities().get_heroes().size() != 0){
+        still_some_heroes = true;
+        break;
+      }
+    }
+
+    //Restart game only if there is no heroes anymore
+    if(not still_some_heroes){
+      restart();
+    }
+
+    stop_game_over(hero);
   }
 }
 
 /**
  * \brief Cancels the current game-over sequence.
  */
-void Game::stop_game_over() {
+void Game::stop_game_over(const HeroPtr& hero) {
 
   Debug::check_assertion(is_showing_game_over(),
       "The game-over sequence is not running");
 
-  get_lua_context().game_on_game_over_finished(*this);
+  get_lua_context().game_on_game_over_finished(*this, hero);
   showing_game_over = false;
   if (!restarting && !get_main_loop().is_resetting()) {
-    // The hero gets back to life.
-    current_map->check_suspended();  // To unsuspend the hero before making him blink.
-    hero->notify_game_over_finished();
+    // If hero was given, notify only this one that game_over is finished
+    if(hero) {
+      hero->notify_game_over_finished();
+    } else { //else notify each heroes
+      for(const MapPtr& current_map : current_maps) {
+        current_map->check_suspended();  // To unsuspend the heroes before making them blink.
+        for(const HeroPtr& hero : current_map->get_entities().get_heroes()) {
+          hero->notify_game_over_finished();
+        }
+      }
+    }
   }
 }
 
@@ -990,16 +1268,23 @@ void Game::stop_game_over() {
  * \brief Simulates pressing a game command.
  * \param command The command to simulate.
  */
-void Game::simulate_command_pressed(GameCommand command){
-  commands->game_command_pressed(command);
+void Game::simulate_command_pressed(Command command){
+  controls->command_pressed(command);
 }
 
 /**
  * \brief Simulates releasing a game command.
  * \param command The command to simulate.
  */
-void Game::simulate_command_released(GameCommand command){
-  commands->game_command_released(command);
+void Game::simulate_command_released(Command command){
+  controls->command_released(command);
+}
+
+bool Game::CameraTeleportation::is_finished() const {
+  const auto& tr = camera->get_transition();
+  return
+      tr == nullptr or
+      (tr->is_finished() and tr->get_direction() == Transition::Direction::OPENING);
 }
 
 }

@@ -322,7 +322,7 @@ void Drawable::draw_region(const Rectangle& region,
  * @param trans the Transition to use
  */
 void Drawable::draw_with_transition(const Rectangle& region, const SurfacePtr& dst_surface, const Point& dst_position, const Transition& trans) const {
-  draw_region(region,dst_surface,dst_position,DrawProxyChain<2>(DrawProxyChain<2>::Proxies{{trans,terminal()}}));
+  draw_region(region,dst_surface,dst_position, DrawProxyChain<2>(DrawProxyChain<2>::Proxies{{trans,terminal()}}));
 }
 
 /**

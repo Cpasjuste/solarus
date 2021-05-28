@@ -20,6 +20,8 @@
 #include "solarus/core/Logger.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/graphics/Video.h"
+#include "solarus/lua/LuaContext.h"
+#include "solarus/core/CurrentQuest.h"
 #include <SDL.h>
 #include <cstdlib>  // std::abs
 #include <sstream>
@@ -27,18 +29,23 @@
 namespace Solarus {
 
 const InputEvent::KeyboardKey InputEvent::directional_keys[] = {
-    KeyboardKey::RIGHT,
-    KeyboardKey::UP,
-    KeyboardKey::LEFT,
-    KeyboardKey::DOWN,
-    KeyboardKey::NONE
+  KeyboardKey::RIGHT,
+  KeyboardKey::UP,
+  KeyboardKey::LEFT,
+  KeyboardKey::DOWN,
+  KeyboardKey::NONE
 };
 bool InputEvent::initialized = false;
-bool InputEvent::joypad_enabled = false;
-SDL_Joystick* InputEvent::joystick = nullptr;
+bool InputEvent::legacy_joypad_enabled = false;
 bool InputEvent::repeat_keyboard = false;
 std::set<SDL_Keycode> InputEvent::keys_pressed;
-int InputEvent::joypad_deadzone = 10000;
+
+
+InputEvent::Joypads InputEvent::joypads;
+std::map<int, SDL_JoystickID> InputEvent::jindex2id;
+// Default the axis states to centered
+
+int InputEvent::joypad_deadzone = 500;
 std::set<Uint8> InputEvent::jbuttons_pressed;
 std::set<Uint8> InputEvent::quit_combo;
 
@@ -47,142 +54,142 @@ const std::string EnumInfoTraits<InputEvent::KeyboardKey>::pretty_name = "keyboa
 
 const EnumInfo<InputEvent::KeyboardKey>::names_type EnumInfoTraits<InputEvent::KeyboardKey>::names = {
 
-    { InputEvent::KeyboardKey::NONE,              "" },
-    { InputEvent::KeyboardKey::BACKSPACE,         "backspace" },
-    { InputEvent::KeyboardKey::TABULATION,        "tab" },
-    { InputEvent::KeyboardKey::CLEAR,             "clear" },
-    { InputEvent::KeyboardKey::RETURN,            "return" },
-    { InputEvent::KeyboardKey::PAUSE,             "pause" },
-    { InputEvent::KeyboardKey::ESCAPE,            "escape" },
-    { InputEvent::KeyboardKey::SPACE,             "space" },
-    { InputEvent::KeyboardKey::EXCLAMATION_MARK,  "!" },
-    { InputEvent::KeyboardKey::DOULE_QUOTE,       "\"" },
-    { InputEvent::KeyboardKey::HASH,              "#" },
-    { InputEvent::KeyboardKey::DOLLAR,            "$" },
-    { InputEvent::KeyboardKey::AMPERSAND,         "&" },
-    { InputEvent::KeyboardKey::SINGLE_QUOTE,      "'" },
-    { InputEvent::KeyboardKey::LEFT_PARENTHESIS,  "(" },
-    { InputEvent::KeyboardKey::RIGHT_PARENTHESIS, ")" },
-    { InputEvent::KeyboardKey::ASTERISK,          "*" },
-    { InputEvent::KeyboardKey::PLUS,              "+" },
-    { InputEvent::KeyboardKey::COMMA,             "," },
-    { InputEvent::KeyboardKey::MINUS,             "-" },
-    { InputEvent::KeyboardKey::PERIOD,            "." },
-    { InputEvent::KeyboardKey::SLASH,             "/" },
-    { InputEvent::KeyboardKey::NUMBER_0,          "0" },
-    { InputEvent::KeyboardKey::NUMBER_1,          "1" },
-    { InputEvent::KeyboardKey::NUMBER_2,          "2" },
-    { InputEvent::KeyboardKey::NUMBER_3,          "3" },
-    { InputEvent::KeyboardKey::NUMBER_4,          "4" },
-    { InputEvent::KeyboardKey::NUMBER_5,          "5" },
-    { InputEvent::KeyboardKey::NUMBER_6,          "6" },
-    { InputEvent::KeyboardKey::NUMBER_7,          "7" },
-    { InputEvent::KeyboardKey::NUMBER_8,          "8" },
-    { InputEvent::KeyboardKey::NUMBER_9,          "9" },
-    { InputEvent::KeyboardKey::COLON,             "." },
-    { InputEvent::KeyboardKey::SEMICOLON,         ":" },
-    { InputEvent::KeyboardKey::LESS,              "<" },
-    { InputEvent::KeyboardKey::EQUALS,            "=" },
-    { InputEvent::KeyboardKey::GREATER,           ">" },
-    { InputEvent::KeyboardKey::QUESTION_MARK,     "?" },
-    { InputEvent::KeyboardKey::AT,                "@" },
-    { InputEvent::KeyboardKey::LEFT_BRACKET,      "[" },
-    { InputEvent::KeyboardKey::BACKSLASH,         "\\" },
-    { InputEvent::KeyboardKey::RIGHT_BRACKET,     "]" },
-    { InputEvent::KeyboardKey::CARET,             "^" },
-    { InputEvent::KeyboardKey::UNDERSCORE,        "_" },
-    { InputEvent::KeyboardKey::BACKQUOTE,         "`" },
-    { InputEvent::KeyboardKey::a,                 "a" },
-    { InputEvent::KeyboardKey::b,                 "b" },
-    { InputEvent::KeyboardKey::c,                 "c" },
-    { InputEvent::KeyboardKey::d,                 "d" },
-    { InputEvent::KeyboardKey::e,                 "e" },
-    { InputEvent::KeyboardKey::f,                 "f" },
-    { InputEvent::KeyboardKey::g,                 "g" },
-    { InputEvent::KeyboardKey::h,                 "h" },
-    { InputEvent::KeyboardKey::i,                 "i" },
-    { InputEvent::KeyboardKey::j,                 "j" },
-    { InputEvent::KeyboardKey::k,                 "k" },
-    { InputEvent::KeyboardKey::l,                 "l" },
-    { InputEvent::KeyboardKey::m,                 "m" },
-    { InputEvent::KeyboardKey::n,                 "n" },
-    { InputEvent::KeyboardKey::o,                 "o" },
-    { InputEvent::KeyboardKey::p,                 "p" },
-    { InputEvent::KeyboardKey::q,                 "q" },
-    { InputEvent::KeyboardKey::r,                 "r" },
-    { InputEvent::KeyboardKey::s,                 "s" },
-    { InputEvent::KeyboardKey::t,                 "t" },
-    { InputEvent::KeyboardKey::u,                 "u" },
-    { InputEvent::KeyboardKey::v,                 "v" },
-    { InputEvent::KeyboardKey::w,                 "w" },
-    { InputEvent::KeyboardKey::x,                 "x" },
-    { InputEvent::KeyboardKey::y,                 "y" },
-    { InputEvent::KeyboardKey::z,                 "z" },
-    { InputEvent::KeyboardKey::KEY_DELETE,        "delete" },
-    { InputEvent::KeyboardKey::KP0,               "kp 0" },
-    { InputEvent::KeyboardKey::KP1,               "kp 1" },
-    { InputEvent::KeyboardKey::KP2,               "kp 2" },
-    { InputEvent::KeyboardKey::KP3,               "kp 3" },
-    { InputEvent::KeyboardKey::KP4,               "kp 4" },
-    { InputEvent::KeyboardKey::KP5,               "kp 5" },
-    { InputEvent::KeyboardKey::KP6,               "kp 6" },
-    { InputEvent::KeyboardKey::KP7,               "kp 7" },
-    { InputEvent::KeyboardKey::KP8,               "kp 8" },
-    { InputEvent::KeyboardKey::KP9,               "kp 9" },
-    { InputEvent::KeyboardKey::KP_PERIOD,         "kp ." },
-    { InputEvent::KeyboardKey::KP_DIVIDE,         "kp /" },
-    { InputEvent::KeyboardKey::KP_MULTIPLY,       "kp *" },
-    { InputEvent::KeyboardKey::KP_MINUS,          "kp -" },
-    { InputEvent::KeyboardKey::KP_PLUS,           "kp +" },
-    { InputEvent::KeyboardKey::KP_ENTER,          "kp return" },
-    { InputEvent::KeyboardKey::KP_EQUALS,         "kp =" },
-    { InputEvent::KeyboardKey::UP,                "up" },
-    { InputEvent::KeyboardKey::DOWN,              "down" },
-    { InputEvent::KeyboardKey::RIGHT,             "right" },
-    { InputEvent::KeyboardKey::LEFT,              "left" },
-    { InputEvent::KeyboardKey::INSERT,            "insert" },
-    { InputEvent::KeyboardKey::HOME,              "home" },
-    { InputEvent::KeyboardKey::END,               "end" },
-    { InputEvent::KeyboardKey::PAGE_UP,           "page up" },
-    { InputEvent::KeyboardKey::PAGE_DOWN,         "page down" },
-    { InputEvent::KeyboardKey::F1,                "f1" },
-    { InputEvent::KeyboardKey::F2,                "f2" },
-    { InputEvent::KeyboardKey::F3,                "f3" },
-    { InputEvent::KeyboardKey::F4,                "f4" },
-    { InputEvent::KeyboardKey::F5,                "f5" },
-    { InputEvent::KeyboardKey::F6,                "f6" },
-    { InputEvent::KeyboardKey::F7,                "f7" },
-    { InputEvent::KeyboardKey::F8,                "f8" },
-    { InputEvent::KeyboardKey::F9,                "f9" },
-    { InputEvent::KeyboardKey::F10,               "f10" },
-    { InputEvent::KeyboardKey::F11,               "f11" },
-    { InputEvent::KeyboardKey::F12,               "f12" },
-    { InputEvent::KeyboardKey::F13,               "f13" },
-    { InputEvent::KeyboardKey::F14,               "f14" },
-    { InputEvent::KeyboardKey::F15,               "f15" },
-    { InputEvent::KeyboardKey::NUMLOCK,           "num lock" },
-    { InputEvent::KeyboardKey::CAPSLOCK,          "caps lock" },
-    { InputEvent::KeyboardKey::SCROLLOCK,         "scroll lock" },
-    { InputEvent::KeyboardKey::RIGHT_SHIFT,       "right shift" },
-    { InputEvent::KeyboardKey::LEFT_SHIFT,        "left shift" },
-    { InputEvent::KeyboardKey::RIGHT_CONTROL,     "right control" },
-    { InputEvent::KeyboardKey::LEFT_CONTROL,      "left control" },
-    { InputEvent::KeyboardKey::RIGHT_ALT,         "right alt" },
-    { InputEvent::KeyboardKey::LEFT_ALT,          "left alt" },
-    { InputEvent::KeyboardKey::RIGHT_META,        "right meta" },
-    { InputEvent::KeyboardKey::LEFT_META,         "left meta" }
+  { InputEvent::KeyboardKey::NONE,              "" },
+  { InputEvent::KeyboardKey::BACKSPACE,         "backspace" },
+  { InputEvent::KeyboardKey::TABULATION,        "tab" },
+  { InputEvent::KeyboardKey::CLEAR,             "clear" },
+  { InputEvent::KeyboardKey::RETURN,            "return" },
+  { InputEvent::KeyboardKey::PAUSE,             "pause" },
+  { InputEvent::KeyboardKey::ESCAPE,            "escape" },
+  { InputEvent::KeyboardKey::SPACE,             "space" },
+  { InputEvent::KeyboardKey::EXCLAMATION_MARK,  "!" },
+  { InputEvent::KeyboardKey::DOULE_QUOTE,       "\"" },
+  { InputEvent::KeyboardKey::HASH,              "#" },
+  { InputEvent::KeyboardKey::DOLLAR,            "$" },
+  { InputEvent::KeyboardKey::AMPERSAND,         "&" },
+  { InputEvent::KeyboardKey::SINGLE_QUOTE,      "'" },
+  { InputEvent::KeyboardKey::LEFT_PARENTHESIS,  "(" },
+  { InputEvent::KeyboardKey::RIGHT_PARENTHESIS, ")" },
+  { InputEvent::KeyboardKey::ASTERISK,          "*" },
+  { InputEvent::KeyboardKey::PLUS,              "+" },
+  { InputEvent::KeyboardKey::COMMA,             "," },
+  { InputEvent::KeyboardKey::MINUS,             "-" },
+  { InputEvent::KeyboardKey::PERIOD,            "." },
+  { InputEvent::KeyboardKey::SLASH,             "/" },
+  { InputEvent::KeyboardKey::NUMBER_0,          "0" },
+  { InputEvent::KeyboardKey::NUMBER_1,          "1" },
+  { InputEvent::KeyboardKey::NUMBER_2,          "2" },
+  { InputEvent::KeyboardKey::NUMBER_3,          "3" },
+  { InputEvent::KeyboardKey::NUMBER_4,          "4" },
+  { InputEvent::KeyboardKey::NUMBER_5,          "5" },
+  { InputEvent::KeyboardKey::NUMBER_6,          "6" },
+  { InputEvent::KeyboardKey::NUMBER_7,          "7" },
+  { InputEvent::KeyboardKey::NUMBER_8,          "8" },
+  { InputEvent::KeyboardKey::NUMBER_9,          "9" },
+  { InputEvent::KeyboardKey::COLON,             "." },
+  { InputEvent::KeyboardKey::SEMICOLON,         ":" },
+  { InputEvent::KeyboardKey::LESS,              "<" },
+  { InputEvent::KeyboardKey::EQUALS,            "=" },
+  { InputEvent::KeyboardKey::GREATER,           ">" },
+  { InputEvent::KeyboardKey::QUESTION_MARK,     "?" },
+  { InputEvent::KeyboardKey::AT,                "@" },
+  { InputEvent::KeyboardKey::LEFT_BRACKET,      "[" },
+  { InputEvent::KeyboardKey::BACKSLASH,         "\\" },
+  { InputEvent::KeyboardKey::RIGHT_BRACKET,     "]" },
+  { InputEvent::KeyboardKey::CARET,             "^" },
+  { InputEvent::KeyboardKey::UNDERSCORE,        "_" },
+  { InputEvent::KeyboardKey::BACKQUOTE,         "`" },
+  { InputEvent::KeyboardKey::a,                 "a" },
+  { InputEvent::KeyboardKey::b,                 "b" },
+  { InputEvent::KeyboardKey::c,                 "c" },
+  { InputEvent::KeyboardKey::d,                 "d" },
+  { InputEvent::KeyboardKey::e,                 "e" },
+  { InputEvent::KeyboardKey::f,                 "f" },
+  { InputEvent::KeyboardKey::g,                 "g" },
+  { InputEvent::KeyboardKey::h,                 "h" },
+  { InputEvent::KeyboardKey::i,                 "i" },
+  { InputEvent::KeyboardKey::j,                 "j" },
+  { InputEvent::KeyboardKey::k,                 "k" },
+  { InputEvent::KeyboardKey::l,                 "l" },
+  { InputEvent::KeyboardKey::m,                 "m" },
+  { InputEvent::KeyboardKey::n,                 "n" },
+  { InputEvent::KeyboardKey::o,                 "o" },
+  { InputEvent::KeyboardKey::p,                 "p" },
+  { InputEvent::KeyboardKey::q,                 "q" },
+  { InputEvent::KeyboardKey::r,                 "r" },
+  { InputEvent::KeyboardKey::s,                 "s" },
+  { InputEvent::KeyboardKey::t,                 "t" },
+  { InputEvent::KeyboardKey::u,                 "u" },
+  { InputEvent::KeyboardKey::v,                 "v" },
+  { InputEvent::KeyboardKey::w,                 "w" },
+  { InputEvent::KeyboardKey::x,                 "x" },
+  { InputEvent::KeyboardKey::y,                 "y" },
+  { InputEvent::KeyboardKey::z,                 "z" },
+  { InputEvent::KeyboardKey::KEY_DELETE,        "delete" },
+  { InputEvent::KeyboardKey::KP0,               "kp 0" },
+  { InputEvent::KeyboardKey::KP1,               "kp 1" },
+  { InputEvent::KeyboardKey::KP2,               "kp 2" },
+  { InputEvent::KeyboardKey::KP3,               "kp 3" },
+  { InputEvent::KeyboardKey::KP4,               "kp 4" },
+  { InputEvent::KeyboardKey::KP5,               "kp 5" },
+  { InputEvent::KeyboardKey::KP6,               "kp 6" },
+  { InputEvent::KeyboardKey::KP7,               "kp 7" },
+  { InputEvent::KeyboardKey::KP8,               "kp 8" },
+  { InputEvent::KeyboardKey::KP9,               "kp 9" },
+  { InputEvent::KeyboardKey::KP_PERIOD,         "kp ." },
+  { InputEvent::KeyboardKey::KP_DIVIDE,         "kp /" },
+  { InputEvent::KeyboardKey::KP_MULTIPLY,       "kp *" },
+  { InputEvent::KeyboardKey::KP_MINUS,          "kp -" },
+  { InputEvent::KeyboardKey::KP_PLUS,           "kp +" },
+  { InputEvent::KeyboardKey::KP_ENTER,          "kp return" },
+  { InputEvent::KeyboardKey::KP_EQUALS,         "kp =" },
+  { InputEvent::KeyboardKey::UP,                "up" },
+  { InputEvent::KeyboardKey::DOWN,              "down" },
+  { InputEvent::KeyboardKey::RIGHT,             "right" },
+  { InputEvent::KeyboardKey::LEFT,              "left" },
+  { InputEvent::KeyboardKey::INSERT,            "insert" },
+  { InputEvent::KeyboardKey::HOME,              "home" },
+  { InputEvent::KeyboardKey::END,               "end" },
+  { InputEvent::KeyboardKey::PAGE_UP,           "page up" },
+  { InputEvent::KeyboardKey::PAGE_DOWN,         "page down" },
+  { InputEvent::KeyboardKey::F1,                "f1" },
+  { InputEvent::KeyboardKey::F2,                "f2" },
+  { InputEvent::KeyboardKey::F3,                "f3" },
+  { InputEvent::KeyboardKey::F4,                "f4" },
+  { InputEvent::KeyboardKey::F5,                "f5" },
+  { InputEvent::KeyboardKey::F6,                "f6" },
+  { InputEvent::KeyboardKey::F7,                "f7" },
+  { InputEvent::KeyboardKey::F8,                "f8" },
+  { InputEvent::KeyboardKey::F9,                "f9" },
+  { InputEvent::KeyboardKey::F10,               "f10" },
+  { InputEvent::KeyboardKey::F11,               "f11" },
+  { InputEvent::KeyboardKey::F12,               "f12" },
+  { InputEvent::KeyboardKey::F13,               "f13" },
+  { InputEvent::KeyboardKey::F14,               "f14" },
+  { InputEvent::KeyboardKey::F15,               "f15" },
+  { InputEvent::KeyboardKey::NUMLOCK,           "num lock" },
+  { InputEvent::KeyboardKey::CAPSLOCK,          "caps lock" },
+  { InputEvent::KeyboardKey::SCROLLOCK,         "scroll lock" },
+  { InputEvent::KeyboardKey::RIGHT_SHIFT,       "right shift" },
+  { InputEvent::KeyboardKey::LEFT_SHIFT,        "left shift" },
+  { InputEvent::KeyboardKey::RIGHT_CONTROL,     "right control" },
+  { InputEvent::KeyboardKey::LEFT_CONTROL,      "left control" },
+  { InputEvent::KeyboardKey::RIGHT_ALT,         "right alt" },
+  { InputEvent::KeyboardKey::LEFT_ALT,          "left alt" },
+  { InputEvent::KeyboardKey::RIGHT_META,        "right meta" },
+  { InputEvent::KeyboardKey::LEFT_META,         "left meta" }
 };
 
 // Mouse button names.
 const std::string EnumInfoTraits<InputEvent::MouseButton>::pretty_name = "mouse button";
 
 const EnumInfo<InputEvent::MouseButton>::names_type EnumInfoTraits<InputEvent::MouseButton>::names = {
-    { InputEvent::MouseButton::NONE,   "" },
-    { InputEvent::MouseButton::LEFT,   "left" },
-    { InputEvent::MouseButton::MIDDLE, "middle" },
-    { InputEvent::MouseButton::RIGHT,  "right" },
-    { InputEvent::MouseButton::X1,     "x1" },
-    { InputEvent::MouseButton::X2,     "x2" }
+  { InputEvent::MouseButton::NONE,   "" },
+  { InputEvent::MouseButton::LEFT,   "left" },
+  { InputEvent::MouseButton::MIDDLE, "middle" },
+  { InputEvent::MouseButton::RIGHT,  "right" },
+  { InputEvent::MouseButton::X1,     "x1" },
+  { InputEvent::MouseButton::X2,     "x2" }
 };
 
 
@@ -210,30 +217,38 @@ void InputEvent::initialize(const Arguments& args) {
     Logger::info(std::string("Joypad axis deadzone: ") + joypad_deadzone_arg);
   }
 
+  //Add joypads to the joy list
+  for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+    if (SDL_IsGameController(i)) {
+      SDL_GameController* gc = SDL_GameControllerOpen(i);
+      SDL_Joystick* js = SDL_JoystickOpen(i);
+      SDL_JoystickID id = SDL_JoystickInstanceID(js);
+      jindex2id[i] = id;
+      joypads.emplace(id,std::make_shared<Joypad>(gc,js));
+    }
+  }
+
   initialized = true;
 
   // Initialize text events.
   SDL_StartTextInput();
 
   // Initialize the joypad.
-  set_joypad_enabled(true);
+  set_legacy_joypad_enabled(true);
 }
 
 /**
  * \brief Quits the input event manager.
  */
 void InputEvent::quit() {
-
-  if (joystick != nullptr) {
-    SDL_JoystickClose(joystick);
-  }
   SDL_StopTextInput();
 
-  joypad_enabled = false;
-  joystick = nullptr;
   repeat_keyboard = false;
   keys_pressed.clear();
+
   jbuttons_pressed.clear();
+
+  joypads.clear();
   initialized = false;
 }
 
@@ -268,70 +283,58 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
   SDL_Event internal_event;
   if (SDL_PollEvent(&internal_event)) {
 
-    // Check if keyboard events are correct.
-    // For some reason, when running Solarus from a Qt application
-    // (which is not recommended)
-    // multiple SDL_KEYUP events are generated when a key remains pressed
-    // (Qt/SDL conflict). This fixes most problems but not all of them.
-    if (internal_event.type == SDL_KEYDOWN) {
-      SDL_Keycode key = internal_event.key.keysym.sym;
-      if (!keys_pressed.insert(key).second) {
-        // Already known as pressed: mark repeated.
-        internal_event.key.repeat = 1;
-      }
-    }
-    else if (internal_event.type == SDL_KEYUP) {
-      SDL_Keycode key = internal_event.key.keysym.sym;
-      if (keys_pressed.erase(key) == 0) {
-        // Already known as not pressed: mark repeated.
-        internal_event.key.repeat = 1;
-      }
-    }
+    //TODO Joypads events
 
-    // Track joypad button events for checking button combinations.
-    else if (internal_event.type == SDL_JOYBUTTONDOWN) {
-      jbuttons_pressed.insert(internal_event.jbutton.button);
-      if (jbuttons_pressed == quit_combo) {
-        simulate_window_closing();
-      }
-    }
-    else if (internal_event.type == SDL_JOYBUTTONUP) {
-      jbuttons_pressed.erase(internal_event.jbutton.button);
-    }
-
-    // Capture mouse movements outside the window
-    // only while dragging.
-    else if (internal_event.type == SDL_MOUSEBUTTONDOWN) {
-      SDL_CaptureMouse(SDL_TRUE);
-    }
-    else if (internal_event.type == SDL_MOUSEBUTTONUP) {
-      Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
-      if (buttons == 0) {
-        SDL_CaptureMouse(SDL_FALSE);  // No more buttons pressed.
-      }
-    }
-
-    // React to joystick connect and disconnect events
-    else if (internal_event.type == SDL_JOYDEVICEADDED) {
-      if (joystick == nullptr and joypad_enabled) {
-        // We had no joystick and one was connected! Try to open it.
-        joystick = SDL_JoystickOpen(internal_event.jdevice.which);
-        if (joystick == nullptr) {
-          Logger::error("Failed to open joystick");
-        } else {
-          const char* joystick_name = SDL_JoystickName(joystick);
-          Logger::info("Using joystick: '" + std::string(joystick_name ? joystick_name : "") + "'");
+    switch(internal_event.type) {
+      // Check if keyboard events are correct.
+      // For some reason, when running Solarus from a Qt application
+      // (which is not recommended)
+      // multiple SDL_KEYUP events are generated when a key remains pressed
+      // (Qt/SDL conflict). This fixes most problems but not all of them.
+      case SDL_KEYDOWN:
+      {
+        SDL_Keycode key = internal_event.key.keysym.sym;
+        if (!keys_pressed.insert(key).second) {
+          // Already known as pressed: mark repeated.
+          internal_event.key.repeat = 1;
         }
       }
-    } else if (internal_event.type == SDL_JOYDEVICEREMOVED) {
-      if (joystick != nullptr and joypad_enabled) {
-        // A joystick is disconnected, maybe it was our
-        Sint32 id = internal_event.jdevice.which;
-        if (SDL_JoystickInstanceID(joystick) == id) {
-          Logger::info("Joystick disconnected");
-          SDL_JoystickClose(joystick);
-          joystick = nullptr;
+        break;
+      case SDL_KEYUP:
+      {
+        SDL_Keycode key = internal_event.key.keysym.sym;
+        if (keys_pressed.erase(key) == 0) {
+          // Already known as not pressed: mark repeated.
+          internal_event.key.repeat = 1;
         }
+      }
+        break;
+
+        // Track joypad button events for checking button combinations.
+      case SDL_JOYBUTTONDOWN:
+      {
+        jbuttons_pressed.insert(internal_event.jbutton.button);
+        if (jbuttons_pressed == quit_combo) {
+          simulate_window_closing();
+        }
+        break;
+      }
+      case SDL_JOYBUTTONUP: {
+        jbuttons_pressed.erase(internal_event.jbutton.button);
+        break;
+      }
+      case SDL_MOUSEBUTTONDOWN:
+        // Capture mouse movements outside the window
+        // only while dragging.
+        SDL_CaptureMouse(SDL_TRUE);
+        break;
+      case SDL_MOUSEBUTTONUP:
+      {
+        Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+        if (buttons == 0) {
+          SDL_CaptureMouse(SDL_FALSE);  // No more buttons pressed.
+        }
+        break;
       }
     }
 
@@ -435,11 +438,8 @@ bool InputEvent::is_key_down(KeyboardKey key) {
  */
 bool InputEvent::is_joypad_button_down(int button) {
 
-  if (joystick == nullptr) {
-    return false;
-  }
-
-  return SDL_JoystickGetButton(joystick, button) != 0;
+  if(joypads.empty()) return false;
+  return joypads.begin()->second->is_button_pressed((JoyPadButton)button); //TODO correct this
 }
 
 /**
@@ -474,23 +474,13 @@ bool InputEvent::is_finger_down(int finger_id) {
  * \return The state of that axis:
  * -1 (left or up), 0 (centered) or 1 (right or down).
  */
-int InputEvent::get_joypad_axis_state(int axis) {
+float InputEvent::get_joypad_axis_state(int axis) {
 
-  if (joystick == nullptr) {
+  if (joypads.empty()) {
     return 0;
   }
 
-  int state = SDL_JoystickGetAxis(joystick, axis);
-
-  int result;
-  if (std::abs(state) < joypad_deadzone) {
-    result = 0;
-  }
-  else {
-    result = (state > 0) ? 1 : -1;
-  }
-
-  return result;
+  return joypads.begin()->second->get_axis((JoyPadAxis)axis); //TODO : better
 }
 
 /**
@@ -500,50 +490,49 @@ int InputEvent::get_joypad_axis_state(int axis) {
  */
 int InputEvent::get_joypad_hat_direction(int hat) {
 
-  if (joystick == nullptr) {
+  if (joypads.empty() or hat > 0) {
     return -1;
   }
 
-  int state = SDL_JoystickGetHat(joystick, hat);
-  int result = -1;
-
-  switch (state) {
-
-    case SDL_HAT_RIGHT:
-      result = 0;
-      break;
-
-    case SDL_HAT_RIGHTUP:
-      result = 1;
-      break;
-
-    case SDL_HAT_UP:
-      result = 2;
-      break;
-
-    case SDL_HAT_LEFTUP:
-      result = 3;
-      break;
-
-    case SDL_HAT_LEFT:
-      result = 4;
-      break;
-
-    case SDL_HAT_LEFTDOWN:
-      result = 5;
-      break;
-
-    case SDL_HAT_DOWN:
-      result = 6;
-      break;
-
-    case SDL_HAT_RIGHTDOWN:
-      result = 7;
-      break;
-
+  auto joypad = joypads.begin()->second;
+  int state = joypad->is_button_pressed(JoyPadButton::DPAD_UP) |
+      joypad->is_button_pressed(JoyPadButton::DPAD_DOWN) << 1 |
+                                                            joypad->is_button_pressed(JoyPadButton::DPAD_LEFT) << 2 |
+                                                            joypad->is_button_pressed(JoyPadButton::DPAD_RIGHT) << 3;
+  switch (state) { //TODO depracate all joystick apis
+    case 1:
+      return 2;
+    case 2:
+      return 6;
+    case 3:
+      return -1;
+    case 4:
+      return 4;
+    case 5:
+      return 3;
+    case 6:
+      return 5;
+    case 7:
+      return 4;
+    case 8:
+      return 0;
+    case 9:
+      return 1;
+    case 10:
+      return 7;
+    case 11:
+      return 0;
+    case 12:
+      return -1;
+    case 13:
+      return 2;
+    case 14:
+      return 6;
+    case 15:
+      return -1;
   }
 
-  return result;
+  return -1;
 }
 
 /**
@@ -627,7 +616,7 @@ bool InputEvent::is_valid() const {
 bool InputEvent::is_keyboard_event() const {
 
   return (internal_event.type == SDL_KEYDOWN || internal_event.type == SDL_KEYUP)
-    && (!internal_event.key.repeat || repeat_keyboard);
+      && (!internal_event.key.repeat || repeat_keyboard);
 }
 
 /**
@@ -636,10 +625,17 @@ bool InputEvent::is_keyboard_event() const {
  */
 bool InputEvent::is_joypad_event() const {
 
-  return internal_event.type == SDL_JOYAXISMOTION
-    || internal_event.type == SDL_JOYHATMOTION
-    || internal_event.type == SDL_JOYBUTTONDOWN
-    || internal_event.type == SDL_JOYBUTTONUP;
+  return internal_event.type == SDL_CONTROLLERAXISMOTION
+      || internal_event.type == SDL_CONTROLLERBUTTONUP
+      || internal_event.type == SDL_CONTROLLERBUTTONDOWN;
+}
+
+bool InputEvent::is_joypad_removed() const {
+  return internal_event.type == SDL_CONTROLLERDEVICEREMOVED;
+}
+
+bool InputEvent::is_joypad_added() const {
+  return internal_event.type == SDL_CONTROLLERDEVICEADDED;
 }
 
 /**
@@ -649,9 +645,9 @@ bool InputEvent::is_joypad_event() const {
 bool InputEvent::is_mouse_event() const {
 
   return internal_event.type == SDL_MOUSEMOTION
-    || internal_event.type == SDL_MOUSEBUTTONDOWN
-    || internal_event.type == SDL_MOUSEBUTTONUP
-    || internal_event.type == SDL_MOUSEWHEEL;
+      || internal_event.type == SDL_MOUSEBUTTONDOWN
+      || internal_event.type == SDL_MOUSEBUTTONUP
+      || internal_event.type == SDL_MOUSEWHEEL;
 }
 
 /**
@@ -661,8 +657,8 @@ bool InputEvent::is_mouse_event() const {
 bool InputEvent::is_finger_event() const {
 
   return internal_event.type == SDL_FINGERMOTION
-    || internal_event.type == SDL_FINGERDOWN
-    || internal_event.type == SDL_FINGERUP;
+      || internal_event.type == SDL_FINGERDOWN
+      || internal_event.type == SDL_FINGERUP;
 }
 
 /**
@@ -674,6 +670,16 @@ bool InputEvent::is_window_event() const {
   return internal_event.type == SDL_QUIT; // other SDL window events are ignored
 }
 
+/**
+ * @brief InputEvent::is_controller_event
+ * @return
+ */
+bool InputEvent::is_controller_event() const {
+  return internal_event.type >= SDL_CONTROLLERAXISMOTION and
+      internal_event.type <= SDL_CONTROLLERDEVICEREMAPPED;
+}
+
+
 // keyboard
 
 /**
@@ -684,7 +690,7 @@ bool InputEvent::is_window_event() const {
 bool InputEvent::is_keyboard_key_pressed() const {
 
   return internal_event.type == SDL_KEYDOWN
-    && (!internal_event.key.repeat || repeat_keyboard);
+      && (!internal_event.key.repeat || repeat_keyboard);
 }
 
 /**
@@ -696,7 +702,7 @@ bool InputEvent::is_keyboard_key_pressed() const {
 bool InputEvent::is_keyboard_key_pressed(KeyboardKey key) const {
 
   return is_keyboard_key_pressed()
-    && get_keyboard_key() == key;
+      && get_keyboard_key() == key;
 }
 
 /**
@@ -736,7 +742,7 @@ bool InputEvent::is_keyboard_direction_key_pressed() const {
 bool InputEvent::is_keyboard_non_direction_key_pressed() const {
 
   return is_keyboard_key_pressed()
-    && !is_keyboard_direction_key_pressed();
+      && !is_keyboard_direction_key_pressed();
 }
 
 /**
@@ -747,7 +753,7 @@ bool InputEvent::is_keyboard_non_direction_key_pressed() const {
 bool InputEvent::is_keyboard_key_released() const {
 
   return internal_event.type == SDL_KEYUP
-    && (!internal_event.key.repeat || repeat_keyboard);
+      && (!internal_event.key.repeat || repeat_keyboard);
 }
 
 /**
@@ -759,7 +765,7 @@ bool InputEvent::is_keyboard_key_released() const {
 bool InputEvent::is_keyboard_key_released(KeyboardKey key) const {
 
   return is_keyboard_key_released()
-    && get_keyboard_key() == key;
+      && get_keyboard_key() == key;
 }
 
 /**
@@ -799,7 +805,7 @@ bool InputEvent::is_keyboard_direction_key_released() const {
 bool InputEvent::is_keyboard_non_direction_key_released() const {
 
   return is_keyboard_key_released()
-    && !is_keyboard_direction_key_released();
+      && !is_keyboard_direction_key_released();
 }
 
 /**
@@ -813,7 +819,7 @@ bool InputEvent::is_keyboard_non_direction_key_released() const {
 bool InputEvent::is_with_shift() const {
 
   return is_keyboard_event()
-    && (internal_event.key.keysym.mod & KMOD_SHIFT);
+      && (internal_event.key.keysym.mod & KMOD_SHIFT);
 }
 
 /**
@@ -827,7 +833,7 @@ bool InputEvent::is_with_shift() const {
 bool InputEvent::is_with_control() const {
 
   return is_keyboard_event()
-    && (internal_event.key.keysym.mod & KMOD_CTRL);
+      && (internal_event.key.keysym.mod & KMOD_CTRL);
 }
 
 /**
@@ -841,7 +847,7 @@ bool InputEvent::is_with_control() const {
 bool InputEvent::is_with_alt() const {
 
   return is_keyboard_event()
-    && (internal_event.key.keysym.mod & KMOD_ALT);
+      && (internal_event.key.keysym.mod & KMOD_ALT);
 }
 
 /**
@@ -936,44 +942,46 @@ void InputEvent::simulate_window_closing() {
  *
  * \return true if joypad support is enabled.
  */
-bool InputEvent::is_joypad_enabled() {
-
-  return joypad_enabled;
+bool InputEvent::is_legacy_joypad_enabled() {
+  return legacy_joypad_enabled;
 }
 
 /**
- * \brief Enables or disables joypad support.
+ * \brief Enables or disables legacy joypad support.
  *
  * Joypad support may be enabled even without any joypad plugged.
  *
  * \param joypad_enabled true to enable joypad support, false to disable it.
  */
-void InputEvent::set_joypad_enabled(bool joypad_enabled) {
-
-  if (joypad_enabled != is_joypad_enabled()) {
-
-    InputEvent::joypad_enabled = joypad_enabled;
-
-    if (joystick != nullptr) {
-      SDL_JoystickClose(joystick);
-      joystick = nullptr;
-      jbuttons_pressed.clear();
-    }
-
-    if (joypad_enabled) {
-        SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-        SDL_JoystickEventState(SDL_ENABLE);
-        if(SDL_NumJoysticks() > 0) {
-          joystick = SDL_JoystickOpen(0);
-        }
-    }
-    else {
-      SDL_JoystickEventState(SDL_IGNORE);
-      SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-    }
-
-    Logger::info(std::string("Joypad support enabled: ") + (joypad_enabled ? "true" : "false"));
+void InputEvent::set_legacy_joypad_enabled(bool joypad_enabled) {
+  if (joypad_enabled != is_legacy_joypad_enabled()) {
+    Logger::info(std::string("Legacy joypad support enabled: ") + (joypad_enabled ? "true" : "false"));
   }
+  InputEvent::legacy_joypad_enabled = joypad_enabled;
+}
+
+/**
+ * @brief Return a joypad that is not the given one
+ * @param joypad joypad to not return
+ * @return other joypad or nullptr if none
+ */
+JoypadPtr InputEvent::other_joypad(const JoypadPtr& joypad) {
+  for(const auto& p : joypads) {
+    if(p.second != joypad) {
+      return p.second;
+    }
+  }
+  return nullptr;
+}
+
+/**
+ * @brief Return the corresponding joystick id
+ * @param index
+ * @return -1 on failure
+ */
+SDL_JoystickID InputEvent::joypad_id_from_index(int index) {
+  auto idit = jindex2id.find(index);
+  return idit != jindex2id.end() ? idit->second : -1;
 }
 
 /**
@@ -983,7 +991,7 @@ void InputEvent::set_joypad_enabled(bool joypad_enabled) {
  */
 bool InputEvent::is_joypad_button_pressed() const {
 
-  return internal_event.type == SDL_JOYBUTTONDOWN;
+  return internal_event.type == SDL_CONTROLLERBUTTONDOWN;
 }
 
 /**
@@ -993,7 +1001,7 @@ bool InputEvent::is_joypad_button_pressed() const {
  */
 bool InputEvent::is_joypad_button_released() const {
 
-  return internal_event.type == SDL_JOYBUTTONUP;
+  return internal_event.type == SDL_CONTROLLERBUTTONUP;
 }
 
 /**
@@ -1004,13 +1012,38 @@ bool InputEvent::is_joypad_button_released() const {
  *
  * \return the button number of this joypad button event
  */
-int InputEvent::get_joypad_button() const {
+JoyPadButton InputEvent::get_joypad_button() const {
 
   if (!is_joypad_button_pressed() && !is_joypad_button_released()) {
-    return -1;
+    return JoyPadButton::INVALID;
   }
 
-  return internal_event.jbutton.button;
+  return static_cast<JoyPadButton>(internal_event.cbutton.button);
+}
+
+JoypadPtr InputEvent::get_joypad() const {
+  if(!is_controller_event()){
+    return nullptr;
+  }
+  int id = 0;
+  switch(internal_event.type) {
+    case SDL_CONTROLLERAXISMOTION:
+    case SDL_CONTROLLERBUTTONDOWN:
+    case SDL_CONTROLLERBUTTONUP:
+      id = internal_event.cbutton.which;
+      break;
+    case SDL_CONTROLLERDEVICEADDED:{
+      id = joypad_id_from_index(internal_event.cdevice.which);
+    break;
+    }
+    case SDL_CONTROLLERDEVICEREMAPPED:
+    case SDL_CONTROLLERDEVICEREMOVED:
+      id = internal_event.cdevice.which;
+    break;
+  }
+
+  auto it = joypads.find(id);
+  return it != joypads.end() ? it->second : nullptr;
 }
 
 /**
@@ -1020,7 +1053,7 @@ int InputEvent::get_joypad_button() const {
  */
 bool InputEvent::is_joypad_axis_moved() const {
 
-  return internal_event.type == SDL_JOYAXISMOTION;
+  return internal_event.type == SDL_CONTROLLERAXISMOTION;
 }
 
 /**
@@ -1032,13 +1065,13 @@ bool InputEvent::is_joypad_axis_moved() const {
  *
  * \return the axis index of this joypad axis event
  */
-int InputEvent::get_joypad_axis() const {
+JoyPadAxis InputEvent::get_joypad_axis() const {
 
   if (!is_joypad_axis_moved()) {
-    return -1;
+    return JoyPadAxis::INVALID;
   }
 
-  return internal_event.jaxis.axis;
+  return static_cast<JoyPadAxis>(internal_event.caxis.axis);
 }
 
 /**
@@ -1050,19 +1083,19 @@ int InputEvent::get_joypad_axis() const {
  * \return the new state of the axis moved during this joypad axis event:
  * -1 (left or up), 0 (centered) or 1 (right or down)
  */
-int InputEvent::get_joypad_axis_state() const {
+double InputEvent::get_joypad_axis_state() const {
 
   if (!is_joypad_axis_moved()) {
     return 0;
   }
 
-  int result;
-  int value = internal_event.jaxis.value;
+  double result;
+  int value = internal_event.caxis.value;
   if (std::abs(value) < joypad_deadzone) {
-    result = 0;
+    result = 0.0;
   }
   else {
-    result = (value > 0) ? 1 : -1;
+    result = value > 0 ? double(value) / 32767 : double(value) / 32768;
   }
 
   return result;
@@ -1080,7 +1113,7 @@ int InputEvent::get_joypad_axis_state() const {
 bool InputEvent::is_joypad_axis_centered() const {
 
   return is_joypad_axis_moved()
-    && get_joypad_axis_state() == 0;
+      && get_joypad_axis_state() == 0;
 }
 
 /**
@@ -1089,8 +1122,8 @@ bool InputEvent::is_joypad_axis_centered() const {
  * \return true if this is a joypad hat event
  */
 bool InputEvent::is_joypad_hat_moved() const {
-
-  return internal_event.type == SDL_JOYHATMOTION;
+  return false; //LETS DEPRECATE THE HAT EVENTS
+  //return internal_event.type == SDL_JOYHATMOTION;
 }
 
 /**
@@ -1179,7 +1212,7 @@ int InputEvent::get_joypad_hat_direction() const {
 bool InputEvent::is_joypad_hat_centered() const {
 
   return is_joypad_hat_moved()
-    && get_joypad_hat_direction() == -1;
+      && get_joypad_hat_direction() == -1;
 }
 
 
@@ -1204,7 +1237,7 @@ bool InputEvent::is_mouse_button_pressed() const {
 bool InputEvent::is_mouse_button_pressed(MouseButton button) const {
 
   return is_mouse_button_pressed()
-    && static_cast<MouseButton>(internal_event.button.button) == button;
+      && static_cast<MouseButton>(internal_event.button.button) == button;
 }
 
 /**
@@ -1226,7 +1259,7 @@ bool InputEvent::is_mouse_button_released() const {
 bool InputEvent::is_mouse_button_released(MouseButton button) const {
 
   return is_mouse_button_released()
-    && static_cast<MouseButton>(internal_event.button.button) == button;
+      && static_cast<MouseButton>(internal_event.button.button) == button;
 }
 
 /**
@@ -1255,7 +1288,7 @@ Point InputEvent::get_mouse_position() const {
   Debug::check_assertion(is_mouse_event(), "Event is not a mouse event");
 
   return Video::output_to_quest_coordinates(
-      Point(internal_event.button.x, internal_event.button.y));
+        Point(internal_event.button.x, internal_event.button.y));
 }
 
 // touch finger
@@ -1279,7 +1312,7 @@ bool InputEvent::is_finger_pressed() const {
 bool InputEvent::is_finger_pressed(int finger_id) const {
 
   return is_finger_pressed()
-    && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
+      && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
 }
 
 /**
@@ -1301,7 +1334,7 @@ bool InputEvent::is_finger_released() const {
 bool InputEvent::is_finger_released(int finger_id) const {
 
   return is_finger_released()
-    && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
+      && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
 }
 
 /**
@@ -1323,7 +1356,7 @@ bool InputEvent::is_finger_moved() const {
 bool InputEvent::is_finger_moved(int finger_id) const {
 
   return is_finger_moved()
-    && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
+      && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
 }
 
 /**
@@ -1426,7 +1459,8 @@ int InputEvent::get_direction() const {
   }
   else if (is_joypad_axis_moved() && !is_joypad_axis_centered()) {
 
-    if (get_joypad_axis() % 2 == 0) {
+    auto axis = get_joypad_axis();
+    if (axis == JoyPadAxis::LEFT_X or axis == JoyPadAxis::RIGHT_X) {
       // we assume the axis is horizontal
       result = (get_joypad_axis_state() > 0) ? 0 : 4;
     }
@@ -1443,6 +1477,22 @@ int InputEvent::get_direction() const {
 }
 
 /**
+ * @brief return the amount of connected joypads
+ * @return the count
+ */
+int InputEvent::get_jopad_count() {
+  return joypads.size();
+}
+
+/**
+ * @brief get all connected joypads
+ * @return
+ */
+const InputEvent::Joypads& InputEvent::get_joypads() {
+  return joypads;
+}
+
+/**
  * \brief Returns whether this keyboard, joypad or mouse event
  * corresponds to pressing something.
  *
@@ -1454,9 +1504,9 @@ int InputEvent::get_direction() const {
 bool InputEvent::is_pressed() const {
 
   return is_keyboard_key_pressed()
-    || is_direction_pressed()
-    || is_joypad_button_pressed()
-    || is_mouse_button_pressed();
+      || is_direction_pressed()
+      || is_joypad_button_pressed()
+      || is_mouse_button_pressed();
 }
 
 /**
@@ -1470,8 +1520,8 @@ bool InputEvent::is_pressed() const {
 bool InputEvent::is_direction_pressed() const {
 
   return is_keyboard_direction_key_pressed()
-    || (is_joypad_axis_moved() && !is_joypad_axis_centered())
-    || (is_joypad_hat_moved() && !is_joypad_hat_centered());
+      || (is_joypad_axis_moved() && !is_joypad_axis_centered())
+      || (is_joypad_hat_moved() && !is_joypad_hat_centered());
 }
 
 /**
@@ -1485,7 +1535,7 @@ bool InputEvent::is_direction_pressed() const {
 bool InputEvent::is_non_direction_pressed() const {
 
   return is_pressed()
-    && !is_direction_pressed();
+      && !is_direction_pressed();
 }
 
 /**
@@ -1500,10 +1550,10 @@ bool InputEvent::is_non_direction_pressed() const {
 bool InputEvent::is_released() const {
 
   return is_keyboard_key_released()
-    || is_joypad_button_released()
-    || (is_joypad_axis_moved() && is_joypad_axis_centered())
-    || (is_joypad_hat_moved() && is_joypad_hat_centered())
-    || is_mouse_button_released();
+      || is_joypad_button_released()
+      || (is_joypad_axis_moved() && is_joypad_axis_centered())
+      || (is_joypad_hat_moved() && is_joypad_hat_centered())
+      || is_mouse_button_released();
 }
 
 // window event
@@ -1550,6 +1600,62 @@ bool InputEvent::is_window_focus_gained() const {
  */
 Size InputEvent::get_window_size() const {
   return {internal_event.window.data1,internal_event.window.data2};
+}
+
+/**
+ * @brief notify this joypad event on the lua side
+ * @param lua_context
+ */
+bool InputEvent::notify_joypad(LuaContext& lua_context) const {
+
+  switch(internal_event.type) {
+    case SDL_CONTROLLERAXISMOTION: {
+      auto joy = joypads.at(internal_event.caxis.which);
+      return lua_context.on_joypad_axis_moved(*joy,
+                                              JoyPadAxis(internal_event.caxis.axis),
+                                              Joypad::computeAxisVal(internal_event.caxis.value));
+    }
+    case SDL_CONTROLLERBUTTONUP: {
+      auto joy = joypads.at(internal_event.cbutton.which);
+      return lua_context.on_joypad_button_released(
+            *joy,
+            JoyPadButton(internal_event.cbutton.button));
+    }
+    case SDL_CONTROLLERBUTTONDOWN: {
+      auto joy = joypads.at(internal_event.cbutton.which);
+      return lua_context.on_joypad_button_pressed(
+            *joy,
+            JoyPadButton(internal_event.cbutton.button));
+    }
+    case SDL_CONTROLLERDEVICEADDED:
+    {
+      int i = internal_event.cdevice.which;
+
+      SDL_JoystickID id = joypad_id_from_index(i);
+
+      if(joypads.find(id) != joypads.end()) {
+        return false; //Consider joypads where already added
+      }
+      SDL_GameController* gc = SDL_GameControllerOpen(i);
+      SDL_Joystick* js = SDL_JoystickOpen(i);
+      id = SDL_JoystickInstanceID(js);
+      jindex2id[i] = id;
+      auto itp = joypads.emplace(id,std::make_shared<Joypad>(gc,js));
+
+      lua_context.input_on_joypad_connected(*itp.first->second);
+      return true; //Connected event always considered handled TODO verify this
+    }
+    case SDL_CONTROLLERDEVICEREMOVED: {
+      auto joy = joypads.at(internal_event.cbutton.which);
+      joy->reset();
+      bool handled = lua_context.on_joypad_removed(*joy);
+      joypads.erase(internal_event.caxis.which);
+      jindex2id.clear();
+      return handled;
+    }
+  }
+  //In case we missed smth, event is not handled
+  return false;
 }
 
 }

@@ -1,0 +1,188 @@
+properties{
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  min_layer = 0,
+  max_layer = 2,
+  tileset = "castle",
+}
+
+tile{
+  layer = 0,
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  pattern = "3",
+}
+
+tile{
+  layer = 0,
+  x = 80,
+  y = 168,
+  width = 48,
+  height = 32,
+  pattern = "26",
+}
+
+tile{
+  layer = 0,
+  x = 256,
+  y = 24,
+  width = 32,
+  height = 192,
+  pattern = "67",
+}
+
+tile{
+  layer = 0,
+  x = 224,
+  y = 24,
+  width = 32,
+  height = 32,
+  pattern = "67",
+}
+
+tile{
+  layer = 0,
+  x = 96,
+  y = 176,
+  width = 16,
+  height = 16,
+  pattern = "5",
+}
+
+tile{
+  layer = 0,
+  x = 232,
+  y = 24,
+  width = 16,
+  height = 24,
+  pattern = "4",
+}
+
+tile{
+  layer = 0,
+  x = 264,
+  y = 144,
+  width = 16,
+  height = 16,
+  pattern = "5",
+}
+
+tile{
+  layer = 0,
+  x = 288,
+  y = 184,
+  width = 32,
+  height = 32,
+  pattern = "67",
+}
+
+tile{
+  layer = 0,
+  x = 0,
+  y = 24,
+  width = 64,
+  height = 32,
+  pattern = "67",
+}
+
+destination{
+  name = "destination",
+  layer = 0,
+  x = 48,
+  y = 45,
+  direction = 3,
+}
+
+destination{
+  name = "alter_destination",
+  layer = 0,
+  x = 48,
+  y = 189,
+  direction = 1,
+}
+
+enemy{
+  name = "dummy",
+  layer = 0,
+  x = 72,
+  y = 189,
+  direction = 0,
+  breed = "test_enemy",
+}
+
+destination{
+  name = "dest_inner",
+  layer = 0,
+  x = 240,
+  y = 45,
+  direction = 1,
+}
+
+teletransporter{
+  name = "to_corner_tp",
+  layer = 0,
+  x = 96,
+  y = 176,
+  width = 16,
+  height = 16,
+  destination_map = "multiplayer/heroes",
+  destination = "dest_inner",
+}
+
+sensor{
+  name = "corner_sensor",
+  layer = 0,
+  x = 272,
+  y = 45,
+  width = 16,
+  height = 16,
+}
+
+teletransporter{
+  name = "to_heroes_2",
+  layer = 0,
+  x = 264,
+  y = 144,
+  width = 16,
+  height = 16,
+  destination_map = "multiplayer/heroes2",
+  destination = "win_dest",
+}
+
+sensor{
+  name = "to_side_sensor",
+  layer = 0,
+  x = 272,
+  y = 205,
+  width = 16,
+  height = 16,
+}
+
+teletransporter{
+  name = "right_side_tp",
+  layer = 0,
+  x = 320,
+  y = 0,
+  width = 16,
+  height = 240,
+  transition = "scrolling",
+  destination_map = "multiplayer/heroes2",
+  destination = "_side",
+}
+
+teletransporter{
+  name = "left_side_tp",
+  layer = 0,
+  x = -16,
+  y = 0,
+  width = 16,
+  height = 240,
+  transition = "scrolling",
+  destination_map = "multiplayer/heroes2",
+  destination = "_side",
+}
+

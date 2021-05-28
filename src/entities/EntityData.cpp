@@ -265,10 +265,15 @@ const std::map<EntityType, const EntityTypeDescription> entity_type_descriptions
             // No additional fields.
         }
     },
-
     {
         EntityType::FIRE, {
             // No additional fields.
+        }
+    },
+    {
+        EntityType::HERO, {
+            { "direction", OptionalFlag::OPTIONAL, FieldValue(-1)}
+            // TODO add more usefull fields
         }
     }
 };

@@ -140,7 +140,9 @@ MainLoop::MainLoop(const Arguments& args):
   lua_commands(),
   lua_commands_mutex(),
   num_lua_commands_pushed(0),
-  num_lua_commands_done(0) {
+  num_lua_commands_done(0),
+  commands_dispatcher(*this)
+{
 
 #ifdef SOLARUS_GIT_REVISION
   Logger::info("Solarus " SOLARUS_VERSION " (" SOLARUS_GIT_REVISION ")");
@@ -176,10 +178,7 @@ MainLoop::MainLoop(const Arguments& args):
   // Read the quest general properties.
   load_quest_properties();
 
-  // Create the quest surface.
-  root_surface = Surface::create(
-      Video::get_quest_size()
-  );
+  make_root_surface();
 
   // Run the Lua world.
   // Do this after the creation of the window, but before showing the window,
@@ -499,14 +498,14 @@ void MainLoop::step() {
 void MainLoop::check_input() {
   SOL_PFUN();
   // Check SDL events.
-  std::unique_ptr<InputEvent> event = InputEvent::get_event();
-  while (event != nullptr) {
-    notify_input(*event);
-    event = InputEvent::get_event();
+  for(std::unique_ptr<InputEvent> event =  InputEvent::get_event();
+      event != nullptr;
+      event = InputEvent::get_event()) {
+     notify_input(*event);
   }
 
   // Check Lua requests.
-  if (!lua_commands.empty()) {
+  /*if (!lua_commands.empty()) {
     std::lock_guard<std::mutex> lock(lua_commands_mutex);
     for (const std::string& command : lua_commands) {
       std::cout << "\n";  // To make sure that the command delimiter starts on a new line.
@@ -523,7 +522,7 @@ void MainLoop::check_input() {
       ++num_lua_commands_done;
     }
     lua_commands.clear();
-  }
+  }*/
 }
 
 void MainLoop::setup_game_icon() {
@@ -562,11 +561,18 @@ void MainLoop::setup_game_icon() {
  */
 void MainLoop::notify_input(const InputEvent& event) {
 
+  bool handled = false;
   if (event.is_window_closing()) {
     set_exiting();
   }
   else if (event.is_window_resizing()) {
+    // Let video module resize it's geometry
     Video::on_window_resized(event.get_window_size());
+    //Notify game if any
+    make_root_surface();
+    if(game) {
+      game->notify_window_size_changed(event.get_window_size());
+    }
   }
   else if (suspend_unfocused && event.is_window_focus_lost()) {
     if (!is_suspended()) {
@@ -592,12 +598,49 @@ void MainLoop::notify_input(const InputEvent& event) {
       exiting = true;
     }
 #endif
+  } else if (event.is_controller_event()) {
+    // First check if main joypad disconnected
+    if(InputEvent::is_legacy_joypad_enabled() &&
+       event.is_joypad_removed() &&
+       game &&
+       (game->get_controls().get_joypad() == event.get_joypad())) {
+      // Main controls joypad is removed, try to fallback on another joypad
+      auto new_joy = InputEvent::other_joypad(event.get_joypad());
+      if(new_joy) {
+        Logger::info("Using joystick: \"" + new_joy->get_name() + "\"");
+      }
+      game->get_controls().set_joypad(new_joy); //Could set joypad to nullptr, leaving it without joy
+    }
+
+    handled = event.notify_joypad(*lua_context);
+
+    if(InputEvent::is_legacy_joypad_enabled() && event.is_joypad_added() && game && !game->get_controls().get_joypad()) {
+      // A joypad was connected and main commands did not had a joypad
+      auto new_joy = event.get_joypad();
+      if(new_joy) {
+        Logger::info("Using joystick: \"" + new_joy->get_name() + "\"");
+      }
+      game->get_controls().set_joypad(new_joy);
+    }
   }
 
   // Send the event to Lua and to the current screen.
-  bool handled = lua_context->notify_input(event);
+  if(!handled) {
+    handled = lua_context->notify_input(event);
+  }
+
   if (!handled && game != nullptr) {
-    game->notify_input(event);
+    handled = game->notify_input(event);
+  }
+
+  if(!handled) {
+    commands_dispatcher.notify_input(event);
+  }
+}
+
+void MainLoop::notify_control(const ControlEvent& event) {
+  if(game != nullptr) {
+    game->notify_control(event);
   }
 }
 
@@ -690,6 +733,24 @@ void MainLoop::quit_lua_console() {
   }
 
   stdin_thread.join();
+}
+
+/**
+ * @brief create the root surface
+ */
+void MainLoop::make_root_surface() {
+  Size s = Video::get_quest_size();
+  switch (Video::get_geometry_mode()) {
+  case Video::GeometryMode::DYNAMIC_ABSOLUTE:
+  case Video::GeometryMode::DYNAMIC_QUEST_SIZE:
+    s = Video::get_window_size();
+    break;
+  default:
+    break;
+  }
+  if(!root_surface or root_surface->get_size() != s) {
+    root_surface = Surface::create(s);
+  }
 }
 
 }

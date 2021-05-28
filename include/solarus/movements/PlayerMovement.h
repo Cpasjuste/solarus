@@ -18,6 +18,7 @@
 #define SOLARUS_PLAYER_MOVEMENT_H
 
 #include "solarus/core/Common.h"
+#include "solarus/core/ControlsPtr.h"
 #include "solarus/movements/StraightMovement.h"
 
 namespace Solarus {
@@ -34,7 +35,7 @@ class PlayerMovement: public StraightMovement {
   public:
 
     // creation and destruction
-    explicit PlayerMovement(int speed);
+    explicit PlayerMovement(int speed, const ControlsPtr &controls);
 
     void update() override;
 
@@ -48,11 +49,15 @@ class PlayerMovement: public StraightMovement {
     void set_wanted_direction();
 
     int moving_speed;        /**< Speed of the entity when it is moving. */
-    int direction8;          /**< Current direction of the movement (0 to 7),
+    /*int direction8;         * Current direction of the movement (0 to 7),
                               * as defined by the directional commands
                               * currently pressed by the player (when the
                               * movement allows them) or -1. */
+    double intensity;        /**< Intensity of the polar coords given by the commands*/
+    double angle;            /**< Angle of the polar coords given by the commands*/
     bool blocked_by_stream;  /**< Whether on a blocking stream. */
+
+    ControlsPtr controls;     /**< controls controlling this player movement. */
 
 };
 
