@@ -598,7 +598,7 @@ void Map::build_foreground_surface() {
   foreground_surface = nullptr;
 
   const CameraPtr& camera = get_camera();
-  if (camera != nullptr) {
+  if (camera == nullptr) {
     return;
   }
 
