@@ -389,7 +389,7 @@ int LuaContext::main_api_get_resource_ids(lua_State* l) {
     lua_settop(l, 0);
     lua_newtable(l);
     int i = 1;
-    for (const std::pair<std::string, std::string>& kvp : elements) {
+    for (const std::pair<std::string, std::string> kvp : elements) {
       const std::string& id = kvp.first;
       push_string(l, id);
       lua_rawseti(l, 1, i);

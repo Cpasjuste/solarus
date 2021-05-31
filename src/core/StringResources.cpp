@@ -188,7 +188,7 @@ bool StringResources::import_from_lua(lua_State* l) {
  */
 bool StringResources::export_to_lua(std::ostream& out) const {
 
-  for (const auto kvp : strings) {
+  for (const auto& kvp : strings) {
     const std::string& key = kvp.first;
     const std::string& value = kvp.second;
 
