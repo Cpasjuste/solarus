@@ -313,7 +313,7 @@ std::set<std::shared_ptr<const T>> Entities::get_entities_by_type() const {
   }
 
   for (const auto& kvp : it->second) {
-    for (const ConstEntityPtr& entity : kvp.second) {
+    for (const ConstEntityPtr entity : kvp.second) {
       result.insert(std::static_pointer_cast<const T>(entity));
     }
   }

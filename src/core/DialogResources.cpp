@@ -305,12 +305,12 @@ bool DialogResources::import_from_lua(lua_State* l) {
  */
 bool DialogResources::export_to_lua(std::ostream& out) const {
 
-  for (const auto kvp : dialogs) {
+  for (const auto& kvp : dialogs) {
     const std::string& id = kvp.first;
     const DialogData& dialog = kvp.second;
 
     out << "dialog{\n  id = \"" << escape_string(id) << "\",\n";
-    for (const auto pkvp : dialog.get_properties()) {
+    for (const auto& pkvp : dialog.get_properties()) {
       out << "  " << pkvp.first << " = \"" << pkvp.second << "\",\n";
     }
     const std::string& text = dialog.get_text();
