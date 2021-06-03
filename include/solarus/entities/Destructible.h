@@ -97,6 +97,8 @@ class Destructible: public Entity {
         Sprite& this_sprite,
         Sprite& other_sprite
     ) override;
+    // Inform the compiler we know a virtual method of the same name exists.
+    using Entity::notify_collision_with_hero;
     void notify_collision_with_hero(Hero& hero, CollisionMode collision_mode);
     virtual bool notify_action_command_pressed(Hero& hero) override;
 

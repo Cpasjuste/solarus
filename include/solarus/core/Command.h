@@ -164,11 +164,11 @@ struct ControlEvent {
   }
 
   static ControlEvent make_pressed(const Command& cmd, const ControlsPtr& emitter) {
-      return ControlEvent(CommandPressed{cmd}, emitter);
+      return ControlEvent(CommandPressed{{cmd}}, emitter);
   }
 
   static ControlEvent make_released(const Command& cmd, const ControlsPtr& emitter) {
-      return ControlEvent(CommandReleased{cmd}, emitter);
+      return ControlEvent(CommandReleased{{cmd}}, emitter);
   }
 
   static ControlEvent make_moved(const Axis& axis, double state, const ControlsPtr& emitter) {
