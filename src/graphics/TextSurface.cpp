@@ -567,6 +567,12 @@ void TextSurface::rebuild_ttf() {
         TTF_RenderUTF8_Blended(&internal_font, text.c_str(), internal_color));
     break;
   }
+
+  Debug::check_assertion(surface != nullptr,
+    std::string("Error rendering text surface for '") + text + "'"
+    " (font: " + font_id + "): " + TTF_GetError()
+  );
+
   SDL_PixelFormat* format = Video::get_pixel_format();
   SDL_Surface_UniquePtr full = SDL_Surface_UniquePtr(SDL_CreateRGBSurface(
        0,
