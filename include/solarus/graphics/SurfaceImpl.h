@@ -23,6 +23,9 @@
 
 #include <SDL_render.h>
 #include <memory>
+#ifdef _WIN32
+#include <string>
+#endif // _WIN32
 
 namespace Solarus {
 

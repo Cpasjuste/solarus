@@ -129,15 +129,24 @@ void create_window(const Arguments& args) {
   }
 
   std::string title = std::string("Solarus ") + SOLARUS_VERSION;
-  context.main_window = SDL_CreateWindow(
-        title.c_str(),
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        context.geometry.wanted_quest_size.width,
-        context.geometry.wanted_quest_size.height,
-        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | (force_software ? 0 : SDL_WINDOW_OPENGL)
-        );
+#ifdef SOLARUS_GL_ES
+#ifdef _WIN32
+  SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
 
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#endif // _WIN32
+#endif // SOLARUS_GL_ES
+  context.main_window = SDL_CreateWindow(
+      title.c_str(),
+      SDL_WINDOWPOS_CENTERED,
+      SDL_WINDOWPOS_CENTERED,
+      context.geometry.wanted_quest_size.width,
+      context.geometry.wanted_quest_size.height,
+      SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | (force_software ? 0 : SDL_WINDOW_OPENGL)
+  );
+
+  
   Debug::check_assertion(context.main_window != nullptr,
                          std::string("Cannot create the window: ") + SDL_GetError());
 
