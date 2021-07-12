@@ -31,10 +31,8 @@
 #include <vector>
 #include <optional>
 
-#ifdef _WIN32
 #include <random>
 #include <iterator>
-#endif
 
 namespace Solarus {
 
