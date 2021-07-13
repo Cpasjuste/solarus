@@ -20,15 +20,20 @@
 #include "solarus/core/Common.h"
 #include <string>
 
+/**
+ * \def SOLARUS_ASSERT(condition, message)
+ * \brief Stops Solarus in debug mode if the condition is \c false.
+ * \param assertion The assertion to check.
+ * \param error_message Error message to show in case of failure.
+ */
 #ifndef NDEBUG
-#define SOLARUS_ASSERT(condition, message) Debug::check_assertion(condition, message)
+#define SOLARUS_ASSERT(condition, message) \
+    ((condition) ? (void)0 : Debug::die(message))
 #else
-#define SOLARUS_ASSERT(condition, message)
+#define SOLARUS_ASSERT(condition, message) ((void)0)
 #endif
 
 namespace Solarus {
-
-class CommandLine;
 
 /**
  * \brief Provides features for handling errors.
