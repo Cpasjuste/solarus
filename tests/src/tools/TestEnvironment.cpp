@@ -75,7 +75,7 @@ Game& TestEnvironment::get_game() {
     step();  // Advance one tick to start the game.
   }
 
-  Debug::check_assertion(main_loop.get_game() != nullptr, "Missing game");
+  SOLARUS_ASSERT(main_loop.get_game() != nullptr, "Missing game");
 
   return *main_loop.get_game();
 }
@@ -87,7 +87,7 @@ Map& TestEnvironment::get_map() {
 
   if (!get_game().has_current_map()) {
     step();  // Advance one tick to start the map.
-    Debug::check_assertion(get_game().has_current_map(), "Missing map");
+    SOLARUS_ASSERT(get_game().has_current_map(), "Missing map");
   }
 
   return get_game().get_default_map();

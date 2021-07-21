@@ -40,12 +40,12 @@ void check_strings(TestEnvironment& /* env */, const std::string& language_id) {
   std::string file_name = "languages/" + language_id + "/text/strings.dat";
   std::string imported_string_buffer = QuestFiles::data_file_read(file_name);
   success = string_resources.import_from_buffer(imported_string_buffer, file_name);
-  Debug::check_assertion(success, "Strings import failed");
+  SOLARUS_ASSERT(success, "Strings import failed");
 
   // Export it.
   std::string exported_string_buffer;
   success = string_resources.export_to_buffer(exported_string_buffer);
-  Debug::check_assertion(success, "Strings export failed");
+  SOLARUS_ASSERT(success, "Strings export failed");
 
   // Check that the file is identical after import/export.
   if (exported_string_buffer != imported_string_buffer) {
@@ -68,12 +68,12 @@ void check_dialogs(TestEnvironment& /* env */, const std::string& language_id) {
   std::string file_name = "languages/" + language_id + "/text/dialogs.dat";
   std::string imported_dialog_buffer = QuestFiles::data_file_read(file_name);
   success = dialog_resources.import_from_quest_file(file_name);
-  Debug::check_assertion(success, "Dialogs import failed");
+  SOLARUS_ASSERT(success, "Dialogs import failed");
 
   // Export it.
   std::string exported_dialog_buffer;
   success = dialog_resources.export_to_buffer(exported_dialog_buffer);
-  Debug::check_assertion(success, "Dialogs export failed");
+  SOLARUS_ASSERT(success, "Dialogs export failed");
 
   // Check that the file is identical after import/export.
   if (exported_dialog_buffer != imported_dialog_buffer) {
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
   const std::map<std::string, std::string>& language_elements =
       CurrentQuest::get_database().get_resource_elements(ResourceType::LANGUAGE);
-  Debug::check_assertion(!language_elements.empty(), "No languages");
+  SOLARUS_ASSERT(!language_elements.empty(), "No languages");
   for (const auto& kvp : language_elements) {
     const std::string& language_id = kvp.first;
     check_strings(env, language_id);

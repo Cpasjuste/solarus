@@ -46,8 +46,6 @@ SOLARUS_API void set_abort_on_die(bool abort);
 
 SOLARUS_API void warning(const std::string& message);
 SOLARUS_API void error(const std::string& message);
-SOLARUS_API void check_assertion(bool assertion, const char* error_message);
-SOLARUS_API void check_assertion(bool assertion, const std::string& error_message);
 [[noreturn]] SOLARUS_API void die(const std::string& error_message);
 
 /**

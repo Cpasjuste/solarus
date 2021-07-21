@@ -45,7 +45,7 @@ void test_path_to_hero(TestEnvironment& env, Entity& entity) {
 
   const bool traversable = !hero.is_obstacle_for(entity);
   const std::string expected_path = traversable ? "7777700" : "77777";
-  Debug::check_assertion(path == expected_path,
+  SOLARUS_ASSERT(path == expected_path,
       std::string("Unexpected path: '") + path + "', expected '" + expected_path + "'");
 }
 

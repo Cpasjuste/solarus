@@ -68,7 +68,7 @@ void LuaContext::add_menu(
 ) {
 
   ScopedLuaRef context = LuaTools::create_ref(current_l,context_index);
-  Debug::check_assertion(!context.is_empty(), "creating context with empty context");
+  SOLARUS_ASSERT(!context.is_empty(), "creating context with empty context");
 
   if(std::count_if(menus.begin(), menus.end(),[&](const LuaMenuData& menu){
                    return menu.ref == menu_ref;
@@ -162,7 +162,7 @@ void LuaContext::update_menus() {
     if (it->ref.is_empty()) {
       // Empty ref on a menu means that we should remove.
       // In this case, context must also be nullptr.
-      Debug::check_assertion(it->context.is_empty(), "Menu with context and no ref");
+      SOLARUS_ASSERT(it->context.is_empty(), "Menu with context and no ref");
       it = menus.erase(it);
     }
     else {

@@ -111,7 +111,7 @@ int LuaContext::shader_api_create(lua_State* l) {
       const std::string& shader_id = LuaTools::check_string(l, 1);
 
       shader = Video::get_renderer().create_shader(shader_id);
-      Debug::check_assertion(shader != nullptr, "Failed to create shader '" + shader_id + "'");
+      SOLARUS_ASSERT(shader != nullptr, "Failed to create shader '" + shader_id + "'");
       if (!shader->is_valid()) {
         LuaTools::error(l, "Failed to create shader: '" + shader_id + "': " + shader->get_error());
       }
@@ -129,7 +129,7 @@ int LuaContext::shader_api_create(lua_State* l) {
       LuaTools::type_error(l, 1, "string or table");
     }
 
-    Debug::check_assertion(shader != nullptr, "Missing shader");
+    SOLARUS_ASSERT(shader != nullptr, "Missing shader");
     push_shader(l, *shader);
     return 1;
   });

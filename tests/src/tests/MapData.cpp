@@ -34,18 +34,18 @@ void check_entity(const EntityData& entity) {
   // Export the entity to a string and import it again.
   std::string exported_entity_buffer;
   bool success = entity.export_to_buffer(exported_entity_buffer);
-  Debug::check_assertion(success, "Entity export failed");
+  SOLARUS_ASSERT(success, "Entity export failed");
 
   EntityData imported_entity;
   success = imported_entity.import_from_buffer(exported_entity_buffer, "entity");
-  Debug::check_assertion(success, "Entity import failed");
+  SOLARUS_ASSERT(success, "Entity import failed");
 
-  Debug::check_assertion(imported_entity.get_type() == entity.get_type(), "Entity type differs");
-  Debug::check_assertion(imported_entity.get_name() == entity.get_name(), "Entity name differs");
-  Debug::check_assertion(imported_entity.get_layer() == entity.get_layer(), "Entity layer differs");
-  Debug::check_assertion(imported_entity.get_xy() == entity.get_xy(), "Entity xy differs");
-  Debug::check_assertion(imported_entity.get_user_properties() == entity.get_user_properties(), "Entity user properties differ");
-  Debug::check_assertion(imported_entity.get_specific_properties() == entity.get_specific_properties(), "Entity specific properties differ");
+  SOLARUS_ASSERT(imported_entity.get_type() == entity.get_type(), "Entity type differs");
+  SOLARUS_ASSERT(imported_entity.get_name() == entity.get_name(), "Entity name differs");
+  SOLARUS_ASSERT(imported_entity.get_layer() == entity.get_layer(), "Entity layer differs");
+  SOLARUS_ASSERT(imported_entity.get_xy() == entity.get_xy(), "Entity xy differs");
+  SOLARUS_ASSERT(imported_entity.get_user_properties() == entity.get_user_properties(), "Entity user properties differ");
+  SOLARUS_ASSERT(imported_entity.get_specific_properties() == entity.get_specific_properties(), "Entity specific properties differ");
 }
 
 /**
@@ -60,12 +60,12 @@ void check_map(TestEnvironment& /* env */, const std::string& map_id) {
   std::string file_name = "maps/" + map_id + ".dat";
   std::string imported_map_buffer = QuestFiles::data_file_read(file_name);
   success = map_data.import_from_buffer(imported_map_buffer, file_name);
-  Debug::check_assertion(success, "Map import failed");
+  SOLARUS_ASSERT(success, "Map import failed");
 
   // Export it.
   std::string exported_map_buffer;
   success = map_data.export_to_buffer(exported_map_buffer);
-  Debug::check_assertion(success, "Map export failed");
+  SOLARUS_ASSERT(success, "Map export failed");
 
   // Check that the file is identical after import/export.
   if (exported_map_buffer != imported_map_buffer) {
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 
   const std::map<std::string, std::string>& map_elements =
       CurrentQuest::get_database().get_resource_elements(ResourceType::MAP);
-  Debug::check_assertion(!map_elements.empty(), "No maps");
+  SOLARUS_ASSERT(!map_elements.empty(), "No maps");
   for (const auto& kvp : map_elements) {
     const std::string& map_id = kvp.first;
     check_map(env, map_id);

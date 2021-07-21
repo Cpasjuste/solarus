@@ -79,7 +79,7 @@ SpriteAnimationSet& Sprite::get_animation_set(const std::string& id) {
     all_animation_sets[id] = animation_set;
   }
 
-  Debug::check_assertion(animation_set != nullptr, "No animation set");
+  SOLARUS_ASSERT(animation_set != nullptr, "No animation set");
 
   return *animation_set;
 }
@@ -945,7 +945,7 @@ const ScopedLuaRef& Sprite::get_finished_callback() const {
 void Sprite::set_finished_callback(const ScopedLuaRef& finished_callback_ref) {
 
   if (!finished_callback_ref.is_empty()) {
-    Debug::check_assertion(get_lua_context() != nullptr, "Undefined Lua context");
+    SOLARUS_ASSERT(get_lua_context() != nullptr, "Undefined Lua context");
   }
 
   this->finished_callback_ref = finished_callback_ref;

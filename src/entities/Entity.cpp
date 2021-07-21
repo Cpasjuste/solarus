@@ -94,7 +94,7 @@ Entity::Entity(
   optimization_distance(default_optimization_distance),
   optimization_distance2(default_optimization_distance * default_optimization_distance) {
 
-  Debug::check_assertion(size.width >= 0 && size.height >= 0,
+  SOLARUS_ASSERT(size.width >= 0 && size.height >= 0,
       "Invalid entity size: width and height must be positive");
 }
 
@@ -355,9 +355,9 @@ bool Entity::is_initialized() const {
  */
 void Entity::finish_initialization() {
 
-  Debug::check_assertion(!initialized, "Entity is already initialized");
-  Debug::check_assertion(is_on_map(), "Missing map");
-  Debug::check_assertion(get_map().is_loaded(), "Map is not ready");
+  SOLARUS_ASSERT(!initialized, "Entity is already initialized");
+  SOLARUS_ASSERT(is_on_map(), "Missing map");
+  SOLARUS_ASSERT(get_map().is_loaded(), "Map is not ready");
 
   notify_creating();
   get_lua_context()->entity_on_created(*this);
@@ -856,7 +856,7 @@ Size Entity::get_size() const {
  */
 void Entity::set_size(int width, int height) {
 
-  Debug::check_assertion(width >= 0 && height >= 0,
+  SOLARUS_ASSERT(width >= 0 && height >= 0,
       "Invalid entity size: width and height must be positive");
   bounding_box.set_size(width, height);
 

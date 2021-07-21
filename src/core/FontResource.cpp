@@ -164,7 +164,8 @@ bool FontResource::is_bitmap_font(const std::string& font_id) {
   }
 
   const auto& kvp = fonts.find(font_id);
-  Debug::check_assertion(kvp != fonts.end(), std::string("No such font: '") + font_id + "'");
+  SOLARUS_ASSERT(kvp != fonts.end(),
+      std::string("No such font: '") + font_id + "'");
   return kvp->second.bitmap_font != nullptr;
 }
 
@@ -180,8 +181,10 @@ SurfacePtr FontResource::get_bitmap_font(const std::string& font_id) {
   }
 
   const auto& kvp = fonts.find(font_id);
-  Debug::check_assertion(kvp != fonts.end(), std::string("No such font: '") + font_id + "'");
-  Debug::check_assertion(kvp->second.bitmap_font != nullptr, std::string("This is not a bitmap font: '") + font_id + "'");
+  SOLARUS_ASSERT(kvp != fonts.end(),
+      std::string("No such font: '") + font_id + "'");
+  SOLARUS_ASSERT(kvp->second.bitmap_font != nullptr,
+      std::string("This is not a bitmap font: '") + font_id + "'");
   return kvp->second.bitmap_font;
 }
 
@@ -200,9 +203,11 @@ TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size, H
   }
 
   const auto& kvp = fonts.find(font_id);
-  Debug::check_assertion(kvp != fonts.end(), std::string("No such font: '") + font_id + "'");
+  SOLARUS_ASSERT(kvp != fonts.end(),
+      std::string("No such font: '") + font_id + "'");
   FontFile& font = kvp->second;
-  Debug::check_assertion(font.bitmap_font == nullptr, std::string("This is not an outline font: '") + font_id + "'");
+  SOLARUS_ASSERT(font.bitmap_font == nullptr,
+      std::string("This is not an outline font: '") + font_id + "'");
 
   std::map<OutlineFontProperties, OutlineFontReader>& outline_fonts = kvp->second.outline_fonts;
 
@@ -217,7 +222,7 @@ TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size, H
       (int) font.buffer.size()
   ));
   TTF_Font_UniquePtr outline_font(TTF_OpenFontRW(rw.get(), 0, size));
-  Debug::check_assertion(outline_font != nullptr,
+  SOLARUS_ASSERT(outline_font != nullptr,
       std::string("Cannot load font from file '") + font.file_name
       + "': " + TTF_GetError()
   );

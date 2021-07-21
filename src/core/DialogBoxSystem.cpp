@@ -92,7 +92,7 @@ void DialogBoxSystem::open(
     const ScopedLuaRef& info_ref,
     const ScopedLuaRef& callback_ref
 ) {
-  Debug::check_assertion(!is_enabled(), "A dialog is already active");
+  SOLARUS_ASSERT(!is_enabled(), "A dialog is already active");
 
   this->dialog_id = dialog_id;
   this->dialog = CurrentQuest::get_dialog(dialog_id);
@@ -176,7 +176,7 @@ void DialogBoxSystem::open(
  */
 void DialogBoxSystem::close(const ScopedLuaRef& status_ref) {
 
-  Debug::check_assertion(is_enabled(), "No dialog is active");
+  SOLARUS_ASSERT(is_enabled(), "No dialog is active");
 
   ScopedLuaRef callback_ref = this->callback_ref;
   this->callback_ref.clear();
@@ -210,7 +210,7 @@ bool DialogBoxSystem::has_more_lines() const {
 void DialogBoxSystem::show_more_lines() {
 
   // This function is only called in the built-in case.
-  Debug::check_assertion(built_in, "This dialog box is not the built-in one");
+  SOLARUS_ASSERT(built_in, "This dialog box is not the built-in one");
 
   if (!has_more_lines()) {
 

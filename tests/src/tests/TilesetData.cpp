@@ -38,12 +38,12 @@ void check_tileset(TestEnvironment& /* env */, const std::string& tileset_id) {
   std::string file_name = "tilesets/" + tileset_id + ".dat";
   std::string imported_tileset_buffer = QuestFiles::data_file_read(file_name);
   success = tileset_data.import_from_buffer(imported_tileset_buffer, file_name);
-  Debug::check_assertion(success, "Tileset import failed");
+  SOLARUS_ASSERT(success, "Tileset import failed");
 
   // Export it.
   std::string exported_tileset_buffer;
   success = tileset_data.export_to_buffer(exported_tileset_buffer);
-  Debug::check_assertion(success, "Tileset export failed");
+  SOLARUS_ASSERT(success, "Tileset export failed");
 
   // Check that the file is identical after import/export.
   if (exported_tileset_buffer != imported_tileset_buffer) {
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 
   const std::map<std::string, std::string>& tileset_elements =
       CurrentQuest::get_database().get_resource_elements(ResourceType::TILESET);
-  Debug::check_assertion(!tileset_elements.empty(), "No tilesets");
+  SOLARUS_ASSERT(!tileset_elements.empty(), "No tilesets");
   for (const auto& kvp : tileset_elements) {
     const std::string& tileset_id = kvp.first;
     check_tileset(env, tileset_id);

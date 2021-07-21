@@ -272,7 +272,7 @@ void GlShader::draw(Surface& dst_surface, const Surface& src_surface, const Draw
 }
 
 void GlShader::upload_uniform(const Uniform& u) {
-  Debug::check_assertion(bound,"Trying to set uniform on an unbound shader");
+  SOLARUS_ASSERT(bound, "Trying to set uniform on an unbound shader");
   GlRenderer::get().shader_about_to_change(this); //Notify renderer that batch must be interupted
   GLint loc = get_uniform_location(u.name);
   if(loc == -1) {

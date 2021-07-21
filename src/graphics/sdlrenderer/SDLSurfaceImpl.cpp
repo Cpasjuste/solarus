@@ -25,8 +25,8 @@ namespace Solarus {
 SDL_Texture* create_texture_from_renderer(SDL_Renderer* renderer, int width, int height) {
   SDL_PixelFormat* format = Video::get_pixel_format();
 
-  Debug::check_assertion(renderer != nullptr, "Missing renderer");
-  Debug::check_assertion(format != nullptr, "Missing RGBA pixel format");
+  SOLARUS_ASSERT(renderer != nullptr, "Missing renderer");
+  SOLARUS_ASSERT(format != nullptr, "Missing RGBA pixel format");
 
   SDL_Texture* tex = SDL_CreateTexture(
       renderer,
@@ -34,8 +34,8 @@ SDL_Texture* create_texture_from_renderer(SDL_Renderer* renderer, int width, int
       SDL_TEXTUREACCESS_TARGET,
       width,
       height);
-  Debug::check_assertion(tex != nullptr,
-                         std::string("Failed to create render texture : ") + SDL_GetError());
+  SOLARUS_ASSERT(tex != nullptr,
+      std::string("Failed to create render texture : ") + SDL_GetError());
   return tex;
 }
 
@@ -54,8 +54,8 @@ SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer *renderer, int width, int height, bo
        format->Gmask,
        format->Bmask,
        format->Amask);
-  Debug::check_assertion(surf_ptr != nullptr,
-                         std::string("Failed to create backup surface ") + SDL_GetError());
+  SOLARUS_ASSERT(surf_ptr != nullptr,
+      std::string("Failed to create backup surface ") + SDL_GetError());
   surface.reset(surf_ptr);
 }
 
@@ -63,8 +63,8 @@ SDLSurfaceImpl::SDLSurfaceImpl(SDL_Renderer* renderer, SDL_Surface_UniquePtr sur
   : SurfaceImpl({surface->w, surface->h}),
     target(false), surface(std::move(surface)) {
   SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, this->surface.get());
-  Debug::check_assertion(tex != nullptr,
-        std::string("Failed to convert surface to texture") + SDL_GetError());
+  SOLARUS_ASSERT(tex != nullptr,
+      std::string("Failed to convert surface to texture") + SDL_GetError());
   texture.reset(tex);
 }
 
