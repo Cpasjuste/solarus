@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/core/Debug.h"
 #include "solarus/core/CurrentQuest.h"
 #include "solarus/core/QuestDatabase.h"
 #include "solarus/core/QuestFiles.h"
@@ -39,12 +38,12 @@ void check_sprite(TestEnvironment& /* env */, const std::string& sprite_id) {
   std::string file_name = "sprites/" + sprite_id + ".dat";
   std::string imported_sprite_buffer = QuestFiles::data_file_read(file_name);
   success = sprite_data.import_from_buffer(imported_sprite_buffer, file_name);
-  SOLARUS_ASSERT(success, "Sprite import failed");
+  TestEnvironment::verify(success, "Sprite import failed");
 
   // Export it.
   std::string exported_sprite_buffer;
   success = sprite_data.export_to_buffer(exported_sprite_buffer);
-  SOLARUS_ASSERT(success, "Sprite export failed");
+  TestEnvironment::verify(success, "Sprite export failed");
 
   // Check that the file is identical after import/export.
   if (exported_sprite_buffer != imported_sprite_buffer) {
@@ -66,7 +65,7 @@ int main(int argc, char** argv) {
 
   const std::map<std::string, std::string>& sprite_elements =
       CurrentQuest::get_database().get_resource_elements(ResourceType::SPRITE);
-  SOLARUS_ASSERT(!sprite_elements.empty(), "No sprites");
+  TestEnvironment::verify(!sprite_elements.empty(), "No sprites");
   for (const auto& kvp : sprite_elements) {
     const std::string& sprite_id = kvp.first;
     std::string file_name = "sprites/" + sprite_id + ".dat";

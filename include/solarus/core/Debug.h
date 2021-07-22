@@ -23,8 +23,8 @@
 /**
  * \def SOLARUS_ASSERT(condition, message)
  * \brief Stops Solarus in debug mode if the condition is \c false.
- * \param assertion The assertion to check.
- * \param error_message Error message to show in case of failure.
+ * \param condition The assertion to check.
+ * \param message Error message to show in case of failure.
  */
 #ifndef NDEBUG
 #define SOLARUS_ASSERT(condition, message) \

@@ -188,5 +188,16 @@ void TestEnvironment::step() {
   get_main_loop().step();
 }
 
+/**
+ * \brief Stops the test if the condition is \c false.
+ * \param condition The assertion or test requirement to check.
+ * \param message Error message to show in case of failure.
+ */
+void TestEnvironment::verify(bool condition, const std::string& message) {
+  if (!condition) {
+    Debug::die(message);
+  }
+}
+
 }
 
