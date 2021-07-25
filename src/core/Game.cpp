@@ -525,7 +525,7 @@ void Game::teleportation_change_map(CameraTeleportation &tp) {
   notify_map_changed(*next_map, *camera);
   //All entities should be there, start the map if necessary
   if(!next_map->is_started()) {
-    Debug::check_assertion(next_map->is_loaded(), "This map is not loaded");
+    SOLARUS_ASSERT(next_map->is_loaded(), "This map is not loaded");
     next_map->start(tp.destination_name);
   }
 
@@ -1203,7 +1203,7 @@ bool Game::is_showing_game_over() const {
  */
 void Game::start_game_over(const HeroPtr& hero) {
 
-  Debug::check_assertion(!is_showing_game_over(),
+  SOLARUS_ASSERT(!is_showing_game_over(),
       "The game-over sequence is already active");
 
   showing_game_over = true;
@@ -1244,7 +1244,7 @@ void Game::start_game_over(const HeroPtr& hero) {
  */
 void Game::stop_game_over(const HeroPtr& hero) {
 
-  Debug::check_assertion(is_showing_game_over(),
+  SOLARUS_ASSERT(is_showing_game_over(),
       "The game-over sequence is not running");
 
   get_lua_context().game_on_game_over_finished(*this, hero);

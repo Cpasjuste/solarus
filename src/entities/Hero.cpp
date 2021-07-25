@@ -2944,7 +2944,7 @@ bool Hero::can_start_item(EquipmentItem& item) {
  * \param item The equipment item to use.
  */
 void Hero::start_item(EquipmentItem& item) {
-  Debug::check_assertion(can_start_item(item),
+  SOLARUS_ASSERT(can_start_item(item),
       std::string("The hero cannot start using item '")
       + item.get_name() + "' now");
   set_state(std::make_shared<UsingItemState>(*this, item));

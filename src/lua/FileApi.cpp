@@ -66,7 +66,7 @@ void LuaContext::register_file_module() {
                                   // io
     lua_getfield(current_l, -1, "open");
                                   // io io.open
-    Debug::check_assertion(lua_isfunction(current_l, -1), "Could not find io.open");
+    SOLARUS_ASSERT(lua_isfunction(current_l, -1), "Could not find io.open");
     lua_getglobal(current_l, "sol");
                                   // io io.open sol
     lua_getfield(current_l, -1, "file");
@@ -88,7 +88,7 @@ void LuaContext::register_file_module() {
                                   // io
   lua_getfield(current_l, -1, "open");
                                   // io open
-  Debug::check_assertion(lua_isfunction(current_l, -1), "Could not find io.open");
+  SOLARUS_ASSERT(lua_isfunction(current_l, -1), "Could not find io.open");
   lua_setfield(current_l, LUA_REGISTRYINDEX, "io.open");
                                   // io
   lua_pop(current_l, 1);
@@ -370,7 +370,7 @@ bool detect_luajit_gc64(lua_State* l) {
         reinterpret_cast<char*>(file_udata) - sizeof(SolarusLuaJit_GCudata64)
   );
 
-  Debug::check_assertion(lua_objlen(l, -1) == sizeof(SolarusLuaJit_IOFileUD), "Unexpected userdata size");
+  SOLARUS_ASSERT(lua_objlen(l, -1) == sizeof(SolarusLuaJit_IOFileUD), "Unexpected userdata size");
   // Check the len field. It should be the size of our userdata if LJ_GC64 is set,
   // otherwise is it the env field (a pointer value).
   const bool gc64 = gc_udata64->len == sizeof(SolarusLuaJit_IOFileUD);

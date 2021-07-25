@@ -74,7 +74,7 @@ LuaContext::~LuaContext() {
  * \return The LuaContext object encapsulating this Lua state.
  */
 LuaContext& LuaContext::get() {
-  Debug::check_assertion(lua_context, "No lua context available");
+  SOLARUS_ASSERT(lua_context, "No lua context available");
   return *lua_context;
 }
 
@@ -175,7 +175,7 @@ void LuaContext::initialize(const Arguments& args) {
     CurrentQuest::set_language(languages.begin()->first);
   }
 
-  Debug::check_assertion(lua_gettop(current_l) == 0, "Non-empty Lua stack after initialization");
+  SOLARUS_ASSERT(lua_gettop(current_l) == 0, "Non-empty Lua stack after initialization");
 
 
   //Do the script passed as arg
@@ -188,7 +188,7 @@ void LuaContext::initialize(const Arguments& args) {
   // Execute the main file.
   do_file_if_exists("main");
 
-  Debug::check_assertion(lua_gettop(current_l) == 0, "Non-empty Lua stack after running main.lua");
+  SOLARUS_ASSERT(lua_gettop(current_l) == 0, "Non-empty Lua stack after running main.lua");
 
   main_on_started();
 }
@@ -226,31 +226,31 @@ void LuaContext::exit() {
 void LuaContext::update() {
 
   // Make sure the stack does not leak.
-  Debug::check_assertion(lua_gettop(main_l) == 0,
+  SOLARUS_ASSERT(lua_gettop(main_l) == 0,
       "Non-empty stack before LuaContext::update()"
   );
 
-  Debug::check_assertion(current_l == main_l,
-                         "Not on the main lua thread to execute lua update");
+  SOLARUS_ASSERT(current_l == main_l,
+      "Not on the main lua thread to execute lua update");
 
   update_drawables();
 
-  Debug::check_assertion(current_l == main_l,
-                         "Not on the main lua thread after updating drawable");
+  SOLARUS_ASSERT(current_l == main_l,
+      "Not on the main lua thread after updating drawable");
   update_movements();
 
-  Debug::check_assertion(current_l == main_l,
-                         "Not on the main lua thread after updating movements");
+  SOLARUS_ASSERT(current_l == main_l,
+      "Not on the main lua thread after updating movements");
 
   update_menus();
 
-  Debug::check_assertion(current_l == main_l,
-                         "Not on the main lua thread after updating menus");
+  SOLARUS_ASSERT(current_l == main_l,
+      "Not on the main lua thread after updating menus");
 
   update_timers();
 
-  Debug::check_assertion(current_l == main_l,
-                         "Not on the main lua thread after updating timers");
+  SOLARUS_ASSERT(current_l == main_l,
+      "Not on the main lua thread after updating timers");
 
   // Call sol.main.on_update().
   main_on_update();
@@ -264,9 +264,8 @@ void LuaContext::update() {
 
   current_l = main_l; //Ensure we run again on the main thread
 
-  Debug::check_assertion(lua_gettop(main_l) == 0,
-      "Non-empty stack after LuaContext::update()"
-  );
+  SOLARUS_ASSERT(lua_gettop(main_l) == 0,
+      "Non-empty stack after LuaContext::update()");
 }
 
 /**
@@ -279,16 +278,14 @@ void LuaContext::update() {
  */
 bool LuaContext::notify_input(const InputEvent& event) {
 
-  Debug::check_assertion(lua_gettop(current_l) == 0,
-      "Non-empty stack before LuaContext::notify_input()"
-  );
+  SOLARUS_ASSERT(lua_gettop(current_l) == 0,
+      "Non-empty stack before LuaContext::notify_input()");
 
   // Call the appropriate callback in sol.main (if it exists).
   const bool handled = main_on_input(event);
 
-  Debug::check_assertion(lua_gettop(current_l) == 0,
-      "Non-empty stack after LuaContext::notify_input()"
-  );
+  SOLARUS_ASSERT(lua_gettop(current_l) == 0,
+      "Non-empty stack after LuaContext::notify_input()");
 
   return handled;
 }
@@ -539,7 +536,7 @@ void LuaContext::push_ref(lua_State* l, const ScopedLuaRef& ref) {
   }
 
   //This is not needed anymore since several state (threads) can be active
-  //Debug::check_assertion(ref.get_lua_state() == l, "Wrong Lua state");
+  //SOLARUS_ASSERT(ref.get_lua_state() == l, "Wrong Lua state");
   ref.push(l);
 }
 
@@ -963,7 +960,7 @@ std::string LuaContext::get_lua_version() const {
  */
 void LuaContext::find_lua_version() {
 
-  Debug::check_assertion(lua_gettop(current_l) == 0, "Non-empty Lua stack before find_lua_version()");
+  SOLARUS_ASSERT(lua_gettop(current_l) == 0, "Non-empty Lua stack before find_lua_version()");
 
   // _VERSION is the Lua language version, giving the same
   // result for vanilla Lua and LuaJIT.
@@ -991,7 +988,7 @@ void LuaContext::find_lua_version() {
     luajit = true;
   }
 
-  Debug::check_assertion(lua_gettop(current_l) == 0, "Non-empty Lua stack after find_lua_version()");
+  SOLARUS_ASSERT(lua_gettop(current_l) == 0, "Non-empty Lua stack after find_lua_version()");
 }
 
 /**
@@ -1030,7 +1027,7 @@ void LuaContext::register_type(
 
   // Check that this type does not already exist.
   luaL_getmetatable(current_l, module_name.c_str());
-  Debug::check_assertion(lua_isnil(current_l, -1),
+  SOLARUS_ASSERT(lua_isnil(current_l, -1),
       std::string("Type ") + module_name + " already exists");
   lua_pop(current_l, 1);
 
@@ -1094,7 +1091,7 @@ void LuaContext::register_type(
  */
 void LuaContext::register_modules() {
 
-  Debug::check_assertion(lua_gettop(current_l) == 0,
+  SOLARUS_ASSERT(lua_gettop(current_l) == 0,
       "Lua stack is not empty before modules initialization");
 
   register_main_module();
@@ -1119,7 +1116,7 @@ void LuaContext::register_modules() {
   register_joypad_module();
   register_controls_module();
 
-  Debug::check_assertion(lua_gettop(current_l) == 0,
+  SOLARUS_ASSERT(lua_gettop(current_l) == 0,
       "Lua stack is not empty after modules initialization");
 }
 
@@ -1213,13 +1210,13 @@ void LuaContext::push_userdata(lua_State* l, ExportableToLua& userdata) {
                                   // ... all_udata lightudata udata mt
 
     Debug::execute_if_debug([&] {
-      Debug::check_assertion(!lua_isnil(main, -1),
+      SOLARUS_ASSERT(!lua_isnil(main, -1),
           std::string("Userdata of type '" + userdata.get_lua_type_name()
           + "' has no metatable, this is a memory leak"));
 
       lua_getfield(main, -1, "__gc");
                                     // ... all_udata lightudata udata mt gc
-      Debug::check_assertion(lua_isfunction(main, -1),
+      SOLARUS_ASSERT(lua_isfunction(main, -1),
           std::string("Userdata of type '") + userdata.get_lua_type_name()
           + "' must have the __gc function LuaContext::userdata_meta_gc");
                                     // ... all_udata lightudata udata mt gc
@@ -1531,7 +1528,7 @@ int LuaContext::userdata_meta_newindex_as_table(lua_State* l) {
     lua_gettable(l, -2);
                                   // ... udata_tables udata_table
   }
-  Debug::check_assertion(!lua_isnil(l, -1), "Missing userdata table");
+  SOLARUS_ASSERT(!lua_isnil(l, -1), "Missing userdata table");
   lua_pushvalue(l, 2);
                                   // ... udata_tables udata_table key
   lua_pushvalue(l, 3);
@@ -1588,7 +1585,7 @@ int LuaContext::userdata_meta_index_as_table(lua_State* l) {
                                   // udata key ... nil
   lua_getmetatable(l, 1);
                                   // udata key ... meta
-  Debug::check_assertion(!lua_isnil(l, -1), "Missing userdata metatable");
+  SOLARUS_ASSERT(!lua_isnil(l, -1), "Missing userdata metatable");
   lua_pushvalue(l, 2);
                                   // udata key ... meta key
   lua_gettable(l, -2);
@@ -1600,7 +1597,7 @@ int LuaContext::userdata_meta_index_as_table(lua_State* l) {
  * @brief checks if the LuaContext is in a event-friendly context
  */
 void LuaContext::check_callback_thread() const {
-  Debug::check_assertion(current_l == main_l, "Events should be called in the main Lua thread");
+  SOLARUS_ASSERT(current_l == main_l, "Events should be called in the main Lua thread");
 }
 
 

@@ -46,18 +46,22 @@ Jumper::Jumper(const std::string& name,
 
   // check the size
   if (direction % 2 != 0) {
-    Debug::check_assertion(size.is_square(), "This jumper has a diagonal direction but is not square");
+    SOLARUS_ASSERT(size.is_square(),
+        "This jumper has a diagonal direction but is not square");
   }
   else {
     if (direction % 4 == 0) {
-      Debug::check_assertion(size.width == 8, "This jumper is horizontal but its height is not 8");
+      SOLARUS_ASSERT(size.width == 8,
+          "This jumper is horizontal but its height is not 8");
     }
     else {
-      Debug::check_assertion(size.height == 8, "This jumper is vertical but its width is not 8");
+      SOLARUS_ASSERT(size.height == 8,
+          "This jumper is vertical but its width is not 8");
     }
   }
   // check the jump length
-  Debug::check_assertion(jump_length > 0, "The jump distance of this jumper must be positive");
+  SOLARUS_ASSERT(jump_length > 0,
+      "The jump distance of this jumper must be positive");
 }
 
 /**

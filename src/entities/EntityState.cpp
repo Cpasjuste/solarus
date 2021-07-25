@@ -198,7 +198,7 @@ const Equipment& Entity::State::get_equipment() const {
  */
 void Entity::State::start(const State* /* previous_state */) {
 
-  Debug::check_assertion(entity != nullptr, "No entity specified");
+  SOLARUS_ASSERT(entity != nullptr, "No entity specified");
 
   stopping = false;
   set_suspended(entity->is_suspended());
@@ -220,7 +220,7 @@ void Entity::State::start(const State* /* previous_state */) {
  */
 void Entity::State::stop(const State* next_state) {
 
-  Debug::check_assertion(!is_stopping(),
+  SOLARUS_ASSERT(!is_stopping(),
       std::string("This state is already stopping: ") + get_name());
 
   // Notify Lua.

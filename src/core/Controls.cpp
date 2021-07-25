@@ -879,8 +879,8 @@ void Controls::set_joypad_axis_binding(const Axis& command_axis, JoyPadAxis axis
  */
   Command Controls::get_command_to_customize() const {
 
-    Debug::check_assertion(is_customizing(),
-                           "The player is not customizing a command");
+    SOLARUS_ASSERT(is_customizing(),
+        "The player is not customizing a command");
     return command_to_customize;
   }
 

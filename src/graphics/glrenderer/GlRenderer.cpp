@@ -109,7 +109,7 @@ GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
   screen_fbo{0,glm::mat4(1.f)}
 {
 
-  Debug::check_assertion(!instance,"Creating two GL renderer");
+  SOLARUS_ASSERT(!instance,"Creating two GL renderer");
   instance = this; //Set this renderer as the unique instance
 
 
@@ -123,7 +123,8 @@ GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
                               DefaultShaders::get_default_fragment_source(),
                               0.0);
 
-  Debug::check_assertion(static_cast<bool>(main_shader),"Failed to compile glRenderer main shader");
+  SOLARUS_ASSERT(static_cast<bool>(main_shader),
+      "Failed to compile glRenderer main shader");
 }
 
 RendererPtr GlRenderer::create(SDL_Window* window, bool force_software) {
@@ -184,7 +185,8 @@ RendererPtr GlRenderer::create(SDL_Window* window, bool force_software) {
   //Set blending to BLEND
   glBlendEquationSeparate(GL_FUNC_ADD,GL_FUNC_ADD);
 
-  Debug::check_assertion(GlShader::initialize(),"shader failed to initialize after gl");
+  bool success = GlShader::initialize();
+  SOLARUS_ASSERT(success, "shader failed to initialize after gl");
 
   //Context populated create Renderer
   std::cerr << SDL_GetError();
@@ -221,7 +223,9 @@ void GlRenderer::set_render_target(GlTexture* target) {
       glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,target->get_texture(),0);
       setup_viewport(target);
 #ifndef SOLARUS_GL_ES
-      Debug::check_assertion(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"glFrameBufferTexture2D failed");
+      SOLARUS_ASSERT(
+          glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
+          "glFrameBufferTexture2D failed");
 #endif
     } else { //Render to screen
       glViewport(window_viewport.get_left(),
@@ -408,8 +412,8 @@ GlRenderer::Fbo* GlRenderer::get_fbo(int width, int height, bool screen) {
   uint_fast64_t key =  (static_cast<uint_fast64_t>(width) << 32) | static_cast<uint_fast64_t>(height);
   int rw = key >> 32;
   int rh = key & 0xFFFFFFFF;
-  Debug::check_assertion(rw == width,"recovered width does not match");
-  Debug::check_assertion(rh == height,"recovered height does not match");
+  SOLARUS_ASSERT(rw == width, "recovered width does not match");
+  SOLARUS_ASSERT(rh == height, "recovered height does not match");
   auto it = fbos.find(key);
   if(it != fbos.end()) {
     return &it->second;

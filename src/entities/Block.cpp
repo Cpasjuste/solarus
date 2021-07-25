@@ -65,7 +65,7 @@ Block::Block(
   can_be_pushed(can_be_pushed),
   can_be_pulled(can_be_pulled) {
 
-  Debug::check_assertion(max_moves >= -1,
+  SOLARUS_ASSERT(max_moves >= -1,
       "maxm_moves must be between postive, 0 or -1");
 
   set_collision_modes(CollisionMode::COLLISION_FACING);
@@ -420,7 +420,7 @@ int Block::get_max_moves() const {
  */
 void Block::set_max_moves(int max_moves) {
 
-  Debug::check_assertion(max_moves >= -1,
+  SOLARUS_ASSERT(max_moves >= -1,
         "max_moves must be positive, 0 or -1");
 
   this->initial_max_moves = max_moves;

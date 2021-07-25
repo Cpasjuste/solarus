@@ -47,7 +47,8 @@ Rectangle TransitionScrolling::get_previous_map_dst_position(
     int scrolling_direction) {
 
   const SurfacePtr& previous_map_surface = get_previous_surface();
-  Debug::check_assertion(previous_map_surface != nullptr, "Missing previous surface for scrolling");
+  SOLARUS_ASSERT(previous_map_surface != nullptr,
+      "Missing previous surface for scrolling");
   const Size& camera_size = previous_map_surface->get_size();
 
   Rectangle dst_position(0, 0);
@@ -73,7 +74,8 @@ void TransitionScrolling::start() {
   }
 
   const SurfacePtr& previous_map_surface = get_previous_surface();
-  Debug::check_assertion(previous_map_surface != nullptr, "Missing previous surface for scrolling");
+  SOLARUS_ASSERT(previous_map_surface != nullptr,
+      "Missing previous surface for scrolling");
 
   // get the scrolling direction
   scrolling_direction = (get_destination_side() + 2) % 4;
@@ -208,7 +210,7 @@ void TransitionScrolling::draw(Surface& dst_surface, const Surface &src_surface,
   }
 
   const SurfacePtr& previous_surface = get_previous_surface();
-  Debug::check_assertion(previous_surface != nullptr,
+  SOLARUS_ASSERT(previous_surface != nullptr,
       "No previous surface defined for scrolling");
 
   Rectangle dst = infos.dst_rectangle();

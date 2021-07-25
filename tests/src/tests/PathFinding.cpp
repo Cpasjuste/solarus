@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/core/Debug.h"
 #include "solarus/core/Game.h"
 #include "solarus/entities/CustomEntity.h"
 #include "solarus/entities/EntityPtr.h"
@@ -45,7 +44,7 @@ void test_path_to_hero(TestEnvironment& env, Entity& entity) {
 
   const bool traversable = !hero.is_obstacle_for(entity);
   const std::string expected_path = traversable ? "7777700" : "77777";
-  Debug::check_assertion(path == expected_path,
+  TestEnvironment::verify(path == expected_path,
       std::string("Unexpected path: '") + path + "', expected '" + expected_path + "'");
 }
 

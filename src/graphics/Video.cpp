@@ -120,7 +120,7 @@ RendererPtr create_chain(SDL_Window* w, bool force_software) {
  */
 void create_window(const Arguments& args) {
 
-  Debug::check_assertion(context.main_window == nullptr, "Window already exists");
+  SOLARUS_ASSERT(context.main_window == nullptr, "Window already exists");
 
   bool force_software = args.has_argument("-force-software-rendering");
 
@@ -138,13 +138,13 @@ void create_window(const Arguments& args) {
         SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | (force_software ? 0 : SDL_WINDOW_OPENGL)
         );
 
-  Debug::check_assertion(context.main_window != nullptr,
-                         std::string("Cannot create the window: ") + SDL_GetError());
+  SOLARUS_ASSERT(context.main_window != nullptr,
+      std::string("Cannot create the window: ") + SDL_GetError());
 
   context.renderer = create_chain<GlRenderer,SDLRenderer>(context.main_window, force_software);
 
-  Debug::check_assertion(static_cast<bool>(context.renderer),
-                         std::string("Cannot create the renderer: ") + SDL_GetError());
+  SOLARUS_ASSERT(static_cast<bool>(context.renderer),
+      std::string("Cannot create the renderer: ") + SDL_GetError());
 
   Logger::info("Renderer: " + context.renderer->get_name());
 
@@ -215,7 +215,7 @@ namespace Video {
  */
 void initialize(const Arguments& args) {
 
-  Debug::check_assertion(!is_initialized(), "Video system already initialized");
+  SOLARUS_ASSERT(!is_initialized(), "Video system already initialized");
 
   // Show the SDL version.
   SDL_version sdl_version;
@@ -370,15 +370,14 @@ void render(const SurfacePtr& quest_surface) {
     return;
   }
 
-  Debug::check_assertion(context.video_mode != nullptr,
-                         "Missing video mode");
+  SOLARUS_ASSERT(context.video_mode != nullptr, "Missing video mode");
 
   // See if there is a filter to apply.
   SurfacePtr surface_to_render = quest_surface;
   const SoftwarePixelFilter* software_filter = context.video_mode->get_software_filter();
   if (software_filter != nullptr) {
-    Debug::check_assertion(context.scaled_surface != nullptr,
-                           "Missing destination surface for scaling");
+    SOLARUS_ASSERT(context.scaled_surface != nullptr,
+        "Missing destination surface for scaling");
     quest_surface->apply_pixel_filter(*software_filter, *context.scaled_surface);
     surface_to_render = context.scaled_surface;
   }
@@ -513,7 +512,7 @@ void set_quest_size_range(
     const Size& min_size,
     const Size& max_size) {
 
-  Debug::check_assertion(
+  SOLARUS_ASSERT(
         normal_size.width >= min_size.width
         && normal_size.height >= min_size.height
         && normal_size.width <= max_size.width
@@ -685,8 +684,8 @@ bool is_mode_supported(const SoftwareVideoMode& mode) {
  */
 void set_default_video_mode() {
 
-  Debug::check_assertion(context.default_video_mode != nullptr,
-                         "Default video mode was not initialized");
+  SOLARUS_ASSERT(context.default_video_mode != nullptr,
+      "Default video mode was not initialized");
 
   SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
   set_fullscreen(false);
@@ -775,8 +774,8 @@ bool set_video_mode(const SoftwareVideoMode& mode) {
  */
 const SoftwareVideoMode& get_video_mode() {
 
-  Debug::check_assertion(context.video_mode != nullptr,
-                         "Video mode not initialized");
+  SOLARUS_ASSERT(context.video_mode != nullptr,
+      "Video mode not initialized");
   return *context.video_mode;
 }
 
@@ -823,7 +822,7 @@ const SoftwareVideoMode* get_video_mode_by_name(
  * \return The size of the window in pixels.
  */
 Size get_window_size() {
-  //Debug::check_assertion(context.main_window != nullptr, "No window");
+  //SOLARUS_ASSERT(context.main_window != nullptr, "No window");
 
   if(context.main_window) {
     //No video, return quest size
@@ -855,8 +854,8 @@ Size get_window_size() {
  */
 void set_window_size(const Size& size) {
 
-  Debug::check_assertion(context.main_window != nullptr, "No window");
-  Debug::check_assertion(
+  SOLARUS_ASSERT(context.main_window != nullptr, "No window");
+  SOLARUS_ASSERT(
         size.width > 0 && size.height > 0,
         "Wrong window size"
         );
@@ -890,7 +889,7 @@ void set_window_size(const Size& size) {
  */
 void reset_window_size() {
 
-  Debug::check_assertion(context.video_mode != nullptr, "No video mode");
+  SOLARUS_ASSERT(context.video_mode != nullptr, "No video mode");
 
   set_window_size(context.video_mode->get_initial_window_size());
 }
@@ -954,7 +953,7 @@ void on_window_resized(const Size& size) {
  */
 Size get_output_size() {
 
-  Debug::check_assertion(context.main_window != nullptr, "No window");
+  SOLARUS_ASSERT(context.main_window != nullptr, "No window");
 
   int width = 0;
   int height = 0;
@@ -1007,8 +1006,8 @@ Point output_to_quest_coordinates(const Point& output_xy) {
   const int x = (output_xy.x - viewport.get_x())/scale_x;
   const int y = (output_xy.y - viewport.get_y())/scale_y;
 
-  Debug::check_assertion(!qs.is_flat(), "Quest size is not initialized");
-  Debug::check_assertion(!viewport.is_flat(), "Viewport is not initialized");
+  SOLARUS_ASSERT(!qs.is_flat(), "Quest size is not initialized");
+  SOLARUS_ASSERT(!viewport.is_flat(), "Viewport is not initialized");
 
   return {x,y};
 }

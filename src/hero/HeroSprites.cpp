@@ -690,7 +690,7 @@ int HeroSprites::get_animation_direction(
  */
 void HeroSprites::set_animation_direction(int direction) {
 
-  Debug::check_assertion(direction >= 0 && direction < 4,
+  SOLARUS_ASSERT(direction >= 0 && direction < 4,
     "Invalid direction for set_animation_direction");
 
   if (tunic_sprite != nullptr) {

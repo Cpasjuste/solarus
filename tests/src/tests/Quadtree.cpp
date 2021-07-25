@@ -15,7 +15,6 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/containers/Quadtree.h"
-#include "solarus/core/Debug.h"
 #include "solarus/core/Rectangle.h"
 #include "tools/TestEnvironment.h"
 #include <memory>
@@ -71,7 +70,7 @@ void check_num_elements(const Quadtree<ElementPtr>& quadtree, int expected) {
  */
 void check_found(const std::vector<ElementPtr>& found_elements, ElementPtr& expected) {
 
-  Debug::check_assertion(
+  TestEnvironment::verify(
       std::find(found_elements.begin(), found_elements.end(), expected) != found_elements.end(),
       "Element not found"
   );
@@ -84,7 +83,7 @@ ElementPtr add(Quadtree<ElementPtr>& quadtree, const Box& bounding_box) {
 
   int num_elements = quadtree.get_num_elements();
   ElementPtr element(std::make_shared<Element>(bounding_box));
-  Debug::check_assertion(quadtree.add(element, element->get_bounding_box()), "Failed to add element");
+  TestEnvironment::verify(quadtree.add(element, element->get_bounding_box()), "Failed to add element");
   check_num_elements(quadtree, num_elements + 1);
   return element;
 }
@@ -95,7 +94,8 @@ ElementPtr add(Quadtree<ElementPtr>& quadtree, const Box& bounding_box) {
 void remove(Quadtree<ElementPtr>& quadtree, const ElementPtr& element) {
 
   int num_elements = quadtree.get_num_elements();
-  Debug::check_assertion(quadtree.remove(element), "Failed to remove element");
+  TestEnvironment::verify(quadtree.remove(element),
+      "Failed to remove element");
   check_num_elements(quadtree, num_elements - 1);
 }
 
@@ -104,10 +104,11 @@ void remove(Quadtree<ElementPtr>& quadtree, const ElementPtr& element) {
  */
 void move(Quadtree<ElementPtr>& quadtree, const ElementPtr& element) {
 
-  Debug::check_assertion(quadtree.contains(element), "Element not in quadtree");
+  TestEnvironment::verify(quadtree.contains(element),
+      "Element not in quadtree");
 
   int num_elements = quadtree.get_num_elements();
-  Debug::check_assertion(quadtree.move(element, element->get_bounding_box()), "Failed to move element");
+  TestEnvironment::verify(quadtree.move(element, element->get_bounding_box()), "Failed to move element");
 
   // The number of elements should be unchanged.
   check_num_elements(quadtree, num_elements);
@@ -148,7 +149,8 @@ void test_add(TestEnvironment& /* env */, Quadtree<ElementPtr>& quadtree) {
   Box region(220, 10, 100, 100);
   std::vector<ElementPtr> found_elements = quadtree.get_elements(region);
 
-  Debug::check_assertion(found_elements.size() == 3, "Expected 3 elements found");
+  TestEnvironment::verify(found_elements.size() == 3,
+      "Expected 3 elements found");
   check_found(found_elements, added_elements[2]);
   check_found(found_elements, added_elements[3]);
   check_found(found_elements, added_elements[4]);
@@ -163,7 +165,8 @@ void test_remove(TestEnvironment& /* env */, Quadtree<ElementPtr>& quadtree) {
   std::vector<ElementPtr> elements = quadtree.get_elements(quadtree.get_space());
 
   // Remove some of them.
-  Debug::check_assertion(quadtree.get_num_elements() > 5, "Wrong number of elements");
+  TestEnvironment::verify(quadtree.get_num_elements() > 5,
+      "Wrong number of elements");
   remove(quadtree, elements[0]);
 }
 
@@ -205,7 +208,8 @@ void test_move(TestEnvironment& /* env */, Quadtree<ElementPtr>& quadtree) {
   std::vector<ElementPtr> elements = quadtree.get_elements(quadtree.get_space());
 
   // Move some of them.
-  Debug::check_assertion(quadtree.get_num_elements() > 4, "Wrong number of elements");
+  TestEnvironment::verify(quadtree.get_num_elements() > 4,
+      "Wrong number of elements");
   ElementPtr element = elements[0];
   element->get_bounding_box().set_xy(128, 256);
   move(quadtree, element);
@@ -221,17 +225,19 @@ void test_move_limit(TestEnvironment& /* env */, Quadtree<ElementPtr>& quadtree)
 
   // Move an element outside the bounds.
   int num_elements = quadtree.get_num_elements();
-  Debug::check_assertion(num_elements > 4, "Wrong number of elements");
+  TestEnvironment::verify(num_elements > 4, "Wrong number of elements");
 
   ElementPtr element = elements[0];
   element->get_bounding_box().set_xy(-50000, -50000);
   move(quadtree, element);
-  Debug::check_assertion(quadtree.get_num_elements() == num_elements, "Wrong number of elements");
+  TestEnvironment::verify(quadtree.get_num_elements() == num_elements,
+      "Wrong number of elements");
 
   // Come back in the bounds.
   element->get_bounding_box().set_xy(42, 64);
   move(quadtree, element);
-  Debug::check_assertion(quadtree.get_num_elements() == num_elements, "Wrong number of elements");
+  TestEnvironment::verify(quadtree.get_num_elements() == num_elements,
+      "Wrong number of elements");
 }
 
 }

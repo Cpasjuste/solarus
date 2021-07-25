@@ -80,7 +80,7 @@ void set_solarus_write_dir(const std::string& solarus_write_dir) {
 
   // This setting never changes at runtime.
   // Allowing to change it would be complex and we don't need that.
-  Debug::check_assertion(solarus_write_dir_.empty(),
+  SOLARUS_ASSERT(solarus_write_dir_.empty(),
       "The Solarus write directory is already set");
 
   solarus_write_dir_ = solarus_write_dir;
@@ -282,7 +282,7 @@ SOLARUS_API std::string get_actual_file_name(
 ) {
   std::string full_file_name;
   if (language_specific) {
-    Debug::check_assertion(!CurrentQuest::get_language().empty(),
+    SOLARUS_ASSERT(!CurrentQuest::get_language().empty(),
         std::string("Cannot open language-specific file '") + file_name
         + "': no language was set"
     );
@@ -305,14 +305,14 @@ SOLARUS_API std::string data_file_read(
     const std::string& file_name
 ) {
   // Open the file.
-  Debug::check_assertion(PHYSFS_exists(file_name.c_str()),
+  SOLARUS_ASSERT(PHYSFS_exists(file_name.c_str()),
       std::string("Data file '") + file_name + "' does not exist"
   );
-  Debug::check_assertion(!PHYSFS_isDirectory(file_name.c_str()),
+  SOLARUS_ASSERT(!PHYSFS_isDirectory(file_name.c_str()),
       std::string("Data file '") + file_name + "' is a directory"
   );
   PHYSFS_file* file = PHYSFS_openRead(file_name.c_str());
-  Debug::check_assertion(file != nullptr,
+  SOLARUS_ASSERT(file != nullptr,
       std::string("Cannot open data file '") + file_name + "'"
   );
 

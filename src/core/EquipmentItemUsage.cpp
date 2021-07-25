@@ -47,7 +47,7 @@ EquipmentItem& EquipmentItemUsage::get_item() {
  */
 void EquipmentItemUsage::start() {
 
-  Debug::check_assertion(variant > 0,
+  SOLARUS_ASSERT(variant > 0,
       std::string("Attempt to use equipment item '") + item.get_name()
       + "' without having it");
 

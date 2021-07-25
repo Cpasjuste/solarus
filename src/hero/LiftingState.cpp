@@ -39,7 +39,7 @@ Hero::LiftingState::LiftingState(
   HeroState(hero, "lifting"),
   lifted_item(lifted_item) {
 
-  Debug::check_assertion(lifted_item != nullptr, "Missing lifted item");
+  SOLARUS_ASSERT(lifted_item != nullptr, "Missing lifted item");
 }
 
 /**
