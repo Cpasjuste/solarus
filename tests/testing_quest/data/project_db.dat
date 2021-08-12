@@ -95,6 +95,8 @@ map{ id = "bugs/1526_destructible_cut_method", description = "#1526: destructibl
 map{ id = "bugs/1527_entity_set_name", description = "#1527: entity:set_name()" }
 map{ id = "bugs/1533_savegame_write_escape", description = "#1533: Keyboard key binds are not escaped properly when savegame file is written" }
 map{ id = "bugs/1534_unicode_filenames", description = "#1534: Cyrillic or Chinese characters in filepath cause sol.file.open to return nil" }
+map{ id = "bugs/1547_teletransporter_on_activated_twice/map_1", description = "#1547 (1): Teletransporter on_activated Twice" }
+map{ id = "bugs/1547_teletransporter_on_activated_twice/map_2", description = "#1547 (2): Teletransporter on_activated Twice" }
 map{ id = "bugs/486_diagonal_dynamic_tiles", description = "#486: Wrong obstacles with diagonal dynamic tiles" }
 map{ id = "bugs/496_stream_speed_0", description = "#496: Allow streams to have a speed of zero" }
 map{ id = "bugs/526_get_entities_same_region", description = "#526: map:get_entities_in_same_region()" }
@@ -611,6 +613,10 @@ file{ path = "maps/bugs/1533_savegame_write_escape.dat", author = "hhromic", lic
 file{ path = "maps/bugs/1533_savegame_write_escape.lua", author = "hhromic", license = "GPL v3" }
 file{ path = "maps/bugs/1534_unicode_filenames.dat", author = "hhromic", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/1534_unicode_filenames.lua", author = "hhromic", license = "GPL v3" }
+file{ path = "maps/bugs/1547_teletransporter_on_activated_twice/map_1.dat", author = "Cluedrew", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1547_teletransporter_on_activated_twice/map_1.lua", author = "Cluedrew", license = "GPL v3" }
+file{ path = "maps/bugs/1547_teletransporter_on_activated_twice/map_2.dat", author = "Cluedrew", license = "CC BY-SA 4.0" }
+file{ path = "maps/bugs/1547_teletransporter_on_activated_twice/map_2.lua", author = "Cluedrew", license = "GPL v3" }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.dat", author = "Christopho", license = "CC BY-SA 4.0" }
 file{ path = "maps/bugs/486_diagonal_dynamic_tiles.lua", author = "Christopho", license = "GPL v3" }
 file{ path = "maps/bugs/496_stream_speed_0.dat", author = "Christopho", license = "CC BY-SA 4.0" }
