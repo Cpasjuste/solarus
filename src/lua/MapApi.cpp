@@ -190,7 +190,7 @@ void LuaContext::register_map_module() {
     lua_pop(current_l, 1);
   }
   else {
-    Debug::check_assertion(lua_isfunction(current_l, -1), "map:move_camera() is not a function");
+    SOLARUS_ASSERT(lua_isfunction(current_l, -1), "map:move_camera() is not a function");
     lua_setfield(current_l, LUA_REGISTRYINDEX, "map.move_camera");
   }
 }
@@ -1472,9 +1472,8 @@ bool LuaContext::create_map_entity_from_data(Map& map, const EntityData& entity_
   const std::string& type_name = enum_to_name(entity_data.get_type());
   std::string function_name = "create_" + type_name;
   const auto& it = entity_creation_functions.find(entity_data.get_type());
-  Debug::check_assertion(it != entity_creation_functions.end(),
-      "Missing entity creation function for type '" + type_name + "'"
-  );
+  SOLARUS_ASSERT(it != entity_creation_functions.end(),
+      "Missing entity creation function for type '" + type_name + "'");
   lua_CFunction function = it->second;
 
   lua_pushcfunction(current_l, function);
@@ -1968,7 +1967,7 @@ int LuaContext::map_api_move_camera(lua_State* l) {
 
     lua_getfield(l, LUA_REGISTRYINDEX, "map.move_camera");
     if (!lua_isnil(l, -1)) {
-      Debug::check_assertion(lua_isfunction(l, -1), "map:move_camera() is not a function");
+      SOLARUS_ASSERT(lua_isfunction(l, -1), "map:move_camera() is not a function");
       lua_insert(l, 1);
       lua_context.call_function(7, 0, "move_camera");
     }

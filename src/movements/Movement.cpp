@@ -84,7 +84,7 @@ Entity* Movement::get_entity() const {
  */
 void Movement::set_entity(Entity* entity) {
 
-  Debug::check_assertion(drawable == nullptr, "This movement is already assigned to a drawable");
+  SOLARUS_ASSERT(drawable == nullptr, "This movement is already assigned to a drawable");
 
   this->entity = entity;
 
@@ -117,7 +117,7 @@ Drawable* Movement::get_drawable() const {
  */
 void Movement::set_drawable(Drawable* drawable) {
 
-  Debug::check_assertion(entity == nullptr, "This movement is already assigned to an entity");
+  SOLARUS_ASSERT(entity == nullptr, "This movement is already assigned to an entity");
 
   this->drawable = drawable;
 
@@ -581,7 +581,7 @@ const ScopedLuaRef& Movement::get_finished_callback() const {
  */
 void Movement::set_finished_callback(const ScopedLuaRef& finished_callback_ref) {
 
-  Debug::check_assertion(get_lua_context() != nullptr, "Undefined Lua context");
+  SOLARUS_ASSERT(get_lua_context() != nullptr, "Undefined Lua context");
 
   this->finished_callback_ref = finished_callback_ref;
 }

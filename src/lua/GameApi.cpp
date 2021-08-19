@@ -1672,7 +1672,7 @@ int LuaContext::game_api_create_camera(lua_State * l) {
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
-    Debug::check_assertion(game, "Game is not started!");
+    SOLARUS_ASSERT(game, "Game is not started!");
 
     std::string cam_id = LuaTools::check_string(l, 2);
     std::string map_id = LuaTools::check_string(l, 3);
@@ -1701,7 +1701,7 @@ int LuaContext::game_api_remove_camera(lua_State * l) { //TODO
     CameraPtr camera = check_camera(l, 2);
 
     Game* game = savegame.get_game();
-    Debug::check_assertion(game, "Game is not started!");
+    SOLARUS_ASSERT(game, "Game is not started!");
 
     Transition::Style transition_style = LuaTools::opt_enum<Transition::Style>(
         l, 3, game->get_default_transition_style());
@@ -1723,7 +1723,7 @@ int LuaContext::game_api_get_cameras(lua_State *l) { //TODO
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
-    Debug::check_assertion(game, "Game is not started!");
+    SOLARUS_ASSERT(game, "Game is not started!");
 
     push_userdata_iterator(l, game->get_cameras());
 
@@ -1742,7 +1742,7 @@ int LuaContext::game_api_get_maps(lua_State * l) { //TODO
     Savegame& savegame = *check_game(l, 1);
 
     Game* game = savegame.get_game();
-    Debug::check_assertion(game, "Game is not started!");
+    SOLARUS_ASSERT(game, "Game is not started!");
 
     push_userdata_iterator(l, game->get_maps());
 

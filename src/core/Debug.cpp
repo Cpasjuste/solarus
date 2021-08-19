@@ -89,35 +89,13 @@ SOLARUS_API void error(const std::string& message) {
   Logger::error(message);
 }
 
-/**
- * \brief Like check_assertion(bool, const std::string&), but avoids
- * a useless conversion to std::string when the assertion is true.
- */
-void SOLARUS_API check_assertion(bool assertion, const char* error_message) {
-
-  // Don't build the std::string when the assertion succeeds.
-  if (!assertion) {
-    die(error_message);
-  }
-}
-
-/**
- * \brief Stops Solarus if the specified assertion is \c false.
- * \param assertion The assertion to check.
- * \param error_message Error message to show in case of failure.
- */
-void SOLARUS_API check_assertion(bool assertion, const std::string& error_message) {
-
-  if (!assertion) {
-    die(error_message);
-  }
-}
 
 /**
  * \brief Stops Solarus on a fatal error.
  *
- * This function is equivalent to check_assertion(false, error_message).
  * The error message is printed using Logger::fatal().
+ * set_show_popup_on_die and set_abort_on_die control
+ * the rest of the function.
  *
  * \param error_message The error message to report.
  */

@@ -107,7 +107,7 @@ const SurfacePtr &Transition::get_previous_surface() const {
  */
 void Transition::set_previous_surface(const SurfacePtr& previous_surface) {
 
-  Debug::check_assertion(previous_surface == nullptr
+  SOLARUS_ASSERT(previous_surface == nullptr
       || get_direction() != Direction::CLOSING,
       "Cannot show a previous surface with an closing transition effect");
 
@@ -127,7 +127,7 @@ void Transition::set_destination_side(int side) {
  * @return the side
  */
 int Transition::get_destination_side() const {
-  Debug::check_assertion(destination_side != -1,
+  SOLARUS_ASSERT(destination_side != -1,
                          "Transition : Destination side was not set");
   return destination_side;
 }

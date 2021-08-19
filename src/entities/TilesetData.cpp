@@ -141,7 +141,7 @@ const std::vector<Rectangle>& TilePatternData::get_frames() const {
  */
 void TilePatternData::set_frames(const std::vector<Rectangle>& frames) {
 
-  Debug::check_assertion(!frames.empty(), "No frames");
+  SOLARUS_ASSERT(!frames.empty(), "No frames");
   this->frames = frames;
 }
 
@@ -170,7 +170,7 @@ int TilePatternData::get_num_frames() const {
  */
 Rectangle TilePatternData::get_frame() const {
 
-  Debug::check_assertion(!frames.empty(), "No pattern frames");
+  SOLARUS_ASSERT(!frames.empty(), "No pattern frames");
   return frames[0];
 }
 
@@ -206,7 +206,7 @@ int TilePatternData::get_frame_delay() const {
  */
 void TilePatternData::set_frame_delay(int frame_delay) {
 
-  Debug::check_assertion(frame_delay > 0, "Invalid frame delay");
+  SOLARUS_ASSERT(frame_delay > 0, "Invalid frame delay");
   this->frame_delay = frame_delay;
 }
 
@@ -405,7 +405,7 @@ bool TilesetData::border_set_exists(const std::string& border_set_id) const {
 const BorderSet& TilesetData::get_border_set(const std::string& border_set_id) const {
 
   const auto& it = border_sets.find(border_set_id);
-  Debug::check_assertion(it != border_sets.end(),
+  SOLARUS_ASSERT(it != border_sets.end(),
     std::string("No such border set: '") + border_set_id + "'");
 
   return it->second;
@@ -423,7 +423,7 @@ const BorderSet& TilesetData::get_border_set(const std::string& border_set_id) c
 BorderSet& TilesetData::get_border_set(const std::string& border_set_id) {
 
   const auto& it = border_sets.find(border_set_id);
-  Debug::check_assertion(it != border_sets.end(),
+  SOLARUS_ASSERT(it != border_sets.end(),
     std::string("No such border set: '") + border_set_id + "'");
 
   return it->second;
@@ -572,7 +572,7 @@ int l_tile_pattern(lua_State* l) {
       LuaTools::type_error(l, 2, "number or table");
     }
     lua_pop(l, 1);
-    Debug::check_assertion(lua_gettop(l) == 1, "Invalid stack when parsing tile pattern");
+    SOLARUS_ASSERT(lua_gettop(l) == 1, "Invalid stack when parsing tile pattern");
 
     std::vector<int> y;
     lua_getfield(l, 1, "y");
@@ -592,7 +592,7 @@ int l_tile_pattern(lua_State* l) {
       LuaTools::type_error(l, 2, "number or table");
     }
     lua_pop(l, 1);
-    Debug::check_assertion(lua_gettop(l) == 1, "Invalid stack when parsing tile pattern");
+    SOLARUS_ASSERT(lua_gettop(l) == 1, "Invalid stack when parsing tile pattern");
 
     if (x.size() != y.size()) {
       LuaTools::arg_error(l, 1, "The length of x and y must match");
