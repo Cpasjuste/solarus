@@ -72,10 +72,6 @@
         <translation>Solarus</translation>
     </message>
     <message>
-        <source>Quests</source>
-        <translation type="vanished">Proyectos</translation>
-    </message>
-    <message>
         <location filename="../src/main_window.ui" line="442"/>
         <source>Quest title</source>
         <translation>Título del proyecto</translation>
@@ -113,92 +109,78 @@
     <message>
         <location filename="../src/main_window.ui" line="144"/>
         <location filename="../src/main_window.ui" line="147"/>
-        <location filename="../src/main_window.ui" line="704"/>
+        <location filename="../src/main_window.ui" line="705"/>
         <source>Remove quest</source>
         <translation>Eliminar proyecto</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="718"/>
+        <location filename="../src/main_window.ui" line="637"/>
+        <source>Options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/main_window.ui" line="719"/>
         <source>Sound volume</source>
         <translation>Volumen de sonido</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="723"/>
+        <location filename="../src/main_window.ui" line="724"/>
         <source>Music volume</source>
         <translation>Volumen de música</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="731"/>
+        <location filename="../src/main_window.ui" line="732"/>
         <source>Fullscreen</source>
         <translation>Pantalla completa</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="734"/>
+        <location filename="../src/main_window.ui" line="735"/>
         <source>F11</source>
         <translation>F11</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="739"/>
+        <location filename="../src/main_window.ui" line="740"/>
         <source>x1</source>
         <translation>x1</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="744"/>
+        <location filename="../src/main_window.ui" line="745"/>
         <source>x2</source>
         <translation>x2</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="749"/>
+        <location filename="../src/main_window.ui" line="750"/>
         <source>x3</source>
         <translation>x3</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="754"/>
+        <location filename="../src/main_window.ui" line="755"/>
         <source>x4</source>
         <translation>x4</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="775"/>
-        <source>Force Software</source>
-        <translation>Forzar Software</translation>
+        <location filename="../src/main_window.ui" line="763"/>
+        <source>Suspend when unfocused</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>None</source>
-        <translation type="vanished">Ninguno</translation>
+        <location filename="../src/main_window.ui" line="784"/>
+        <source>Force software rendering</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Scale2x</source>
-        <translation type="vanished">Scale2x</translation>
-    </message>
-    <message>
-        <source>Hq2x</source>
-        <translation type="vanished">Hq2x</translation>
-    </message>
-    <message>
-        <source>Hq3x</source>
-        <translation type="vanished">Hq3x</translation>
-    </message>
-    <message>
-        <source>Hq4x</source>
-        <translation type="vanished">Hq4x</translation>
-    </message>
-    <message>
-        <source>2D acceleration</source>
-        <translation type="vanished">Aceleración 2D</translation>
-    </message>
-    <message>
-        <location filename="../src/main_window.ui" line="762"/>
+        <location filename="../src/main_window.ui" line="771"/>
         <source>Mute</source>
         <translation>Silenciar</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="767"/>
+        <location filename="../src/main_window.ui" line="776"/>
         <source>About</source>
         <translation>Acerca de</translation>
     </message>
     <message>
         <location filename="../src/main_window.ui" line="398"/>
-        <location filename="../src/main_window.ui" line="692"/>
+        <location filename="../src/main_window.ui" line="693"/>
         <source>Play</source>
         <translation>Jugar</translation>
     </message>
@@ -218,19 +200,10 @@
         <translation>Proyecto</translation>
     </message>
     <message>
-        <source>Settings</source>
-        <translation type="vanished">Parámetros</translation>
-    </message>
-    <message>
         <location filename="../src/main_window.ui" line="112"/>
-        <location filename="../src/main_window.ui" line="678"/>
+        <location filename="../src/main_window.ui" line="679"/>
         <source>Add quest...</source>
         <translation>Añadir un proyecto...</translation>
-    </message>
-    <message>
-        <location filename="../src/main_window.ui" line="637"/>
-        <source>Video</source>
-        <translation>Vídeo</translation>
     </message>
     <message>
         <location filename="../src/main_window.ui" line="641"/>
@@ -238,82 +211,92 @@
         <translation>Zoom</translation>
     </message>
     <message>
-        <source>Video filter</source>
-        <translation type="vanished">Filtro de vídeo</translation>
-    </message>
-    <message>
-        <location filename="../src/main_window.ui" line="654"/>
+        <location filename="../src/main_window.ui" line="655"/>
         <source>Audio</source>
         <translation>Audio</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="662"/>
+        <location filename="../src/main_window.ui" line="663"/>
         <source>Help</source>
         <translation>Ayuda</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="683"/>
+        <location filename="../src/main_window.ui" line="684"/>
         <source>Exit</source>
         <translation>Salir</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="695"/>
+        <location filename="../src/main_window.ui" line="696"/>
         <source>F5</source>
         <translation>F5</translation>
     </message>
     <message>
-        <location filename="../src/main_window.ui" line="713"/>
+        <location filename="../src/main_window.ui" line="714"/>
         <source>Stop</source>
         <translation>Detener</translation>
     </message>
     <message>
-        <source>Solarus %1</source>
-        <translation type="vanished">Solarus %1</translation>
-    </message>
-    <message>
-        <location filename="../src/main_window.cpp" line="250"/>
+        <location filename="../src/main_window.cpp" line="261"/>
         <source>A quest is playing</source>
         <translation>Hay un proyecto en ejecución</translation>
     </message>
     <message>
-        <location filename="../src/main_window.cpp" line="251"/>
+        <location filename="../src/main_window.cpp" line="262"/>
         <source>A quest is playing. Do you really want to exit Solarus?</source>
         <translation>Hay un proyecto en ejecución. ¿De verdad que quieres salir de Solarus?</translation>
     </message>
     <message>
-        <location filename="../src/main_window.cpp" line="278"/>
+        <location filename="../src/main_window.cpp" line="289"/>
         <source>Select archive or quest.dat</source>
         <translation>Seleccionar archivo o quest.dat</translation>
     </message>
     <message>
-        <location filename="../src/main_window.cpp" line="286"/>
+        <location filename="../src/main_window.cpp" line="297"/>
         <source>No quest was found in this directory</source>
         <translation>No se ha encontrado proyecto en este directorio</translation>
-    </message>
-    <message>
-        <source>Select quest directory</source>
-        <translation type="vanished">Selecciona directorio del proyecto</translation>
-    </message>
-    <message>
-        <source>2D acceleration changed</source>
-        <translation type="vanished">Aceleración 2D modificada</translation>
-    </message>
-    <message>
-        <source>The change will take effect next time you play a quest.</source>
-        <translation type="vanished">El cambio se efectuará la próxima vez que ejecutes un proyecto.</translation>
     </message>
 </context>
 <context>
     <name>SolarusGui::QuestRunner</name>
     <message>
-        <location filename="../src/quest_runner.cpp" line="159"/>
-        <source>Failed to run quest</source>
-        <translation>Error al ejecutar el proyecto</translation>
+        <location filename="../src/quest_runner.cpp" line="248"/>
+        <location filename="../src/quest_runner.cpp" line="252"/>
+        <location filename="../src/quest_runner.cpp" line="256"/>
+        <location filename="../src/quest_runner.cpp" line="260"/>
+        <location filename="../src/quest_runner.cpp" line="264"/>
+        <location filename="../src/quest_runner.cpp" line="268"/>
+        <source>Quest Runner</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/quest_runner.cpp" line="160"/>
-        <source>Cannot start quest process: no program name</source>
-        <translation>No se puede iniciar el proceso del proyecto: falta el nombre del programa</translation>
+        <location filename="../src/quest_runner.cpp" line="249"/>
+        <source>The process failed to start.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="253"/>
+        <source>The process crashed some time after starting successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="257"/>
+        <source>The last wait-for function on the process timed out.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="261"/>
+        <source>An error occurred when attempting to write to the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="265"/>
+        <source>An error occurred when attempting to read from the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="269"/>
+        <source>An unknown error occurred.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
