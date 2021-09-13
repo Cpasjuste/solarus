@@ -72,10 +72,6 @@
         <translation>Solarus</translation>
     </message>
     <message>
-        <source>Quests</source>
-        <translation type="vanished">Quêtes</translation>
-    </message>
-    <message>
         <location filename="../src/main_window.ui" line="442"/>
         <source>Quest title</source>
         <translation>Titre de la quête</translation>
@@ -173,34 +169,6 @@
         <translation>Forcer le rendu software</translation>
     </message>
     <message>
-        <source>Force Software</source>
-        <translation type="vanished">Forcer le rendu software</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation type="vanished">Aucun</translation>
-    </message>
-    <message>
-        <source>Scale2x</source>
-        <translation type="vanished">Scale2x</translation>
-    </message>
-    <message>
-        <source>Hq2x</source>
-        <translation type="vanished">Hq2x</translation>
-    </message>
-    <message>
-        <source>Hq3x</source>
-        <translation type="vanished">Hq3x</translation>
-    </message>
-    <message>
-        <source>Hq4x</source>
-        <translation type="vanished">Hq4x</translation>
-    </message>
-    <message>
-        <source>2D acceleration</source>
-        <translation type="vanished">Accélération 2D</translation>
-    </message>
-    <message>
         <location filename="../src/main_window.ui" line="771"/>
         <source>Mute</source>
         <translation>Muet</translation>
@@ -232,27 +200,15 @@
         <translation>Quête</translation>
     </message>
     <message>
-        <source>Settings</source>
-        <translation type="vanished">Paramètres</translation>
-    </message>
-    <message>
         <location filename="../src/main_window.ui" line="112"/>
         <location filename="../src/main_window.ui" line="679"/>
         <source>Add quest...</source>
         <translation>Ajouter une quête...</translation>
     </message>
     <message>
-        <source>Video</source>
-        <translation type="vanished">Vidéo</translation>
-    </message>
-    <message>
         <location filename="../src/main_window.ui" line="641"/>
         <source>Zoom</source>
         <translation>Zoom</translation>
-    </message>
-    <message>
-        <source>Video filter</source>
-        <translation type="vanished">Filtre vidéo</translation>
     </message>
     <message>
         <location filename="../src/main_window.ui" line="655"/>
@@ -280,10 +236,6 @@
         <translation>Arrêter</translation>
     </message>
     <message>
-        <source>Solarus %1</source>
-        <translation type="vanished">Solarus %1</translation>
-    </message>
-    <message>
         <location filename="../src/main_window.cpp" line="261"/>
         <source>A quest is playing</source>
         <translation>Une quête est en cours</translation>
@@ -303,30 +255,48 @@
         <source>No quest was found in this directory</source>
         <translation>Aucune quête n&apos;a été trouvée dans ce dossier</translation>
     </message>
-    <message>
-        <source>Select quest directory</source>
-        <translation type="vanished">Sélectionnez le dossier de la quête</translation>
-    </message>
-    <message>
-        <source>2D acceleration changed</source>
-        <translation type="vanished">Accélération 2D modifiée</translation>
-    </message>
-    <message>
-        <source>The change will take effect next time you play a quest.</source>
-        <translation type="vanished">Le changement prendra effet la prochaine fois que vous lancerez une quête.</translation>
-    </message>
 </context>
 <context>
     <name>SolarusGui::QuestRunner</name>
     <message>
-        <location filename="../src/quest_runner.cpp" line="165"/>
-        <source>Failed to run quest</source>
-        <translation>Le lancement de la quête a échoué</translation>
+        <location filename="../src/quest_runner.cpp" line="248"/>
+        <location filename="../src/quest_runner.cpp" line="252"/>
+        <location filename="../src/quest_runner.cpp" line="256"/>
+        <location filename="../src/quest_runner.cpp" line="260"/>
+        <location filename="../src/quest_runner.cpp" line="264"/>
+        <location filename="../src/quest_runner.cpp" line="268"/>
+        <source>Quest Runner</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/quest_runner.cpp" line="166"/>
-        <source>Cannot start quest process: no program name</source>
-        <translation>Impossible de démarrer le processus de la quête : nom du programme manquant</translation>
+        <location filename="../src/quest_runner.cpp" line="249"/>
+        <source>The process failed to start.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="253"/>
+        <source>The process crashed some time after starting successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="257"/>
+        <source>The last wait-for function on the process timed out.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="261"/>
+        <source>An error occurred when attempting to write to the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="265"/>
+        <source>An error occurred when attempting to read from the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/quest_runner.cpp" line="269"/>
+        <source>An unknown error occurred.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

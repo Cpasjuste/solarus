@@ -41,7 +41,7 @@ QuestRunner::QuestRunner(QObject* parent) :
   connect(&process, SIGNAL(finished(int)),
           this, SLOT(on_finished()));
   connect(&process, SIGNAL(error(QProcess::ProcessError)),
-          this, SLOT(on_finished()));  // TODO report the error
+          this, SLOT(on_error(QProcess::ProcessError)));
   connect(&process, SIGNAL(readyReadStandardOutput()),
           this, SLOT(standard_output_data_available()));
 
@@ -158,15 +158,7 @@ void QuestRunner::start(const QString& quest_path) {
   }
 
   // Run the current executable itself with the special option "-run quest_path".
-  QStringList editor_arguments = QApplication::arguments();
-  if (editor_arguments.isEmpty()) {
-    QMessageBox::warning(
-          nullptr,
-          tr("Failed to run quest"),
-          tr("Cannot start quest process: no program name")
-    );
-  }
-  QString program_name = editor_arguments.at(0);
+  QString program_name = QApplication::applicationFilePath();
   QStringList arguments = create_arguments(quest_path);
 
   process.start(program_name, arguments);
@@ -241,6 +233,42 @@ void QuestRunner::on_finished() {
 
   last_command_id = -1;
   emit finished();
+}
+
+/**
+ * @brief Slot called when there is a process execution error.
+ * @param perr the process error to report to the user.
+ *
+ * This function simply notifies the user of an error and returns immediately.
+ */
+void QuestRunner::on_error(QProcess::ProcessError perr) {
+
+  switch (perr) {
+    case QProcess::FailedToStart:
+      QMessageBox::critical(nullptr, tr("Quest Runner"),
+          tr("The process failed to start."));
+      break;
+    case QProcess::Crashed:
+      QMessageBox::critical(nullptr, tr("Quest Runner"),
+          tr("The process crashed some time after starting successfully."));
+      break;
+    case QProcess::Timedout:
+      QMessageBox::critical(nullptr, tr("Quest Runner"),
+          tr("The last wait-for function on the process timed out."));
+      break;
+    case QProcess::WriteError:
+      QMessageBox::critical(nullptr, tr("Quest Runner"),
+          tr("An error occurred when attempting to write to the process."));
+      break;
+    case QProcess::ReadError:
+      QMessageBox::critical(nullptr, tr("Quest Runner"),
+          tr("An error occurred when attempting to read from the process."));
+      break;
+    case QProcess::UnknownError:
+      QMessageBox::critical(nullptr, tr("Quest Runner"),
+          tr("An unknown error occurred."));
+      break;
+  }
 }
 
 }
