@@ -1,0 +1,30 @@
+properties{
+  x = 0,
+  y = 0,
+  width = 320,
+  height = 240,
+  min_layer = 0,
+  max_layer = 2,
+  tileset = "castle",
+}
+
+teletransporter{
+  name = "south_exit",
+  layer = 0,
+  x = 88,
+  y = 240,
+  width = 128,
+  height = 16,
+  transition = "scrolling",
+  destination_map = "bugs/1547_teletransporter_on_activated_twice/map_2",
+  destination = "_side",
+}
+
+destination{
+  name = "destination",
+  layer = 0,
+  x = 152,
+  y = 221,
+  direction = 1,
+}
+
