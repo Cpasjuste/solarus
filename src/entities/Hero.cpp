@@ -809,10 +809,6 @@ void Hero::place_on_destination(Map& map, const Rectangle& previous_map_location
         boomerang->remove_from_map();
       }
 
-      if (destination != nullptr) { //TODO Verify if we can definatly remove this
-        get_lua_context()->destination_on_activated(*destination, *this);
-      }
-
       const std::shared_ptr<Stairs> stairs = get_stairs_overlapping();
       if (stairs != nullptr) {
         // The hero arrived on the map by stairs.
