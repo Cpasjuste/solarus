@@ -522,12 +522,14 @@ void Game::teleportation_change_map(CameraTeleportation &tp) {
       }
   }
 
-  notify_map_changed(*next_map, *camera);
+
   //All entities should be there, start the map if necessary
   if(!next_map->is_started()) {
     SOLARUS_ASSERT(next_map->is_loaded(), "This map is not loaded");
     next_map->start(tp.destination_name);
   }
+
+  notify_map_changed(*next_map, *camera);
 
   if(tp.opt_hero) {
       on_hero_map_change(tp.opt_hero, tp);
