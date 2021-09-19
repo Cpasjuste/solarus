@@ -46,10 +46,3 @@ set(SOLARUS_OPENAL_EXTENSIONS_RECONNECT ${SOLARUS_INITIAL_OPENAL_EXTENSIONS_RECO
 
 # Profiling instrumentation
 set(SOLARUS_PROFILING "OFF" CACHE BOOL "Enable compiling with easy_profiler embedded")
-
-# Mainloop shape
-set(SOLARUS_DYNAMIC_STEP "OFF" CACHE BOOL "Enable a mainloop updating in sync with video output")
-
-# Subpixel camera movement emulation
-set(SOLARUS_SUBPIXEL_CAMERA "OFF" CACHE BOOL "Enable motion-compensation for the camera")
-
