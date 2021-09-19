@@ -82,7 +82,7 @@ bool TraversableInfo::is_traversable(
     Entity& other_entity
 ) const {
 
-  Debug::check_assertion(!is_empty(), "Empty traversable info");
+  SOLARUS_ASSERT(!is_empty(), "Empty traversable info");
 
   if (traversable_test_ref.is_empty()) {
     // A fixed boolean was set.

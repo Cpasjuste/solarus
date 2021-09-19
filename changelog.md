@@ -17,6 +17,11 @@ This release adds new features but does not introduce any incompatibility.
 * Add methods `hero:get/set_push_delay()` (#1524).
 * Add methods `hero:get/set_carry_height()`.
 
+### Solarus launcher GUI changes
+
+* Fix Quest Runner not working on Windows when binaries are under Unicode paths.
+* Add error reporting to the Quest Runner process manager.
+
 ## Solarus 1.6.5 (2010-04-06)
 
 ### Engine changes

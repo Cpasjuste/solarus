@@ -61,7 +61,7 @@ const std::string& StringResources::get_string(
     const std::string& key) const {
 
   const auto& it = strings.find(key);
-  Debug::check_assertion(it != strings.end(),
+  SOLARUS_ASSERT(it != strings.end(),
     std::string("No such string: '") + key + "'");
 
   return it->second;
@@ -78,7 +78,7 @@ const std::string& StringResources::get_string(
 std::string& StringResources::get_string(const std::string& key) {
 
   const auto& it = strings.find(key);
-  Debug::check_assertion(it != strings.end(),
+  SOLARUS_ASSERT(it != strings.end(),
     std::string("No such string: '") + key + "'");
 
   return it->second;
@@ -188,7 +188,7 @@ bool StringResources::import_from_lua(lua_State* l) {
  */
 bool StringResources::export_to_lua(std::ostream& out) const {
 
-  for (const auto kvp : strings) {
+  for (const auto& kvp : strings) {
     const std::string& key = kvp.first;
     const std::string& value = kvp.second;
 

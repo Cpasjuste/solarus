@@ -70,7 +70,7 @@ class Switch: public Entity {
     bool is_arrow_target() const;
     bool is_solid() const;
     bool is_activated() const;
-    void activate();
+    void activate(Entity *opt_entity);
     void set_activated(bool enabled);
     bool is_locked() const;
     void set_locked(bool locked);

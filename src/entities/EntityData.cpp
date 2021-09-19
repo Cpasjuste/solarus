@@ -265,10 +265,15 @@ const std::map<EntityType, const EntityTypeDescription> entity_type_descriptions
             // No additional fields.
         }
     },
-
     {
         EntityType::FIRE, {
             // No additional fields.
+        }
+    },
+    {
+        EntityType::HERO, {
+            { "direction", OptionalFlag::OPTIONAL, FieldValue(-1)}
+            // TODO add more usefull fields
         }
     }
 };
@@ -549,7 +554,7 @@ int EntityData::get_user_property_count() const {
  */
 const EntityData::UserProperty& EntityData::get_user_property(int index) const {
 
-  Debug::check_assertion(index >= 0 && index < get_user_property_count(),
+  SOLARUS_ASSERT(index >= 0 && index < get_user_property_count(),
       "Invalid user property index");
   return user_properties.at(index);
 }
@@ -561,14 +566,14 @@ const EntityData::UserProperty& EntityData::get_user_property(int index) const {
  */
 void EntityData::set_user_property(int index, const UserProperty& user_property) {
 
-  Debug::check_assertion(index >= 0 && index < get_user_property_count(),
+  SOLARUS_ASSERT(index >= 0 && index < get_user_property_count(),
       "Invalid user property index");
 
-  Debug::check_assertion(is_user_property_key_valid(user_property.first),
+  SOLARUS_ASSERT(is_user_property_key_valid(user_property.first),
       "Invalid user property key");
 
   int existing_index = get_user_property_index(user_property.first);
-  Debug::check_assertion(existing_index == -1 || existing_index == index,
+  SOLARUS_ASSERT(existing_index == -1 || existing_index == index,
       "This user property already exists");
 
   user_properties[index] = user_property;
@@ -581,7 +586,7 @@ void EntityData::set_user_property(int index, const UserProperty& user_property)
 void EntityData::set_user_properties(const std::vector<UserProperty>& user_properties) {
 
   for (const UserProperty& user_property : user_properties) {
-    Debug::check_assertion(is_user_property_key_valid(user_property.first),
+    SOLARUS_ASSERT(is_user_property_key_valid(user_property.first),
         "Invalid user property key");
   }
 
@@ -597,10 +602,10 @@ void EntityData::set_user_properties(const std::vector<UserProperty>& user_prope
  */
 void EntityData::add_user_property(const UserProperty& user_property) {
 
-  Debug::check_assertion(is_user_property_key_valid(user_property.first),
+  SOLARUS_ASSERT(is_user_property_key_valid(user_property.first),
       "Invalid user property key");
 
-  Debug::check_assertion(!has_user_property(user_property.first),
+  SOLARUS_ASSERT(!has_user_property(user_property.first),
       "This user property already exists");
 
   user_properties.emplace_back(user_property);
@@ -612,7 +617,7 @@ void EntityData::add_user_property(const UserProperty& user_property) {
  */
 void EntityData::remove_user_property(int index) {
 
-  Debug::check_assertion(index >= 0 && index < get_user_property_count(),
+  SOLARUS_ASSERT(index >= 0 && index < get_user_property_count(),
       "Invalid user property index");
 
   user_properties.erase(user_properties.begin() + index);
@@ -702,10 +707,10 @@ bool EntityData::is_string(const std::string& key) const {
 const std::string& EntityData::get_string(const std::string& key) const {
 
   const auto& it = specific_properties.find(key);
-  Debug::check_assertion(it != specific_properties.end(),
+  SOLARUS_ASSERT(it != specific_properties.end(),
       "No such entity field in " + get_type_name() + ": '" + key + "'");
 
-  Debug::check_assertion(it->second.value_type == EntityFieldType::STRING,
+  SOLARUS_ASSERT(it->second.value_type == EntityFieldType::STRING,
       "Field '" + key + "' is not a string");
 
   return it->second.string_value;
@@ -720,10 +725,10 @@ const std::string& EntityData::get_string(const std::string& key) const {
 void EntityData::set_string(const std::string& key, const std::string& value) {
 
   const auto& it = specific_properties.find(key);
-  Debug::check_assertion(it != specific_properties.end(),
+  SOLARUS_ASSERT(it != specific_properties.end(),
       "No such entity field in " + get_type_name() + ": '" + key + "'");
 
-  Debug::check_assertion(it->second.value_type == EntityFieldType::STRING,
+  SOLARUS_ASSERT(it->second.value_type == EntityFieldType::STRING,
       "Field '" + key + "' is not a string");
 
   it->second.string_value = value;
@@ -752,10 +757,10 @@ bool EntityData::is_integer(const std::string& key) const {
 int EntityData::get_integer(const std::string& key) const {
 
   const auto& it = specific_properties.find(key);
-  Debug::check_assertion(it != specific_properties.end(),
+  SOLARUS_ASSERT(it != specific_properties.end(),
       "No such entity field in " + get_type_name() + ": '" + key + "'");
 
-  Debug::check_assertion(it->second.value_type == EntityFieldType::INTEGER,
+  SOLARUS_ASSERT(it->second.value_type == EntityFieldType::INTEGER,
       "Field '" + key + "' is not a string");
 
   return it->second.int_value;
@@ -770,10 +775,10 @@ int EntityData::get_integer(const std::string& key) const {
 void EntityData::set_integer(const std::string& key, int value) {
 
   const auto& it = specific_properties.find(key);
-  Debug::check_assertion(it != specific_properties.end(),
+  SOLARUS_ASSERT(it != specific_properties.end(),
       "No such entity field in " + get_type_name() + ": '" + key + "'");
 
-  Debug::check_assertion(it->second.value_type == EntityFieldType::INTEGER,
+  SOLARUS_ASSERT(it->second.value_type == EntityFieldType::INTEGER,
       "Field '" + key + "' is not an integer");
 
   it->second.int_value = value;
@@ -802,10 +807,10 @@ bool EntityData::is_boolean(const std::string& key) const {
 bool EntityData::get_boolean(const std::string& key) const {
 
   const auto& it = specific_properties.find(key);
-  Debug::check_assertion(it != specific_properties.end(),
+  SOLARUS_ASSERT(it != specific_properties.end(),
       "No such entity field in " + get_type_name() + ": '" + key + "'");
 
-  Debug::check_assertion(it->second.value_type == EntityFieldType::BOOLEAN,
+  SOLARUS_ASSERT(it->second.value_type == EntityFieldType::BOOLEAN,
       "Field '" + key + "' is not a boolean");
 
   return it->second.int_value != 0;
@@ -820,10 +825,10 @@ bool EntityData::get_boolean(const std::string& key) const {
 void EntityData::set_boolean(const std::string& key, bool value) {
 
   const auto& it = specific_properties.find(key);
-  Debug::check_assertion(it != specific_properties.end(),
+  SOLARUS_ASSERT(it != specific_properties.end(),
       "No such entity field in " + get_type_name() + ": '" + key + "'");
 
-  Debug::check_assertion(it->second.value_type == EntityFieldType::BOOLEAN,
+  SOLARUS_ASSERT(it->second.value_type == EntityFieldType::BOOLEAN,
       "Field '" + key + "' is not an boolean");
 
   it->second.int_value = value ? 1 : 0;

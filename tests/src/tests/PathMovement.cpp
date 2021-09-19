@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "solarus/core/Debug.h"
 #include "solarus/entities/CustomEntity.h"
 #include "solarus/movements/PathMovement.h"
 #include "tools/TestEnvironment.h"
@@ -39,36 +38,36 @@ void one_step_test(TestEnvironment& env, Entity& entity) {
     env.step();
   }
 
-  Debug::check_assertion(entity.get_xy() - old_xy == Point(8, 0),
+  TestEnvironment::verify(entity.get_xy() - old_xy == Point(8, 0),
       "Unexpected coordinates for 'one_step_test #1'");
-  Debug::check_assertion(movement->get_total_distance_covered() == 8,
+  TestEnvironment::verify(movement->get_total_distance_covered() == 8,
       "Unexpected distance covered for 'one_step_test #1'");
 
   movement->set_path("4");  // 8 pixels to the left.
   while (!movement->is_finished()) {
     env.step();
   }
-  Debug::check_assertion(entity.get_xy() == old_xy,
+  TestEnvironment::verify(entity.get_xy() == old_xy,
       "Unexpected coordinates for 'one_step_test #2'");
-  Debug::check_assertion(movement->get_total_distance_covered() == 16,
+  TestEnvironment::verify(movement->get_total_distance_covered() == 16,
       "Unexpected distance covered for 'one_step_test #2'");
 
   movement->set_path("3");
   while (!movement->is_finished()) {
     env.step();
   }
-  Debug::check_assertion(entity.get_xy() - old_xy == Point(-8, -8),
+  TestEnvironment::verify(entity.get_xy() - old_xy == Point(-8, -8),
       "Unexpected coordinates for 'one_step_test #3'");
-  Debug::check_assertion(movement->get_total_distance_covered() == 24,
+  TestEnvironment::verify(movement->get_total_distance_covered() == 24,
       "Unexpected distance covered for 'one_step_test #3'");
 
   movement->set_path("7");
   while (!movement->is_finished()) {
     env.step();
   }
-  Debug::check_assertion(entity.get_xy() == old_xy,
+  TestEnvironment::verify(entity.get_xy() == old_xy,
       "Unexpected coordinates for 'one_step_test #4'");
-  Debug::check_assertion(movement->get_total_distance_covered() == 32,
+  TestEnvironment::verify(movement->get_total_distance_covered() == 32,
       "Unexpected distance covered for 'one_step_test #4'");
 
   entity.clear_movement();
@@ -84,7 +83,7 @@ void direction_test(TestEnvironment& env, Entity& entity) {
   );
   entity.set_movement(movement);
 
-  Debug::check_assertion(movement->get_current_direction() == 5,
+  TestEnvironment::verify(movement->get_current_direction() == 5,
       "Unexpected current direction for 'direction_test #1'");
 
   while (!movement->is_finished()) {
@@ -92,7 +91,7 @@ void direction_test(TestEnvironment& env, Entity& entity) {
   }
 
   // when the movement is finished, PathMovement::get_current_direction() must return the last direction
-  Debug::check_assertion(movement->get_current_direction() == 5,
+  TestEnvironment::verify(movement->get_current_direction() == 5,
       "Unexpected last direction for 'direction_test #1'");
 }
 
@@ -112,9 +111,9 @@ void multi_step_test(TestEnvironment& env, Entity& entity) {
     env.step();
   }
 
-  Debug::check_assertion(entity.get_xy() - old_xy == Point(0, 16),
+  TestEnvironment::verify(entity.get_xy() - old_xy == Point(0, 16),
       "Unexpected coordinates for 'multi_step_test #1'");
-  Debug::check_assertion(movement->get_total_distance_covered() == 16,
+  TestEnvironment::verify(movement->get_total_distance_covered() == 16,
       "Unexpected distance covered for 'multi_step_test #1'");
 
   movement->set_path("220");
@@ -123,9 +122,9 @@ void multi_step_test(TestEnvironment& env, Entity& entity) {
     env.step();
   }
 
-  Debug::check_assertion(entity.get_xy() - old_xy == Point(8, 0),
+  TestEnvironment::verify(entity.get_xy() - old_xy == Point(8, 0),
       "Unexpected coordinates for 'multi_step_test #2'");
-  Debug::check_assertion(movement->get_total_distance_covered() == 40,
+  TestEnvironment::verify(movement->get_total_distance_covered() == 40,
       "Unexpected distance covered for 'multi_step_test #2'");
 
   entity.clear_movement();
@@ -137,7 +136,7 @@ void multi_step_test(TestEnvironment& env, Entity& entity) {
 void snap_test(TestEnvironment& env, Entity& entity) {
 
   entity.set_top_left_xy(155, 108);  // Not aligned to the grid.
-  Debug::check_assertion(!entity.is_aligned_to_grid(),
+  TestEnvironment::verify(!entity.is_aligned_to_grid(),
       "Entity should not be aligned on the grid");
 
   // #1: a path movement that does not require the entity to snap to the grid
@@ -148,9 +147,9 @@ void snap_test(TestEnvironment& env, Entity& entity) {
   while (!movement->is_finished()) {
     env.step();
   }
-  Debug::check_assertion(entity.get_top_left_xy() == Point(147, 124),
+  TestEnvironment::verify(entity.get_top_left_xy() == Point(147, 124),
       "Unexpected coordinates for 'snap_test #1'");
-  Debug::check_assertion(movement->get_total_distance_covered() == 16,
+  TestEnvironment::verify(movement->get_total_distance_covered() == 16,
       "Unexpected distance covered for 'snap_test #1'");
   entity.clear_movement();
 
@@ -162,9 +161,9 @@ void snap_test(TestEnvironment& env, Entity& entity) {
   while (!movement->is_finished()) {
     env.step();
   }
-  Debug::check_assertion(entity.get_top_left_xy() == Point(152, 112),
+  TestEnvironment::verify(entity.get_top_left_xy() == Point(152, 112),
       "Unexpected coordinates for 'snap_test #2'");
-  Debug::check_assertion(movement->get_total_distance_covered() == 16,
+  TestEnvironment::verify(movement->get_total_distance_covered() == 16,
       "Unexpected distance covered for 'snap_test #2'");
 
 }

@@ -47,7 +47,6 @@ class Hero::CarryingState: public Hero::PlayerMovementState {
     void set_animation_walking() override;
     std::shared_ptr<CarriedObject> get_carried_object() const override;
     CarriedObject::Behavior get_previous_carried_object_behavior() const override;
-
   private:
 
     void throw_item();

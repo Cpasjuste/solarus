@@ -32,12 +32,30 @@ namespace Solarus {
 
 /**
  * \brief Constructor.
+ * \param hero Hero owning this equipment
  * \param savegame The savegame to encapsulate.
+ * \param prefix A prefix added to keys modified by this equipement
  */
-Equipment::Equipment(Savegame& savegame):
+Equipment::Equipment(const SavegamePtr &savegame, const std::string& prefix):
   savegame(savegame),
-  suspended(true) {
+  suspended(true),
+  prefix(prefix),
+  hero(nullptr)
+{
 
+}
+
+/**
+ * @brief Set default values for this equipement
+ */
+void Equipment::set_initial_values() {
+  // Set the initial equipment.
+  set_max_life(1);
+  set_life(1);
+  set_ability(Ability::TUNIC, 1);  // Mandatory to have a valid hero sprite.
+  set_ability(Ability::PUSH, 1);
+  set_ability(Ability::GRAB, 1);
+  set_ability(Ability::PULL, 1);
 }
 
 /**
@@ -45,7 +63,7 @@ Equipment::Equipment(Savegame& savegame):
  * \return The savegame.
  */
 Savegame& Equipment::get_savegame() {
-  return savegame;
+  return *savegame;
 }
 
 /**
@@ -53,7 +71,7 @@ Savegame& Equipment::get_savegame() {
  * \return A game or nullptr.
  */
 Game* Equipment::get_game() {
-  return savegame.get_game();
+  return savegame->get_game();
 }
 
 /**
@@ -65,7 +83,7 @@ void Equipment::notify_game_started() {
 /**
  * \brief Notifies the equipment that the game has is finished.
  */
-void Equipment::notify_game_finished() {
+void Equipment::notify_game_finished() { //TODO make sure this is called
 
   // The equipment items will disappear: notify them.
   for (const auto& kvp: items) {
@@ -78,12 +96,12 @@ void Equipment::notify_game_finished() {
  * \brief Notifies the equipment system has another map has just been started.
  * \param map the new current map
  */
-void Equipment::notify_map_changed(Map& map) {
+void Equipment::notify_map_changed(Map& map, Camera& camera) {
 
   // Notify the items.
   for (const auto& kvp: items) {
     EquipmentItem& item = *kvp.second;
-    item.notify_map_changed(map);
+    item.notify_map_changed(map, camera);
   }
 }
 
@@ -96,7 +114,7 @@ void Equipment::notify_map_changed(Map& map) {
  */
 void Equipment::update() {
 
-  Game* game = savegame.get_game();
+  Game* game = savegame->get_game();
   if (game == nullptr) {
     // Nothing dynamic when there is no game.
     return;
@@ -135,7 +153,7 @@ void Equipment::set_suspended(bool suspended) {
  * \return the player's maximum number of money
  */
 int Equipment::get_max_money() const {
-  return savegame.get_integer(Savegame::KEY_MAX_MONEY);
+  return get_integer(Savegame::KEY_MAX_MONEY);
 }
 
 /**
@@ -144,9 +162,9 @@ int Equipment::get_max_money() const {
  */
 void Equipment::set_max_money(int max_money) {
 
-  Debug::check_assertion(max_money >= 0, "Invalid money amount to add");
+  SOLARUS_ASSERT(max_money >= 0, "Invalid max money amount");
 
-  savegame.set_integer(Savegame::KEY_MAX_MONEY, max_money);
+  set_integer(Savegame::KEY_MAX_MONEY, max_money);
 
   // If the max money is reduced, make sure the current money does not exceed
   // the new maximum.
@@ -160,7 +178,7 @@ void Equipment::set_max_money(int max_money) {
  * \return the player's current amount of money
  */
 int Equipment::get_money() const {
-  return savegame.get_integer(Savegame::KEY_CURRENT_MONEY);
+  return get_integer(Savegame::KEY_CURRENT_MONEY);
 }
 
 /**
@@ -174,7 +192,7 @@ int Equipment::get_money() const {
 void Equipment::set_money(int money) {
 
   money = std::max(0, std::min(get_max_money(), money));
-  savegame.set_integer(Savegame::KEY_CURRENT_MONEY, money);
+  set_integer(Savegame::KEY_CURRENT_MONEY, money);
 }
 
 /**
@@ -187,7 +205,7 @@ void Equipment::set_money(int money) {
  */
 void Equipment::add_money(int money_to_add) {
 
-  Debug::check_assertion(money_to_add >= 0, "Invalid money amount to add");
+  SOLARUS_ASSERT(money_to_add >= 0, "Invalid money amount to add");
 
   set_money(get_money() + money_to_add);
 }
@@ -202,7 +220,7 @@ void Equipment::add_money(int money_to_add) {
  */
 void Equipment::remove_money(int money_to_remove) {
 
-  Debug::check_assertion(money_to_remove >= 0, "Invalid money amount to remove");
+  SOLARUS_ASSERT(money_to_remove >= 0, "Invalid money amount to remove");
 
   set_money(get_money() - money_to_remove);
 }
@@ -212,7 +230,7 @@ void Equipment::remove_money(int money_to_remove) {
  * \return the player's maximum level of life
  */
 int Equipment::get_max_life() const {
-  return savegame.get_integer(Savegame::KEY_MAX_LIFE);
+  return get_integer(Savegame::KEY_MAX_LIFE);
 }
 
 /**
@@ -225,9 +243,9 @@ int Equipment::get_max_life() const {
  */
 void Equipment::set_max_life(int max_life) {
 
-  Debug::check_assertion(max_life >= 0, "Invalid life amount");
+  SOLARUS_ASSERT(max_life >= 0, "Invalid life amount");
 
-  savegame.set_integer(Savegame::KEY_MAX_LIFE, max_life);
+  set_integer(Savegame::KEY_MAX_LIFE, max_life);
 
   // If the max life is reduced, make sure the current life does not exceed
   // the new maximum.
@@ -241,7 +259,7 @@ void Equipment::set_max_life(int max_life) {
  * \return the player's current life
  */
 int Equipment::get_life() const {
-  return savegame.get_integer(Savegame::KEY_CURRENT_LIFE);
+  return get_integer(Savegame::KEY_CURRENT_LIFE);
 }
 
 /**
@@ -255,7 +273,7 @@ int Equipment::get_life() const {
 void Equipment::set_life(int life) {
 
   life = std::max(0, std::min(get_max_life(), life));
-  savegame.set_integer(Savegame::KEY_CURRENT_LIFE, life);
+  set_integer(Savegame::KEY_CURRENT_LIFE, life);
 }
 
 /**
@@ -268,7 +286,7 @@ void Equipment::set_life(int life) {
  */
 void Equipment::add_life(int life_to_add) {
 
-  Debug::check_assertion(life_to_add >= 0, "Invalid life amount to add");
+  SOLARUS_ASSERT(life_to_add >= 0, "Invalid life amount to add");
 
   set_life(get_life() + life_to_add);
 }
@@ -280,7 +298,7 @@ void Equipment::add_life(int life_to_add) {
  */
 void Equipment::remove_life(int life_to_remove) {
 
-  Debug::check_assertion(life_to_remove >= 0, "Invalid life amount to remove");
+  SOLARUS_ASSERT(life_to_remove >= 0, "Invalid life amount to remove");
 
   set_life(get_life() - life_to_remove);
 }
@@ -298,7 +316,7 @@ void Equipment::restore_all_life() {
  * \return the maximum level of magic
  */
 int Equipment::get_max_magic() const {
-  return savegame.get_integer(Savegame::KEY_MAX_MAGIC);
+  return get_integer(Savegame::KEY_MAX_MAGIC);
 }
 
 /**
@@ -311,9 +329,9 @@ int Equipment::get_max_magic() const {
  */
 void Equipment::set_max_magic(int max_magic) {
 
-  Debug::check_assertion(max_magic >= 0, "Invalid magic amount");
+  SOLARUS_ASSERT(max_magic >= 0, "Invalid magic amount");
 
-  savegame.set_integer(Savegame::KEY_MAX_MAGIC, max_magic);
+  set_integer(Savegame::KEY_MAX_MAGIC, max_magic);
 
   restore_all_magic();
 }
@@ -323,7 +341,7 @@ void Equipment::set_max_magic(int max_magic) {
  * \return the player's current number of magic points
  */
 int Equipment::get_magic() const {
-  return savegame.get_integer(Savegame::KEY_CURRENT_MAGIC);
+  return get_integer(Savegame::KEY_CURRENT_MAGIC);
 }
 
 /**
@@ -338,7 +356,7 @@ int Equipment::get_magic() const {
 void Equipment::set_magic(int magic) {
 
   magic = std::max(0, std::min(get_max_magic(), magic));
-  savegame.set_integer(Savegame::KEY_CURRENT_MAGIC, magic);
+  set_integer(Savegame::KEY_CURRENT_MAGIC, magic);
 }
 
 /**
@@ -351,7 +369,7 @@ void Equipment::set_magic(int magic) {
  */
 void Equipment::add_magic(int magic_to_add) {
 
-  Debug::check_assertion(magic_to_add >= 0, "Invalid magic amount to add");
+  SOLARUS_ASSERT(magic_to_add >= 0, "Invalid magic amount to add");
 
   set_magic(get_magic() + magic_to_add);
 }
@@ -367,7 +385,7 @@ void Equipment::add_magic(int magic_to_add) {
  */
 void Equipment::remove_magic(int magic_to_remove) {
 
-  Debug::check_assertion(magic_to_remove >= 0, "Invalid magic amount to remove");
+  SOLARUS_ASSERT(magic_to_remove >= 0, "Invalid magic amount to remove");
 
   set_magic(get_magic() - magic_to_remove);
 }
@@ -425,7 +443,7 @@ bool Equipment::item_exists(const std::string& item_name) const {
  */
 EquipmentItem& Equipment::get_item(const std::string& item_name) {
 
-  Debug::check_assertion(item_exists(item_name),
+  SOLARUS_ASSERT(item_exists(item_name),
       std::string("No such item: '") + item_name + "'");
 
   return *items.find(item_name)->second;
@@ -438,7 +456,7 @@ EquipmentItem& Equipment::get_item(const std::string& item_name) {
  */
 const EquipmentItem& Equipment::get_item(const std::string& item_name) const {
 
-  Debug::check_assertion(item_exists(item_name),
+  SOLARUS_ASSERT(item_exists(item_name),
       std::string("No such item: '") + item_name + "'");
 
   return *items.find(item_name)->second;
@@ -453,12 +471,12 @@ EquipmentItem* Equipment::get_item_assigned(int slot) {
 
   // TODO don't hardcode item slots
 
-  Debug::check_assertion(slot >= 1 && slot <= 2,
+  SOLARUS_ASSERT(slot >= 1 && slot <= 2,
       "Invalid item slot");
 
   char savegame_variable[] = "_item_slot_0";
   savegame_variable[11] = '0' + slot;
-  const std::string& item_name = savegame.get_string(savegame_variable);
+  const std::string& item_name = get_string(savegame_variable);
 
   EquipmentItem* item = nullptr;
   if (!item_name.empty()) {
@@ -474,12 +492,12 @@ EquipmentItem* Equipment::get_item_assigned(int slot) {
  */
 const EquipmentItem* Equipment::get_item_assigned(int slot) const {
 
-  Debug::check_assertion(slot >= 1 && slot <= 2,
+  SOLARUS_ASSERT(slot >= 1 && slot <= 2,
       "Invalid item slot");
 
   std::ostringstream oss;
   oss << "_item_slot_" << slot;
-  const std::string& item_name = savegame.get_string(oss.str());
+  const std::string& item_name = get_string(oss.str());
 
   const EquipmentItem* item = nullptr;
   if (!item_name.empty()) {
@@ -499,23 +517,23 @@ const EquipmentItem* Equipment::get_item_assigned(int slot) const {
  */
 void Equipment::set_item_assigned(int slot, EquipmentItem* item) {
 
-  Debug::check_assertion(slot >= 1 && slot <= 2,
+  SOLARUS_ASSERT(slot >= 1 && slot <= 2,
       "Invalid item slot");
 
   std::ostringstream oss;
   oss << "_item_slot_" << slot;
 
   if (item != nullptr) {
-    Debug::check_assertion(item->get_variant() > 0,
+    SOLARUS_ASSERT(item->get_variant() > 0,
         std::string("Cannot assign item '") + item->get_name()
         + "' because the player does not have it");
-    Debug::check_assertion(item->is_assignable(),
+    SOLARUS_ASSERT(item->is_assignable(),
         std::string("The item '") + item->get_name()
         + "' cannot be assigned");
-    savegame.set_string(oss.str(), item->get_name());
+    set_string(oss.str(), item->get_name());
   }
   else {
-    savegame.set_string(oss.str(), "");
+    set_string(oss.str(), "");
   }
 }
 
@@ -603,7 +621,7 @@ bool Equipment::has_ability(Ability ability, int level) const {
  * \return The level of this ability.
  */
 int Equipment::get_ability(Ability ability) const {
-  return savegame.get_integer(get_ability_savegame_variable(ability));
+  return get_integer(get_ability_savegame_variable(ability));
 }
 
 /**
@@ -613,15 +631,15 @@ int Equipment::get_ability(Ability ability) const {
  */
 void Equipment::set_ability(Ability ability, int level) {
 
-  savegame.set_integer(get_ability_savegame_variable(ability), level);
+  set_integer(get_ability_savegame_variable(ability), level);
 
-  Game* game = get_game();
-  if (game != nullptr) {
+  Hero* hero = get_hero();
+  if (hero != nullptr) {
     if (ability == Ability::TUNIC ||
         ability == Ability::SWORD ||
         ability == Ability::SHIELD) {
       // The hero's sprites may depend on these abilities.
-      game->get_hero()->rebuild_equipment();
+      hero->rebuild_equipment();
     }
   }
 }
@@ -639,6 +657,58 @@ void Equipment::notify_ability_used(Ability ability) {
     EquipmentItem& item = *kvp.second;
     item.notify_ability_used(ability);
   }
+}
+
+/**
+ * @brief Helper to get integer with the equipement prefix
+ * @param key prefix-less key
+ * @return the value
+ */
+int Equipment::get_integer(const std::string& key) const {
+  return savegame->get_integer(prefix+key);
+}
+
+/**
+ * @brief Helper to set integer with the equipment prefix
+ * @param key prefix-less key
+ * @param value the value
+ */
+void Equipment::set_integer(const std::string& key, int value) {
+  savegame->set_integer(prefix+key, value);
+}
+
+/**
+ * @brief Helper to get string with the equipement prefix
+ * @param key prefix-less key
+ * @return the value
+ */
+std::string Equipment::get_string(const std::string& key) const {
+  return savegame->get_string(prefix+key);
+}
+
+/**
+ * @brief Helper to set string with the equipment prefix
+ * @param key prefix-less key
+ * @param value the value
+ */
+void Equipment::set_string(const std::string& key, const std::string& value) {
+  savegame->set_string(prefix+key, value);
+}
+
+/**
+ * @brief Sets the hero using this equipment
+ * @param hero
+ */
+void Equipment::set_hero(Hero *hero){
+  this->hero = hero;
+}
+
+/**
+ * @brief Gets the hero using this equipment
+ * @return
+ */
+Hero* Equipment::get_hero(){
+  return hero;
 }
 
 }

@@ -16,7 +16,7 @@
  */
 #include "solarus/core/Debug.h"
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/core/Geometry.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/Stream.h"
@@ -29,11 +29,15 @@ namespace Solarus {
  * \brief Constructor.
  * \param moving_speed movement speed
  */
-PlayerMovement::PlayerMovement(int moving_speed):
+PlayerMovement::PlayerMovement(int moving_speed, const ControlsPtr &controls):
   StraightMovement(false, true),
   moving_speed(moving_speed),
-  direction8(-1),
-  blocked_by_stream(false) {
+  //direction8(-1),
+  intensity(0.0),
+  angle(0.0),
+  blocked_by_stream(false),
+  controls(controls)
+{
 
 }
 
@@ -57,10 +61,10 @@ void PlayerMovement::update() {
   // Someone may have stopped the movement
   // (e.g. Hero::reset_movement()).
   if (is_stopped() &&
-      direction8 != -1 &&
+      intensity != 0.0 &&
       !blocked_by_stream
   ) {
-    direction8 = -1;
+    intensity = 0.0;
     compute_movement();
   }
   else {
@@ -68,10 +72,10 @@ void PlayerMovement::update() {
       stop();
     }
     // Check if the wanted direction has changed.
-    const GameCommands& commands = get_entity()->get_game().get_commands();
-    int wanted_direction8 = commands.get_wanted_direction8();
-    if (wanted_direction8 != direction8 && !is_suspended()) {
-      direction8 = wanted_direction8;
+    auto [norm, ang] = controls->get_wanted_polar();
+    if (std::tie(norm, ang) != std::tie(intensity, angle) && !is_suspended()) {
+      intensity = norm;
+      angle = ang;
       compute_movement();
     }
   }
@@ -85,7 +89,10 @@ void PlayerMovement::update() {
  * to a direction or the movement is disabled
  */
 int PlayerMovement::get_wanted_direction8() const {
-  return direction8;
+  if(intensity < 1e-3){
+    return -1;
+  }
+  return int((Geometry::radians_to_degrees(angle)+360)/45) % 8;
 }
 
 /**
@@ -112,14 +119,10 @@ void PlayerMovement::set_moving_speed(int moving_speed) {
  * and computes the corresponding movement.
  */
 void PlayerMovement::set_wanted_direction() {
-
-  if (get_entity() != nullptr && get_entity()->is_on_map()) {
-    GameCommands& commands = get_entity()->get_game().get_commands();
-    direction8 = commands.get_wanted_direction8();
-  }
-  else {
-    direction8 = -1;
-  }
+  //direction8 = commands->get_wanted_direction8();
+  auto [intensity, angle] = controls->get_wanted_polar();
+  this->intensity = intensity;
+  this->angle = angle;
 }
 
 /**
@@ -131,7 +134,7 @@ void PlayerMovement::compute_movement() {
 
   // Compute the speed vector corresponding to the direction wanted by the player
 
-  if (direction8 == -1) {
+  if (std::abs(intensity) < 1e-3) {
     // No wanted movement.
     stop();
   }
@@ -140,9 +143,9 @@ void PlayerMovement::compute_movement() {
       stop();
     }
     else {
-      set_speed(moving_speed);
+      set_speed(std::ceil(moving_speed*intensity));
     }
-    set_angle(Geometry::degrees_to_radians(direction8 * 45));
+    set_angle(angle);
   }
 }
 

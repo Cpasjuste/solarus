@@ -297,7 +297,7 @@ void Settings::set_from_quest() {
     set_integer(key_music_volume, Music::get_volume());
   }
   if (InputEvent::is_initialized()) {
-    set_boolean(key_joypad_enabled, InputEvent::is_joypad_enabled());
+    set_boolean(key_joypad_enabled, InputEvent::is_legacy_joypad_enabled());
   }
   if (CurrentQuest::is_initialized()) {
     if (!CurrentQuest::get_language().empty()) {
@@ -356,7 +356,7 @@ void Settings::apply_to_quest() {
     // Joystick.
     auto joypad_enabled = get_boolean(key_joypad_enabled);
     if (joypad_enabled.second) {
-      InputEvent::set_joypad_enabled(joypad_enabled.first);
+      InputEvent::set_legacy_joypad_enabled(joypad_enabled.first);
     }
   }
 }

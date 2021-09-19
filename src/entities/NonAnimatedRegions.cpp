@@ -41,9 +41,9 @@ NonAnimatedRegions::NonAnimatedRegions(Map& map, int layer):
  */
 void NonAnimatedRegions::add_tile(const TileInfo& tile) {
 
-  Debug::check_assertion(are_squares_animated.empty(),
+  SOLARUS_ASSERT(are_squares_animated.empty(),
       "Tile regions are already built");
-  Debug::check_assertion(tile.layer == layer, "Wrong layer for add tile");
+  SOLARUS_ASSERT(tile.layer == layer, "Wrong layer for add tile");
 
   tiles.push_back(tile);
 }
@@ -57,7 +57,7 @@ void NonAnimatedRegions::add_tile(const TileInfo& tile) {
  */
 void NonAnimatedRegions::build(std::vector<TileInfo>& rejected_tiles) {
 
-  Debug::check_assertion(are_squares_animated.empty(),
+  SOLARUS_ASSERT(are_squares_animated.empty(),
       "Tile regions are already built");
 
   const int map_width8 = map.get_width8();
@@ -164,48 +164,44 @@ void NonAnimatedRegions::update() {
     return;
   }
 
-  std::vector<int> indexes_to_clear;
-  const CameraPtr& camera = map.get_camera();
-  if (camera == nullptr) {
-    return;
-  }
+  // Store votes for evictions of the cameras
+  std::unordered_map<int,int> indexes_to_clear;
 
-  const Size& cell_size = non_animated_tiles.get_cell_size();
-  const Rectangle& camera_position = camera->get_bounding_box();
-  const int row1 = camera_position.get_y() / cell_size.height;
-  const int row2 = (camera_position.get_y() + camera_position.get_height()) / cell_size.height;
-  const int column1 = camera_position.get_x() / cell_size.width;
-  const int column2 = (camera_position.get_x() + camera_position.get_width()) / cell_size.width;
-
-  for (const auto& kvp : optimized_tiles_surfaces) {
-    const int cell_index = kvp.first;
+  for (const auto& [cell_index, surface] : optimized_tiles_surfaces) {
     const int row = cell_index / non_animated_tiles.get_num_columns();
     const int column = cell_index % non_animated_tiles.get_num_columns();
-    if (column < column1 || column > column2 || row < row1 || row > row2) {
-      indexes_to_clear.push_back(cell_index);
+
+    for(const auto& camera : map.get_entities().get_cameras()) {
+      const Size& cell_size = non_animated_tiles.get_cell_size();
+      const Rectangle& camera_position = camera->get_bounding_box();
+      const int row1 = camera_position.get_y() / cell_size.height;
+      const int row2 = (camera_position.get_y() + camera_position.get_height()) / cell_size.height;
+      const int column1 = camera_position.get_x() / cell_size.width;
+      const int column2 = (camera_position.get_x() + camera_position.get_width()) / cell_size.width;
+
+      if (column < column1 || column > column2 || row < row1 || row > row2) {
+        indexes_to_clear[cell_index]++;
+      }
     }
   }
 
-  for (int cell_index : indexes_to_clear) {
-    optimized_tiles_surfaces.erase(cell_index);
+  int num_cameras = map.get_entities().get_cameras().size();
+  for (auto [cell_index, vote] : indexes_to_clear) {
+    if(vote >= num_cameras) {
+      optimized_tiles_surfaces.erase(cell_index);
+    }
   }
 }
 
 /**
  * \brief Draws a layer of non-animated regions of tiles on the current map.
  */
-void NonAnimatedRegions::draw_on_map() {
-
-  const CameraPtr& camera = map.get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-
+void NonAnimatedRegions::draw_on_map(const Camera &camera) {
   // Check all grid cells that overlap the camera.
   const int num_rows = non_animated_tiles.get_num_rows();
   const int num_columns = non_animated_tiles.get_num_columns();
   const Size& cell_size = non_animated_tiles.get_cell_size();
-  const Rectangle& camera_position = camera->get_bounding_box();
+  const Rectangle& camera_position = camera.get_bounding_box();
 
   const int row1 = camera_position.get_y() / cell_size.height;
   const int row2 = (camera_position.get_y() + camera_position.get_height()) / cell_size.height;
@@ -216,6 +212,8 @@ void NonAnimatedRegions::draw_on_map() {
     // No cell.
     return;
   }
+
+  const auto& surface = camera.get_surface();
 
   for (int i = row1; i <= row2; ++i) {
     if (i < 0 || i >= num_rows) {
@@ -239,9 +237,10 @@ void NonAnimatedRegions::draw_on_map() {
           i * cell_size.height
       };
 
-      const Point dst_position = cell_xy - camera_position.get_xy();
+
+      const Point dst_position = cell_xy;
       optimized_tiles_surfaces.at(cell_index)->draw(
-          map.get_camera_surface(), dst_position
+        surface, dst_position
       );
     }
   }
@@ -253,11 +252,12 @@ void NonAnimatedRegions::draw_on_map() {
  */
 void NonAnimatedRegions::build_cell(int cell_index) {
 
-  Debug::check_assertion(
+  SOLARUS_ASSERT(
       cell_index >= 0 && (size_t) cell_index < non_animated_tiles.get_num_cells(),
       "Wrong cell index"
   );
-  Debug::check_assertion(optimized_tiles_surfaces.find(cell_index) == optimized_tiles_surfaces.end(),
+  SOLARUS_ASSERT(
+      optimized_tiles_surfaces.find(cell_index) == optimized_tiles_surfaces.end(),
       "This cell is already built"
   );
 
@@ -286,7 +286,7 @@ void NonAnimatedRegions::build_cell(int cell_index) {
     );
 
     const Tileset* tileset = tile.tileset != nullptr ? tile.tileset : &map.get_tileset();
-    Debug::check_assertion(tileset != nullptr, "Missing tileset");
+    SOLARUS_ASSERT(tileset != nullptr, "Missing tileset");
     tile.pattern->fill_surface(
         cell_surface,
         dst_position,

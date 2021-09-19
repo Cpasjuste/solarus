@@ -73,6 +73,11 @@ class SOLARUS_API QuestProperties : public LuaData {
     Size get_max_quest_size() const;
     void set_max_quest_size(const Size& max_quest_size);
 
+    bool is_dynamic_timestep() const;
+    void set_dynamic_timestep(bool dynamic);
+    bool is_subpixel_camera() const;
+    void set_subpixel_camera(bool subpixel);
+
   private:
 
     std::string solarus_version;       /**< Version of Solarus the quest is
@@ -92,6 +97,8 @@ class SOLARUS_API QuestProperties : public LuaData {
     Size min_quest_size;               /**< Minimum quest size. */
     Size max_quest_size;               /**< Maximum quest size. */
 
+    bool use_dynamic_timestep;         /**< Quest requests engine in dynamic timestep */
+    bool use_subpixel_camera;          /**< Quest requests engine to do subpixel camera movement */
 };
 
 }

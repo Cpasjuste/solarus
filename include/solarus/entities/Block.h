@@ -59,8 +59,8 @@ class Block: public Entity {
     void notify_created() override;
     void notify_collision(Entity& entity_overlapping, CollisionMode collision_mode) override;
     void notify_collision_with_switch(Switch& sw, CollisionMode collision_mode) override;
-    bool notify_action_command_pressed() override;
-    bool start_movement_by_hero() override;
+    bool notify_action_command_pressed(Hero& hero) override;
+    bool start_movement_by_hero(Hero &hero) override;
     void stop_movement_by_hero() override;
     void notify_moving_by(Entity& entity) override;
     void notify_moved_by(Entity& entity) override;
@@ -90,6 +90,7 @@ class Block: public Entity {
     int initial_max_moves;      /**< value of maximum_moves when the block was created */
     bool can_be_pushed;         /**< indicates that the hero can push this block */
     bool can_be_pulled;         /**< indicates that the hero can pull this block */
+    HeroPtr moving_hero;        /**< Moving hero */
 
     static constexpr uint32_t moving_delay = 500; /**< delay between two successive moves of a block */
 

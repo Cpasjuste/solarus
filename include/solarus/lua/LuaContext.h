@@ -22,7 +22,7 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Ability.h"
 #include "solarus/core/Debug.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/core/InputEvent.h"
 #include "solarus/core/TimerPtr.h"
 #include "solarus/entities/Camera.h"
@@ -97,7 +97,7 @@ class Teletransporter;
 class TextSurface;
 class Timer;
 class Treasure;
-
+class Player;
 class Arguments;
 
 using EntityVector = std::vector<EntityPtr>;
@@ -127,6 +127,9 @@ class LuaContext {
     static const std::string sound_module_name;
     static const std::string video_module_name;
     static const std::string input_module_name;
+    static const std::string joypad_module_name;
+    static const std::string controls_module_name;
+    static const std::string player_module_name;
     static const std::string file_module_name;
     static const std::string timer_module_name;
     static const std::string game_module_name;
@@ -164,9 +167,11 @@ class LuaContext {
     void exit();
     void update();
     bool notify_input(const InputEvent& event);
+
+
     void notify_map_suspended(Map& map, bool suspended);
-    void notify_shop_treasure_interaction(ShopTreasure& shop_treasure);
-    void notify_hero_brandish_treasure(
+    void notify_shop_treasure_interaction(ShopTreasure& shop_treasure, Hero &hero);
+    void notify_hero_brandish_treasure(Hero &hero,
         const Treasure& treasure,
         const ScopedLuaRef& callback_ref
     );
@@ -358,25 +363,36 @@ class LuaContext {
     // Video events.
     void video_on_draw(const SurfacePtr& screen);
 
+    // Input events.
+    void input_on_joypad_connected(Joypad& joy);
+
+    // Joypad events.
+    bool on_joypad_axis_moved(Joypad& joypad, JoyPadAxis axis, double val);
+    bool on_joypad_button_pressed(Joypad& joypad, JoyPadButton button);
+    bool on_joypad_button_released(Joypad& joaypad, JoyPadButton button);
+    bool on_joypad_removed(Joypad& joypad);
+
     // Menu events.
     void menu_on_started(const ScopedLuaRef& menu_ref);
     void menu_on_finished(const ScopedLuaRef& menu_ref);
     void menu_on_update(const ScopedLuaRef& menu_ref);
     void menu_on_draw(const ScopedLuaRef& menu_ref, const SurfacePtr& dst_surface);
     bool menu_on_input(const ScopedLuaRef& menu_ref, const InputEvent& event);
+    bool menu_on_command(const ScopedLuaRef& menu_ref, const ControlEvent& event);
     bool menu_on_command_pressed(
         const ScopedLuaRef& menu_ref,
-        GameCommand command
+        Command command
     );
     bool menu_on_command_released(
         const ScopedLuaRef& menu_ref,
-        GameCommand command
+        Command command
     );
     void menus_on_update(int context_index);
     void menus_on_draw(int context_index, const SurfacePtr& dst_surface);
     bool menus_on_input(int context_index, const InputEvent& event);
-    bool menus_on_command_pressed(int context_index, GameCommand command);
-    bool menus_on_command_released(int context_index, GameCommand command);
+    bool menus_on_command(int context_index, const ControlEvent& command);
+    //bool menus_on_command_pressed(int context_index, Command command);
+    //bool menus_on_command_released(int context_index, Command command);
 
     // Sprite events.
     void sprite_on_animation_finished(
@@ -400,7 +416,7 @@ class LuaContext {
     void item_on_finished(EquipmentItem& item);
     void item_on_update(EquipmentItem& item);
     void item_on_suspended(EquipmentItem& item, bool suspended);
-    void item_on_map_changed(EquipmentItem& item, Map& map);
+    void item_on_map_changed(EquipmentItem& item, Map& map, Camera &camera);
     void item_on_pickable_created(EquipmentItem& item, Pickable& pickable);
     void item_on_obtaining(EquipmentItem& item, const Treasure& treasure);
     void item_on_obtained(EquipmentItem& item, const Treasure& treasure);
@@ -418,7 +434,7 @@ class LuaContext {
     void game_on_finished(Game& game);
     void game_on_update(Game& game);
     void game_on_draw(Game& game, const SurfacePtr& dst_surface);
-    void game_on_map_changed(Game& game, Map& map);
+    void game_on_map_changed(Game& game, Map& map, Solarus::Camera &camera);
     void game_on_world_changed(
         Game& game,
         const std::string& previous_world,
@@ -432,11 +448,13 @@ class LuaContext {
         const ScopedLuaRef& info_ref
     );
     void game_on_dialog_finished(Game& game, const Dialog& dialog);
-    bool game_on_game_over_started(Game& game);
-    void game_on_game_over_finished(Game& game);
+    bool game_on_game_over_started(Game& game, const HeroPtr& hero);
+    void game_on_game_over_finished(Game& game, const HeroPtr& hero);
     bool game_on_input(Game& game, const InputEvent& event);
-    bool game_on_command_pressed(Game& game, GameCommand command);
-    bool game_on_command_released(Game& game, GameCommand command);
+
+    bool game_on_control(Game& game, const ControlEvent& event);
+    bool game_on_command_pressed(Game& game, Command command);
+    bool game_on_command_released(Game& game, Command command);
 
     // Map events.
     void map_on_started(Map& map, const std::shared_ptr<Destination>& destination);
@@ -449,8 +467,7 @@ class LuaContext {
     void map_on_obtaining_treasure(Map& map, const Treasure& treasure);
     void map_on_obtained_treasure(Map& map, const Treasure& treasure);
     bool map_on_input(Map& map, const InputEvent& event);
-    bool map_on_command_pressed(Map& map, GameCommand command);
-    bool map_on_command_released(Map& map, GameCommand command);
+    bool map_on_control(Map& map, const ControlEvent& command);
 
     // Map entity events.
     void entity_on_update(Entity& entity);
@@ -466,7 +483,7 @@ class LuaContext {
     void entity_on_movement_started(Entity& entity, Movement& movement);
     void entity_on_movement_changed(Entity& entity, Movement& movement);
     void entity_on_movement_finished(Entity& entity);
-    bool entity_on_interaction(Entity& entity);
+    bool entity_on_interaction(Entity& entity, Hero &hero);
     bool entity_on_interaction_item(Entity& entity, EquipmentItem& item_used);
     void entity_on_state_changing(
         Entity& entity,
@@ -478,8 +495,8 @@ class LuaContext {
         Entity& carrier,
         CarriedObject& carried_object);
     bool hero_on_taking_damage(Hero& hero, int damage);
-    void destination_on_activated(Destination& destination);
-    void teletransporter_on_activated(Teletransporter& teletransporter);
+    void destination_on_activated(Destination& destination, Hero& hero);
+    void teletransporter_on_activated(Teletransporter& teletransporter, Hero& hero);
     void npc_on_collision_fire(Npc& npc);
     void carried_object_on_lifted(CarriedObject& carried_object);
     void carried_object_on_thrown(CarriedObject& carried_object);
@@ -487,11 +504,11 @@ class LuaContext {
     bool chest_on_opened(Chest& chest, const Treasure& treasure);
     void block_on_moving(Block& block);
     void block_on_moved(Block& block);
-    void switch_on_activated(Switch& sw);
-    void switch_on_inactivated(Switch& sw);
-    void switch_on_left(Switch& sw);
-    void sensor_on_activated(Sensor& sensor);
-    void sensor_on_activated_repeat(Sensor& sensor);
+    void switch_on_activated(Switch& sw, Entity* opt_entity);
+    void switch_on_inactivated(Switch& s, Entity* opt_entity);
+    void switch_on_left(Switch& sw, Entity& entity);
+    void sensor_on_activated(Sensor& sensor, Hero &hero);
+    void sensor_on_activated_repeat(Sensor& sensor, Entity &entity);
     void sensor_on_left(Sensor& sensor);
     void sensor_on_collision_explosion(Sensor& sensor);
     void separator_on_activating(Separator& separator, int direction4);
@@ -546,8 +563,7 @@ class LuaContext {
         const EnemyReaction::Reaction& reaction
     );
     bool state_on_input(CustomState& state, const InputEvent& event);
-    bool state_on_command_pressed(CustomState& state, GameCommand command);
-    bool state_on_command_released(CustomState& state, GameCommand command);
+    bool state_on_command(CustomState& state, const ControlEvent& command);
 
     // Implementation of the API.
 
@@ -628,6 +644,15 @@ class LuaContext {
       video_api_reset_window_size,
       video_api_get_shader,
       video_api_set_shader,
+      video_api_set_geometry_mode,
+
+      // Joypad API.
+      joypad_api_get_axis,
+      joypad_api_is_button_pressed,
+      joypad_api_get_name,
+      joypad_api_rumble,
+      joypad_api_has_rumble,
+      joypad_api_is_attached,
 
       // Input API.
       input_api_is_joypad_enabled,
@@ -644,6 +669,8 @@ class LuaContext {
       input_api_get_finger_pressure,
       input_api_simulate_key_pressed,
       input_api_simulate_key_released,
+      input_api_get_joypad_count,
+      input_api_get_joypads,
 
       // File API.
       file_api_open,
@@ -925,6 +952,11 @@ class LuaContext {
       game_api_capture_command_binding,
       game_api_simulate_command_pressed,
       game_api_simulate_command_released,
+      game_api_get_controls,
+      game_api_create_camera,
+      game_api_remove_camera,
+      game_api_get_cameras,
+      game_api_get_maps,
 
       // Equipment item API.
       item_api_get_name,
@@ -999,6 +1031,8 @@ class LuaContext {
       map_api_set_entities_enabled,
       map_api_remove_entities,
       map_api_create_entity,  // Same function used for all entity types.
+      map_api_get_cameras,
+      map_api_get_heroes,
 
       // Map entity API.
       entity_api_get_type,
@@ -1105,6 +1139,38 @@ class LuaContext {
       hero_api_start_hurt,
       hero_api_start_state,
       hero_api_get_state_object,
+      hero_api_get_controls,
+      hero_api_set_controls,
+      hero_get_starting_location,
+      hero_set_starting_location,
+
+      hero_get_life, //Attribute and equipement getter/setters
+      hero_set_life,
+      hero_add_life,
+      hero_remove_life,
+      hero_get_max_life,
+      hero_set_max_life,
+      hero_add_max_life,
+      hero_get_money,
+      hero_set_money,
+      hero_add_money,
+      hero_remove_money,
+      hero_get_max_money,
+      hero_set_max_money,
+      hero_get_magic,
+      hero_set_magic,
+      hero_add_magic,
+      hero_remove_magic,
+      hero_get_max_magic,
+      hero_set_max_magic,
+      hero_has_ability,
+      hero_get_ability,
+      hero_set_ability,
+      hero_get_item,
+      hero_has_item,
+      hero_get_item_assigned,
+      hero_set_item_assigned,
+
       camera_api_get_position_on_screen,
       camera_api_set_position_on_screen,
       camera_api_get_state,
@@ -1113,6 +1179,14 @@ class LuaContext {
       camera_api_get_position_to_track,
       camera_api_get_tracked_entity,
       camera_api_get_surface,
+      camera_api_set_viewport,
+      camera_api_get_viewport,
+      camera_api_set_zoom,
+      camera_api_get_zoom,
+      camera_api_get_rotation,
+      camera_api_set_rotation,
+      camera_api_teleport,
+
       destination_api_get_starting_location_mode,
       destination_api_set_starting_location_mode,
       destination_api_is_default,
@@ -1310,6 +1384,29 @@ class LuaContext {
       state_api_get_carried_object_action,
       state_api_set_carried_object_action,
 
+      // Commands API
+      controls_api_create_from_keyboard,
+      controls_api_create_from_joypad,
+      controls_api_set_analog_commands_enabled,
+      controls_api_are_analog_commands_enabled,
+      controls_api_is_pressed,
+      controls_api_get_axis_state,
+      controls_api_get_direction,
+      controls_api_set_keyboard_binding,
+      controls_api_get_keyboard_binding,
+      controls_api_set_joypad_binding,
+      controls_api_get_joypad_binding,
+      controls_api_set_joypad_axis_binding,
+      controls_api_get_joypad_axis_binding,
+      controls_api_set_keyboard_axis_binding,
+      controls_api_get_keyboard_axis_binding,
+      controls_api_capture_bindings,
+      commands_api_get_effect,
+      controls_api_simulate_pressed,
+      controls_api_simulate_released,
+      controls_api_simulate_axis_moved,
+
+
       // available to all userdata types
       userdata_rawget_as_table,
       userdata_meta_gc,
@@ -1373,6 +1470,8 @@ class LuaContext {
     void register_sound_module();
     void register_video_module();
     void register_input_module();
+    void register_joypad_module();
+    void register_controls_module();
     void register_file_module();
     void register_timer_module();
     void register_item_module();
@@ -1391,6 +1490,7 @@ class LuaContext {
     // Pushing objects to Lua.
     static void push_main(lua_State* current_l);
     static void push_video(lua_State* current_l);
+    static void push_input(lua_State* current_l);
     static void push_string(lua_State* current_l, const std::string& text);
     static void push_color(lua_State* current_l, const Color& color);
 public:
@@ -1409,7 +1509,47 @@ private:
     static void push_map(lua_State* current_l, Map& map);
     static void push_state(lua_State* current_l, CustomState& state);
     static void push_entity(lua_State* current_l, Entity& entity);
-    static void push_entity_iterator(lua_State* current_l, const EntityVector& entities);
+
+
+    template<typename Container>
+
+    /**
+     * @brief push a c++ collection of userdata as a table array on the stack
+     * @param l A lua context
+     * @param elements A collection of userdata, order is preserved
+     */
+    static void push_userdata_array(lua_State* l, const Container& elements) {
+        int i = 0;
+        lua_newtable(l);
+        for(const auto& element: elements) {
+          ++i;
+          lua_pushinteger(l, i);
+          push_userdata(l, *element);
+          lua_rawset(l, -3);
+        }
+    }
+
+    /**
+     * \brief Pushes a list of userdata element as an iterator onto the stack.
+     *
+     * The iterator is pushed onto the stack as one value of type function.
+     *
+     * \param l A Lua context.
+     * \param elements A list of userdata. The iterator preserves their order.
+     */
+    template<typename Container>
+    static void push_userdata_iterator(lua_State* l, const Container& elements)
+    {
+      // Create a Lua table with the list of entities, preserving their order.
+      push_userdata_array(l, elements);
+
+      lua_pushinteger(l, elements.size());
+      lua_pushinteger(l, 1);
+      // 3 upvalues: entities table, size, current index.
+
+      lua_pushcclosure(l, l_entity_iterator_next, 3);
+    }
+
     static void push_named_sprite_iterator(
         lua_State* current_l,
         const std::vector<Entity::NamedSprite>& sprites
@@ -1432,6 +1572,11 @@ private:
     static void push_dynamic_tile(lua_State* current_l, DynamicTile& dynamic_tile);
     static void push_enemy(lua_State* current_l, Enemy& enemy);
     static void push_custom_entity(lua_State* current_l, CustomEntity& entity);
+    static void push_joypad(lua_State* current_l, Joypad& joypad);
+    static void push_controls(lua_State* current_l, Controls& commands);
+    static void push_command(lua_State* current_l, const Command& command);
+    static void push_axis(lua_State* current_l, const Axis& command_axis);
+    static void push_player(lua_State* current_l, Player& commands);
 
     // Getting objects from Lua.
     static bool is_main(lua_State* current_l, int index);
@@ -1525,6 +1670,15 @@ private:
     static std::shared_ptr<Enemy> check_enemy(lua_State* current_l, int index);
     static bool is_custom_entity(lua_State* current_l, int index);
     static std::shared_ptr<CustomEntity> check_custom_entity(lua_State* current_l, int index);
+    static bool is_joypad(lua_State* current_l, int index);
+    static std::shared_ptr<Joypad> check_joypad(lua_State* current_l, int index);
+    static bool is_controls(lua_State* current_l, int index);
+    static std::shared_ptr<Controls> check_controls(lua_State* current_l, int index);
+    static bool is_player(lua_State* current_l, int index);
+    static std::shared_ptr<Player> check_player(lua_State* current_l, int index);
+    static Command check_command(lua_State* l, int index);
+    static Axis check_axis(lua_State* l, int index);
+
 
     // Events.
     void check_callback_thread() const;
@@ -1540,9 +1694,10 @@ private:
     void on_unpaused();
     bool on_dialog_started(const Dialog& dialog, const ScopedLuaRef& info_ref);
     void on_dialog_finished(const Dialog& dialog);
-    bool on_game_over_started();
-    void on_game_over_finished();
+    bool on_game_over_started(const HeroPtr& hero);
+    void on_game_over_finished(const HeroPtr& hero);
     bool on_input(const InputEvent& event);
+    bool on_command(const ControlEvent& event);
     bool on_key_pressed(const InputEvent& event);
     bool on_key_released(const InputEvent& event);
     bool on_character_pressed(const InputEvent& event);
@@ -1555,8 +1710,6 @@ private:
     bool on_finger_pressed(const InputEvent& event);
     bool on_finger_released(const InputEvent& event);
     bool on_finger_moved(const InputEvent& event);
-    bool on_command_pressed(GameCommand command);
-    bool on_command_released(GameCommand command);
     void on_animation_finished(const std::string& animation);
     void on_animation_changed(const std::string& animation);
     void on_direction_changed(const std::string& animation, int direction);
@@ -1573,11 +1726,11 @@ private:
     bool on_taking_damage(int damage);
     void on_activating();
     void on_activating(int direction4);
-    void on_activated();
+    void on_activated(Entity* opt_entity);
     void on_activated(int direction4);
-    void on_activated_repeat();
-    void on_inactivated();
-    void on_left();
+    void on_activated_repeat(Entity& entity);
+    void on_inactivated(Entity *opt_entity);
+    void on_left(Entity* opt_entity);
     bool on_interaction();
     bool on_interaction_item(EquipmentItem& item_used);
     void on_npc_interaction(Npc& npc);
@@ -1596,7 +1749,7 @@ private:
     void on_closed();
     void on_moving();
     void on_moved();
-    void on_map_changed(Map& map);
+    void on_map_changed(Map& map, Camera &camera);
     void on_world_changed(const std::string& previous_world, const std::string& new_world);
     void on_pickable_created(Pickable& pickable);
     void on_variant_changed(int variant);
@@ -1680,7 +1833,9 @@ private:
       l_create_custom_entity,
       l_create_bomb,
       l_create_explosion,
-      l_create_fire;
+      l_create_fire,
+      l_create_camera,
+      l_create_hero;
 
     // Script data.
     lua_State* main_l;                 /**< The MAIN Lua state encapsulated. */

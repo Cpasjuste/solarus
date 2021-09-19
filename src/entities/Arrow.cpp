@@ -331,7 +331,7 @@ bool Arrow::is_flying() const {
  */
 void Arrow::attach_to(Entity& entity_reached) {
 
-  Debug::check_assertion(this->entity_reached == nullptr,
+  SOLARUS_ASSERT(this->entity_reached == nullptr,
       "This arrow is already attached to an entity");
 
   this->entity_reached = std::static_pointer_cast<Entity>(

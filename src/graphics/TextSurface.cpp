@@ -444,9 +444,8 @@ void TextSurface::rebuild() {
     return;
   }
 
-  Debug::check_assertion(FontResource::exists(font_id),
-      std::string("No such font: '") + font_id + "'"
-  );
+  SOLARUS_ASSERT(FontResource::exists(font_id),
+      std::string("No such font: '") + font_id + "'");
 
   if (FontResource::is_bitmap_font(font_id)) {
     rebuild_bitmap();
@@ -567,6 +566,12 @@ void TextSurface::rebuild_ttf() {
         TTF_RenderUTF8_Blended(&internal_font, text.c_str(), internal_color));
     break;
   }
+
+  SOLARUS_ASSERT(surface != nullptr,
+    std::string("Error rendering text surface for '") + text + "'"
+    " (font: " + font_id + "): " + TTF_GetError()
+  );
+
   SDL_PixelFormat* format = Video::get_pixel_format();
   SDL_Surface_UniquePtr full = SDL_Surface_UniquePtr(SDL_CreateRGBSurface(
        0,

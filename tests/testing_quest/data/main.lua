@@ -1,3 +1,5 @@
+require('scripts/coroutine_test_helper')
+
 -- Postpone a continuation to let engine simulate a bit.
 function later(cont)
   local context = sol.main

@@ -79,7 +79,7 @@ void Hero::BackToSolidGroundState::start(const State* previous_state) {
   lua_State* l = get_lua_context().get_internal_state();
 
   // Call the Lua function to get the coordinates and layer.
-  Debug::check_assertion(!target_position.is_empty(), "Missing solid ground callback");
+  SOLARUS_ASSERT(!target_position.is_empty(), "Missing solid ground callback");
   target_position.push(l);
   bool success = LuaTools::call_function(l, 0, 3, "Solid ground callback");
   if (success &&
@@ -154,7 +154,7 @@ void Hero::BackToSolidGroundState::update() {
       if (get_equipment().get_life() <= 0 &&
           !get_game().is_showing_game_over()) {
         get_sprites().stop_blinking();
-        get_game().start_game_over();
+        get_game().start_game_over(hero.shared_from_this_cast<Hero>());
         return;
       }
 

@@ -17,6 +17,10 @@ list(APPEND LUA_TEST_MAPS
   "custom_state/pushing"
   "custom_state/reuse_state"
   "teletransportation_tests/main"
+  "multiplayer/heroes"
+  "multiplayer/cameras"
+  "multiplayer/friendly_fire"
+  "multiplayer/heroes_game_over"
   "bugs/486_diagonal_dynamic_tiles"
   "bugs/496_stream_speed_0"
   "bugs/526_get_entities_same_region"
@@ -169,6 +173,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1527_entity_set_name"
   "bugs/1533_savegame_write_escape"
   "bugs/1534_unicode_filenames"
+  "bugs/1547_teletransporter_on_activated_twice/map_1"
 )
 
 # Test that should succeed when there are non-fatal errors

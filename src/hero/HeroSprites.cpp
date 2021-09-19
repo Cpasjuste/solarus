@@ -690,7 +690,7 @@ int HeroSprites::get_animation_direction(
  */
 void HeroSprites::set_animation_direction(int direction) {
 
-  Debug::check_assertion(direction >= 0 && direction < 4,
+  SOLARUS_ASSERT(direction >= 0 && direction < 4,
     "Invalid direction for set_animation_direction");
 
   if (tunic_sprite != nullptr) {
@@ -818,15 +818,11 @@ void HeroSprites::update() {
  * \brief Called after sprites of the hero were drawn on the camera.
  * \param camera The camera where to draw.
  */
-void HeroSprites::draw_on_map() {
+void HeroSprites::draw_on_map(Camera& camera) {
+  hero.draw_sprites(camera, clipping_rectangle);
 
-  const CameraPtr& camera = hero.get_map().get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-  hero.draw_sprites(*camera, clipping_rectangle);
   if (lifted_item != nullptr) {
-    lifted_item->draw(*camera);
+    lifted_item->draw(camera);
   }
 }
 

@@ -73,7 +73,7 @@ class ShopTreasure: public Entity {
     bool is_sword_ignored() const override;
     bool is_obstacle_for(Entity& other) override;
     void notify_collision(Entity& entity_overlapping, CollisionMode collision_mode) override;
-    bool notify_action_command_pressed() override;
+    bool notify_action_command_pressed(Hero& hero) override;
 
     void update() override;
     void built_in_draw(Camera& camera) override;

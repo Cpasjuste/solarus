@@ -54,6 +54,7 @@ private slots:
 
   void standard_output_data_available();
   void on_finished();
+  void on_error(QProcess::ProcessError perr);
 
 private:
 

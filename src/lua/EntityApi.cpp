@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/audio/Sound.h"
+#include "solarus/core/AbilityInfo.h"
 #include "solarus/core/CurrentQuest.h"
 #include "solarus/core/Debug.h"
 #include "solarus/core/Geometry.h"
@@ -218,6 +219,8 @@ void LuaContext::register_entity_module() {
       { "start_hurt", hero_api_start_hurt },
       { "get_state", entity_api_get_state },
       { "get_state_object", hero_api_get_state_object },
+      { "get_controls", hero_api_get_controls },
+      { "set_controls", hero_api_set_controls }
   };
   if (CurrentQuest::is_format_at_least({ 1, 6 })) {
     hero_methods.insert(hero_methods.end(), {
@@ -231,6 +234,37 @@ void LuaContext::register_entity_module() {
       { "set_push_delay", hero_api_set_push_delay},
       { "get_carry_height", hero_api_get_carry_height},
       { "set_carry_height", hero_api_set_carry_height},
+    });
+  }
+
+  if (CurrentQuest::is_format_at_least({ 1, 6 })) { //TODO change to 1.7
+    hero_methods.insert(hero_methods.end(), {
+        { "get_life", hero_get_life },
+        { "set_life", hero_set_life },
+        { "add_life", hero_add_life },
+        { "remove_life", hero_remove_life },
+        { "get_max_life", hero_get_max_life },
+        { "set_max_life", hero_set_max_life },
+        { "add_max_life", hero_add_max_life },
+        { "get_money", hero_get_money },
+        { "set_money", hero_set_money },
+        { "add_money", hero_add_money },
+        { "remove_money", hero_remove_money },
+        { "get_max_money", hero_get_max_money },
+        { "set_max_money", hero_set_max_money },
+        { "get_magic", hero_get_magic },
+        { "set_magic", hero_set_magic },
+        { "add_magic", hero_add_magic },
+        { "remove_magic", hero_remove_magic },
+        { "get_max_magic", hero_get_max_magic },
+        { "set_max_magic", hero_set_max_magic },
+        { "has_ability", hero_has_ability },
+        { "get_abiltiy", hero_get_ability },
+        { "set_ability", hero_set_ability },
+        { "get_item", hero_get_item },
+        { "has_item", hero_has_item },
+        { "get_item_assigned", hero_get_item_assigned },
+        { "set_item_assigned", hero_set_item_assigned }
     });
   }
 
@@ -251,6 +285,13 @@ void LuaContext::register_entity_module() {
       { "start_manual", camera_api_start_manual },
       { "get_position_to_track", camera_api_get_position_to_track },
       { "get_tracked_entity", camera_api_get_tracked_entity },
+      { "set_viewport", camera_api_set_viewport },
+      { "get_viewport", camera_api_get_viewport },
+      { "set_zoom", camera_api_set_zoom},
+      { "get_zoom", camera_api_get_zoom},
+      { "set_rotation", camera_api_set_rotation},
+      { "get_rotation", camera_api_get_rotation},
+      { "teleport", camera_api_teleport }
   };
   if (CurrentQuest::is_format_at_most({ 1, 5 })) {
     camera_methods.insert(camera_methods.end(), {
@@ -738,33 +779,6 @@ EntityPtr LuaContext::check_entity(lua_State* l, int index) {
 void LuaContext::push_entity(lua_State* l, Entity& entity) {
 
   push_userdata(l, entity);
-}
-
-/**
- * \brief Pushes a list of entities as an iterator onto the stack.
- *
- * The iterator is pushed onto the stack as one value of type function.
- *
- * \param l A Lua context.
- * \param entity A list of entities. The iterator preserves their order.
- */
-void LuaContext::push_entity_iterator(lua_State* l, const EntityVector& entities) {
-
-  // Create a Lua table with the list of entities, preserving their order.
-  int i = 0;
-  lua_newtable(l);
-  for (const EntityPtr& entity: entities) {
-    ++i;
-    lua_pushinteger(l, i);
-    push_entity(l, *entity);
-    lua_rawset(l, -3);
-  }
-
-  lua_pushinteger(l, entities.size());
-  lua_pushinteger(l, 1);
-  // 3 upvalues: entities table, size, current index.
-
-  lua_pushcclosure(l, l_entity_iterator_next, 3);
 }
 
 /**
@@ -2181,7 +2195,8 @@ int LuaContext::hero_api_teleport(lua_State* l) {
       LuaTools::arg_error(l, 2, std::string("No such map: '") + map_id + "'");
     }
 
-    game.set_current_map(map_id, destination_name, transition_style);
+    HeroPtr hero_ptr = std::static_pointer_cast<Hero>(hero.shared_from_this());
+    hero.get_game().teleport_hero(hero_ptr, map_id, destination_name, transition_style);
 
     return 0;
   });
@@ -3057,6 +3072,501 @@ int LuaContext::hero_api_get_state_object(lua_State* l) {
 }
 
 /**
+ * \brief Implementation of hero:get_commands().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_get_controls(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    const Hero& hero = *check_hero(l, 1);
+
+    const ControlsPtr& cmds = hero.get_controls();
+
+    if(cmds) {
+      push_controls(l, *cmds);
+    } else {
+      lua_pushnil(l);
+    }
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_commands().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_api_set_controls(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    Controls& cmds = *check_controls(l, 2);
+
+    hero.set_controls(cmds.shared_from_this_cast<Controls>());
+
+    return 0;
+  });
+}
+
+
+/**
+ * \brief Implementation of hero:get_life().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_life(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    lua_pushnumber(l, hero.get_equipment().get_life());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_life().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_set_life(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    hero.get_equipment().set_life(LuaTools::check_int(l, 2));
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:add_life().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_add_life(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    hero.get_equipment().add_life(LuaTools::check_int(l, 2));
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:remove_life().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_remove_life(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    hero.get_equipment().remove_life(LuaTools::check_int(l,2));
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_max_life().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_max_life(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    lua_pushnumber(l, hero.get_equipment().get_max_life());
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_max_life().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_set_max_life(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.get_equipment().set_max_life(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:add_max_life().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_add_max_life(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    Equipment& equipment = hero.get_equipment();
+
+    int max_life = equipment.get_max_life();
+    equipment.set_max_life(max_life + LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_money().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_money(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    lua_pushnumber(l, hero.get_equipment().get_money());
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_money().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_set_money(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.get_equipment().set_money(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:add_money().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_add_money(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.get_equipment().add_money(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:remove_money().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_remove_money(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.get_equipment().remove_money(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_max_money().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_max_money(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    lua_pushnumber(l, hero.get_equipment().get_max_money());
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_max_money().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_set_max_money(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.get_equipment().set_max_money(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_magic().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_magic(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    lua_pushnumber(l, hero.get_equipment().get_magic());
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_magic().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_set_magic(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.get_equipment().set_magic(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:add_magic().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_add_magic(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.get_equipment().add_magic(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:remove_magic().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_remove_magic(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    hero.get_equipment().remove_magic(LuaTools::check_int(l, 2));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_max_magic().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_max_magic(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    lua_pushnumber(l, hero.get_equipment().get_max_magic());
+
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_max_magic().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_set_max_magic(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+
+    int magic = LuaTools::check_int(l, 2);
+
+    if (magic < 0) {
+      LuaTools::arg_error(l, 2, "Invalid magic points value: must be positive or zero");
+    }
+
+    hero.get_equipment().set_max_magic(magic);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:has_ability().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_has_ability(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    Ability ability = LuaTools::check_enum<Ability>(l, 2);
+
+    bool has_ability = hero.get_equipment().has_ability(ability);
+
+    lua_pushboolean(l, has_ability);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_commands().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_ability(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    Ability ability = LuaTools::check_enum<Ability>(l, 2);
+
+    int ability_level = hero.get_equipment().get_ability(ability);
+
+    lua_pushinteger(l, ability_level);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_ability().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_set_ability(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    Ability ability = LuaTools::check_enum<Ability>(l, 2);
+    int level = LuaTools::check_int(l, 3);
+
+    hero.get_equipment().set_ability(ability, level);
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_item().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_item(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    const std::string& item_name = LuaTools::check_string(l, 2);
+
+    if (!hero.get_equipment().item_exists(item_name)) {
+      LuaTools::error(l, std::string("No such item: '") + item_name + "'");
+    }
+
+    push_item(l, hero.get_equipment().get_item(item_name));
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:has_item().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_has_item(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    const std::string& item_name = LuaTools::check_string(l, 2);
+
+    const Equipment& equipment = hero.get_equipment();
+    if (!equipment.item_exists(item_name)) {
+      LuaTools::error(l, std::string("No such item: '") + item_name + "'");
+    }
+
+    if (!equipment.get_item(item_name).is_saved()) {
+      LuaTools::error(l, std::string("Item '") + item_name + "' is not saved");
+    }
+
+    lua_pushboolean(l, equipment.get_item(item_name).get_variant() > 0);
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:get_item_assigned().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_get_item_assigned(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    int slot = LuaTools::check_int(l, 2);
+
+    if (slot < 1 || slot > 2) {
+      LuaTools::arg_error(l, 2, "The item slot should be 1 or 2");
+    }
+
+    EquipmentItem* item = hero.get_equipment().get_item_assigned(slot);
+
+    if (item == nullptr) {
+      lua_pushnil(l);
+    }
+    else {
+      push_item(l, *item);
+    }
+    return 1;
+  });
+}
+
+/**
+ * \brief Implementation of hero:set_item_assigned().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::hero_set_item_assigned(lua_State* l) {
+
+  return state_boundary_handle(l, [&] {
+    Hero& hero = *check_hero(l, 1);
+    int slot = LuaTools::check_int(l, 2);
+    EquipmentItem* item = nullptr;
+    if (!lua_isnil(l, 3)) {
+      item = check_item(l, 3).get();
+    }
+
+    if (slot < 1 || slot > 2) {
+      LuaTools::arg_error(l, 2, "The item slot should be 1 or 2");
+    }
+
+    hero.get_equipment().set_item_assigned(slot, item);
+
+    return 0;
+  });
+}
+
+
+/**
  * \brief Notifies Lua that the hero is brandishing a treasure.
  *
  * Lua then manages the treasure's dialog if any.
@@ -3066,6 +3576,7 @@ int LuaContext::hero_api_get_state_object(lua_State* l) {
  * treasure's dialog finishes (possibly an empty ref).
  */
 void LuaContext::notify_hero_brandish_treasure(
+    Hero& hero,
     const Treasure& treasure,
     const ScopedLuaRef& callback_ref
 ) {
@@ -3080,14 +3591,15 @@ void LuaContext::notify_hero_brandish_treasure(
   lua_pushinteger(current_l, treasure.get_variant());
   push_string(current_l, treasure.get_savegame_variable());
   push_ref(current_l, callback_ref);
-  lua_pushcclosure(current_l, l_treasure_brandish_finished, 4);
+  push_hero(current_l, hero);
+  lua_pushcclosure(current_l, l_treasure_brandish_finished, 5);
   const ScopedLuaRef& treasure_callback_ref = create_ref();
 
   if (!CurrentQuest::dialog_exists(dialog_id)) {
     // No treasure dialog: keep brandishing the treasure for some delay
     // and then execute the callback.
     TimerPtr timer = std::make_shared<Timer>(3000);
-    push_map(current_l, game.get_current_map());
+    push_map(current_l, hero.get_map());
     add_timer(timer, -1, treasure_callback_ref);
     lua_pop(current_l, 1);
   }
@@ -3101,7 +3613,7 @@ void LuaContext::notify_hero_brandish_treasure(
  * \brief Callback function executed after the animation of brandishing
  * a treasure.
  *
- * Upvalues: item, variant, savegame variable, callback/nil.
+ * Upvalues: item, variant, savegame variable, callback/nil, hero
  *
  * \param l The Lua context that is calling this function.
  * \return Number of values to return to Lua.
@@ -3116,18 +3628,18 @@ int LuaContext::l_treasure_brandish_finished(lua_State* l) {
     int treasure_variant = LuaTools::check_int(l, lua_upvalueindex(2));
     const std::string& treasure_savegame_variable =
         LuaTools::check_string(l, lua_upvalueindex(3));
+    Hero& hero = *check_hero(l, lua_upvalueindex(5));
     lua_pushvalue(l, lua_upvalueindex(4));
 
     // Check upvalues. Any error here would be the fault of the C++ side
     // because the user cannot call this function.
-    Debug::check_assertion(item.get_game() != nullptr,
+    SOLARUS_ASSERT(item.get_game() != nullptr,
         "Equipment item without game");
 
-    Debug::check_assertion(lua_isnil(l, -1) || lua_isfunction(l, -1),
+    SOLARUS_ASSERT(lua_isnil(l, -1) || lua_isfunction(l, -1),
         "Expected function or nil for treasure callback");
 
     Game& game = *item.get_game();
-    Hero& hero = *game.get_hero();
     const Treasure treasure(game, item.get_name(), treasure_variant, treasure_savegame_variable);
 
     // Notify the Lua item and the Lua map.
@@ -3136,7 +3648,7 @@ int LuaContext::l_treasure_brandish_finished(lua_State* l) {
       lua_context.call_function(0, 0, "treasure callback");
     }
     lua_context.item_on_obtained(item, treasure);
-    lua_context.map_on_obtained_treasure(game.get_current_map(), treasure);
+    lua_context.map_on_obtained_treasure(hero.get_map(), treasure);
 
     if (hero.is_brandishing_treasure()) {
       // The script may have changed the hero's state.
@@ -3214,6 +3726,110 @@ int LuaContext::camera_api_set_position_on_screen(lua_State* l) {
     camera.set_position_on_screen({ x, y });
 
     return 0;
+  });
+}
+
+/**
+ * \brief Implementation of camera:get_position_on_screen().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_get_viewport(lua_State * l) {
+  return state_boundary_handle(l, [&] {
+    const Camera& camera = *check_camera(l, 1);
+
+    const auto& viewport = camera.get_viewport();
+
+    lua_pushnumber(l, viewport.left);
+    lua_pushnumber(l, viewport.top);
+    lua_pushnumber(l, viewport.width);
+    lua_pushnumber(l, viewport.height);
+
+    return 4;
+  });
+}
+
+/**
+ * \brief Implementation of camera:get_position_on_screen().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_set_viewport(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    double x = LuaTools::check_number(l, 2);
+    double y = LuaTools::check_number(l, 3);
+    double w = LuaTools::check_number(l, 4);
+    double h = LuaTools::check_number(l, 5);
+
+    camera.set_viewport(FRectangle(x, y, w, h));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of camera:set_zoom().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_set_zoom(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    double zx = LuaTools::check_number(l, 2);
+    double zy = LuaTools::check_number(l, 3);
+
+    camera.set_zoom(Scale(zx, zy));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of camera:get_zoom().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_get_zoom(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    Scale s = camera.get_zoom();
+
+    lua_pushnumber(l, static_cast<double>(s.x));
+    lua_pushnumber(l, static_cast<double>(s.y));
+
+    return 2;
+  });
+}
+
+/**
+ * \brief Implementation of camera:set_rotation().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_set_rotation(lua_State *l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    double r = LuaTools::check_number(l, 2);
+
+    camera.set_rotation(static_cast<float>(r));
+
+    return 0;
+  });
+}
+
+/**
+ * \brief Implementation of camera:get_rotation().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_get_rotation(lua_State* l) {
+  return state_boundary_handle(l, [&] {
+    Camera& camera = *check_camera(l, 1);
+    double rot = static_cast<double>(camera.get_rotation());
+
+    lua_pushnumber(l, rot);
+    return 1;
   });
 }
 
@@ -3322,6 +3938,31 @@ int LuaContext::camera_api_get_surface(lua_State* l) {
     return 1;
   });
 }
+
+/**
+ * \brief Implementation of camera:teleport().
+ * \param l The Lua context that is calling this function.
+ * \return Number of values to return to Lua.
+ */
+int LuaContext::camera_api_teleport(lua_State *l) {
+  return state_boundary_handle(l, [&] {
+    CameraPtr camera_ptr = check_camera(l, 1);
+    Camera& camera = *camera_ptr;
+    Game& game = camera.get_game();
+
+    std::string map_id = LuaTools::check_string(l, 2);
+    std::string destination_id = LuaTools::check_string(l, 3);
+    Transition::Style transition_style = LuaTools::opt_enum<Transition::Style>(
+        l, 4, game.get_default_transition_style());
+
+
+    game.teleport_camera(camera_ptr, map_id, destination_id, transition_style, nullptr);
+
+    return 0;
+  });
+}
+
+
 
 /**
  * \brief Returns whether a value is a userdata of type destination.
@@ -4529,7 +5170,7 @@ void LuaContext::push_shop_treasure(lua_State* l, ShopTreasure& shop_treasure) {
  *
  * \param shop_treasure A shop treasure.
  */
-void LuaContext::notify_shop_treasure_interaction(ShopTreasure& shop_treasure) {
+void LuaContext::notify_shop_treasure_interaction(ShopTreasure& shop_treasure, Hero& /*hero*/) {
 
   push_shop_treasure(current_l, shop_treasure);
   lua_pushcclosure(current_l, l_shop_treasure_description_dialog_finished, 1);
@@ -6112,8 +6753,8 @@ int LuaContext::enemy_api_hurt(lua_State* l) {
     Enemy& enemy = *check_enemy(l, 1);
     int life_points = LuaTools::check_int(l, 2);
 
-    if (enemy.is_in_normal_state() && !enemy.is_invulnerable()) {
-      Hero& hero = enemy.get_map().get_entities().get_hero();
+    if (enemy.is_in_normal_state() && !enemy.is_invulnerable()) { //TODO check if default hero is okay...
+      Hero& hero = enemy.get_default_hero();
       enemy.set_attack_consequence(EnemyAttack::SCRIPT, EnemyReaction::ReactionType::HURT, life_points);
       enemy.try_hurt(EnemyAttack::SCRIPT, hero, nullptr);
     }
@@ -6151,8 +6792,8 @@ int LuaContext::enemy_api_immobilize(lua_State* l) {
       return 0;
     }
 
-    if (enemy.is_in_normal_state() || enemy.is_immobilized()) {
-      Hero& hero = enemy.get_map().get_entities().get_hero();
+    if (enemy.is_in_normal_state() || enemy.is_immobilized()) { //TODO check if default hero is okay
+      Hero& hero = enemy.get_default_hero();
       enemy.set_attack_consequence(EnemyAttack::SCRIPT, EnemyReaction::ReactionType::IMMOBILIZED, 0);
       enemy.try_hurt(EnemyAttack::SCRIPT, hero, nullptr);
     }
@@ -6277,13 +6918,13 @@ bool LuaContext::do_traversable_test_function(
     ExportableToLua& userdata,
     Entity& other_entity) {
 
-  Debug::check_assertion(!traversable_test_ref.is_empty(),
+  SOLARUS_ASSERT(!traversable_test_ref.is_empty(),
       "Missing traversable test function ref"
   );
 
   // Call the test function.
   push_ref(current_l, traversable_test_ref);
-  Debug::check_assertion(lua_isfunction(current_l, -1),
+  SOLARUS_ASSERT(lua_isfunction(current_l, -1),
       "Traversable test is not a function"
   );
   push_userdata(current_l, userdata);
@@ -6312,13 +6953,13 @@ bool LuaContext::do_custom_entity_collision_test_function(
     CustomEntity& custom_entity,
     Entity& other_entity
 ) {
-  Debug::check_assertion(!collision_test_ref.is_empty(),
+  SOLARUS_ASSERT(!collision_test_ref.is_empty(),
       "Missing collision test function"
   );
 
   // Call the test function.
   push_ref(current_l, collision_test_ref);
-  Debug::check_assertion(lua_isfunction(current_l, -1),
+  SOLARUS_ASSERT(lua_isfunction(current_l, -1),
       "Collision test is not a function"
   );
   push_custom_entity(current_l, custom_entity);
@@ -6346,11 +6987,11 @@ void LuaContext::do_custom_entity_collision_callback(
     CustomEntity& custom_entity,
     Entity& other_entity
 ) {
-  Debug::check_assertion(!callback_ref.is_empty(),
+  SOLARUS_ASSERT(!callback_ref.is_empty(),
       "Missing collision callback");
 
   push_ref(current_l, callback_ref);
-  Debug::check_assertion(lua_isfunction(current_l, -1),
+  SOLARUS_ASSERT(lua_isfunction(current_l, -1),
       "Collision callback is not a function");
   push_custom_entity(current_l, custom_entity);
   push_entity(current_l, other_entity);
@@ -6375,12 +7016,12 @@ void LuaContext::do_custom_entity_collision_callback(
     Sprite& custom_entity_sprite,
     Sprite& other_entity_sprite) {
 
-  Debug::check_assertion(!callback_ref.is_empty(),
+  SOLARUS_ASSERT(!callback_ref.is_empty(),
       "Missing sprite collision callback"
   );
 
   push_ref(current_l, callback_ref);
-  Debug::check_assertion(lua_isfunction(current_l, -1),
+  SOLARUS_ASSERT(lua_isfunction(current_l, -1),
       "Sprite collision callback is not a function");
   push_custom_entity(current_l, custom_entity);
   push_entity(current_l, other_entity);
@@ -7025,7 +7666,7 @@ void LuaContext::entity_on_movement_finished(Entity& entity) {
  * \param entity A map entity.
  * \return \c true if an interaction occurred.
  */
-bool LuaContext::entity_on_interaction(Entity& entity) {
+bool LuaContext::entity_on_interaction(Entity& entity, Hero& /*hero*/) {
 
   if (!userdata_has_field(entity, "on_interaction")) {
     return false;
@@ -7166,14 +7807,14 @@ bool LuaContext::hero_on_taking_damage(Hero& hero, int damage) {
  *
  * \param destination A destination.
  */
-void LuaContext::destination_on_activated(Destination& destination) {
+void LuaContext::destination_on_activated(Destination& destination, Hero &hero) {
 
   if (!userdata_has_field(destination, "on_activated")) {
     return;
   }
-  run_on_main([this, &destination](lua_State* l){
+  run_on_main([this, &destination, &hero](lua_State* l){
     push_entity(l, destination);
-    on_activated();
+    on_activated(&hero);
     lua_pop(l, 1);
   });
 }
@@ -7185,14 +7826,14 @@ void LuaContext::destination_on_activated(Destination& destination) {
  *
  * \param teletransporter A teletransporter.
  */
-void LuaContext::teletransporter_on_activated(Teletransporter& teletransporter) {
+void LuaContext::teletransporter_on_activated(Teletransporter& teletransporter, Hero &hero) {
 
   if (!userdata_has_field(teletransporter, "on_activated")) {
     return;
   }
-  run_on_main([this, &teletransporter](lua_State* l){
+  run_on_main([this, &teletransporter, &hero](lua_State* l){
     push_teletransporter(l, teletransporter);
-    on_activated();
+    on_activated(&hero);
     lua_pop(l, 1);
   });
 }
@@ -7344,15 +7985,15 @@ bool LuaContext::chest_on_opened(Chest& chest, const Treasure& treasure) {
  *
  * \param sw A switch.
  */
-void LuaContext::switch_on_activated(Switch& sw) {
+void LuaContext::switch_on_activated(Switch& sw, Entity* opt_entity) {
 
   if (!userdata_has_field(sw, "on_activated")) {
     return;
   }
 
-  run_on_main([this, &sw](lua_State* l){
+  run_on_main([this, &sw, opt_entity](lua_State* l){
     push_switch(l, sw);
-    on_activated();
+    on_activated(opt_entity);
     lua_pop(l, 1);
   });
 }
@@ -7364,15 +8005,15 @@ void LuaContext::switch_on_activated(Switch& sw) {
  *
  * \param sw A switch.
  */
-void LuaContext::switch_on_inactivated(Switch& sw) {
+void LuaContext::switch_on_inactivated(Switch& sw, Entity* opt_entity) {
 
   if (!userdata_has_field(sw, "on_inactivated")) {
     return;
   }
 
-  run_on_main([this, &sw](lua_State* l){
+  run_on_main([this, &sw, opt_entity](lua_State* l){
     push_switch(l, sw);
-    on_inactivated();
+    on_inactivated(opt_entity);
     lua_pop(l, 1);
   });
 }
@@ -7384,15 +8025,15 @@ void LuaContext::switch_on_inactivated(Switch& sw) {
  *
  * \param sw A switch.
  */
-void LuaContext::switch_on_left(Switch& sw) {
+void LuaContext::switch_on_left(Switch& sw, Entity &entity) {
 
   if (!userdata_has_field(sw, "on_left")) {
     return;
   }
 
-  run_on_main([this, &sw](lua_State* l){
+  run_on_main([this, &sw, &entity](lua_State* l){
     push_switch(l, sw);
-    on_left();
+    on_left(&entity);
     lua_pop(l, 1);
   });
 }
@@ -7404,15 +8045,15 @@ void LuaContext::switch_on_left(Switch& sw) {
  *
  * \param sensor A sensor.
  */
-void LuaContext::sensor_on_activated(Sensor& sensor) {
+void LuaContext::sensor_on_activated(Sensor& sensor, Hero& hero) {
 
   if (!userdata_has_field(sensor, "on_activated")) {
     return;
   }
 
-  run_on_main([this, &sensor](lua_State* l){
+  run_on_main([this, &sensor, &hero](lua_State* l){
     push_entity(l, sensor);
-    on_activated();
+    on_activated(&hero);
     lua_pop(l, 1);
   });
 }
@@ -7424,14 +8065,14 @@ void LuaContext::sensor_on_activated(Sensor& sensor) {
  *
  * \param sensor A sensor.
  */
-void LuaContext::sensor_on_activated_repeat(Sensor& sensor) {
+void LuaContext::sensor_on_activated_repeat(Sensor& sensor, Entity& entity) {
 
   if (!userdata_has_field(sensor, "on_activated_repeat")) {
     return;
   }
-  run_on_main([this, &sensor](lua_State* l){
+  run_on_main([this, &sensor, &entity](lua_State* l){
     push_entity(l, sensor);
-    on_activated_repeat();
+    on_activated_repeat(entity);
     lua_pop(l, 1);
   });
 }
@@ -7447,7 +8088,7 @@ void LuaContext::sensor_on_left(Sensor& sensor) {
   }
   run_on_main([this, &sensor](lua_State* l){
     push_entity(l, sensor);
-    on_left();
+    on_left(nullptr);
     lua_pop(l, 1);
   });
 }

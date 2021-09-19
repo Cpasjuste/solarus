@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2018-2020 std::gregwar, Solarus - http://www.solarus-games.org
+ *
+ * Solarus is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Solarus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <solarus/graphics/glrenderer/GlRenderer.h>
 #include <solarus/graphics/glrenderer/GlTexture.h>
 #include <solarus/graphics/glrenderer/GlShader.h>
@@ -93,7 +109,7 @@ GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
   screen_fbo{0,glm::mat4(1.f),{1,1}}
 {
 
-  Debug::check_assertion(!instance,"Creating two GL renderer");
+  SOLARUS_ASSERT(!instance,"Creating two GL renderer");
   instance = this; //Set this renderer as the unique instance
 
 
@@ -107,7 +123,8 @@ GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
                               DefaultShaders::get_default_fragment_source(),
                               0.0);
 
-  Debug::check_assertion(static_cast<bool>(main_shader),"Failed to compile glRenderer main shader");
+  SOLARUS_ASSERT(static_cast<bool>(main_shader),
+      "Failed to compile glRenderer main shader");
 }
 
 RendererPtr GlRenderer::create(SDL_Window* window, bool force_software) {
@@ -170,7 +187,8 @@ RendererPtr GlRenderer::create(SDL_Window* window, bool force_software) {
   //Set blending to BLEND
   glBlendEquationSeparate(GL_FUNC_ADD,GL_FUNC_ADD);
 
-  Debug::check_assertion(GlShader::initialize(),"shader failed to initialize after gl");
+  bool success = GlShader::initialize();
+  SOLARUS_ASSERT(success, "shader failed to initialize after gl");
 
   //Context populated create Renderer
   std::cerr << SDL_GetError();
@@ -205,11 +223,17 @@ void GlRenderer::set_render_target(GlTexture* target) {
     glBindFramebuffer(GL_FRAMEBUFFER,fbo->id);
     if(fbo->id) { //Render to Texture
       glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,target->get_texture(),0);
+/*<<<<<<< HEAD
       glViewport(0,0,
                  fbo->viewport.x,
                  fbo->viewport.y);
+=======*/
+      setup_viewport(target);
+//>>>>>>> dev
 #ifndef SOLARUS_GL_ES
-      Debug::check_assertion(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"glFrameBufferTexture2D failed");
+      SOLARUS_ASSERT(
+          glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
+          "glFrameBufferTexture2D failed");
 #endif
     } else { //Render to screen
       glViewport(window_viewport.get_left(),
@@ -219,6 +243,19 @@ void GlRenderer::set_render_target(GlTexture* target) {
     }
     current_target = target;
   }
+}
+
+void GlRenderer::setup_viewport(GlTexture* target) {
+  const auto& viewport = target->get_view().get_viewport();
+  const auto& vp_size = target->fbo->viewport;
+
+  // TODO take margins into account here
+  GLint x = viewport.left * vp_size.x;
+  GLint y = viewport.top * vp_size.y;
+  GLsizei w = viewport.width * vp_size.x;
+  GLsizei h = viewport.height * vp_size.y;
+
+  glViewport(x, y, w, h);
 }
 
 void GlRenderer::bind_as_gl_target(SurfaceImpl& surf) {
@@ -315,6 +352,18 @@ void GlRenderer::fill(SurfaceImpl& dst, const Color& color, const Rectangle& whe
                ));
 }
 
+void GlRenderer::notify_target_changed(const SurfaceImpl& surf) {
+    const GlTexture* tex = &surf.as<GlTexture>();
+    if(tex == current_target) {
+        restart_batch();
+        current_target = nullptr; //Force update of the target properties
+    }
+
+    if(tex == current_texture) {
+        restart_batch();
+    }
+}
+
 void GlRenderer::invalidate(const SurfaceImpl& surf) {
   const GlTexture* tex = &surf.as<GlTexture>();
 
@@ -370,22 +419,26 @@ GlRenderer::~GlRenderer() {
  */
 GlRenderer::Fbo* GlRenderer::get_fbo(int width, int height, bool screen, int margin) {
   if(screen) return &screen_fbo;
+
   uint_fast64_t key =  (static_cast<uint_fast64_t>(margin) << 48) |
       (static_cast<uint_fast64_t>(width) << 24) |
       static_cast<uint_fast64_t>(height);
   int rm = key >> 48;
   int rw = (key >> 24) & 0xFFFFFF;
   int rh = key & 0xFFFFFF;
-  Debug::check_assertion(rm == margin, "recovered margin does not match");
-  Debug::check_assertion(rw == width,"recovered width does not match");
-  Debug::check_assertion(rh == height,"recovered height does not match");
+  SOLARUS_ASSERT(rm == margin, "recovered margin does not match");
+  SOLARUS_ASSERT(rw == width,"recovered width does not match");
+  SOLARUS_ASSERT(rh == height,"recovered height does not match");
+
   auto it = fbos.find(key);
   if(it != fbos.end()) {
     return &it->second;
   }
   GLuint fbo;
   glGenFramebuffers(1,&fbo);
-  glm::mat4 view = glm::ortho<float>(-margin,width+margin,-margin,height+margin);
+  float half_width = margin+width*0.5f;
+  float half_height = margin+height*0.5f;
+  glm::mat4 view = glm::ortho<float>(-half_width, half_width, -half_height, half_height);
   return &fbos.insert({key,{fbo,view,glm::ivec2(width+margin*2, height+margin*2)}}).first->second;
 }
 
@@ -497,7 +550,7 @@ void GlRenderer::set_state(const GlTexture *src, GlShader* shad, GlTexture* dst,
     glUniformMatrix4fv(current_shader->get_uniform_location(Shader::MVP_MATRIX_NAME),
                        1,
                        GL_FALSE,
-                       glm::value_ptr(dst->fbo->view));
+                       glm::value_ptr(dst_mvp(dst)));
     if(current_texture) {
       glUniformMatrix3fv(current_shader->get_uniform_location(Shader::UV_MATRIX_NAME),
                          1,
@@ -520,6 +573,15 @@ void GlRenderer::set_state(const GlTexture *src, GlShader* shad, GlTexture* dst,
     glUniform1i(
           current_shader->get_uniform_location(Shader::TIME_NAME),
           System::now_ms());
+  }
+}
+
+glm::mat4 GlRenderer::dst_mvp(GlTexture* dst) const {
+  if(dst->fbo->id) {
+    //return dst->get_view().get_transform();
+    return dst->fbo->view * dst->get_view().get_transform();
+  } else {
+    return screen_fbo.view;
   }
 }
 
@@ -665,7 +727,7 @@ void GlRenderer::add_sprite(const DrawInfos& infos) {
   vec2 br = (otobr) * scale;
   vec2 tr = vec2(otobr.x,ototl.y) * scale;
   if(infos.should_use_ex()) {
-    float alpha = infos.rotation;
+    float alpha = static_cast<float>(infos.rotation);
     mat2 rot = mat2(cos(alpha),-sin(alpha),sin(alpha),cos(alpha));
     tl = rot * tl;
     bl = rot * bl;

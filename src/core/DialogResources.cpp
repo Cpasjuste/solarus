@@ -72,7 +72,7 @@ bool DialogData::has_property(const std::string& key) const {
  */
 const std::string& DialogData::get_property(const std::string& key) const {
 
-  Debug::check_assertion(has_property(key),
+  SOLARUS_ASSERT(has_property(key),
     std::string("No such property: '") + key + "'");
   return properties.at(key);
 }
@@ -138,7 +138,7 @@ const DialogData& DialogResources::get_dialog(
     const std::string& dialog_id) const {
 
   const auto& it = dialogs.find(dialog_id);
-  Debug::check_assertion(it != dialogs.end(),
+  SOLARUS_ASSERT(it != dialogs.end(),
     std::string("No such dialog: '") + dialog_id + "'");
 
   return it->second;
@@ -156,7 +156,7 @@ DialogData& DialogResources::get_dialog(
     const std::string& dialog_id) {
 
   const auto& it = dialogs.find(dialog_id);
-  Debug::check_assertion(it != dialogs.end(),
+  SOLARUS_ASSERT(it != dialogs.end(),
     std::string("No such dialog: '") + dialog_id + "'");
 
   return it->second;
@@ -305,12 +305,12 @@ bool DialogResources::import_from_lua(lua_State* l) {
  */
 bool DialogResources::export_to_lua(std::ostream& out) const {
 
-  for (const auto kvp : dialogs) {
+  for (const auto& kvp : dialogs) {
     const std::string& id = kvp.first;
     const DialogData& dialog = kvp.second;
 
     out << "dialog{\n  id = \"" << escape_string(id) << "\",\n";
-    for (const auto pkvp : dialog.get_properties()) {
+    for (const auto& pkvp : dialog.get_properties()) {
       out << "  " << pkvp.first << " = \"" << pkvp.second << "\",\n";
     }
     const std::string& text = dialog.get_text();

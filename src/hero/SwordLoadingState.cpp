@@ -17,7 +17,7 @@
 #include "solarus/audio/Sound.h"
 #include "solarus/core/Equipment.h"
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/core/Geometry.h"
 #include "solarus/core/QuestFiles.h"
 #include "solarus/core/System.h"
@@ -79,8 +79,10 @@ void Hero::SwordLoadingState::update() {
     return;
   }
 
-  bool attack_pressed = get_commands().is_command_pressed(GameCommand::ATTACK);
+
+  bool attack_pressed = get_commands().is_command_pressed(CommandId::ATTACK);
   uint32_t now = System::now_ms();
+
 
   // detect when the sword is loaded (i.e. ready for a spin attack)
   if (attack_pressed &&

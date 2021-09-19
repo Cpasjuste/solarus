@@ -104,8 +104,6 @@ Entities::Entities(Game& game, Map& map):
   tiles_ground(),
   non_animated_regions(),
   tiles_in_animated_regions(),
-  hero(game.get_hero()),
-  camera(nullptr),
   named_entities(),
   all_entities(),
   quadtree(new EntityTree()),
@@ -134,13 +132,6 @@ Entities::Entities(Game& game, Map& map):
   const int margin = 64;
   Rectangle quadtree_space(-margin, -margin, map.get_width() + 2 * margin, map.get_height() + 2 * margin);
   quadtree->initialize(quadtree_space);
-
-  // Create the camera.
-  std::shared_ptr<Camera> camera = std::make_shared<Camera>(map);
-  add_entity(camera);
-  const HeroPtr& hero = game.get_hero();
-  Debug::check_assertion(hero != nullptr, "Missing hero when initializing camera");
-  camera->start_tracking(hero);
 }
 
 /**
@@ -182,11 +173,23 @@ void Entities::notify_entity_removed(Entity& entity) {
 }
 
 /**
- * \brief Returns the hero.
+ * \brief Returns the default hero.
  * \return The hero.
  */
-Hero& Entities::get_hero() {
-  return *hero;
+Hero& Entities::get_default_hero() {
+  if(heroes.size()){
+    return *heroes.front();
+  } else {
+    return *game.get_hero();
+  }
+}
+
+/**
+ * @brief Returns the heroes
+ * @return the heroes
+ */
+const Heroes &Entities::get_heroes() const {
+  return heroes;
 }
 
 /**
@@ -290,7 +293,12 @@ EntityVector Entities::get_entities_with_prefix(const std::string& prefix) {
         entities.push_back(entity);
       }
     }
-    entities.push_back(hero);
+    for(const HeroPtr& hero : heroes) {
+      entities.push_back(hero);
+    }
+    for(const CameraPtr& cam : cameras) {
+      entities.push_back(cam);
+    }
     return entities;
   }
 
@@ -511,7 +519,7 @@ Rectangle Entities::get_region_box(const Point& point) const {
     }
   }
 
-  Debug::check_assertion(top < bottom && left < right, "Invalid region rectangle");
+  SOLARUS_ASSERT(top < bottom && left < right, "Invalid region rectangle");
 
   return Rectangle(left, top, right - left, bottom - top);
 }
@@ -574,7 +582,7 @@ EntityVector Entities::get_entities_by_type_z_sorted(EntityType type) {
  */
 EntitySet Entities::get_entities_by_type(EntityType type, int layer) {
 
-  Debug::check_assertion(map.is_valid_layer(layer), "Invalid layer");
+  SOLARUS_ASSERT(map.is_valid_layer(layer), "Invalid layer");
 
   EntitySet result;
 
@@ -644,8 +652,11 @@ void Entities::notify_map_starting(Map& map, const std::shared_ptr<Destination>&
     entity->notify_map_starting(map, destination);
     entity->notify_tileset_changed();
   }
-  hero->notify_map_starting(map, destination);
-  hero->notify_tileset_changed();
+
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_starting(map, destination);
+    hero->notify_tileset_changed();
+  }
 }
 
 /**
@@ -661,7 +672,9 @@ void Entities::notify_map_started(Map& map, const std::shared_ptr<Destination>& 
   for (const EntityPtr& entity: all_entities) {
     entity->notify_map_started(map, destination);
   }
-  hero->notify_map_started(map, destination);
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_started(map, destination);
+  }
 }
 
 /**
@@ -673,12 +686,14 @@ void Entities::notify_map_started(Map& map, const std::shared_ptr<Destination>& 
  * \param map The map.
  * \param destination Destination entity where the hero is placed or nullptr.
  */
-void Entities::notify_map_opening_transition_finishing(Map& map, const std::shared_ptr<Destination>& destination) {
+void Entities::notify_map_opening_transition_finishing(Map& map, const std::string& destination_name, const HeroPtr& opt_hero) {
 
   for (const EntityPtr& entity: all_entities) {
-    entity->notify_map_opening_transition_finishing(map, destination);
+    entity->notify_map_opening_transition_finishing(map, destination_name, opt_hero);
   }
-  hero->notify_map_opening_transition_finishing(map, destination);
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_opening_transition_finishing(map, destination_name, opt_hero);
+  }
 }
 
 /**
@@ -690,12 +705,14 @@ void Entities::notify_map_opening_transition_finishing(Map& map, const std::shar
  * \param map The map.
  * \param destination Destination entity where the hero is placed or nullptr.
  */
-void Entities::notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination) {
+void Entities::notify_map_opening_transition_finished(Map& map, const std::shared_ptr<Destination>& destination, const HeroPtr& opt_hero) {
 
   for (const EntityPtr& entity: all_entities) {
-    entity->notify_map_opening_transition_finished(map, destination);
+    entity->notify_map_opening_transition_finished(map, destination, opt_hero);
   }
-  hero->notify_map_opening_transition_finished(map, destination);
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_opening_transition_finished(map, destination, opt_hero);
+  }
 }
 
 /**
@@ -714,7 +731,10 @@ void Entities::notify_tileset_changed() {
   for (const EntityPtr& entity: all_entities) {
     entity->notify_tileset_changed();
   }
-  hero->notify_tileset_changed();
+
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_tileset_changed();
+  }
 }
 
 /**
@@ -726,7 +746,9 @@ void Entities::notify_map_finished() {
     entity->notify_map_finished();
     notify_entity_removed(*entity);
   }
-  hero->notify_map_finished();
+  for(const HeroPtr& hero : heroes) {
+    hero->notify_map_finished();
+  }
 }
 
 /**
@@ -736,7 +758,7 @@ void Entities::notify_map_finished() {
  */
 void Entities::initialize_layers() {
 
-  Debug::check_assertion(z_orders.empty(), "Layers already initialized");
+  SOLARUS_ASSERT(z_orders.empty(), "Layers already initialized");
 
   for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
     tiles_ground[layer] = std::vector<Ground>();
@@ -760,16 +782,14 @@ void Entities::add_tile_info(const TileInfo& tile_info) {
 
   const Rectangle& box = tile_info.box;
   const int layer = tile_info.layer;
-  Debug::check_assertion(map.is_valid_layer(layer),
-                         "Invalid layer");
+  SOLARUS_ASSERT(map.is_valid_layer(layer), "Invalid layer");
 
-  Debug::check_assertion(tile_info.pattern != nullptr,
-                         "Missing tile pattern");
+  SOLARUS_ASSERT(tile_info.pattern != nullptr, "Missing tile pattern");
   const TilePattern& pattern = *tile_info.pattern;
 
   // The size of a runtime tile should be the size of its pattern
   // for performance reasons, to optimize away more tiles.
-  Debug::check_assertion(
+  SOLARUS_ASSERT(
       box.get_width() == pattern.get_width() &&
       box.get_height() == pattern.get_height(),
       "Static tile size must match tile pattern size");
@@ -933,7 +953,7 @@ void Entities::add_entity(const EntityPtr& entity) {
     return;
   }
 
-  Debug::check_assertion(map.is_valid_layer(entity->get_layer()),
+  SOLARUS_ASSERT(map.is_valid_layer(entity->get_layer()),
       "No such layer on this map: " + std::to_string(entity->get_layer()));
 
   const EntityType type = entity->get_type();
@@ -943,14 +963,22 @@ void Entities::add_entity(const EntityPtr& entity) {
     // Update the quadtree.
     quadtree->add(entity, entity->get_max_bounding_box());
 
+
     // Update the specific entities lists.
-    switch (entity->get_type()) {
+    switch (type) {
 
       case EntityType::CAMERA:
-        Debug::check_assertion(camera == nullptr, "Only one camera is supported");
-        camera = std::static_pointer_cast<Camera>(entity);
+        {
+          CameraPtr new_camera = std::static_pointer_cast<Camera>(entity);
+          cameras.push_back(new_camera);
+        }
         break;
-
+      case EntityType::HERO:
+      {
+        HeroPtr hero = std::static_pointer_cast<Hero>(entity);
+        heroes.push_back(hero);
+        break;
+      }
       case EntityType::DESTINATION:
         {
           std::shared_ptr<Destination> destination =
@@ -971,7 +999,7 @@ void Entities::add_entity(const EntityPtr& entity) {
     }
 
     // Track the insertion order.
-    z_orders[layer].add(entity);
+    z_orders[layer].bring_to_front(entity);
 
     // Update the list of entities by type.
     auto it = entities_by_type.find(type);
@@ -982,7 +1010,7 @@ void Entities::add_entity(const EntityPtr& entity) {
     sets[layer].insert(entity);
 
     // Update the list of all entities.
-    if (type != EntityType::HERO) {
+    if (type != EntityType::HERO && type != EntityType::CAMERA) {
       all_entities.push_back(entity);
     }
   }
@@ -1009,6 +1037,32 @@ void Entities::remove_entity(Entity& entity) {
 
     // Tell the entity.
     entity.notify_being_removed();
+
+    //Manage removal from the special entities list
+    EntityType type = entity.get_type();
+    switch (type) {
+
+      case EntityType::CAMERA:
+        {
+          CameraPtr camera = entity.shared_from_this_cast<Camera>();
+          cameras.erase(std::remove(cameras.begin(),
+                                    cameras.end(),
+                                    camera),
+                        cameras.end());
+        }
+        break;
+      case EntityType::HERO:
+      {
+        HeroPtr hero = entity.shared_from_this_cast<Hero>();
+        heroes.erase(std::remove(heroes.begin(),
+                                 heroes.end(),
+                                 hero),
+                      heroes.end());
+        break;
+      }
+      default:
+      break;
+    }
 
     // Remove the entity from the by name list
     // to allow users to create a new one with
@@ -1068,15 +1122,19 @@ void Entities::remove_marked_entities() {
     switch (type) {
 
       case EntityType::CAMERA:
-        camera = nullptr;
+        cameras.erase(std::remove(cameras.begin(),
+                                   cameras.end(),
+                                   std::static_pointer_cast<Camera>(entity)),
+                       cameras.end());
         break;
-
+      case EntityType::HERO:
+        heroes.erase(std::remove(heroes.begin(),
+                                 heroes.end(),
+                                 std::static_pointer_cast<Hero>(entity)),
+                     heroes.end());
       default:
       break;
     }
-
-    // Track the insertion order.
-    z_orders.at(layer).remove(entity);
 
     // Update the list of entities by type.
     const auto& it = entities_by_type.find(type);
@@ -1086,7 +1144,8 @@ void Entities::remove_marked_entities() {
     }
 
     // Destroy it.
-    notify_entity_removed(*entity);
+    //notify_entity_removed(*entity); //Already done when pushing in the remove list
+    //TODO this could break things expecting the event being raised two times
   }
   entities_to_remove.clear();
 }
@@ -1103,7 +1162,9 @@ void Entities::remove_marked_entities() {
 void Entities::set_suspended(bool suspended) {
 
   // the hero first
-  hero->set_suspended(suspended);
+  for(const HeroPtr& hero : heroes) {
+    hero->set_suspended(suspended);
+  }
 
   // other entities
   for (const EntityPtr& entity: all_entities) {
@@ -1118,25 +1179,24 @@ void Entities::set_suspended(bool suspended) {
  */
 void Entities::update() {
   SOL_PFUN(profiler::colors::Red);
-  Debug::check_assertion(map.is_started(), "The map is not started");
+  SOLARUS_ASSERT(map.is_started(), "The map is not started");
 
   // First update the hero.
-  hero->update();
+  for(const HeroPtr& hero : heroes) {
+    hero->update();
+  }
 
   // Update the dynamic entities.
   for (const EntityPtr& entity: all_entities) {
-
-    if (
-        !entity->is_being_removed() &&
-        entity->get_type() != EntityType::CAMERA  // The camera is updated after.
-    ) {
       entity->update();
-    }
   }
 
-  // Update the camera after everyone else.
-  camera->update();
-  entities_to_draw.clear();  // Invalidate entities to draw.
+  // Update the cameras after everyone else.
+  for(const auto& camera : cameras) {
+    camera->update();
+  }
+
+  //entities_to_draw.clear();  // Invalidate entities to draw.
   for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
     non_animated_regions[layer]->update();
   }
@@ -1151,14 +1211,7 @@ void Entities::update() {
 /**
  * \brief Draws the entities on the map surface.
  */
-void Entities::draw() {
-
-  const CameraPtr& camera = get_camera();
-  if (camera == nullptr) {
-    return;
-  }
-
-  const SurfacePtr& camera_surface = camera->get_surface();
+void Entities::draw(Camera& camera) {
 
   // Lazily build the list of entities to draw.
   if (entities_to_draw.empty()) {
@@ -1172,10 +1225,10 @@ void Entities::draw() {
     EntityVector entities_in_camera;
     Rectangle around_camera(
         Point(
-            camera->get_x() - camera->get_size().width,
-            camera->get_y() - camera->get_size().height
+            camera.get_x() - camera.get_size().width,
+            camera.get_y() - camera.get_size().height
         ),
-        camera->get_size() * 3
+        camera.get_size() * 3
     );
     //get_entities_in_rectangle_z_sorted(around_camera, entities_in_camera);
     get_entities_in_rectangle_raw(around_camera, entities_in_camera);
@@ -1184,7 +1237,7 @@ void Entities::draw() {
       SOL_PBLOCK("Pushing entities.", profiler::colors::Green);
       for (const EntityPtr& entity : entities_in_camera) {
         int layer = entity->get_layer();
-        Debug::check_assertion(map.is_valid_layer(layer), "Invalid layer");
+        SOLARUS_ASSERT(map.is_valid_layer(layer), "Invalid layer");
         entities_to_draw[layer].push_back(entity);
       }
     }
@@ -1228,10 +1281,10 @@ void Entities::draw() {
     // will be drawn later).
     {
       SOL_PBLOCK("Draw dynamic tiles", profiler::colors::Green);
-      for (unsigned int i = 0; i < tiles_in_animated_regions[layer].size(); ++i) {
-        Tile& tile = *tiles_in_animated_regions[layer][i];
-        if (tile.overlaps(*camera) || !tile.is_drawn_at_its_position()) {
-          tile.draw(*camera);
+      for (const TilePtr& ptile : tiles_in_animated_regions[layer]) {
+        Tile& tile = *ptile;
+        if (tile.overlaps(camera) || !tile.is_drawn_at_its_position()) {
+          tile.draw(camera);
         }
       }
     }
@@ -1240,17 +1293,16 @@ void Entities::draw() {
     // since they are already drawn).
     {
       SOL_PBLOCK("Draw non animated region", profiler::colors::Green)
-      non_animated_regions[layer]->draw_on_map();
+      non_animated_regions[layer]->draw_on_map(camera);
     }
 
-    // Draw dynamic entities, ordered by their data structure.
     {
       SOL_PBLOCK("Draw entitites", profiler::colors::Green);
       for (const EntityPtr& entity: entities_to_draw[layer]) {
         if (!entity->is_being_removed() &&
             entity->is_enabled() &&
             entity->is_visible()) {
-          entity->draw(*camera);
+          entity->draw(camera);
         }
       }
     }
@@ -1258,9 +1310,14 @@ void Entities::draw() {
 
   if (EntityTree::debug_quadtrees) {
     SOL_PBLOCK("Quadtree debug draw", profiler::colors::DarkGreen);
+
+    const SurfacePtr& camera_surface = camera.get_surface();
+
     // Draw the quadtree structure for debugging.
-    quadtree->draw(camera_surface, -camera->get_top_left_xy());
+    quadtree->draw(camera_surface, -camera.get_top_left_xy());
   }
+
+  entities_to_draw.clear();  // Invalidate entities to draw.
 }
 
 /**
@@ -1288,8 +1345,7 @@ void Entities::set_entity_layer(Entity& entity, int layer) {
     }
 
     // Track the insertion order.
-    z_orders.at(old_layer).remove(shared_entity);
-    z_orders.at(layer).add(shared_entity);
+    z_orders.at(layer).bring_to_front(shared_entity);
 
     // Update the list of entities by type and layer.
     const EntityType type = entity.get_type();
@@ -1414,36 +1470,13 @@ Entities::ZOrderInfo::ZOrderInfo() :
 }
 
 /**
- * \brief Inserts an entity at the end of the structure.
- *
- * Nothing happens if the entity was already present.
- */
-void Entities::ZOrderInfo::add(const EntityPtr& entity) {
-
-  ++max;
-  entity->set_z(max);
-}
-
-/**
- * \brief Removes an entity from the structure.
- *
- * Nothing happens if the entity was not present.
- */
-void Entities::ZOrderInfo::remove(const EntityPtr& entity) {
-
-  entity->set_z(0);
-  // Other Z values remain unchanged: removing an entity does not break the order.
-}
-
-/**
  * \brief Puts an entity above all others.
  *
  * It will then have a Z order greater than all other entities in the structure.
  */
 void Entities::ZOrderInfo::bring_to_front(const EntityPtr& entity) {
-
-  remove(entity);
-  add(entity);
+  ++max;
+  entity->set_z(max);
 }
 
 /**
@@ -1452,8 +1485,6 @@ void Entities::ZOrderInfo::bring_to_front(const EntityPtr& entity) {
  * It will then have a Z order lower than all other entities in the structure.
  */
 void Entities::ZOrderInfo::bring_to_back(const EntityPtr& entity) {
-
-  remove(entity);
   --min;
   entity->set_z(min);
 }

@@ -20,6 +20,7 @@
 #include "solarus/core/Common.h"
 #include "solarus/containers/Grid.h"
 #include "solarus/entities/TileInfo.h"
+#include "solarus/entities/Camera.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include <unordered_map>
 #include <vector>
@@ -45,9 +46,9 @@ class NonAnimatedRegions {
     void add_tile(const TileInfo& tile);
     void build(std::vector<TileInfo>& rejected_tiles);
     void notify_tileset_changed();
-    void update();
-    void draw_on_map();
 
+    void draw_on_map(const Camera& camera);
+    void update();
   private:
 
     bool overlaps_animated_tile(const TileInfo& tile) const;

@@ -140,7 +140,7 @@ bool Switch::is_activated() const {
  *
  * This function does nothing if the switch is locked or already activated.
  */
-void Switch::activate() {
+void Switch::activate(Entity* opt_entity) {
 
   if (!activated && !locked) {
 
@@ -150,7 +150,7 @@ void Switch::activate() {
       Sound::play(sound_id, get_game().get_resource_provider());
     }
 
-    get_lua_context()->switch_on_activated(*this);
+    get_lua_context()->switch_on_activated(*this, opt_entity);
   }
 }
 
@@ -225,13 +225,13 @@ void Switch::update() {
     if (!entity_overlapping_still_present) {
       // the entity just left the switch or disappeared from the map
       // (it may even have been freed)
-
+      Entity* old_overlap = entity_overlapping;
       entity_overlapping = nullptr;
       if (is_activated() && inactivate_when_leaving && !locked) {
         set_activated(false);
-        get_lua_context()->switch_on_inactivated(*this);
+        get_lua_context()->switch_on_inactivated(*this, old_overlap);
       }
-      get_lua_context()->switch_on_left(*this);
+      get_lua_context()->switch_on_left(*this, *old_overlap);
     }
   }
 }
@@ -300,7 +300,7 @@ void Switch::try_activate(Hero& hero) {
       !needs_block &&
       !is_activated()) {
     // this switch allows the hero to activate it
-    activate();
+    activate(&hero);
   }
   this->entity_overlapping = &hero;
 }
@@ -317,7 +317,7 @@ void Switch::try_activate(Block& block) {
   if (is_walkable() &&
       !is_activated()) {
     // blocks can only activate walkable, visible switches
-    activate();
+    activate(&block);
   }
   this->entity_overlapping = &block;
 }
@@ -329,12 +329,12 @@ void Switch::try_activate(Block& block) {
  *
  * \param arrow the arrow overlapping this switch
  */
-void Switch::try_activate(Arrow& /* arrow */) {
+void Switch::try_activate(Arrow& arrow) {
 
   if ((subtype == Subtype::ARROW_TARGET || subtype == Subtype::SOLID)
       && !is_activated()) {
     // arrows can only activate arrow targets and solid switches
-    activate();
+    activate(&arrow);
   }
 }
 
@@ -348,7 +348,7 @@ void Switch::try_activate() {
 
   // arbitrary entities can activate solid switches
   if (subtype == Subtype::SOLID && !is_activated()) {
-    activate();
+    activate(nullptr);
   }
 }
 

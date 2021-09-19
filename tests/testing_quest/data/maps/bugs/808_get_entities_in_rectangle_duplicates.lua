@@ -12,7 +12,7 @@ function map:on_started()
     num_entities_in_rectangle = num_entities_in_rectangle + 1
   end
 
-  assert(num_entities_in_rectangle == num_entities)
+  assert_equal(num_entities_in_rectangle, num_entities)
 
   sol.main.exit()
 end

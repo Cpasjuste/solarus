@@ -68,7 +68,7 @@ void EnemyReaction::set_general_reaction(ReactionType reaction, int life_lost, c
     general_reaction.life_lost = life_lost;
   }
   else if (reaction == ReactionType::LUA_CALLBACK) {
-    Debug::check_assertion(!callback.is_empty(), "Missing enemy reaction callback");
+    SOLARUS_ASSERT(!callback.is_empty(), "Missing enemy reaction callback");
     general_reaction.callback = callback;
   }
 }
@@ -96,7 +96,7 @@ void EnemyReaction::set_sprite_reaction(const Sprite* sprite, ReactionType react
       sprite_reactions[sprite].life_lost = life_lost;
     }
     else if (reaction == ReactionType::LUA_CALLBACK) {
-      Debug::check_assertion(!callback.is_empty(), "Missing enemy reaction callback");
+      SOLARUS_ASSERT(!callback.is_empty(), "Missing enemy reaction callback");
       sprite_reactions[sprite].callback = callback;
     }
   }

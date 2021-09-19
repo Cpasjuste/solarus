@@ -22,6 +22,8 @@
 #include "solarus/graphics/ShaderPtr.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include "solarus/graphics/Renderer.h"
+#include "solarus/core/EnumInfo.h"
+
 #include <vector>
 #include <string>
 
@@ -40,6 +42,11 @@ class SoftwareVideoMode;
  * \brief Draws the window and handles the video mode.
  */
 namespace Video {
+    enum class GeometryMode {
+      LETTER_BOXING,                            /**< Does letterboxing like legacy solarus */
+      DYNAMIC_QUEST_SIZE,                       /**< Extend viewport to fit the window, keep quest size as reference */
+      DYNAMIC_ABSOLUTE                          /**< Extend viewport to fit the window, map pixels 1:1 */
+    };
 
     struct Geometry {
       Size normal_quest_size;                   /**< Default value of quest_size (depends on the quest). */
@@ -52,6 +59,8 @@ namespace Video {
                                                  * letterboxed to fit. In fullscreen, remembers the size
                                                  * to use when returning to windowed mode. */
       Size logical_size;                        /**< Size of the window minus the letterboxing black bars */
+      GeometryMode mode =
+          GeometryMode::LETTER_BOXING;     /**< Mode in which the Video backend handle geometry */
     };
 
     void initialize(const Arguments& args);
@@ -113,6 +122,9 @@ namespace Video {
     Size get_output_size();
     Size get_output_size_no_bars();
 
+    void set_geometry_mode(Video::GeometryMode mode);
+    Video::GeometryMode get_geometry_mode();
+
     Point output_to_quest_coordinates(const Point& output_xy);
     Point renderer_to_quest_coordinates(const Point& renderer_xy);
 
@@ -125,6 +137,12 @@ namespace Video {
 
     uint64_t get_display_period_ns();
 }  // namespace Video
+
+template <>
+struct SOLARUS_API EnumInfoTraits<Video::GeometryMode> {
+  static const std::string pretty_name;
+  static const EnumInfo<Video::GeometryMode>::names_type names;
+};
 
 }  // namespace Solarus
 

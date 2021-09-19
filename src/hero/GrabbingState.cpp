@@ -16,7 +16,7 @@
  */
 #include "solarus/core/Equipment.h"
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/hero/GrabbingState.h"
 #include "solarus/hero/HeroSprites.h"
 
@@ -58,7 +58,7 @@ void Hero::GrabbingState::update() {
 
   // Release the obstacle.
   Hero& hero = get_entity();
-  if (!get_commands().is_command_pressed(GameCommand::ACTION)) {
+  if (!get_commands().is_command_pressed(CommandId::ACTION)) {
     hero.start_free();
     return;
   }

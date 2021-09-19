@@ -22,6 +22,7 @@
 #include "solarus/graphics/Transition.h"
 #include "solarus/lua/ExportableToLua.h"
 #include <map>
+#include <vector>
 #include <string>
 
 struct lua_State;
@@ -37,7 +38,6 @@ class MainLoop;
  * This class provides read and write access to the saved data.
  */
 class SOLARUS_API Savegame: public ExportableToLua {
-
   public:
 
     static const int SAVEGAME_VERSION;  /**< Version number of the savegame file format. */
@@ -95,7 +95,20 @@ class SOLARUS_API Savegame: public ExportableToLua {
     void save();
     const std::string& get_file_name() const;
 
-    // data
+    // unsaved data
+    MainLoop& get_main_loop();
+    LuaContext& get_lua_context();
+    const Game* get_game() const;
+    Game* get_game();
+    void set_game(Game* game);
+    const EquipmentPtr& get_default_equipment() const;
+
+    Transition::Style get_default_transition_style() const;
+    void set_default_transition_style(Transition::Style default_transition_style);
+
+    virtual const std::string& get_lua_type_name() const override;
+
+    // data, private to allow only access via the player view
     bool is_string(const std::string& key) const;
     std::string get_string(const std::string& key) const;
     void set_string(const std::string& key, const std::string& value);
@@ -113,8 +126,9 @@ class SOLARUS_API Savegame: public ExportableToLua {
     void set_default_joypad_controls();
     void post_process_existing_savegame();
 
+
     // unsaved data
-    MainLoop& get_main_loop();
+    /*MainLoop& get_main_loop();
     LuaContext& get_lua_context();
     const Equipment& get_equipment() const;
     Equipment& get_equipment();
@@ -126,8 +140,7 @@ class SOLARUS_API Savegame: public ExportableToLua {
     Transition::Style get_default_transition_style() const;
     void set_default_transition_style(Transition::Style default_transition_style);
 
-    const std::string& get_lua_type_name() const override;
-
+    const std::string& get_lua_type_name() const override;*/
   private:
 
     struct SavedValue {
@@ -143,18 +156,19 @@ class SOLARUS_API Savegame: public ExportableToLua {
     };
 
     std::map<std::string, SavedValue> saved_values;
+    //std::vector<PlayerPtr> players;
+
+    EquipmentPtr opt_equipment;    /**< Optional main equipement of this savegame */
 
     bool empty;
     std::string file_name;         /**< Savegame file name relative to the quest write directory. */
     MainLoop& main_loop;
-    Equipment equipment;
     Game* game;                    /**< nullptr if this savegame is not currently running */
     Transition::Style
         default_transition_style;  /**< Transition style to use by default. */
 
     void import_from_file();
     static int l_newindex(lua_State* l);
-
 };
 
 }

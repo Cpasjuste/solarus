@@ -75,6 +75,12 @@ int l_quest(lua_State* l) {
     const std::string& max_quest_size_string =
         LuaTools::opt_string_field(l, 1, "max_quest_size", normal_quest_size_string);
 
+    const bool use_subpixel_camera =
+        LuaTools::opt_boolean_field(l, 1, "subpixel_camera", false);
+
+    const bool use_dynamic_timestep =
+        LuaTools::opt_boolean_field(l, 1, "dynamic_timestep", false);
+
     properties.set_solarus_version(solarus_version);
     properties.set_quest_write_dir(quest_write_dir);
     properties.set_title(title);
@@ -84,6 +90,8 @@ int l_quest(lua_State* l) {
     properties.set_website(website);
     properties.set_quest_version(quest_version);
     properties.set_release_date(release_date);
+    properties.set_dynamic_timestep(use_dynamic_timestep);
+    properties.set_subpixel_camera(use_subpixel_camera);
 
     Size normal_quest_size, min_quest_size, max_quest_size;
     bool success = Video::parse_size(normal_quest_size_string, normal_quest_size);
@@ -162,6 +170,8 @@ bool QuestProperties::export_to_lua(std::ostream& out) const {
       << "  normal_quest_size = \"" << normal_quest_size.width << 'x' << normal_quest_size.height << "\",\n"
       << "  min_quest_size = \"" << min_quest_size.width << 'x' << min_quest_size.height << "\",\n"
       << "  max_quest_size = \"" << max_quest_size.width << 'x' << max_quest_size.height << "\",\n"
+      << "  dynamic_timestep = " << (use_dynamic_timestep ? "true" : "false") << ",\n"
+      << "  subpixel_camera = " << (use_subpixel_camera ? "true" : "false") << ",\n"
       << "}\n\n";
 
   return true;
@@ -384,6 +394,22 @@ Size QuestProperties::get_max_quest_size() const {
  */
 void QuestProperties::set_max_quest_size(const Size& max_quest_size) {
   this->max_quest_size = max_quest_size;
+}
+
+bool QuestProperties::is_dynamic_timestep() const {
+  return use_dynamic_timestep;
+}
+
+bool QuestProperties::is_subpixel_camera() const {
+  return use_subpixel_camera;
+}
+
+void QuestProperties::set_dynamic_timestep(bool dynamic) {
+  use_dynamic_timestep = dynamic;
+}
+
+void QuestProperties::set_subpixel_camera(bool subpixel) {
+  use_subpixel_camera = subpixel;
 }
 
 }

@@ -4,12 +4,18 @@ local detected_2 = false
 local detected_3 = false
 
 custom_entity_2:add_collision_test("overlapping", function(first_entity, second_entity)
-  assert(second_entity == custom_entity)
+  if sol.main.get_type(second_entity) == 'camera' then
+    return
+  end
+  assert_equal(second_entity, custom_entity)
   detected_2 = true
 end)
 
 custom_entity_3:add_collision_test("overlapping", function(first_entity, second_entity)
-  assert(second_entity == custom_entity)
+  if sol.main.get_type(second_entity) == 'camera' then
+    return
+  end
+  assert_equal(second_entity, custom_entity)
   detected_3 = true
 end)
 

@@ -37,7 +37,7 @@ Separator::Separator(
 ):
   Entity(name, 0, layer, xy, size) {
 
-  Debug::check_assertion((size.width == 16 && size.height > 16)
+  SOLARUS_ASSERT((size.width == 16 && size.height > 16)
       || (size.width > 16 && size.height == 16), "Invalid separator size");
 
   set_collision_modes(CollisionMode::COLLISION_CUSTOM);

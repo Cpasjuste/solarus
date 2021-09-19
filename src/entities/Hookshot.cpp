@@ -39,13 +39,15 @@ namespace Solarus {
  * \brief Creates a hookshot.
  * \param hero the hero
  */
-Hookshot::Hookshot(const Hero& hero):
+Hookshot::Hookshot(Hero& hero):
     Entity("", 0, hero.get_layer(), Point(0, 0), Size(0, 0)),
     next_sound_date(System::now_ms()),
     has_to_go_back(false),
     going_back(false),
     entity_reached(nullptr),
-    link_sprite(std::make_shared<Sprite>("entities/hookshot")) {
+    link_sprite(std::make_shared<Sprite>("entities/hookshot")),
+    hero(hero)
+{
 
   // initialize the entity
   int direction = hero.get_animation_direction();
@@ -185,7 +187,7 @@ void Hookshot::update() {
       if (has_to_go_back) {
         going_back = true;
         std::shared_ptr<Movement> movement = std::make_shared<TargetMovement>(
-            std::static_pointer_cast<Hero>(get_hero().shared_from_this()),
+            hero.shared_from_this_cast<Hero>(),
             0,
             0,
             192,
@@ -194,14 +196,14 @@ void Hookshot::update() {
         clear_movement();
         set_movement(movement);
       }
-      else if (get_distance(get_hero()) >= 120) {
+      else if (get_distance(hero) >= 120) {
         go_back();
       }
     }
-    else if (get_distance(get_hero()) == 0 ||
+    else if (get_distance(hero) == 0 ||
         (get_movement() != nullptr && get_movement()->is_finished())) {
       remove_from_map();
-      get_hero().start_state_from_ground();
+      hero.start_state_from_ground();
     }
   }
 }
@@ -230,8 +232,8 @@ void Hookshot::built_in_draw(Camera& camera) {
   if (direction > 4) {
     return;
   }
-  int x1 = get_hero().get_x() + dxy[direction].x;
-  int y1 = get_hero().get_y() + dxy[direction].y;
+  int x1 = hero.get_x() + dxy[direction].x;
+  int y1 = hero.get_y() + dxy[direction].y;
   int x2 = get_x();
   int y2 = get_y() - 5;
 
@@ -264,7 +266,7 @@ bool Hookshot::is_going_back() const {
  */
 void Hookshot::go_back() {
 
-  Debug::check_assertion(!is_going_back(), "The hookshot is already going back");
+  SOLARUS_ASSERT(!is_going_back(), "The hookshot is already going back");
 
   has_to_go_back = true;
 }
@@ -275,7 +277,7 @@ void Hookshot::go_back() {
  */
 void Hookshot::attach_to(Entity& entity_reached) {
 
-  Debug::check_assertion(this->entity_reached == nullptr,
+  SOLARUS_ASSERT(this->entity_reached == nullptr,
       "The hookshot is already attached to an entity");
 
   this->entity_reached = &entity_reached;
@@ -290,7 +292,7 @@ void Hookshot::attach_to(Entity& entity_reached) {
   }
   std::string path = " ";
   path[0] = '0' + (direction * 2);
-  get_hero().set_movement(std::make_shared<PathMovement>(
+  hero.set_movement(std::make_shared<PathMovement>(
       path, 192, true, false, false
   ));
 }
@@ -317,7 +319,7 @@ void Hookshot::notify_obstacle_reached() {
 void Hookshot::notify_collision_with_enemy(
     Enemy& enemy, Sprite& /* this_sprite */, Sprite& enemy_sprite) {
 
-  if (!overlaps(get_hero())) {
+  if (!overlaps(hero)) {
     enemy.try_hurt(EnemyAttack::HOOKSHOT, *this, &enemy_sprite);
   }
 }

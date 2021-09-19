@@ -32,7 +32,7 @@ class Hookshot: public Entity {
 
     static constexpr EntityType ThisType = EntityType::HOOKSHOT;
 
-    explicit Hookshot(const Hero& hero);
+    explicit Hookshot(Hero &hero);
 
     EntityType get_type() const override;
 
@@ -82,7 +82,7 @@ class Hookshot: public Entity {
 
     SpritePtr
         link_sprite;             /**< sprite of the links */
-
+    Hero& hero;                  /**< Hero launching the hookshot */
 };
 
 }

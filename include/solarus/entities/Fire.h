@@ -34,7 +34,7 @@ class Fire: public Entity {
 
     static constexpr EntityType ThisType = EntityType::FIRE;
 
-    Fire(const std::string& name, int layer, const Point& xy);
+    Fire(const std::string& name, int layer, const Point& xy, const HeroPtr& author);
 
     virtual EntityType get_type() const override;
 
@@ -48,6 +48,9 @@ class Fire: public Entity {
         Sprite& other_sprite
     ) override;
 
+    const HeroPtr& get_author() const;
+private:
+     HeroPtr author;
 };
 
 }

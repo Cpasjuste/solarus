@@ -15,7 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/core/Game.h"
-#include "solarus/core/GameCommands.h"
+#include "solarus/core/Controls.h"
 #include "solarus/hero/FreeState.h"
 #include "solarus/hero/GrabbingState.h"
 #include "solarus/hero/HeroSprites.h"
@@ -81,7 +81,7 @@ void Hero::PushingState::update() {
     // stop pushing if the player changes his direction
     else if (get_commands().get_wanted_direction8() != pushing_direction4 * 2) {
 
-      if (get_commands().is_command_pressed(GameCommand::ACTION) &&
+      if (get_commands().is_command_pressed(CommandId::ACTION) &&
           hero.can_grab()
       ) {
         hero.start_grabbing();
@@ -101,7 +101,7 @@ void Hero::PushingState::update() {
           hero.try_snap_to_facing_entity();
         }
 
-        if (facing_entity->start_movement_by_hero()) {
+        if (facing_entity->start_movement_by_hero(hero)) {
 
           std::string path = "  ";
           path[0] = path[1] = '0' + pushing_direction4 * 2;
@@ -249,7 +249,7 @@ void Hero::PushingState::stop_moving_pushed_entity() {
     return;
   }
 
-  if (get_commands().is_command_pressed(GameCommand::ACTION) &&
+  if (get_commands().is_command_pressed(CommandId::ACTION) &&
       hero.can_grab()
   ) {
     // The hero was pushing an entity and grabbing it.

@@ -29,6 +29,7 @@
 #include <memory>
 #include <stack>
 #include <vector>
+#include <optional>
 
 namespace Solarus {
 

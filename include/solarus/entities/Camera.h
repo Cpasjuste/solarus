@@ -20,9 +20,12 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/core/Scale.h"
+#include "solarus/core/FRectangle.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/EntityPtr.h"
+#include "solarus/core/Scale.h"
 #include "solarus/graphics/SurfacePtr.h"
+#include "solarus/graphics/Transition.h"
 #include <memory>
 
 namespace Solarus {
@@ -43,9 +46,14 @@ class TargetMovement;
 class Camera : public Entity {
   public:
 
+    enum class SurfaceMode {
+      ABSOLUTE,
+      MAP
+    };
+
     static constexpr EntityType ThisType = EntityType::CAMERA;
 
-    explicit Camera(Map& map);
+    explicit Camera(const std::string& name);
 
     EntityType get_type() const override;
 
@@ -53,6 +61,7 @@ class Camera : public Entity {
     void set_suspended(bool suspended) override;
     void notify_movement_started() override;
     void notify_size_changed() override;
+    void notify_being_removed() override;
     bool is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) override;
     static constexpr int margin = 1;
 
@@ -79,12 +88,43 @@ class Camera : public Entity {
     Rectangle apply_separators(const Rectangle& area) const;
     Rectangle apply_separators_and_map_bounds(const Rectangle& area) const;
 
-private:
+    void reset_view();
+    void apply_view();
 
-    void create_surface();
+    void set_surface_mode();
+    void notify_window_size_changed(const Size& new_size);
+
+    Rectangle get_viewport_rectangle() const;
+
+    void set_viewport(const FRectangle& viewport);
+    const FRectangle& get_viewport() const;
+
+    void set_zoom(const Scale& zoom);
+    const Scale& get_zoom() const;
+
+    void set_rotation(float rotation);
+    float get_rotation() const;
+
+    void set_transition(std::unique_ptr<Transition> transition);
+    std::unique_ptr<Transition>& get_transition();
+
+    void draw(const SurfacePtr& dst_surface, const SurfacePtr& screen_surface) const;
+
+    void track_position(const Point& center, const EntityPtr &entity = nullptr);
+private:
+    void create_surface(const Size& size);
+    void update_view(const Size& viewport_size);
 
     SurfacePtr surface;           /**< Surface where this camera draws its entities. */
-    Point position_on_screen;     /**< Where to draw this camera on the screen. */
+    std::unique_ptr<Transition>
+        transition;               /**< Ongoing transition */
+    Point position_on_screen;     /**< Where to draw this camera on the screen. Used by Legacy LetterBoxing mode. */
+    FRectangle viewport;          /**< Relative geometry of the camera on screen. Used by dynamic video modes. */
+    Scale zoom;                   /**< Level of zoom of this camera compared to 1:1 cam. */
+    Scale zoom_corr;              /**< Correction factor for the zoom, to compensate integer rounding of the camera size */
+    float rotation = 0.f;         /**< Rotation of this camera */
+    glm::vec2 position_offset
+    = {0.f,0.f};    /**< Small offset in position to compensate for discretization after zoom */
     glm::vec2 subpixel_offset;       /**< Speed of subpixel move */
 };
 

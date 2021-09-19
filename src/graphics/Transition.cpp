@@ -36,9 +36,9 @@ const EnumInfo<Transition::Style>::names_type EnumInfoTraits<Transition::Style>:
  * \param direction direction of the transition effect (in or out)
  */
 Transition::Transition(Transition::Direction direction):
-  game(nullptr),
   direction(direction),
   previous_surface(nullptr),
+  destination_side(-1),
   suspended(false),
   when_suspended(0) {
 
@@ -61,8 +61,7 @@ Transition::~Transition() {
  */
 Transition* Transition::create(
     Transition::Style style,
-    Transition::Direction direction,
-    Game* game) {
+    Transition::Direction direction) {
 
   Transition* transition = nullptr;
 
@@ -81,20 +80,7 @@ Transition* Transition::create(
     break;
   }
 
-  transition->game = game;
-
   return transition;
-}
-
-/**
- * \brief Returns the current game.
- *
- * Some transition effects need a game to run.
- *
- * \return The current game or nullptr.
- */
-Game* Transition::get_game() const {
-  return game;
 }
 
 /**
@@ -110,7 +96,7 @@ Transition::Direction Transition::get_direction() const {
  * that was played before this opening transition.
  * \return The previous surface or nullptr.
  */
-Surface* Transition::get_previous_surface() const {
+const SurfacePtr &Transition::get_previous_surface() const {
   return previous_surface;
 }
 
@@ -119,13 +105,31 @@ Surface* Transition::get_previous_surface() const {
  * that was played before this opening transition.
  * \param previous_surface The previous surface or nullptr.
  */
-void Transition::set_previous_surface(Surface* previous_surface) {
+void Transition::set_previous_surface(const SurfacePtr& previous_surface) {
 
-  Debug::check_assertion(previous_surface == nullptr
+  SOLARUS_ASSERT(previous_surface == nullptr
       || get_direction() != Direction::CLOSING,
       "Cannot show a previous surface with an closing transition effect");
 
   this->previous_surface = previous_surface;
+}
+
+/**
+ * @brief sets the side of the map to which we need to scroll
+ * @param side
+ */
+void Transition::set_destination_side(int side) {
+  destination_side = side;
+}
+
+/**
+ * @brief get side of the map to which this transition scrolls
+ * @return the side
+ */
+int Transition::get_destination_side() const {
+  SOLARUS_ASSERT(destination_side != -1,
+                         "Transition : Destination side was not set");
+  return destination_side;
 }
 
 /**

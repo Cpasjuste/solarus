@@ -44,7 +44,7 @@ SpriteAnimationSet::SpriteAnimationSet(const std::string& id):
  */
 void SpriteAnimationSet::load() {
 
-  Debug::check_assertion(animations.empty(),
+  SOLARUS_ASSERT(animations.empty(),
       "Animation set already loaded");
 
   // Load the sprite data file.
@@ -126,7 +126,7 @@ bool SpriteAnimationSet::has_animation(
 const SpriteAnimation& SpriteAnimationSet::get_animation(
     const std::string& animation_name) const {
 
-  Debug::check_assertion(has_animation(animation_name),
+  SOLARUS_ASSERT(has_animation(animation_name),
       std::string("No animation '") + animation_name
       + "' in animation set '" + id + "'"
   );
@@ -142,7 +142,7 @@ const SpriteAnimation& SpriteAnimationSet::get_animation(
 SpriteAnimation& SpriteAnimationSet::get_animation(
     const std::string& animation_name) {
 
-  Debug::check_assertion(has_animation(animation_name),
+  SOLARUS_ASSERT(has_animation(animation_name),
       std::string("No animation '") + animation_name
       + "' in animation set '" + id + "'"
   );

@@ -154,14 +154,14 @@ bool call_function(
     const char* function_name
 ) {
   SOL_PBLOCK(function_name, profiler::colors::Blue);
-  Debug::check_assertion(lua_gettop(l) > nb_arguments, "Missing arguments");
+  SOLARUS_ASSERT(lua_gettop(l) > nb_arguments, "Missing arguments");
   int base = lua_gettop(l) - nb_arguments;
   lua_pushcfunction(l, &LuaContext::l_backtrace);
   lua_insert(l, base);
   int status = lua_pcall(l, nb_arguments, nb_results, base);
   lua_remove(l, base);
   if (status != 0) {
-    Debug::check_assertion(lua_isstring(l, -1), "Missing error message");
+    SOLARUS_ASSERT(lua_isstring(l, -1), "Missing error message");
     Debug::error(std::string("In ") + function_name + ": "
         + lua_tostring(l, -1)
     );

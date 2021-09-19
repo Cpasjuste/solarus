@@ -1037,7 +1037,7 @@ void Enemy::attack_hero(Hero& hero, Sprite* this_sprite) {
 
     bool hero_protected = false;
     if (minimum_shield_needed != 0
-        && get_equipment().has_ability(Ability::SHIELD, minimum_shield_needed)
+        && hero.get_equipment().has_ability(Ability::SHIELD, minimum_shield_needed)
         && hero.can_use_shield()) {
 
       // Compute the direction corresponding to the angle between the enemy and the hero.
@@ -1057,7 +1057,7 @@ void Enemy::attack_hero(Hero& hero, Sprite* this_sprite) {
     }
 
     if (hero_protected) {
-      attack_stopped_by_hero_shield();
+      attack_stopped_by_hero_shield(hero);
     }
     else {
       // Let the enemy script handle this if it wants.
@@ -1078,7 +1078,7 @@ void Enemy::attack_hero(Hero& hero, Sprite* this_sprite) {
  *
  * By default, the shield sound is played and the enemy cannot attack again for a while.
  */
-void Enemy::attack_stopped_by_hero_shield() {
+void Enemy::attack_stopped_by_hero_shield(Hero& hero) {
 
   Sound::play("shield", get_game().get_resource_provider());
 
@@ -1086,7 +1086,7 @@ void Enemy::attack_stopped_by_hero_shield() {
   can_attack = false;
   can_attack_again_date = now + 1000;
 
-  get_equipment().notify_ability_used(Ability::SHIELD);
+  hero.get_equipment().notify_ability_used(Ability::SHIELD);
 }
 
 /**
@@ -1242,7 +1242,7 @@ void Enemy::try_hurt(EnemyAttack attack, Entity& source, Sprite* this_sprite) {
         Hero& hero = static_cast<Hero&>(source);
 
         // Sword attacks only use pixel-precise collisions.
-        Debug::check_assertion(this_sprite != nullptr,
+        SOLARUS_ASSERT(this_sprite != nullptr,
             "Missing enemy sprite for sword attack"
         );
 
