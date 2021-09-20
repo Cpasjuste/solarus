@@ -138,7 +138,7 @@ void Hero::BackToSolidGroundState::update() {
   Hero& hero = get_entity();
   if (hero.get_movement()->is_finished()) {
 
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
     if (end_date == 0) {
       end_date = now + end_delay;
       get_sprites().set_animation_stopped_normal();
@@ -168,7 +168,7 @@ void Hero::BackToSolidGroundState::set_suspended(bool suspended) {
   HeroState::set_suspended(suspended);
 
   if (!suspended && end_date != 0) {
-    end_date += System::now() - get_when_suspended();
+    end_date += System::now_ms() - get_when_suspended();
   }
 }
 

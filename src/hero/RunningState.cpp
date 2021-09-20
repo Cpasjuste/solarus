@@ -60,7 +60,7 @@ void Hero::RunningState::start(const State* previous_state) {
 
   phase = 0;
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   next_phase_date = now + 500;
   next_sound_date = now + 300;
 }
@@ -88,7 +88,7 @@ void Hero::RunningState::update() {
     return;
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   if (!is_bouncing() && now >= next_sound_date) {
     Sound::play("running", get_game().get_resource_provider());
@@ -130,7 +130,7 @@ void Hero::RunningState::set_suspended(bool suspended) {
   HeroState::set_suspended(suspended);
 
   if (!suspended) {
-    uint32_t diff = System::now() - get_when_suspended();
+    uint32_t diff = System::now_ms() - get_when_suspended();
     next_phase_date += diff;
     next_sound_date += diff;
   }

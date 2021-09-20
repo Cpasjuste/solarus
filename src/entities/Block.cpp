@@ -58,7 +58,7 @@ Block::Block(
   Entity(name, direction, layer, xy, Size(16, 16)),
   max_moves(max_moves),
   sound_played(false),
-  when_can_move(System::now()),
+  when_can_move(System::now_ms()),
   last_position(xy),
   initial_position(xy),
   initial_max_moves(max_moves),
@@ -235,7 +235,7 @@ bool Block::start_movement_by_hero(Hero& hero) {
 
   if (get_movement() != nullptr             // the block is already moving
       || max_moves == 0                     // the block cannot move anymore
-      || System::now() < when_can_move      // the block cannot move for a while
+      || System::now_ms() < when_can_move      // the block cannot move for a while
       || (pulling && !can_be_pulled)        // the hero tries to pull a block that cannot be pulled
       || (!pulling && !can_be_pushed)       // the hero tries to push a block that cannot be pushed
       || (allowed_direction != -1 && hero_direction != allowed_direction)) { // incorrect direction
@@ -316,7 +316,7 @@ void Block::notify_ground_below_changed() {
 void Block::stop_movement_by_hero() {
 
   clear_movement();
-  when_can_move = System::now() + moving_delay;
+  when_can_move = System::now_ms() + moving_delay;
 
   // see if the block has moved
   if (get_xy() != last_position) {
@@ -354,7 +354,7 @@ void Block::reset() {
   if (get_movement() != nullptr) {
     // the block was being pushed or pulled by the hero
     clear_movement();
-    when_can_move = System::now() + moving_delay;
+    when_can_move = System::now_ms() + moving_delay;
   }
 
   last_position = initial_position;

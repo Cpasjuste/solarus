@@ -533,7 +533,7 @@ void SDLShader::render(const Surface &surface, const Rectangle& region, const Si
   compute_matrices(surface.get_size(),region,dst_size,dst_position,flip_y,viewport,dst,scale,uvm);
   //Set input size
   const Size& size = flip_y ? Video::get_output_size() : dst_size;
-  set_uniform_1i(Shader::TIME_NAME, System::now());
+  set_uniform_1i(Shader::TIME_NAME, System::now_ms());
   set_uniform_2f(Shader::OUTPUT_SIZE_NAME, size.width, size.height);
   set_uniform_2f(Shader::INPUT_SIZE_NAME, region.get_width(), region.get_height());
   render(screen_quad,surface,viewport*dst*scale,uvm);
@@ -571,7 +571,7 @@ void SDLShader::draw(Surface& dst_surface, const Surface &src_surface, const Dra
     glm::mat4 transform = Transform(dst_position,infos.transformation_origin,infos.scale,infos.rotation).get_glm_transform() * scale;
     //Set input size
     const Size& size = dst_size;
-    that->set_uniform_1i(Shader::TIME_NAME, System::now());
+    that->set_uniform_1i(Shader::TIME_NAME, System::now_ms());
     that->set_uniform_2f(Shader::OUTPUT_SIZE_NAME, size.width, size.height);
     that->set_uniform_2f(Shader::INPUT_SIZE_NAME, region.get_width(), region.get_height());
     that->render(screen_quad,src_surface,viewport*transform,uvm);

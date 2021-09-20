@@ -36,14 +36,14 @@ CircleMovement::CircleMovement():
   current_angle(0.0),
   initial_angle(0.0),
   angle_increment(1),
-  next_angle_change_date(static_cast<double>(System::now())),
-  angle_change_delay(5.0),
-  angular_speed(1000.0 / Geometry::degrees_to_radians(angle_change_delay)),
+  next_angle_change_date(static_cast<double>(System::now_ns())),
+  angle_change_delay(5000000.0),
+  angular_speed(1000000000.0 / Geometry::degrees_to_radians(angle_change_delay)),
   current_radius(0),
   wanted_radius(0),
   previous_radius(0),
   radius_increment(0),
-  next_radius_change_date(System::now()),
+  next_radius_change_date(System::now_ns()),
   radius_change_delay(0),
   duration(0),
   end_movement_date(0),
@@ -51,7 +51,7 @@ CircleMovement::CircleMovement():
   num_increments(0),
   num_rotations(0),
   loop_delay(0),
-  restart_date(System::now()) {
+  restart_date(System::now_ns()) {
 
 }
 
@@ -130,7 +130,7 @@ void CircleMovement::set_radius(int radius) {
   else {
     this->radius_increment = (radius > this->current_radius) ? 1 : -1;
     if (is_started()) {
-      this->next_radius_change_date = System::now();
+      this->next_radius_change_date = System::now_ns();
     }
   }
   recompute_position();
@@ -142,7 +142,7 @@ void CircleMovement::set_radius(int radius) {
  */
 int CircleMovement::get_radius_speed() const {
 
-  return radius_change_delay == 0 ? 0 : 1000 / radius_change_delay;
+  return radius_change_delay == 0 ? 0 : 1000000000 / radius_change_delay;
 }
 
 /**
@@ -165,7 +165,7 @@ void CircleMovement::set_radius_speed(int radius_speed) {
     this->radius_change_delay = 0;
   }
   else {
-    this->radius_change_delay = 1000 / radius_speed;
+    this->radius_change_delay = 1000000000 / radius_speed;
   }
 
   set_radius(wanted_radius);
@@ -192,8 +192,8 @@ void CircleMovement::set_angular_speed(double angular_speed) {
   }
 
   this->angular_speed = angular_speed;
-  this->angle_change_delay = 1000.0 / Geometry::radians_to_degrees(angular_speed);
-  this->next_angle_change_date = static_cast<double>(System::now());
+  this->angle_change_delay = 1000000000.0 / Geometry::radians_to_degrees(angular_speed);
+  this->next_angle_change_date = static_cast<double>(System::now_ns());
   recompute_position();
 }
 
@@ -258,7 +258,7 @@ void CircleMovement::set_clockwise(bool clockwise) {
  */
 uint32_t CircleMovement::get_duration() const {
 
-  return duration;
+  return duration/1000000;
 }
 
 /**
@@ -272,9 +272,9 @@ uint32_t CircleMovement::get_duration() const {
  */
 void CircleMovement::set_duration(uint32_t duration) {
 
-  this->duration = duration;
+  this->duration = duration*1000000;
   if (duration != 0 && is_started()) {
-    this->end_movement_date = System::now() + duration;
+    this->end_movement_date = System::now_ns() + duration;
   }
 }
 
@@ -320,7 +320,7 @@ void CircleMovement::set_max_rotations(int max_rotations) {
  */
 uint32_t CircleMovement::get_loop() const {
 
-  return loop_delay;
+  return loop_delay / 1000000;
 }
 
 /**
@@ -329,9 +329,9 @@ uint32_t CircleMovement::get_loop() const {
  */
 void CircleMovement::set_loop(uint32_t delay) {
 
-  this->loop_delay = delay;
+  this->loop_delay = delay*10000000;
   if (delay != 0 && is_stopped()) {
-    this->restart_date = System::now() + delay;
+    this->restart_date = System::now_ns() + delay;
   }
 }
 
@@ -351,7 +351,7 @@ void CircleMovement::update() {
   }
 
   bool update_needed = false;
-  uint32_t now = System::now();
+  uint64_t now = System::now_ns();
 
   // Maybe it is time to stop or to restart.
   if (current_radius != 0 &&
@@ -440,8 +440,8 @@ void CircleMovement::set_suspended(bool suspended) {
 
   Movement::set_suspended(suspended);
 
-  if (get_when_suspended() != 0) {
-    uint32_t diff = System::now() - get_when_suspended();
+  if (get_when_suspended_ns() != 0) {
+    uint64_t diff = System::now_ns() - get_when_suspended_ns();
     next_angle_change_date += diff;
     next_radius_change_date += diff;
     end_movement_date += diff;
@@ -455,19 +455,19 @@ void CircleMovement::set_suspended(bool suspended) {
 void CircleMovement::start() {
 
   current_angle = initial_angle;
-  next_angle_change_date = System::now();
+  next_angle_change_date = System::now_ns();
   num_increments = 0;
   num_rotations = 0;
 
   if (duration != 0) {
-    end_movement_date = System::now() + duration;
+    end_movement_date = System::now_ns() + duration;
   }
 
   if (radius_change_delay == 0) {
     current_radius = wanted_radius;
   }
   else {
-    next_radius_change_date = System::now();
+    next_radius_change_date = System::now_ns();
   }
   recompute_position();
 }
@@ -497,7 +497,7 @@ void CircleMovement::stop() {
   set_radius(0);
 
   if (loop_delay != 0) {
-    restart_date = System::now() + loop_delay;
+    restart_date = System::now_ns() + loop_delay;
   }
   recompute_position();
 }

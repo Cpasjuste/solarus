@@ -114,7 +114,7 @@ bool PixelBits::test_aligned_collision(const PixelBits& other,
   }
 
   if (debug_pixel_collisions) {
-    std::cout << System::now() << "\n bounding box collision\n";
+    std::cout << System::now_ms() << "\n bounding box collision\n";
     std::cout << "rect1 = " << bounding_box1 << "\n";
     std::cout << "rect2 = " << bounding_box2 << "\n";
     print();

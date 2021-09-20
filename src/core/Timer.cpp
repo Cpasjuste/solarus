@@ -29,9 +29,9 @@ namespace Solarus {
  * \param duration Duration of the timer in milliseconds.
  */
 Timer::Timer(uint32_t duration):
-  expiration_date(System::now() + duration),
+  expiration_date(System::now_ms() + duration),
   duration(duration),
-  finished(System::now() >= this->expiration_date),
+  finished(System::now_ms() >= this->expiration_date),
   suspended_with_map(false),
   suspended(false),
   when_suspended(0),
@@ -52,7 +52,7 @@ bool Timer::is_with_sound() const {
  * \param with_sound true to play a clock sound during this timer.
  */
 void Timer::set_with_sound(bool with_sound) {
-  next_sound_date = with_sound ? System::now() : 0;
+  next_sound_date = with_sound ? System::now_ms() : 0;
 }
 
 /**
@@ -76,7 +76,7 @@ void Timer::set_suspended(bool suspended) {
   if (suspended != this->suspended) {
     this->suspended = suspended;
 
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
 
     if (suspended) {
       // the timer is being suspended
@@ -159,7 +159,7 @@ uint32_t Timer::get_expiration_date() const {
 void Timer::set_expiration_date(uint32_t expiration_date) {
 
   this->expiration_date = expiration_date;
-  this->finished = System::now() >= this->expiration_date;
+  this->finished = System::now_ms() >= this->expiration_date;
 }
 
 /**
@@ -172,7 +172,7 @@ void Timer::update() {
   }
 
   // check the time
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   finished = (now >= expiration_date);
 
   // play the sound

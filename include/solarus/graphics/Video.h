@@ -128,12 +128,14 @@ namespace Video {
     Point output_to_quest_coordinates(const Point& output_xy);
     Point renderer_to_quest_coordinates(const Point& renderer_xy);
 
+    void clear_screen_surface();
     void render(const SurfacePtr& quest_surface);
     void finish();
 
     void invalidate(const SurfaceImpl &texture);
     SurfacePtr& get_screen_surface();
 
+    uint64_t get_display_period_ns();
 }  // namespace Video
 
 template <>

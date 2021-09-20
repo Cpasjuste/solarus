@@ -55,7 +55,7 @@ void Hero::VictoryState::start(const State* previous_state) {
   // compute the date when the victory state is considered as finished,
   // but the game may be currently suspended
   uint32_t start_victory_date = is_suspended() ?
-      get_when_suspended() : System::now();
+      get_when_suspended() : System::now_ms();
   end_victory_date = start_victory_date + 1500;
 }
 
@@ -77,7 +77,7 @@ void Hero::VictoryState::update() {
 
   HeroState::update();
 
-  if (!finished && System::now() >= end_victory_date) {
+  if (!finished && System::now_ms() >= end_victory_date) {
     finished = true;
     if (!callback_ref.is_empty()) {
       // The behavior is defined by Lua.
@@ -100,7 +100,7 @@ void Hero::VictoryState::set_suspended(bool suspended) {
   HeroState::set_suspended(suspended);
 
   if (!suspended) {
-    end_victory_date += System::now() - get_when_suspended();
+    end_victory_date += System::now_ms() - get_when_suspended();
   }
 }
 

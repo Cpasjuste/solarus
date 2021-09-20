@@ -106,7 +106,7 @@ MessageCallback( GLenum source,
 
 GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
   sdl_gl_context(sdl_ctx),
-  screen_fbo{0,glm::mat4(1.f)}
+  screen_fbo{0,glm::mat4(1.f),{1,1}}
 {
 
   SOLARUS_ASSERT(!instance,"Creating two GL renderer");
@@ -135,6 +135,8 @@ RendererPtr GlRenderer::create(SDL_Window* window, bool force_software) {
 #ifdef SOLARUS_GL_ES
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES);
 #else
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
 #endif
 
@@ -193,8 +195,8 @@ RendererPtr GlRenderer::create(SDL_Window* window, bool force_software) {
   return RendererPtr(new GlRenderer(sdl_ctx));
 }
 
-SurfaceImplPtr GlRenderer::create_texture(int width, int height) {
-  auto simpl = new GlTexture(width,height);
+SurfaceImplPtr GlRenderer::create_texture(int width, int height, int margin) {
+  auto simpl = new GlTexture(width, height, false, margin);
   clear(*simpl);
   return SurfaceImplPtr(simpl);
 }
@@ -221,7 +223,13 @@ void GlRenderer::set_render_target(GlTexture* target) {
     glBindFramebuffer(GL_FRAMEBUFFER,fbo->id);
     if(fbo->id) { //Render to Texture
       glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,target->get_texture(),0);
+/*<<<<<<< HEAD
+      glViewport(0,0,
+                 fbo->viewport.x,
+                 fbo->viewport.y);
+=======*/
       setup_viewport(target);
+//>>>>>>> dev
 #ifndef SOLARUS_GL_ES
       SOLARUS_ASSERT(
           glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
@@ -239,11 +247,13 @@ void GlRenderer::set_render_target(GlTexture* target) {
 
 void GlRenderer::setup_viewport(GlTexture* target) {
   const auto& viewport = target->get_view().get_viewport();
+  const auto& vp_size = target->fbo->viewport;
 
-  GLint x = viewport.left * target->get_width();
-  GLint y = viewport.top * target->get_height();
-  GLsizei w = viewport.width * target->get_width();
-  GLsizei h = viewport.height * target->get_height();
+  // TODO take margins into account here
+  GLint x = viewport.left * vp_size.x;
+  GLint y = viewport.top * vp_size.y;
+  GLsizei w = viewport.width * vp_size.x;
+  GLsizei h = viewport.height * vp_size.y;
 
   glViewport(x, y, w, h);
 }
@@ -407,21 +417,29 @@ GlRenderer::~GlRenderer() {
  * @param screen desired buffer is the screen buffer?
  * @return a struct with the view matrix integrated
  */
-GlRenderer::Fbo* GlRenderer::get_fbo(int width, int height, bool screen) {
+GlRenderer::Fbo* GlRenderer::get_fbo(int width, int height, bool screen, int margin) {
   if(screen) return &screen_fbo;
-  uint_fast64_t key =  (static_cast<uint_fast64_t>(width) << 32) | static_cast<uint_fast64_t>(height);
-  int rw = key >> 32;
-  int rh = key & 0xFFFFFFFF;
-  SOLARUS_ASSERT(rw == width, "recovered width does not match");
-  SOLARUS_ASSERT(rh == height, "recovered height does not match");
+
+  uint_fast64_t key =  (static_cast<uint_fast64_t>(margin) << 48) |
+      (static_cast<uint_fast64_t>(width) << 24) |
+      static_cast<uint_fast64_t>(height);
+  int rm = key >> 48;
+  int rw = (key >> 24) & 0xFFFFFF;
+  int rh = key & 0xFFFFFF;
+  SOLARUS_ASSERT(rm == margin, "recovered margin does not match");
+  SOLARUS_ASSERT(rw == width,"recovered width does not match");
+  SOLARUS_ASSERT(rh == height,"recovered height does not match");
+
   auto it = fbos.find(key);
   if(it != fbos.end()) {
     return &it->second;
   }
   GLuint fbo;
   glGenFramebuffers(1,&fbo);
-  glm::mat4 view = glm::ortho<float>(0,width,0,height);
-  return &fbos.insert({key,{fbo,view}}).first->second;
+  float half_width = margin+width*0.5f;
+  float half_height = margin+height*0.5f;
+  glm::mat4 view = glm::ortho<float>(-half_width, half_width, -half_height, half_height);
+  return &fbos.insert({key,{fbo,view,glm::ivec2(width+margin*2, height+margin*2)}}).first->second;
 }
 
 /**
@@ -554,13 +572,14 @@ void GlRenderer::set_state(const GlTexture *src, GlShader* shad, GlTexture* dst,
     }
     glUniform1i(
           current_shader->get_uniform_location(Shader::TIME_NAME),
-          System::now());
+          System::now_ms());
   }
 }
 
-const glm::mat4& GlRenderer::dst_mvp(GlTexture* dst) const {
+glm::mat4 GlRenderer::dst_mvp(GlTexture* dst) const {
   if(dst->fbo->id) {
-    return dst->get_view().get_transform();
+    //return dst->get_view().get_transform();
+    return dst->fbo->view * dst->get_view().get_transform();
   } else {
     return screen_fbo.view;
   }

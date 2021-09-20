@@ -58,7 +58,7 @@ SOLARUS_API void print(const std::string& message, std::ostream& out) {
 #ifdef ANDROID
   SDL_Log("%s",message.c_str());
 #else
-  uint32_t simulated_time = System::now();
+  uint32_t simulated_time = System::now_ms();
   out << "[Solarus] [" << simulated_time << "] " << message << std::endl;
 #endif
 }

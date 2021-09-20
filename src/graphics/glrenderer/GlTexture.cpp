@@ -20,23 +20,32 @@
 #include "solarus/graphics/Video.h"
 
 #include <glm/gtx/matrix_transform_2d.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <SDL_render.h>
 
 namespace Solarus {
 
-inline glm::mat3 uv_view(int width, int height) {
-  using namespace glm;
-    return scale(mat3(1.f),vec2(1.f/width,1.f/height));
+inline glm::mat3 uv_view(int width, int height, int margin=0) {
+  // premult NDC to UV with actual pixel to NDC computation, this casts nicely to 3x3 because its only scaling
+  auto mat4 = glm::inverse(glm::ortho<float>(0, 1, 0, 1)) * glm::ortho<float>(-margin, width+margin,-margin, height+margin);
+
+  glm::mat3 result;
+  result[0] = mat4[0];
+  result[1] = mat4[1];
+  result[2] = mat4[3];
+
+  result[2][2] = 1.f;
+  return result;
 }
 
-GlTexture::GlTexture(int width, int height, bool screen_tex)
+GlTexture::GlTexture(int width, int height, bool screen_tex, int margin)
   : SurfaceImpl({width, height}),
     target(true),
-    uv_transform(uv_view(width,height)),
-    fbo(GlRenderer::get().get_fbo(width,height,screen_tex)) {
+    uv_transform(uv_view(width, height, margin)),
+    fbo(GlRenderer::get().get_fbo(width,height,screen_tex, margin)) {
   glGenTextures(1,&tex_id);
   glBindTexture(GL_TEXTURE_2D,tex_id);
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width+margin*2,height+margin*2,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
 
   set_texture_params();
   GlRenderer::get().rebind_texture();

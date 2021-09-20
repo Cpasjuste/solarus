@@ -68,7 +68,7 @@ void TransitionFade::set_delay(uint32_t delay) {
  */
 void TransitionFade::start() {
   alpha = alpha_start;
-  next_frame_date = System::now();
+  next_frame_date = System::now_ms();
 }
 
 /**
@@ -143,7 +143,7 @@ bool TransitionFade::is_finished() const {
 void TransitionFade::notify_suspended(bool suspended) {
 
   if (!suspended) {
-    next_frame_date += System::now() - get_when_suspended();
+    next_frame_date += System::now_ms() - get_when_suspended();
   }
 }
 
@@ -158,7 +158,7 @@ void TransitionFade::update() {
     return;
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
 
   // update the transition effect if needed
   while (now >= next_frame_date && !finished) {

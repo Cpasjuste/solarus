@@ -26,9 +26,12 @@
 #include "solarus/graphics/Video.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/movements/TargetMovement.h"
+#include "solarus/core/CurrentQuest.h"
+#include "solarus/core/QuestProperties.h"
 
 #include <algorithm>
 #include <list>
+#include <iostream>
 
 namespace Solarus {
 
@@ -95,12 +98,12 @@ void TrackingState::update() {
 
   Camera& camera = get_entity<Camera>();
   if (separator_next_scrolling_date == 0) {
-    camera.track_position(tracked_entity->get_center_point() + camera.get_origin());
+    camera.track_position(tracked_entity->get_center_point() + camera.get_origin(), tracked_entity);
   }
   else {
     // The tracked entity is currently traversing a separator.
     // Update camera coordinates.
-    uint32_t now = System::now();
+    uint32_t now = System::now_ms();
     bool finished = false;
     while (separator_next_scrolling_date != 0
         && now >= separator_next_scrolling_date) {
@@ -185,7 +188,7 @@ void TrackingState::traverse_separator(Separator& separator) {
   }
 
   separator.notify_activating(separator_scrolling_direction4);
-  separator_next_scrolling_date = System::now();
+  separator_next_scrolling_date = System::now_ms();
 
   // Move the tracked entity two pixels ahead to avoid to traverse the separator again.
   tracked_entity->set_xy(tracked_entity->get_xy() + 2 * separator_scrolling_delta);
@@ -277,10 +280,10 @@ Camera::Camera(const std::string &name):
   Entity(name, 0, 0, Point(0, 0), Video::get_quest_size()),
   surface(nullptr),
   position_on_screen(0, 0),
-  viewport(0.f, 0.f, 1.f, 1.f) {
+  viewport(0.f, 0.f, 1.f, 1.f),
+  subpixel_offset{0.f,0.f} {
 
   create_surface(get_size());
-  //set_map(map);
   notify_window_size_changed(Video::get_window_size());
 }
 
@@ -307,8 +310,11 @@ bool Camera::can_be_drawn() const {
  * This function should be called when the camera size is changed.
  */
 void Camera::create_surface(const Size& size) {
-
-  surface = Surface::create(size);
+  if(CurrentQuest::get_properties().is_subpixel_camera()) {
+    surface = Surface::create(size, true, margin);
+  } else {
+    surface = Surface::create(size);
+  }
 }
 
 /**
@@ -746,6 +752,16 @@ Rectangle Camera::apply_separators_and_map_bounds(const Rectangle& area) const {
   return apply_map_bounds(apply_separators(area));
 }
 
+
+void Camera::set_subpixel_offset(const glm::vec2 &offset) {
+  subpixel_offset = offset;
+}
+
+Point Camera::get_position_on_screen(Scale px_scale) const {
+  glm::vec2 delta = -subpixel_offset * glm::vec2(px_scale);
+  return get_position_on_screen()*px_scale + Point(std::roundf(delta.x), std::roundf(delta.y));
+}
+
 /**
  * @brief Sets the surface's view to the default one
  */
@@ -797,7 +813,7 @@ void Camera::notify_being_removed() {
  *
  * @param center
  */
-void Camera::track_position(const Point& center) {
+void Camera::track_position(const Point& center, const EntityPtr& tracked_entity) {
     // Normal case: not traversing a separator.
 
     // First compute camera coordinates ignoring map limits and separators.
@@ -806,6 +822,19 @@ void Camera::track_position(const Point& center) {
 
     // Then apply constraints of both separators and map limits.
     set_bounding_box(apply_separators_and_map_bounds(next));
+
+    if(tracked_entity) {
+      glm::vec2 offset = tracked_entity->get_movement() ? tracked_entity->get_movement()->get_subpixel_offset() : glm::vec2{0,0};
+
+      if(get_bounding_box().get_left() != next.get_left()) {
+        offset.x = 0.f;
+      }
+      if(get_bounding_box().get_top() != next.get_top()){
+        offset.y = 0.f;
+      }
+      set_subpixel_offset(offset);
+    }
+
     notify_bounding_box_changed();
 }
 
@@ -813,7 +842,7 @@ void Camera::track_position(const Point& center) {
  * @brief Draw the content of this camera to a surface
  * @param dst_surface a surface
  */
-void Camera::draw(const SurfacePtr& dst_surface) const {
+void Camera::draw(const SurfacePtr& dst_surface, const SurfacePtr &screen_surface) const {
   const auto& surf = get_surface();
   if(transition){
     surf->draw_with_transition(
@@ -822,7 +851,31 @@ void Camera::draw(const SurfacePtr& dst_surface) const {
           get_position_on_screen(),
           *transition);
   } else {
-    surf->draw(dst_surface, get_position_on_screen());
+    if(CurrentQuest::get_properties().is_subpixel_camera()) {
+      const ShaderPtr shader = surf->get_shader();
+      const DrawProxy& proxy = shader ?
+            reinterpret_cast<const DrawProxy&>(*shader) :
+            Video::get_renderer().default_terminal();
+
+      //context.screen_surface->clear();
+      //auto camera_size = camera_surface->get_size();
+      auto scale = Video::get_output_size_no_bars()/Video::get_quest_size();
+      auto pixel_scale = Video::get_output_size_no_bars()/surf->get_size();
+
+      proxy.draw(
+            *screen_surface,
+            *surf,
+            DrawInfos(
+              Rectangle(Point(-Camera::margin,-Camera::margin), surf->get_size() + Size(Camera::margin*2, Camera::margin*2)),
+              get_position_on_screen(pixel_scale) - Point(Camera::margin, Camera::margin)*pixel_scale,
+              Point(),
+              BlendMode::BLEND,
+              255,0,
+              scale,
+              null_proxy));
+    } else {
+      surf->draw(dst_surface, get_position_on_screen());
+    }
   }
 }
 

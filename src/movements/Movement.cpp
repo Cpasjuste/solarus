@@ -221,7 +221,7 @@ void Movement::set_xy(const Point& xy) {
   this->xy = xy;
 
   notify_position_changed();
-  last_move_date = System::now();
+  last_move_date = System::now_ns();
 }
 
 /**
@@ -324,6 +324,14 @@ void Movement::notify_movement_finished() {
 }
 
 /**
+ * @brief get offset from current integer position to "should-be" subpixel position
+ * @return 2D offset in pixels of movement
+ */
+glm::vec2 Movement::get_subpixel_offset() const {
+  return {0.f,0.f};
+}
+
+/**
  * \brief Returns whether the movement is stopped.
  * \return true if the object is stopped, false otherwise
  */
@@ -383,7 +391,7 @@ void Movement::set_suspended(bool suspended) {
   if (suspended != this->suspended) {
     this->suspended = suspended;
 
-    uint32_t now = System::now();
+    uint64_t now = System::now_ns();
 
     if (suspended) {
       // the movement is being suspended
@@ -422,7 +430,7 @@ void Movement::set_ignore_suspend(bool ignore_suspend) {
  *
  * \return the date when this movement started to be suspended
  */
-uint32_t Movement::get_when_suspended() const {
+uint64_t Movement::get_when_suspended_ns() const {
   return when_suspended;
 }
 

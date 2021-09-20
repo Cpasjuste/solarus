@@ -57,7 +57,7 @@ void Surface::empty_cache() {
  * \param width The width in pixels.
  * \param height The height in pixels.
  */
-Surface::Surface(int width, int height, bool premultiplied):
+Surface::Surface(int width, int height, bool premultiplied, int margin):
   Drawable(),
   internal_surface(nullptr)
 {
@@ -65,7 +65,7 @@ Surface::Surface(int width, int height, bool premultiplied):
   SOLARUS_ASSERT(width > 0 && height > 0,
       "Attempt to create a surface with an empty size");
 
-  internal_surface = Video::get_renderer().create_texture(width,height);
+  internal_surface = Video::get_renderer().create_texture(width,height, margin);
   internal_surface->set_premultiplied(premultiplied);
 }
 
@@ -121,8 +121,8 @@ SurfacePtr Surface::create(int width, int height, bool premultiplied) {
  * \param size The size in pixels.
  * \return The created surface.
  */
-SurfacePtr Surface::create(const Size& size, bool premultiplied) {
-  SurfacePtr surface = std::make_shared<Surface>(size.width, size.height, premultiplied);
+SurfacePtr Surface::create(const Size& size, bool premultiplied, int margin) {
+  SurfacePtr surface = std::make_shared<Surface>(size.width, size.height, premultiplied, margin);
   return surface;
 }
 

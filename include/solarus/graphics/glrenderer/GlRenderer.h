@@ -51,11 +51,12 @@ public:
   struct Fbo{
     GLuint id;
     glm::mat4 view;
+    glm::ivec2 viewport;
   };
 
   GlRenderer(SDL_GLContext ctx);
   static RendererPtr create(SDL_Window* window, bool force_software);
-  SurfaceImplPtr create_texture(int width, int height) override;
+  SurfaceImplPtr create_texture(int width, int height, int margin) override;
   SurfaceImplPtr create_texture(SDL_Surface_UniquePtr &&surface) override;
   SurfaceImplPtr create_window_surface(SDL_Window* w, int width, int height) override;
   ShaderPtr create_shader(const std::string& shader_id) override;
@@ -106,12 +107,13 @@ private:
   void add_sprite(const DrawInfos& infos);
   size_t buffered_indices() const;
   size_t buffered_vertices() const;
-  Fbo* get_fbo(int width, int height, bool screen = false);
+
+  Fbo* get_fbo(int width, int height, bool screen = false, int margin = 0);
   void setup_viewport(GlTexture* target);
 
   void shader_about_to_change(GlShader* shader);
 
-  const glm::mat4& dst_mvp(GlTexture* dst) const;
+  glm::mat4 dst_mvp(GlTexture* dst) const;
 
   static GlRenderer* instance;
   SDL_GLContext sdl_gl_context;
@@ -134,7 +136,7 @@ private:
 
   std::vector<Vertex> vertex_buffer;
 
-  Fbo screen_fbo = {0,glm::mat4(1.f)};
+  Fbo screen_fbo = {0,glm::mat4(1.f),{1,1}};
   std::unordered_map<uint_fast64_t,Fbo> fbos;
   Rectangle window_viewport;
 

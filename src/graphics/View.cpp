@@ -20,19 +20,15 @@
 
 namespace Solarus {
 
-View::View(const glm::vec2& size) : View(size/2.f, size) {
-
-}
-
 View::View(const Rectangle& rect)
   : viewport(0.f,0.f,1.f,1.f)
 {
   reset(rect);
 }
 
-View::View(const glm::vec2& center, const glm::vec2& size) :
+View::View(const glm::vec2& center) :
   center(center),
-  size(size),
+  scale(1.f),
   rotation(0),
   viewport(0.f,0.f,1.f,1.f)
 {
@@ -43,21 +39,12 @@ glm::vec2 View::get_center() const {
   return center;
 }
 
-glm::vec2 View::get_size() const {
-  return size;
-}
-
 float View::get_rotation() const {
   return rotation;
 }
 
 void View::set_center(const glm::vec2& center) {
   this->center = center;
-  invalidate();
-}
-
-void View::set_size(const glm::vec2& size) {
-  this->size = size;
   invalidate();
 }
 
@@ -72,7 +59,7 @@ void View::move(const glm::vec2& delta) {
 }
 
 void View::zoom(const glm::vec2& factor) {
-  size /= factor;
+  scale *= factor;
   invalidate();
 }
 
@@ -86,13 +73,16 @@ const glm::mat4& View::get_transform() const {
     auto view =
             glm::translate(
               glm::rotate(
-                glm::mat4(1.f),
-                  rotation,
-                  glm::vec3(0.f,0.f,-1.f)
+                glm::scale(
+                  glm::mat4(1.f),
+                  glm::vec3(scale, 1.f)
+                ),
+                rotation,
+                glm::vec3(0.f,0.f,-1.f)
                 ),
               glm::vec3(-center, 0.f)
             );
-    transform = glm::ortho<float>(-size.x*0.5f, size.x*0.5f, -size.y*0.5f, size.y*0.5f)*view;
+    transform = view;
     transform_dirty = false;
   }
   return transform;
@@ -121,8 +111,8 @@ const FRectangle& View::get_viewport() const {
 }
 
 void View::reset(const Rectangle &rect) {
-  center = rect.get_center();
-  size = rect.get_size();
+  center = glm::vec2{rect.get_left()+rect.get_right(), rect.get_top()+rect.get_bottom()}*0.5f;
+  scale = glm::vec2(1.f);
   rotation = 0.f;
   invalidate();
 }

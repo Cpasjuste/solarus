@@ -35,16 +35,15 @@ namespace Solarus {
 class View
 {
 public:
-  View(const glm::vec2& size);
-  View(const Rectangle& rect);
-  View(const glm::vec2& center, const glm::vec2& size);
+  View(const glm::vec2& center);
+  View(const Rectangle& rectangle);
 
   glm::vec2 get_center() const;
-  glm::vec2 get_size() const;
+  //glm::vec2 get_size() const;
   float get_rotation() const;
 
   void set_center(const glm::vec2& center);
-  void set_size(const glm::vec2& size);
+  //void set_size(const glm::vec2& size);
   void set_rotation(float rotation);
 
   void move(const glm::vec2& delta);
@@ -65,8 +64,9 @@ private:
     transform_dirty = true;
     inv_transform_dirty = true;
   }
-  glm::vec2 center;                         /**< Center at which the view looks */
-  glm::vec2 size;                           /**< Size the view covers */
+  glm::vec2 center = glm::vec2(0.f);        /**< Center at which the view looks */
+  //glm::vec2 size;                         /**< Size the view covers */
+  glm::vec2 scale = glm::vec2(1.f);          /**< Scaling of the view */
   float rotation = 0;                       /**< Rotation of the view around the center */
   FRectangle viewport;                      /**< Viewport of this view, in fraction of the */
   mutable glm::mat4 transform;              /**< Cached transform from the viewed space to target space */

@@ -44,8 +44,8 @@ class StraightMovement: public Movement {
     double get_x_speed() const;
     double get_y_speed() const;
     double get_speed() const;
-    void set_dim_speed(uint32_t& delay,
-                       uint32_t& next_move_date,
+    void set_dim_speed(uint64_t&delay,
+                       uint64_t&next_move_date,
                        double &current_speed,
                        int& move,
                        double target_speed,
@@ -67,11 +67,13 @@ class StraightMovement: public Movement {
     void set_finished();
     virtual void stop() override;
 
+    glm::vec2 get_subpixel_offset() const override;
+
     const std::string& get_lua_type_name() const override;
 
   protected:
 
-    void set_next_move_date(uint32_t& current_next_move_date, uint32_t next_move_date);
+    void set_next_move_date(uint64_t& current_next_move_date, uint64_t next_move_date);
 
     void update_smooth_xy();
     void update_smooth_x();
@@ -92,13 +94,13 @@ class StraightMovement: public Movement {
                                   * positive value: moving downwards
                                   * negative value: moving upwards */
 
-    uint32_t next_move_date_x;   /**< Date of the next x move in ticks. */
-    uint32_t next_move_date_y;   /**< Date of the next y move in ticks. */
+    uint64_t next_move_date_x;   /**< Date of the next x move in ticks. */
+    uint64_t next_move_date_y;   /**< Date of the next y move in ticks. */
 
     // the following fields are redundant and can be computed from x_speed and y_speed
-    uint32_t x_delay;            /**< Delay in ticks between an x move of 1 pixel.
+    uint64_t x_delay;            /**< Delay in ticks between an x move of 1 pixel.
                                   * x_delay = 200 / |x_speed| */
-    uint32_t y_delay;            /**< Delay in ticks between an y move of 1 pixel.
+    uint64_t y_delay;            /**< Delay in ticks between an y move of 1 pixel.
                                   * y_delay = 200 / |y_speed| */
     int x_move;                  /**< Number of pixels of the next x move : 0, 1 or -1. */
     int y_move;                  /**< Number of pixels of the next y move : 0, 1 or -1. */
@@ -113,6 +115,8 @@ class StraightMovement: public Movement {
     bool smooth;                 /**< Makes the movement adjust its trajectory
                                   * when an obstacle is close */
 
+    bool x_blocked;
+    bool y_blocked;
 };
 
 }

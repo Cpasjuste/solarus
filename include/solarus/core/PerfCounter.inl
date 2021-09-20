@@ -21,7 +21,7 @@
 namespace Solarus {
 
 inline void PerfCounter::update(const std::string& name) {
-  uint32_t current_time = System::get_real_time();
+  uint32_t current_time = System::get_real_time_ms();
   ++count[name];
   if (current_time - last_time >= interval) {
     last_time = current_time;

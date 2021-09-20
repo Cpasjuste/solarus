@@ -275,7 +275,7 @@ void Entity::State::set_suspended(bool suspended) {
 
     // remember the date if the state is being suspended
     if (suspended) {
-      when_suspended = System::now();
+      when_suspended = System::now_ms();
     }
   }
 }

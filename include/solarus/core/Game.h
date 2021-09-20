@@ -82,7 +82,7 @@ class SOLARUS_API Game {
     bool notify_input(const InputEvent& event);
     void update();
 
-    void draw(const SurfacePtr& dst_surface);
+    void draw(const SurfacePtr& dst_surface, const SurfacePtr& screen_surface);
     void notify_window_size_changed(const Size& size);
 
     // game controls

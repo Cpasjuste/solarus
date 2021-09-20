@@ -5,7 +5,7 @@
 namespace Solarus {
 
 SurfaceImpl::SurfaceImpl(const Size &size) :
-  size(size), view(size)
+  size(size), view(Rectangle(size))
 {
 
 }

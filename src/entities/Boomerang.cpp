@@ -87,7 +87,7 @@ Boomerang::Boomerang(
   movement->set_max_distance(max_distance);
   set_movement(movement);
 
-  next_sound_date = System::now();
+  next_sound_date = System::now_ms();
 }
 
 /**
@@ -253,7 +253,7 @@ void Boomerang::update() {
     return;
   }
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   if (now >= next_sound_date) {
     Sound::play("boomerang", get_game().get_resource_provider());
     next_sound_date = now + 150;

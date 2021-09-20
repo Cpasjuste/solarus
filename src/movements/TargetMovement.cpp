@@ -70,7 +70,7 @@ TargetMovement::TargetMovement(
   sign_x(0),
   sign_y(0),
   moving_speed(moving_speed),
-  next_recomputation_date(System::now()),
+  next_recomputation_date(System::now_ms()),
   finished(false),
   recomputing_movement(false) {
 }
@@ -115,7 +115,7 @@ void TargetMovement::set_target(
   }
 
   recompute_movement();
-  next_recomputation_date = System::now() + recomputation_delay;
+  next_recomputation_date = System::now_ms() + recomputation_delay;
 }
 
 /**
@@ -144,7 +144,7 @@ void TargetMovement::update() {
     set_target(nullptr, target);
   }
 
-  if (System::now() >= next_recomputation_date) {
+  if (System::now_ms() >= next_recomputation_date) {
     recompute_movement();
     next_recomputation_date += recomputation_delay;
   }

@@ -357,6 +357,15 @@ void hide_window() {
 }
 
 /**
+ * @brief Clear the clean surface if any
+ */
+void clear_screen_surface() {
+  if(!context.disable_window) {
+    context.screen_surface->clear();
+  }
+}
+
+/**
  * \brief Draws the quest surface on the screen with the current video mode.
  * \param quest_surface The quest surface to render on the screen.
  */
@@ -408,7 +417,7 @@ void render(const SurfacePtr& quest_surface) {
         static_cast<const DrawProxy&>(*context.current_shader) :
         context.renderer->default_terminal();
 
-  context.screen_surface->clear();
+  //context.screen_surface->clear();
   proxy.draw(
         *context.screen_surface,
         *surface_to_render,
@@ -1021,6 +1030,15 @@ Point renderer_to_quest_coordinates(
     const Point& renderer_xy
     ) {
   return renderer_xy; //TODO check if this is true now
+}
+
+uint64_t get_display_period_ns() {
+  SDL_DisplayMode mode;
+  SDL_GetWindowDisplayMode(context.main_window, &mode);
+  if(mode.refresh_rate == 0) {
+    return 1000000000 / 60;
+  }
+  return 1000000000 / mode.refresh_rate;
 }
 
 }  // namespace Video

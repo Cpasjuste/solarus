@@ -538,8 +538,7 @@ void Game::teleportation_change_map(CameraTeleportation &tp) {
  * \brief Draws the game.
  * \param dst_surface The surface where the game will be drawn.
  */
-void Game::draw(const SurfacePtr& dst_surface) {
-
+void Game::draw(const SurfacePtr& dst_surface, const SurfacePtr& screen_surface) {
   SOL_PFUN(profiler::colors::Green);
   /** Draw maps to their camera */
   for(const MapPtr& current_map : current_maps) {
@@ -548,7 +547,7 @@ void Game::draw(const SurfacePtr& dst_surface) {
 
   //Draw cameras to screen
   for(const CameraPtr& camera : cameras) {
-    camera->draw(dst_surface);
+    camera->draw(dst_surface, screen_surface);
   }
 
   if(current_maps.size() > 0) {

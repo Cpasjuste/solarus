@@ -499,7 +499,7 @@ void Door::set_suspended(bool suspended) {
   Entity::set_suspended(suspended);
 
   if (!suspended && next_hint_sound_date > 0) {
-    next_hint_sound_date += System::now() - get_when_suspended();
+    next_hint_sound_date += System::now_ms() - get_when_suspended();
   }
 }
 
@@ -521,9 +521,9 @@ void Door::update() {
         return Geometry::get_distance(get_center_point(), hero->get_center_point()) < 40  && hero->get_equipment().has_ability(Ability::DETECT_WEAK_WALLS);
       })
       && !is_suspended()
-      && System::now() >= next_hint_sound_date) {
+      && System::now_ms() >= next_hint_sound_date) {
     Sound::play("cane", get_game().get_resource_provider());
-    next_hint_sound_date = System::now() + 500;
+    next_hint_sound_date = System::now_ms() + 500;
   }
 
   const SpritePtr& sprite = get_sprite();

@@ -318,7 +318,7 @@ void CustomState::update_jumper() {
     current_jumper = nullptr;
     jumper_start_date = 0;
   }
-  else if (System::now() >= jumper_start_date) {
+  else if (System::now_ms() >= jumper_start_date) {
     // Time to make the jump and everything is okay.
     hero.start_jumping(
         jump_direction8, current_jumper->get_jump_length(), true, true);
@@ -334,10 +334,10 @@ void CustomState::set_suspended(bool suspended) {
 
   if (!suspended) {
     if (jumper_start_date != 0) {
-      jumper_start_date += System::now() - get_when_suspended();
+      jumper_start_date += System::now_ms() - get_when_suspended();
     }
     if (start_pushing_date != 0) {
-      start_pushing_date += System::now() - get_when_suspended();
+      start_pushing_date += System::now_ms() - get_when_suspended();
     }
   }
 
@@ -1533,7 +1533,7 @@ void CustomState::notify_obstacle_reached() {
     if (hero.is_facing_point_on_obstacle() &&   // He is really facing an obstacle.
         equipment.has_ability(Ability::PUSH)    // He is able to push.
     ) {
-      uint32_t now = System::now();
+      uint32_t now = System::now_ms();
       if (pushing_direction4 == -1) {
         // Start state "pushing" after a delay.
         start_pushing_date = now + get_pushing_delay();
@@ -1618,7 +1618,7 @@ void CustomState::notify_jumper_activated(Jumper& jumper) {
 
   // Add a small delay before jumping.
   current_jumper = std::static_pointer_cast<Jumper>(jumper.shared_from_this());
-  jumper_start_date = System::now() + get_jumper_delay();
+  jumper_start_date = System::now_ms() + get_jumper_delay();
   update_jumper();
 }
 

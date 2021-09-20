@@ -153,9 +153,9 @@ void Sound::update_device_connection() {
     if (!is_connected) {
       Logger::info("Lost connection to audio device");
     } else {
-      if (System::now() >= next_device_detection_date) {
+      if (System::now_ms() >= next_device_detection_date) {
         // Check if this device is still the default one.
-        next_device_detection_date = System::now() + 1000;
+        next_device_detection_date = System::now_ms() + 1000;
 
         const ALchar* current_device_name = alcGetString(device, SOLARUS_OPENAL_DEVICE_SPECIFIER);
         const ALchar* default_device_name = alcGetString(nullptr, SOLARUS_OPENAL_DEVICE_SPECIFIER);
@@ -178,13 +178,13 @@ void Sound::update_device_connection() {
       context = nullptr;
       alcCloseDevice(device);
       device = nullptr;
-      next_device_detection_date = System::now();
+      next_device_detection_date = System::now_ms();
       Music::notify_device_disconnected_all();
     }
   }
 
   if (device == nullptr) {
-    if (System::now() >= next_device_detection_date) {
+    if (System::now_ms() >= next_device_detection_date) {
       // Try to connect or reconnect to an audio device.
       device = alcOpenDevice(nullptr);
       if (device == nullptr) {
@@ -209,7 +209,7 @@ void Sound::update_device_connection() {
       }
       if (device == nullptr) {
         // The attempt failed: try again later.
-        next_device_detection_date = System::now() + 1000;
+        next_device_detection_date = System::now_ms() + 1000;
       }
     }
   }

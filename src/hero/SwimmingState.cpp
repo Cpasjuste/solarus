@@ -75,7 +75,7 @@ void Hero::SwimmingState::update() {
   if (hero.get_ground_below() != Ground::DEEP_WATER) {
     hero.set_state(std::make_shared<FreeState>(hero));
   }
-  else if (fast_swimming && System::now() >= end_fast_swim_date) {
+  else if (fast_swimming && System::now_ms() >= end_fast_swim_date) {
     fast_swimming = false;
     hero.set_walking_speed(get_slow_swimming_speed());
 
@@ -97,7 +97,7 @@ void Hero::SwimmingState::set_suspended(bool suspended) {
   PlayerMovementState::set_suspended(suspended);
 
   if (!is_suspended() && fast_swimming) {
-    end_fast_swim_date += System::now() - get_when_suspended();
+    end_fast_swim_date += System::now_ms() - get_when_suspended();
   }
 }
 
@@ -160,7 +160,7 @@ void Hero::SwimmingState::try_swim_faster() {
     get_entity().set_walking_speed(get_fast_swimming_speed());
     get_sprites().set_animation_swimming_fast();
     Sound::play("swim", get_game().get_resource_provider());
-    end_fast_swim_date = System::now() + 600;
+    end_fast_swim_date = System::now_ms() + 600;
   }
 }
 

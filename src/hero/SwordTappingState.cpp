@@ -51,7 +51,7 @@ void Hero::SwordTappingState::start(const State* previous_state) {
   HeroState::start(previous_state);
 
   get_sprites().set_animation_sword_tapping();
-  next_sound_date = System::now() + 100;
+  next_sound_date = System::now_ms() + 100;
 }
 
 /**
@@ -99,7 +99,7 @@ void Hero::SwordTappingState::update() {
     else {
 
       // play the sound every 100 ms
-      uint32_t now = System::now();
+      uint32_t now = System::now_ms();
       if (get_sprites().get_current_frame() == 3 && now >= next_sound_date) {
 
         Entity* facing_entity = hero.get_facing_entity();
@@ -130,7 +130,7 @@ void Hero::SwordTappingState::set_suspended(bool suspended) {
   HeroState::set_suspended(suspended);
 
   if (!suspended) {
-    next_sound_date += System::now() - get_when_suspended();
+    next_sound_date += System::now_ms() - get_when_suspended();
   }
 }
 

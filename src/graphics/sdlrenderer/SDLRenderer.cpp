@@ -92,7 +92,7 @@ RendererPtr SDLRenderer::create(SDL_Window* window, bool force_software) {
   }
 }
 
-SurfaceImplPtr SDLRenderer::create_texture(int width, int height) {
+SurfaceImplPtr SDLRenderer::create_texture(int width, int height, int /*margin*/) {
   auto simpl = new SDLSurfaceImpl(renderer,width,height);
   clear(*simpl);
   return SurfaceImplPtr(simpl);

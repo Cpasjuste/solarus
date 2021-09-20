@@ -238,7 +238,7 @@ int LuaContext::main_api_exit(lua_State* l) {
 int LuaContext::main_api_get_elapsed_time(lua_State* l) {
 
   return state_boundary_handle(l, [&] {
-    uint32_t elapsed_time = System::now();
+    uint32_t elapsed_time = System::now_ms();
 
     lua_pushinteger(l, elapsed_time);
     return 1;

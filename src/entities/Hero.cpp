@@ -173,7 +173,7 @@ void Hero::set_suspended(bool suspended) {
 
   if (!suspended) {
 
-    uint32_t diff = System::now() - get_when_suspended();
+    uint32_t diff = System::now_ms() - get_when_suspended();
     next_ground_date += diff;
 
     if (end_invincible_date != 0) {
@@ -292,7 +292,7 @@ void Hero::update_commands_effects() {
 void Hero::update_ground_effects() {
 
   // see if it's time to do something (depending on the ground)
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   if (now >= next_ground_date) {
 
     if (is_ground_visible() && get_movement() != nullptr) {
@@ -352,7 +352,7 @@ void Hero::update_ground_effects() {
  */
 void Hero::update_ice() {
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   int wanted_movement_direction8 = get_wanted_movement_direction8();
   if (wanted_movement_direction8 == -1) {
     // The player wants to stop.
@@ -2340,7 +2340,7 @@ void Hero::set_invincible(bool invincible, uint32_t duration) {
   this->invincible = invincible;
   this->end_invincible_date = 0;
   if (invincible) {
-    this->end_invincible_date = (duration == 0) ? 0 : System::now() + duration;
+    this->end_invincible_date = (duration == 0) ? 0 : System::now_ms() + duration;
   }
 }
 
@@ -2351,7 +2351,7 @@ void Hero::update_invincibility() {
 
   if (is_invincible() &&
       end_invincible_date != 0 &&
-      System::now() >= end_invincible_date) {
+      System::now_ms() >= end_invincible_date) {
     set_invincible(false, 0);
   }
 }
@@ -2416,7 +2416,7 @@ void Hero::start_grass() {
   // Display a special sprite below the hero.
   sprites->create_ground(Ground::GRASS);
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   next_ground_date = std::max(next_ground_date, now);
 
   set_walking_speed(normal_walking_speed * 4 / 5);
@@ -2431,7 +2431,7 @@ void Hero::start_shallow_water() {
   // Display a special sprite below the hero.
   sprites->create_ground(Ground::SHALLOW_WATER);
 
-  uint32_t now = System::now();
+  uint32_t now = System::now_ms();
   next_ground_date = std::max(next_ground_date, now);
 
   set_walking_speed(normal_walking_speed * 4 / 5);
@@ -2493,7 +2493,7 @@ void Hero::start_hole() {
   else {
     // otherwise, push the hero towards the hole
 
-    next_ground_date = System::now();
+    next_ground_date = System::now_ms();
 
     // Don't calculate the attraction direction based on the wanted movement
     // because the wanted movement may be different from the real one.
@@ -2529,8 +2529,8 @@ void Hero::start_hole() {
  */
 void Hero::start_ice() {
 
-  next_ground_date = System::now();
-  next_ice_date = System::now();
+  next_ground_date = System::now_ms();
+  next_ice_date = System::now_ms();
 
   ice_movement_direction8 = get_wanted_movement_direction8();
   if (ice_movement_direction8 == -1) {

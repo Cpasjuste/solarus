@@ -19,6 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/core/Rectangle.h"
+#include "solarus/core/Scale.h"
 #include "solarus/core/FRectangle.h"
 #include "solarus/entities/Entity.h"
 #include "solarus/entities/EntityPtr.h"
@@ -43,7 +44,6 @@ class TargetMovement;
  * or be controlled manually by a script.
  */
 class Camera : public Entity {
-
   public:
 
     enum class SurfaceMode {
@@ -63,12 +63,19 @@ class Camera : public Entity {
     void notify_size_changed() override;
     void notify_being_removed() override;
     bool is_separator_obstacle(Separator& separator, const Rectangle& candidate_position) override;
+    static constexpr int margin = 1;
+
+    void set_subpixel_offset(const glm::vec2& offset);
+    Point get_position_on_screen(Scale px_scale) const;
+
 
     const SurfacePtr& get_surface() const;
 
     Point get_position_on_screen() const;
     void set_position_on_screen(const Point& position_on_screen);
     Point get_position_to_track(const Point& tracked_xy) const;
+
+
 
     void start_tracking(const EntityPtr& entity);
     void start_manual();
@@ -85,7 +92,6 @@ class Camera : public Entity {
     void apply_view();
 
     void set_surface_mode();
-
     void notify_window_size_changed(const Size& new_size);
 
     Rectangle get_viewport_rectangle() const;
@@ -102,9 +108,9 @@ class Camera : public Entity {
     void set_transition(std::unique_ptr<Transition> transition);
     std::unique_ptr<Transition>& get_transition();
 
-    void draw(const SurfacePtr& dst_surface) const;
+    void draw(const SurfacePtr& dst_surface, const SurfacePtr& screen_surface) const;
 
-    void track_position(const Point& center);
+    void track_position(const Point& center, const EntityPtr &entity = nullptr);
 private:
     void create_surface(const Size& size);
     void update_view(const Size& viewport_size);
@@ -119,6 +125,7 @@ private:
     float rotation = 0.f;         /**< Rotation of this camera */
     glm::vec2 position_offset
     = {0.f,0.f};    /**< Small offset in position to compensate for discretization after zoom */
+    glm::vec2 subpixel_offset;       /**< Speed of subpixel move */
 };
 
 }

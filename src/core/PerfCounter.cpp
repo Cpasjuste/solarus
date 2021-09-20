@@ -18,7 +18,7 @@
 
 namespace Solarus {
 
-uint32_t PerfCounter::last_time = System::get_real_time();
+uint32_t PerfCounter::last_time = System::get_real_time_ms();
 std::map<std::string,uint32_t> PerfCounter::count;
 
 }  // namespace Solarus
