@@ -21,6 +21,7 @@ list(APPEND LUA_TEST_MAPS
   "multiplayer/cameras"
   "multiplayer/friendly_fire"
   "multiplayer/heroes_game_over"
+  "event_order"
   "bugs/486_diagonal_dynamic_tiles"
   "bugs/496_stream_speed_0"
   "bugs/526_get_entities_same_region"
