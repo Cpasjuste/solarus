@@ -522,16 +522,21 @@ void Game::teleportation_change_map(CameraTeleportation &tp) {
       }
   }
 
-  notify_map_changed(*next_map, *camera);
+
   //All entities should be there, start the map if necessary
   if(!next_map->is_started()) {
     SOLARUS_ASSERT(next_map->is_loaded(), "This map is not loaded");
     next_map->start(tp.destination_name);
   }
 
+  //Only notify map change if maps are different
+  if(next_map != current_map) {
+     notify_map_changed(*next_map, *camera);
+  }
+
   if(tp.opt_hero) {
       on_hero_map_change(tp.opt_hero, tp);
-  } //Call the on_map_changed after map start
+  }
 }
 
 /**
@@ -805,7 +810,7 @@ void Game::teleport_camera(const CameraPtr& camera,
   // Add the teleportation details to the list of current teleportations
   cameras_teleportations.emplace_back(std::move(ct));
 
-  if(!camera->is_on_map()) {
+  if(!camera->is_on_map() && started) {
     //Fast forward to opening transition
     teleportation_change_map(cameras_teleportations.back());
   }
