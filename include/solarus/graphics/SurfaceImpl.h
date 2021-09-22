@@ -23,6 +23,7 @@
 
 #include <SDL_render.h>
 #include <memory>
+#include <string>
 
 namespace Solarus {
 

@@ -129,6 +129,9 @@ void create_window(const Arguments& args) {
   }
 
   std::string title = std::string("Solarus ") + SOLARUS_VERSION;
+#ifdef SOLARUS_GL_ES
+  SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
+#endif // SOLARUS_GL_ES
   context.main_window = SDL_CreateWindow(
         title.c_str(),
         SDL_WINDOWPOS_CENTERED,

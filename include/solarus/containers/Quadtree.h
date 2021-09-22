@@ -31,6 +31,9 @@
 #include <vector>
 #include <optional>
 
+#include <random>
+#include <iterator>
+
 namespace Solarus {
 
 class Color;
@@ -124,7 +127,7 @@ class Quadtree {
         int element_node;    /**< id of the element being inserted */
     };
 
-    using ColorGenerator = std::uniform_int_distribution<uint8_t>;
+    using ColorGenerator = std::uniform_int_distribution<uint32_t>;
 
     /**
      * @brief Struct holding node geometry and links to element and other nodes
