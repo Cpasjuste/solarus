@@ -174,6 +174,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1533_savegame_write_escape"
   "bugs/1534_unicode_filenames"
   "bugs/1547_teletransporter_on_activated_twice/map_1"
+  "bugs/1550_use_bow"
 )
 
 # Test that should succeed when there are non-fatal errors

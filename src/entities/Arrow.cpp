@@ -62,7 +62,6 @@ Arrow::Arrow(const Hero& hero):
   }
 
   set_xy(hero.get_center_point());
-  notify_position_changed();
 
   std::string path = " ";
   path[0] = '0' + (direction * 2);
