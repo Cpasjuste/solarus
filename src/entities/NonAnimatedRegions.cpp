@@ -41,9 +41,9 @@ NonAnimatedRegions::NonAnimatedRegions(Map& map, int layer):
  */
 void NonAnimatedRegions::add_tile(const TileInfo& tile) {
 
-  SOLARUS_ASSERT(are_squares_animated.empty(),
+  SOLARUS_REQUIRE(are_squares_animated.empty(),
       "Tile regions are already built");
-  SOLARUS_ASSERT(tile.layer == layer, "Wrong layer for add tile");
+  SOLARUS_REQUIRE(tile.layer == layer, "Wrong layer for add tile");
 
   tiles.push_back(tile);
 }
@@ -57,7 +57,7 @@ void NonAnimatedRegions::add_tile(const TileInfo& tile) {
  */
 void NonAnimatedRegions::build(std::vector<TileInfo>& rejected_tiles) {
 
-  SOLARUS_ASSERT(are_squares_animated.empty(),
+  SOLARUS_REQUIRE(are_squares_animated.empty(),
       "Tile regions are already built");
 
   const int map_width8 = map.get_width8();
@@ -252,11 +252,11 @@ void NonAnimatedRegions::draw_on_map(const Camera &camera) {
  */
 void NonAnimatedRegions::build_cell(int cell_index) {
 
-  SOLARUS_ASSERT(
+  SOLARUS_REQUIRE(
       cell_index >= 0 && (size_t) cell_index < non_animated_tiles.get_num_cells(),
       "Wrong cell index"
   );
-  SOLARUS_ASSERT(
+  SOLARUS_REQUIRE(
       optimized_tiles_surfaces.find(cell_index) == optimized_tiles_surfaces.end(),
       "This cell is already built"
   );
@@ -286,7 +286,7 @@ void NonAnimatedRegions::build_cell(int cell_index) {
     );
 
     const Tileset* tileset = tile.tileset != nullptr ? tile.tileset : &map.get_tileset();
-    SOLARUS_ASSERT(tileset != nullptr, "Missing tileset");
+    SOLARUS_REQUIRE(tileset != nullptr, "Missing tileset");
     tile.pattern->fill_surface(
         cell_surface,
         dst_position,

@@ -29,7 +29,7 @@ ControlsDispatcher::ControlsDispatcher(MainLoop& main_loop) :
 }
 
 ControlsDispatcher& ControlsDispatcher::get() {
-  SOLARUS_ASSERT(instance, "No current CommandsDispatcher");
+  SOLARUS_REQUIRE(instance, "No current CommandsDispatcher");
   return *instance;
 }
 

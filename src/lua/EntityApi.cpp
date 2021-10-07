@@ -3633,10 +3633,10 @@ int LuaContext::l_treasure_brandish_finished(lua_State* l) {
 
     // Check upvalues. Any error here would be the fault of the C++ side
     // because the user cannot call this function.
-    SOLARUS_ASSERT(item.get_game() != nullptr,
+    SOLARUS_REQUIRE(item.get_game() != nullptr,
         "Equipment item without game");
 
-    SOLARUS_ASSERT(lua_isnil(l, -1) || lua_isfunction(l, -1),
+    SOLARUS_REQUIRE(lua_isnil(l, -1) || lua_isfunction(l, -1),
         "Expected function or nil for treasure callback");
 
     Game& game = *item.get_game();
@@ -6918,13 +6918,13 @@ bool LuaContext::do_traversable_test_function(
     ExportableToLua& userdata,
     Entity& other_entity) {
 
-  SOLARUS_ASSERT(!traversable_test_ref.is_empty(),
+  SOLARUS_REQUIRE(!traversable_test_ref.is_empty(),
       "Missing traversable test function ref"
   );
 
   // Call the test function.
   push_ref(current_l, traversable_test_ref);
-  SOLARUS_ASSERT(lua_isfunction(current_l, -1),
+  SOLARUS_REQUIRE(lua_isfunction(current_l, -1),
       "Traversable test is not a function"
   );
   push_userdata(current_l, userdata);
@@ -6953,13 +6953,13 @@ bool LuaContext::do_custom_entity_collision_test_function(
     CustomEntity& custom_entity,
     Entity& other_entity
 ) {
-  SOLARUS_ASSERT(!collision_test_ref.is_empty(),
+  SOLARUS_REQUIRE(!collision_test_ref.is_empty(),
       "Missing collision test function"
   );
 
   // Call the test function.
   push_ref(current_l, collision_test_ref);
-  SOLARUS_ASSERT(lua_isfunction(current_l, -1),
+  SOLARUS_REQUIRE(lua_isfunction(current_l, -1),
       "Collision test is not a function"
   );
   push_custom_entity(current_l, custom_entity);
@@ -6987,11 +6987,11 @@ void LuaContext::do_custom_entity_collision_callback(
     CustomEntity& custom_entity,
     Entity& other_entity
 ) {
-  SOLARUS_ASSERT(!callback_ref.is_empty(),
+  SOLARUS_REQUIRE(!callback_ref.is_empty(),
       "Missing collision callback");
 
   push_ref(current_l, callback_ref);
-  SOLARUS_ASSERT(lua_isfunction(current_l, -1),
+  SOLARUS_REQUIRE(lua_isfunction(current_l, -1),
       "Collision callback is not a function");
   push_custom_entity(current_l, custom_entity);
   push_entity(current_l, other_entity);
@@ -7016,12 +7016,12 @@ void LuaContext::do_custom_entity_collision_callback(
     Sprite& custom_entity_sprite,
     Sprite& other_entity_sprite) {
 
-  SOLARUS_ASSERT(!callback_ref.is_empty(),
+  SOLARUS_REQUIRE(!callback_ref.is_empty(),
       "Missing sprite collision callback"
   );
 
   push_ref(current_l, callback_ref);
-  SOLARUS_ASSERT(lua_isfunction(current_l, -1),
+  SOLARUS_REQUIRE(lua_isfunction(current_l, -1),
       "Sprite collision callback is not a function");
   push_custom_entity(current_l, custom_entity);
   push_entity(current_l, other_entity);

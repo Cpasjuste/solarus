@@ -41,7 +41,7 @@ ItDecoder::ItDecoder():
  */
 void ItDecoder::load(const std::string& sound_buffer) {
 
-  SOLARUS_ASSERT(modplug_file == nullptr, "IT data is already loaded");
+  SOLARUS_REQUIRE(modplug_file == nullptr, "IT data is already loaded");
 
   // Load the IT data into the IT library.
   modplug_file = ModPlugFileUniquePtr(
@@ -54,7 +54,7 @@ void ItDecoder::load(const std::string& sound_buffer) {
  */
 void ItDecoder::unload() {
 
-  SOLARUS_ASSERT(modplug_file != nullptr, "IT data is not loaded");
+  SOLARUS_REQUIRE(modplug_file != nullptr, "IT data is not loaded");
 
   modplug_file = nullptr;
 }
@@ -88,7 +88,7 @@ int ItDecoder::get_channel_volume(int channel) const {
 
   const int num_patterns = ModPlug_NumPatterns(modplug_file.get());
 
-  SOLARUS_ASSERT(channel >= 0 && channel < get_num_channels(),
+  SOLARUS_REQUIRE(channel >= 0 && channel < get_num_channels(),
       "Invalid channel number");
 
   if (num_patterns == 0) {

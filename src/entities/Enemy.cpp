@@ -1242,7 +1242,7 @@ void Enemy::try_hurt(EnemyAttack attack, Entity& source, Sprite* this_sprite) {
         Hero& hero = static_cast<Hero&>(source);
 
         // Sword attacks only use pixel-precise collisions.
-        SOLARUS_ASSERT(this_sprite != nullptr,
+        SOLARUS_REQUIRE(this_sprite != nullptr,
             "Missing enemy sprite for sword attack"
         );
 

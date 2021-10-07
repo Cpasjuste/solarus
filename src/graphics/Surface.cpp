@@ -62,7 +62,7 @@ Surface::Surface(int width, int height, bool premultiplied, int margin):
   internal_surface(nullptr)
 {
 
-  SOLARUS_ASSERT(width > 0 && height > 0,
+  SOLARUS_REQUIRE(width > 0 && height > 0,
       "Attempt to create a surface with an empty size");
 
   internal_surface = Video::get_renderer().create_texture(width,height, margin);
@@ -187,7 +187,7 @@ SDL_Surface_UniquePtr Surface::create_sdl_surface_from_file(
   SDL_Surface_UniquePtr surface = SDL_Surface_UniquePtr(IMG_Load_RW(rw, 0));
   SDL_RWclose(rw);
 
-  SOLARUS_ASSERT(surface != nullptr,
+  SOLARUS_REQUIRE(surface != nullptr,
       std::string("Cannot load image '") + file_name + "'");
 
   // Check if the surface is too large and emit a warning
@@ -209,7 +209,7 @@ SDL_Surface_UniquePtr Surface::create_sdl_surface_from_file(
         pixel_format,
         0
   ));
-  SOLARUS_ASSERT(converted_surface != nullptr,
+  SOLARUS_REQUIRE(converted_surface != nullptr,
       std::string("Failed to convert software surface: ") + SDL_GetError());
   return converted_surface;
 }

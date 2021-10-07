@@ -109,7 +109,7 @@ GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
   screen_fbo{0,glm::mat4(1.f),{1,1}}
 {
 
-  SOLARUS_ASSERT(!instance,"Creating two GL renderer");
+  SOLARUS_REQUIRE(!instance,"Creating two GL renderer");
   instance = this; //Set this renderer as the unique instance
 
 
@@ -123,7 +123,7 @@ GlRenderer::GlRenderer(SDL_GLContext sdl_ctx) :
                               DefaultShaders::get_default_fragment_source(),
                               0.0);
 
-  SOLARUS_ASSERT(static_cast<bool>(main_shader),
+  SOLARUS_REQUIRE(static_cast<bool>(main_shader),
       "Failed to compile glRenderer main shader");
 }
 
@@ -188,7 +188,7 @@ RendererPtr GlRenderer::create(SDL_Window* window, bool force_software) {
   glBlendEquationSeparate(GL_FUNC_ADD,GL_FUNC_ADD);
 
   bool success = GlShader::initialize();
-  SOLARUS_ASSERT(success, "shader failed to initialize after gl");
+  SOLARUS_REQUIRE(success, "shader failed to initialize after gl");
 
   //Context populated create Renderer
   std::cerr << SDL_GetError();
@@ -231,7 +231,7 @@ void GlRenderer::set_render_target(GlTexture* target) {
       setup_viewport(target);
 //>>>>>>> dev
 #ifndef SOLARUS_GL_ES
-      SOLARUS_ASSERT(
+      SOLARUS_REQUIRE(
           glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
           "glFrameBufferTexture2D failed");
 #endif
@@ -426,9 +426,9 @@ GlRenderer::Fbo* GlRenderer::get_fbo(int width, int height, bool screen, int mar
   int rm = key >> 48;
   int rw = (key >> 24) & 0xFFFFFF;
   int rh = key & 0xFFFFFF;
-  SOLARUS_ASSERT(rm == margin, "recovered margin does not match");
-  SOLARUS_ASSERT(rw == width,"recovered width does not match");
-  SOLARUS_ASSERT(rh == height,"recovered height does not match");
+  SOLARUS_REQUIRE(rm == margin, "recovered margin does not match");
+  SOLARUS_REQUIRE(rw == width, "recovered width does not match");
+  SOLARUS_REQUIRE(rh == height, "recovered height does not match");
 
   auto it = fbos.find(key);
   if(it != fbos.end()) {

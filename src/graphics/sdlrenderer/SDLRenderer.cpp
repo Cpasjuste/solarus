@@ -50,7 +50,7 @@ SDLRenderer::SDLRenderer(SDL_Renderer* a_renderer, bool shaders) : renderer(a_re
     renderer = SDL_CreateSoftwareRenderer(software_screen.get());
 
   }
-  SOLARUS_ASSERT(!instance, "Creating two SDL renderer");
+  SOLARUS_REQUIRE(!instance, "Creating two SDL renderer");
   instance = this; //Set this renderer as the unique instance
 }
 

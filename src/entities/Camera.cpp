@@ -78,7 +78,7 @@ TrackingState::TrackingState(Camera& camera, const EntityPtr& tracked_entity) :
   separator_next_scrolling_date(0),
   separator_scrolling_direction4(0) {
 
-  SOLARUS_ASSERT(tracked_entity != nullptr, "Missing tracked entity");
+  SOLARUS_REQUIRE(tracked_entity != nullptr, "Missing tracked entity");
   set_entity(camera);
 }
 
@@ -529,7 +529,7 @@ Rectangle Camera::apply_separators(const Rectangle& area) const {
       }
     }
     else {
-      SOLARUS_ASSERT(separator->is_horizontal(), "Invalid separator shape");
+      SOLARUS_REQUIRE(separator->is_horizontal(), "Invalid separator shape");
 
       // Horizontal separator.
       int separation_y = separator->get_y() + 8;

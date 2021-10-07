@@ -89,7 +89,7 @@ int MapData::get_min_layer() const {
  */
 void MapData::set_min_layer(int min_layer) {
 
-  SOLARUS_ASSERT(min_layer <= 0, "The min layer should be lower than or equal to 0");
+  SOLARUS_REQUIRE(min_layer <= 0, "The min layer should be lower than or equal to 0");
 
   if (min_layer == this->min_layer) {
     // No change.
@@ -136,7 +136,7 @@ int MapData::get_max_layer() const {
  */
 void MapData::set_max_layer(int max_layer) {
 
-  SOLARUS_ASSERT(max_layer >= 0, "The max layer should be higher than or equal to 0");
+  SOLARUS_REQUIRE(max_layer >= 0, "The max layer should be higher than or equal to 0");
 
   if (max_layer == this->max_layer) {
     // No change.
@@ -298,7 +298,7 @@ int MapData::get_num_entities(int layer) const {
  */
 int MapData::get_num_tiles(int layer) const {
 
-  SOLARUS_ASSERT(is_valid_layer(layer), "Invalid layer");
+  SOLARUS_REQUIRE(is_valid_layer(layer), "Invalid layer");
 
   return entities.at(layer).num_tiles;
 }
@@ -319,7 +319,7 @@ int MapData::get_num_dynamic_entities(int layer) const {
  */
 const std::deque<EntityData>& MapData::get_entities(int layer) const {
 
-  SOLARUS_ASSERT(is_valid_layer(layer), "Invalid layer");
+  SOLARUS_REQUIRE(is_valid_layer(layer), "Invalid layer");
 
   return entities.at(layer).entities;
 }
@@ -331,7 +331,7 @@ const std::deque<EntityData>& MapData::get_entities(int layer) const {
  */
 std::deque<EntityData>& MapData::get_entities(int layer) {
 
-  SOLARUS_ASSERT(is_valid_layer(layer), "Invalid layer");
+  SOLARUS_REQUIRE(is_valid_layer(layer), "Invalid layer");
 
   return entities.at(layer).entities;
 }
@@ -344,7 +344,7 @@ std::deque<EntityData>& MapData::get_entities(int layer) {
  */
 EntityIndex MapData::set_entity_layer(const EntityIndex& src_index, int dst_layer) {
 
-  SOLARUS_ASSERT(is_valid_layer(dst_layer), "Invalid layer in MapData::set_entity_layer()");
+  SOLARUS_REQUIRE(is_valid_layer(dst_layer), "Invalid layer in MapData::set_entity_layer()");
 
   int src_layer = src_index.layer;
   if (dst_layer == src_index.layer) {
@@ -400,8 +400,8 @@ void MapData::set_entity_order(const EntityIndex& src_index, int dst_order) {
   int min_order = dynamic ? get_num_tiles(layer) : 0;
   int max_order = dynamic ? (get_num_entities(layer) - 1) : (get_num_tiles(layer) - 1);
 
-  SOLARUS_ASSERT(dst_order >= min_order, "Entity order out of range (lower than min)");
-  SOLARUS_ASSERT(dst_order <= max_order, "Entity order out of range (higher than max)");
+  SOLARUS_REQUIRE(dst_order >= min_order, "Entity order out of range (lower than min)");
+  SOLARUS_REQUIRE(dst_order <= max_order, "Entity order out of range (higher than max)");
 
   std::deque<EntityData>& entities = get_entities(layer);
 
@@ -462,7 +462,7 @@ EntityIndex MapData::bring_entity_to_front(const EntityIndex& index) {
   int bound = entity.is_dynamic() ? get_num_entities(index.layer) : get_num_tiles(index.layer);
 
   EntityIndex dst_index(index.layer, bound - 1);
-  SOLARUS_ASSERT(index.order <= dst_index.order, "Entity index out of range");
+  SOLARUS_REQUIRE(index.order <= dst_index.order, "Entity index out of range");
   if (dst_index.order == index.order) {
     // Already to the front.
     return index;
@@ -486,7 +486,7 @@ EntityIndex MapData::bring_entity_to_back(const EntityIndex& index) {
   int bound = entity.is_dynamic() ? get_num_tiles(index.layer) : 0;
 
   EntityIndex dst_index(index.layer, bound);
-  SOLARUS_ASSERT(index.order >= dst_index.order, "Entity index out of range");
+  SOLARUS_REQUIRE(index.order >= dst_index.order, "Entity index out of range");
   if (dst_index.order == index.order) {
     // Already to the back.
     return index;
@@ -515,7 +515,7 @@ bool MapData::entity_exists(const EntityIndex& index) const {
  */
 const EntityData& MapData::get_entity(const EntityIndex& index) const {
 
-  SOLARUS_ASSERT(entity_exists(index),
+  SOLARUS_REQUIRE(entity_exists(index),
       "Entity index out of range"
   );
 
@@ -533,7 +533,7 @@ const EntityData& MapData::get_entity(const EntityIndex& index) const {
  */
 EntityData& MapData::get_entity(const EntityIndex& index) {
 
-  SOLARUS_ASSERT(entity_exists(index),
+  SOLARUS_REQUIRE(entity_exists(index),
       "Entity index out of range"
   );
 
@@ -932,7 +932,7 @@ bool MapData::export_to_lua(std::ostream& out) const {
     const EntityDataList& layer_entities = kvp.second;
     for (const EntityData& entity_data : layer_entities.entities) {
       bool success = entity_data.export_to_lua(out);
-      SOLARUS_ASSERT(success, "Entity export failed");
+      SOLARUS_REQUIRE(success, "Entity export failed");
     }
   }
 

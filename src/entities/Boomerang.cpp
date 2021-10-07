@@ -237,7 +237,7 @@ bool Boomerang::is_going_back() const {
  */
 void Boomerang::go_back() {
 
-  SOLARUS_ASSERT(!is_going_back(), "The boomerang is already going back");
+  SOLARUS_REQUIRE(!is_going_back(), "The boomerang is already going back");
 
   has_to_go_back = true;
 }

@@ -609,7 +609,7 @@ void MainLoop::setup_game_icon() {
 
   //else try to use default icon
   SDL_Surface_UniquePtr surface = Surface::create_sdl_surface_from_memory(quest_icon_data, quest_icon_data_len);
-  SOLARUS_ASSERT(bool(surface), "Could not load built-in icon");
+  SOLARUS_REQUIRE(bool(surface), "Could not load built-in icon");
 
   Video::set_window_icon(surface.get());
 }

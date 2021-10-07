@@ -444,7 +444,7 @@ void TextSurface::rebuild() {
     return;
   }
 
-  SOLARUS_ASSERT(FontResource::exists(font_id),
+  SOLARUS_REQUIRE(FontResource::exists(font_id),
       std::string("No such font: '") + font_id + "'");
 
   if (FontResource::is_bitmap_font(font_id)) {
@@ -567,7 +567,7 @@ void TextSurface::rebuild_ttf() {
     break;
   }
 
-  SOLARUS_ASSERT(surface != nullptr,
+  SOLARUS_REQUIRE(surface != nullptr,
     std::string("Error rendering text surface for '") + text + "'"
     " (font: " + font_id + "): " + TTF_GetError()
   );

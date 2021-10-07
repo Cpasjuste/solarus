@@ -85,7 +85,7 @@ const std::string& Map::get_tileset_id() const {
  */
 void Map::set_tileset(const std::string& tileset_id) {
 
-  SOLARUS_ASSERT(is_game_running(), "The game of this map does not exist");
+  SOLARUS_REQUIRE(is_game_running(), "The game of this map does not exist");
   ResourceProvider& resource_provider = get_game().get_resource_provider();
   tileset = &resource_provider.get_tileset(tileset_id);
   get_entities().notify_tileset_changed();
@@ -333,7 +333,7 @@ void Map::load(Game& game) {
  * \return The Lua context where all scripts are run.
  */
 LuaContext& Map::get_lua_context() {
-  SOLARUS_ASSERT(is_game_running(), "The game of this map does not exist");
+  SOLARUS_REQUIRE(is_game_running(), "The game of this map does not exist");
   return get_savegame()->get_lua_context();
 }
 
@@ -348,7 +348,7 @@ LuaContext& Map::get_lua_context() {
  * \return The game.
  */
 Game& Map::get_game() {
-  SOLARUS_ASSERT(is_game_running(), "The game of this map does not exist");
+  SOLARUS_REQUIRE(is_game_running(), "The game of this map does not exist");
   return *savegame->get_game();
 }
 
@@ -417,7 +417,7 @@ std::shared_ptr<Destination> Map::get_destination(const std::string& destination
     return nullptr;
   }
 
-  SOLARUS_ASSERT(is_loaded(), "This map is not loaded");
+  SOLARUS_REQUIRE(is_loaded(), "This map is not loaded");
 
   std::shared_ptr<Destination> destination;
   if (!destination_name.empty()) {
@@ -543,7 +543,7 @@ bool Map::is_suspended() const {
  */
 void Map::check_suspended() {
 
-  SOLARUS_ASSERT(is_game_running(), "The game of this map does not exist");
+  SOLARUS_REQUIRE(is_game_running(), "The game of this map does not exist");
   bool game_suspended = get_game().is_suspended();
   if (suspended != game_suspended) {
     set_suspended(game_suspended);

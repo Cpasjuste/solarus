@@ -46,7 +46,7 @@ AnimatedTilePattern::AnimatedTilePattern(
   frame_index(0),
   next_frame_date(System::now_ms() + frame_delay) {
 
-  SOLARUS_ASSERT(!this->frames.empty(), "Missing frames for animated pattern");
+  SOLARUS_REQUIRE(!frames.empty(), "Missing frames for animated pattern");
 }
 
 /**
@@ -82,7 +82,8 @@ void AnimatedTilePattern::draw(
   if (mirror_loop && frame_index >= num_frames) {
     final_frame_index = (2 * frames.size() - 2) - frame_index;
   }
-  SOLARUS_ASSERT(final_frame_index >= 0 && final_frame_index < num_frames, "Wrong frame index");
+  SOLARUS_REQUIRE(final_frame_index >= 0 && final_frame_index < num_frames,
+      "Wrong frame index");
   const Rectangle& src = frames[final_frame_index];
   Point dst = dst_position;
 
