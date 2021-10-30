@@ -22,7 +22,7 @@ This release adds new features but does not introduce any incompatibility.
 * Fix Quest Runner not working on Windows when binaries are under Unicode paths.
 * Add error reporting to the Quest Runner process manager.
 
-## Solarus 1.6.5 (2010-04-06)
+## Solarus 1.6.5 (2021-04-06)
 
 ### Engine changes
 
