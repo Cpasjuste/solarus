@@ -808,6 +808,30 @@ void Entity::set_top_left_xy(const Point& xy) {
 }
 
 /**
+ * \brief Returns the position of the entity's bottom-right corner.
+ * \return The position of the entity's right side.
+ */
+int Entity::get_bottom_right_x() const {
+  return bounding_box.get_right();
+}
+
+/**
+ * \brief Returns the y position of the entity's bottom-right corner.
+ * \return The position of the entity's bottom side.
+ */
+int Entity::get_bottom_right_y() const {
+  return bounding_box.get_bottom();
+}
+
+/**
+ * \brief Returns the position of the entity's bottom-right corner.
+ * \return The position of the entity's bottom-right corner.
+ */
+Point Entity::get_bottom_right_xy() const {
+  return bounding_box.get_bottom_right();
+}
+
+/**
  * \brief Returns the coordinates where this entity should be drawn.
  *
  * Most of the time, this function just returns get_xy().
@@ -3255,77 +3279,7 @@ bool Entity::is_in_same_region(const Entity& other) const {
  */
 bool Entity::is_in_same_region(const Point& xy) const {
 
-  const Point& this_xy = get_center_point();
-  const Point& other_xy = xy;
-
-  const std::set<ConstSeparatorPtr>& separators =
-      get_entities().get_entities_by_type<Separator>();
-  for (const ConstSeparatorPtr& separator: separators) {
-
-    if (separator->is_vertical()) {
-      // Vertical separation.
-      if (this_xy.y < separator->get_top_left_y() ||
-          this_xy.y >= separator->get_top_left_y() + separator->get_height()) {
-        // This separator is irrelevant: the entity is not in either side,
-        // it is too much to the north or to the south.
-        //
-        //     |
-        //     |
-        //     |
-        //
-        //  x
-        //
-        continue;
-      }
-
-      if (other_xy.y < separator->get_top_left_y() ||
-          other_xy.y >= separator->get_top_left_y() + separator->get_height()) {
-        // This separator is irrelevant: the other entity is not in either side.
-        // it is too much to the north or to the south.
-        continue;
-      }
-
-      // Both entities are in the zone of influence of this separator.
-      // See if they are in the same side.
-      const int separation_x = separator->get_center_point().x;
-      if (this_xy.x < separation_x &&
-          separation_x <= other_xy.x) {
-        // Different side.
-        return false;
-      }
-
-      if (other_xy.x < separation_x &&
-          separation_x <= this_xy.x) {
-        // Different side.
-        return false;
-      }
-    }
-    else {
-      // Horizontal separation.
-      if (this_xy.x < separator->get_top_left_x() ||
-          this_xy.x >= separator->get_top_left_x() + separator->get_width()) {
-        continue;
-      }
-
-      if (other_xy.x < separator->get_top_left_x() ||
-          other_xy.x >= separator->get_top_left_x() + separator->get_width()) {
-        continue;
-      }
-
-      const int separation_y = separator->get_center_point().y;
-      if (this_xy.y < separation_y &&
-          separation_y <= other_xy.y) {
-        return false;
-      }
-
-      if (other_xy.y < separation_y &&
-          separation_y <= this_xy.y) {
-        return false;
-      }
-    }
-  }
-
-  return true;
+  return get_entities().are_in_same_region(get_center_point(), xy);
 }
 
 /**

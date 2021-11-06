@@ -158,6 +158,7 @@ list(APPEND LUA_TEST_MAPS
   "bugs/1419_crash_teletransporting_to_invalid_layer/map_1"
   "bugs/1423_crash_carried_without_shadow"
   "bugs/1424_rawget_rawset"
+  "bugs/1425_is_in_same_region_4_way_separators"
   "bugs/1428_movement_blocking"
   "bugs/1436_thrown_object_shadow"
   "bugs/1439_ground_sprite_ladder"
