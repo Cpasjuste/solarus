@@ -166,7 +166,7 @@ bool has_language(const std::string& language_code) {
  */
 void set_language(const std::string& language_code) {
 
-  SOLARUS_ASSERT(has_language(language_code),
+  SOLARUS_REQUIRE(has_language(language_code),
       std::string("No such language: '") + language_code + "'");
 
   get_language() = language_code;
@@ -302,7 +302,7 @@ bool dialog_exists(const std::string& dialog_id) {
  */
 const Dialog& get_dialog(const std::string& dialog_id) {
 
-  SOLARUS_ASSERT(dialog_exists(dialog_id), std::string(
+  SOLARUS_REQUIRE(dialog_exists(dialog_id), std::string(
     "No such dialog: '") + dialog_id + "'");
   return get_dialogs()[dialog_id];
 }

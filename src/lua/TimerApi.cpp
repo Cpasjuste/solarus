@@ -125,7 +125,7 @@ void LuaContext::add_timer(
     }
   });
 
-  SOLARUS_ASSERT(timers.find(timer) == timers.end(),
+  SOLARUS_REQUIRE(timers.find(timer) == timers.end(),
       "Duplicate timer in the system");
 
   timers[timer].callback_ref = callback_ref;
@@ -159,7 +159,7 @@ void LuaContext::add_timer(
         if (is_entity(current_l, context_index)) {
           EntityPtr entity = check_entity(current_l, context_index);
 
-          SOLARUS_ASSERT(!entity->is_being_removed(), "Cannot add timer: this entity is being removed");
+          SOLARUS_REQUIRE(!entity->is_being_removed(), "Cannot add timer: this entity is being removed");
 
           initially_suspended = entity->is_suspended() || !entity->is_enabled();
         } else {  // State.
@@ -238,7 +238,7 @@ void LuaContext::update_timers() {
     if (it != timers.end()) {
       timers.erase(it);
 
-      SOLARUS_ASSERT(timers.find(timer) == timers.end(),
+      SOLARUS_REQUIRE(timers.find(timer) == timers.end(),
           "Failed to remove timer");
     }
   }
@@ -308,7 +308,7 @@ void LuaContext::set_entity_timers_suspended_as_map(
  * \param timer The timer to execute.
  */
 void LuaContext::do_timer_callback(const TimerPtr& timer) {
-  SOLARUS_ASSERT(timer->is_finished(), "This timer is still running");
+  SOLARUS_REQUIRE(timer->is_finished(), "This timer is still running");
 
   auto it = timers.find(timer);
   if (it != timers.end() &&

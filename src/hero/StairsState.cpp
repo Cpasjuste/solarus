@@ -102,7 +102,7 @@ void Hero::StairsState::start(const State* previous_state) {
     if (way == Stairs::NORMAL_WAY) {
       // Toward a higher layer: change the layer now.
       int layer = stairs->get_layer();
-      SOLARUS_ASSERT(get_map().is_valid_layer(layer), "Invalid stairs layer");
+      SOLARUS_REQUIRE(get_map().is_valid_layer(layer), "Invalid stairs layer");
       get_entities().set_entity_layer(hero, layer + 1);
     }
   }

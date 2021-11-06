@@ -113,7 +113,7 @@ void Savegame::initialize() {
   }
 
   const std::string& quest_write_dir = QuestFiles::get_quest_write_dir();
-  SOLARUS_ASSERT(!quest_write_dir.empty(),
+  SOLARUS_REQUIRE(!quest_write_dir.empty(),
       "The quest write directory for savegames was not set in quest.dat");
 
   if (!QuestFiles::data_file_exists(file_name)) {
@@ -454,7 +454,7 @@ std::string Savegame::get_string(const std::string& key) const {
  */
 void Savegame::set_string(const std::string& key, const std::string& value) {
 
-  SOLARUS_ASSERT(LuaTools::is_valid_lua_identifier(key),
+  SOLARUS_REQUIRE(LuaTools::is_valid_lua_identifier(key),
       std::string("Savegame variable '") + key + "' is not a valid key");
 
   saved_values[key].type = SavedValue::VALUE_STRING;
@@ -510,7 +510,7 @@ int Savegame::get_integer(const std::string& key) const {
  */
 void Savegame::set_integer(const std::string& key, int value) {
 
-  SOLARUS_ASSERT(LuaTools::is_valid_lua_identifier(key),
+  SOLARUS_REQUIRE(LuaTools::is_valid_lua_identifier(key),
       std::string("Savegame variable '") + key + "' is not a valid key");
 
   saved_values[key].type = SavedValue::VALUE_INTEGER;
@@ -566,7 +566,7 @@ bool Savegame::get_boolean(const std::string& key) const {
  */
 void Savegame::set_boolean(const std::string& key, bool value) {
 
-  SOLARUS_ASSERT(LuaTools::is_valid_lua_identifier(key),
+  SOLARUS_REQUIRE(LuaTools::is_valid_lua_identifier(key),
       std::string("Savegame variable '") + key + "' is not a valid key");
 
   saved_values[key].type = SavedValue::VALUE_BOOLEAN;
@@ -589,7 +589,7 @@ bool Savegame::is_set(const std::string& key) const {
  */
 void Savegame::unset(const std::string& key) {
 
-  SOLARUS_ASSERT(LuaTools::is_valid_lua_identifier(key),
+  SOLARUS_REQUIRE(LuaTools::is_valid_lua_identifier(key),
       std::string("Savegame variable '") + key + "' is not a valid key");
 
   saved_values.erase(key);

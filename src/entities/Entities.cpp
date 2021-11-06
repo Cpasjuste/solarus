@@ -519,7 +519,7 @@ Rectangle Entities::get_region_box(const Point& point) const {
     }
   }
 
-  SOLARUS_ASSERT(top < bottom && left < right, "Invalid region rectangle");
+  SOLARUS_REQUIRE(top < bottom && left < right, "Invalid region rectangle");
 
   return Rectangle(left, top, right - left, bottom - top);
 }
@@ -654,7 +654,7 @@ EntityVector Entities::get_entities_by_type_z_sorted(EntityType type) {
  */
 EntitySet Entities::get_entities_by_type(EntityType type, int layer) {
 
-  SOLARUS_ASSERT(map.is_valid_layer(layer), "Invalid layer");
+  SOLARUS_REQUIRE(map.is_valid_layer(layer), "Invalid layer");
 
   EntitySet result;
 
@@ -830,7 +830,7 @@ void Entities::notify_map_finished() {
  */
 void Entities::initialize_layers() {
 
-  SOLARUS_ASSERT(z_orders.empty(), "Layers already initialized");
+  SOLARUS_REQUIRE(z_orders.empty(), "Layers already initialized");
 
   for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
     tiles_ground[layer] = std::vector<Ground>();
@@ -854,14 +854,14 @@ void Entities::add_tile_info(const TileInfo& tile_info) {
 
   const Rectangle& box = tile_info.box;
   const int layer = tile_info.layer;
-  SOLARUS_ASSERT(map.is_valid_layer(layer), "Invalid layer");
+  SOLARUS_REQUIRE(map.is_valid_layer(layer), "Invalid layer");
 
-  SOLARUS_ASSERT(tile_info.pattern != nullptr, "Missing tile pattern");
+  SOLARUS_REQUIRE(tile_info.pattern != nullptr, "Missing tile pattern");
   const TilePattern& pattern = *tile_info.pattern;
 
   // The size of a runtime tile should be the size of its pattern
   // for performance reasons, to optimize away more tiles.
-  SOLARUS_ASSERT(
+  SOLARUS_REQUIRE(
       box.get_width() == pattern.get_width() &&
       box.get_height() == pattern.get_height(),
       "Static tile size must match tile pattern size");
@@ -1025,7 +1025,7 @@ void Entities::add_entity(const EntityPtr& entity) {
     return;
   }
 
-  SOLARUS_ASSERT(map.is_valid_layer(entity->get_layer()),
+  SOLARUS_REQUIRE(map.is_valid_layer(entity->get_layer()),
       "No such layer on this map: " + std::to_string(entity->get_layer()));
 
   const EntityType type = entity->get_type();
@@ -1251,7 +1251,7 @@ void Entities::set_suspended(bool suspended) {
  */
 void Entities::update() {
   SOL_PFUN(profiler::colors::Red);
-  SOLARUS_ASSERT(map.is_started(), "The map is not started");
+  SOLARUS_REQUIRE(map.is_started(), "The map is not started");
 
   // First update the hero.
   for(const HeroPtr& hero : heroes) {
@@ -1309,7 +1309,7 @@ void Entities::draw(Camera& camera) {
       SOL_PBLOCK("Pushing entities.", profiler::colors::Green);
       for (const EntityPtr& entity : entities_in_camera) {
         int layer = entity->get_layer();
-        SOLARUS_ASSERT(map.is_valid_layer(layer), "Invalid layer");
+        SOLARUS_REQUIRE(map.is_valid_layer(layer), "Invalid layer");
         entities_to_draw[layer].push_back(entity);
       }
     }

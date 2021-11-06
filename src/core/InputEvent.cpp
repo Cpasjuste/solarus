@@ -1285,7 +1285,7 @@ InputEvent::MouseButton InputEvent::get_mouse_button() const {
  */
 Point InputEvent::get_mouse_position() const {
 
-  SOLARUS_ASSERT(is_mouse_event(), "Event is not a mouse event");
+  SOLARUS_REQUIRE(is_mouse_event(), "Event is not a mouse event");
 
   return Video::output_to_quest_coordinates(
         Point(internal_event.button.x, internal_event.button.y));
@@ -1368,7 +1368,7 @@ bool InputEvent::is_finger_moved(int finger_id) const {
  */
 int InputEvent::get_finger() const {
 
-  SOLARUS_ASSERT(is_finger_event(), "Event is not a touch finger event");
+  SOLARUS_REQUIRE(is_finger_event(), "Event is not a touch finger event");
 
   return static_cast<int>(internal_event.tfinger.fingerId);
 }
@@ -1382,7 +1382,7 @@ int InputEvent::get_finger() const {
  */
 Point InputEvent::get_finger_position() const {
 
-  SOLARUS_ASSERT(is_finger_event(), "Event is not a touch finger event");
+  SOLARUS_REQUIRE(is_finger_event(), "Event is not a touch finger event");
 
   const Size output_size = Video::get_output_size();
   const int x = internal_event.tfinger.x * static_cast<float>(output_size.width);
@@ -1398,7 +1398,7 @@ Point InputEvent::get_finger_position() const {
  */
 Point InputEvent::get_finger_distance() const {
 
-  SOLARUS_ASSERT(is_finger_event(), "Event is not a touch finger event");
+  SOLARUS_REQUIRE(is_finger_event(), "Event is not a touch finger event");
 
   const Size output_size = Video::get_output_size();
   const int x = internal_event.tfinger.x * static_cast<float>(output_size.width);
@@ -1413,7 +1413,7 @@ Point InputEvent::get_finger_distance() const {
  */
 float InputEvent::get_finger_pressure() const {
 
-  SOLARUS_ASSERT(is_finger_event(), "Event is not a touch finger event");
+  SOLARUS_REQUIRE(is_finger_event(), "Event is not a touch finger event");
 
   return internal_event.tfinger.pressure;
 }

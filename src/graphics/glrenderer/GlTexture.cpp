@@ -119,7 +119,7 @@ void GlTexture::create_surface() const {
         format->Gmask,
         format->Bmask,
         format->Amask);
-  SOLARUS_ASSERT(surf_ptr != nullptr,
+  SOLARUS_REQUIRE(surf_ptr != nullptr,
       std::string("Failed to create backup surface ") + SDL_GetError());
   surface.reset(surf_ptr);
 }

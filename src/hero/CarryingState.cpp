@@ -37,7 +37,7 @@ Hero::CarryingState::CarryingState(
   PlayerMovementState(hero, "carrying"),
   carried_object(carried_object) {
 
-  SOLARUS_ASSERT(carried_object != nullptr, "Missing carried object");
+  SOLARUS_REQUIRE(carried_object != nullptr, "Missing carried object");
 }
 
 /**

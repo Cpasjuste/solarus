@@ -21,14 +21,21 @@
 #include <string>
 
 /**
+ * \brief Stops Solarus if the condition is \c false.
+ * \param condition The condition to check.
+ * \param message Error message to show in case of failure.
+ */
+#define SOLARUS_REQUIRE(condition, message) \
+    ((condition) ? (void)0 : Debug::die(message))
+
+/**
  * \def SOLARUS_ASSERT(condition, message)
  * \brief Stops Solarus in debug mode if the condition is \c false.
- * \param condition The assertion to check.
+ * \param condition The condition to check.
  * \param message Error message to show in case of failure.
  */
 #ifndef NDEBUG
-#define SOLARUS_ASSERT(condition, message) \
-    ((condition) ? (void)0 : Debug::die(message))
+#define SOLARUS_ASSERT(condition, message) SOLARUS_REQUIRE(condition, message)
 #else
 #define SOLARUS_ASSERT(condition, message) ((void)0)
 #endif

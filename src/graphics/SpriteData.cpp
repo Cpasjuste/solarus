@@ -307,7 +307,7 @@ const SpriteAnimationDirectionData&
   SpriteAnimationData::get_direction(int direction_nb) const {
 
   int size = directions.size();
-  SOLARUS_ASSERT(direction_nb >= 0 && direction_nb < size,
+  SOLARUS_REQUIRE(direction_nb >= 0 && direction_nb < size,
     "No such direction");
 
   return directions[direction_nb];
@@ -326,7 +326,7 @@ SpriteAnimationDirectionData&
   SpriteAnimationData::get_direction(int direction_nb) {
 
   int size = directions.size();
-  SOLARUS_ASSERT(direction_nb >= 0 && direction_nb < size,
+  SOLARUS_REQUIRE(direction_nb >= 0 && direction_nb < size,
     "No such direction");
 
   return directions[direction_nb];
@@ -454,7 +454,7 @@ const SpriteAnimationData& SpriteData::get_animation(
     const std::string& animation_name) const {
 
   const auto& it = animations.find(animation_name);
-  SOLARUS_ASSERT(it != animations.end(),
+  SOLARUS_REQUIRE(it != animations.end(),
     std::string("No such animation: '") + animation_name + "'");
 
   return it->second;
@@ -473,7 +473,7 @@ SpriteAnimationData& SpriteData::get_animation(
     const std::string& animation_name) {
 
   const auto& it = animations.find(animation_name);
-  SOLARUS_ASSERT(it != animations.end(),
+  SOLARUS_REQUIRE(it != animations.end(),
     std::string("No such animation: '") + animation_name + "'");
 
   return it->second;

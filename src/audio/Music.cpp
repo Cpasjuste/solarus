@@ -82,7 +82,7 @@ Music::Music(
   callback_ref(callback_ref),
   source(AL_NONE) {
 
-  SOLARUS_ASSERT(!loop || callback_ref.is_empty(),
+  SOLARUS_REQUIRE(!loop || callback_ref.is_empty(),
       "Attempt to set both a loop and a callback to music");
 
   for (int i = 0; i < nb_buffers; i++) {
@@ -169,7 +169,7 @@ void Music::set_volume(int volume) {
  */
 int Music::get_num_channels() {
 
-  SOLARUS_ASSERT(get_format() == IT,
+  SOLARUS_REQUIRE(get_format() == IT,
       "This function is only supported for .it musics");
 
   return it_decoder->get_num_channels();
@@ -185,7 +185,7 @@ int Music::get_num_channels() {
  */
 int Music::get_channel_volume(int channel) {
 
-  SOLARUS_ASSERT(get_format() == IT,
+  SOLARUS_REQUIRE(get_format() == IT,
       "This function is only supported for .it musics");
 
   return it_decoder->get_channel_volume(channel);
@@ -201,7 +201,7 @@ int Music::get_channel_volume(int channel) {
  */
 void Music::set_channel_volume(int channel, int volume) {
 
-  SOLARUS_ASSERT(get_format() == IT,
+  SOLARUS_REQUIRE(get_format() == IT,
       "This function is only supported for .it musics");
 
   it_decoder->set_channel_volume(channel, volume);
@@ -216,7 +216,7 @@ void Music::set_channel_volume(int channel, int volume) {
  */
 int Music::get_tempo() {
 
-  SOLARUS_ASSERT(get_format() == IT,
+  SOLARUS_REQUIRE(get_format() == IT,
       "This function is only supported for .it musics");
 
   return it_decoder->get_tempo();
@@ -231,7 +231,7 @@ int Music::get_tempo() {
  */
 void Music::set_tempo(int tempo) {
 
-  SOLARUS_ASSERT(get_format() == IT,
+  SOLARUS_REQUIRE(get_format() == IT,
       "This function is only supported for .it musics");
 
   it_decoder->set_tempo(tempo);

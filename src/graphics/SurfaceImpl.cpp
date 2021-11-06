@@ -46,7 +46,7 @@ std::string SurfaceImpl::get_pixels() const {
                                             format,
                                             0
                                             ));
-  SOLARUS_ASSERT(converted_surface != nullptr,
+  SOLARUS_REQUIRE(converted_surface != nullptr,
       std::string("Failed to convert pixels to RGBA format") + SDL_GetError());
   const char* buffer = static_cast<const char*>(converted_surface->pixels);
   return std::string(buffer, num_pixels * converted_surface->format->BytesPerPixel);
@@ -67,15 +67,15 @@ void SurfaceImpl::set_pixels(const std::string& buffer) {
 
 void SurfaceImpl::apply_pixel_filter(const SoftwarePixelFilter& pixel_filter, SurfaceImpl& dst_surface) const {
   const int factor = pixel_filter.get_scaling_factor();
-  SOLARUS_ASSERT(dst_surface.get_width() == get_width() * factor,
+  SOLARUS_REQUIRE(dst_surface.get_width() == get_width() * factor,
       "Wrong destination surface size");
-  SOLARUS_ASSERT(dst_surface.get_height() == get_height() * factor,
+  SOLARUS_REQUIRE(dst_surface.get_height() == get_height() * factor,
       "Wrong destination surface size");
 
   SDL_Surface* src_internal_surface = get_surface();
   SDL_Surface* dst_internal_surface = dst_surface.get_surface();
 
-  SOLARUS_ASSERT(dst_internal_surface != nullptr,
+  SOLARUS_REQUIRE(dst_internal_surface != nullptr,
       "Missing software destination surface for pixel filter");
 
   SDL_LockSurface(src_internal_surface);
@@ -117,7 +117,7 @@ const Size& SurfaceImpl::get_size() const {
 
 bool SurfaceImpl::is_pixel_transparent(int index) const {
   SDL_Surface* surface = get_surface();
-  SOLARUS_ASSERT(surface->format->BytesPerPixel == 4 and surface->format->Amask != 0, "Surface is not in RGBA format");
+  SOLARUS_REQUIRE(surface->format->BytesPerPixel == 4 and surface->format->Amask != 0, "Surface is not in RGBA format");
   uint32_t pixel = static_cast<uint32_t*>(surface->pixels)[index];
   return (pixel & surface->format->Amask) == 0;
 }

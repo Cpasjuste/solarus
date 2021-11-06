@@ -162,7 +162,7 @@ int Equipment::get_max_money() const {
  */
 void Equipment::set_max_money(int max_money) {
 
-  SOLARUS_ASSERT(max_money >= 0, "Invalid max money amount");
+  SOLARUS_REQUIRE(max_money >= 0, "Invalid max money amount");
 
   set_integer(Savegame::KEY_MAX_MONEY, max_money);
 
@@ -205,7 +205,7 @@ void Equipment::set_money(int money) {
  */
 void Equipment::add_money(int money_to_add) {
 
-  SOLARUS_ASSERT(money_to_add >= 0, "Invalid money amount to add");
+  SOLARUS_REQUIRE(money_to_add >= 0, "Invalid money amount to add");
 
   set_money(get_money() + money_to_add);
 }
@@ -220,7 +220,7 @@ void Equipment::add_money(int money_to_add) {
  */
 void Equipment::remove_money(int money_to_remove) {
 
-  SOLARUS_ASSERT(money_to_remove >= 0, "Invalid money amount to remove");
+  SOLARUS_REQUIRE(money_to_remove >= 0, "Invalid money amount to remove");
 
   set_money(get_money() - money_to_remove);
 }
@@ -243,7 +243,7 @@ int Equipment::get_max_life() const {
  */
 void Equipment::set_max_life(int max_life) {
 
-  SOLARUS_ASSERT(max_life >= 0, "Invalid life amount");
+  SOLARUS_REQUIRE(max_life >= 0, "Invalid life amount");
 
   set_integer(Savegame::KEY_MAX_LIFE, max_life);
 
@@ -286,7 +286,7 @@ void Equipment::set_life(int life) {
  */
 void Equipment::add_life(int life_to_add) {
 
-  SOLARUS_ASSERT(life_to_add >= 0, "Invalid life amount to add");
+  SOLARUS_REQUIRE(life_to_add >= 0, "Invalid life amount to add");
 
   set_life(get_life() + life_to_add);
 }
@@ -298,7 +298,7 @@ void Equipment::add_life(int life_to_add) {
  */
 void Equipment::remove_life(int life_to_remove) {
 
-  SOLARUS_ASSERT(life_to_remove >= 0, "Invalid life amount to remove");
+  SOLARUS_REQUIRE(life_to_remove >= 0, "Invalid life amount to remove");
 
   set_life(get_life() - life_to_remove);
 }
@@ -329,7 +329,7 @@ int Equipment::get_max_magic() const {
  */
 void Equipment::set_max_magic(int max_magic) {
 
-  SOLARUS_ASSERT(max_magic >= 0, "Invalid magic amount");
+  SOLARUS_REQUIRE(max_magic >= 0, "Invalid magic amount");
 
   set_integer(Savegame::KEY_MAX_MAGIC, max_magic);
 
@@ -369,7 +369,7 @@ void Equipment::set_magic(int magic) {
  */
 void Equipment::add_magic(int magic_to_add) {
 
-  SOLARUS_ASSERT(magic_to_add >= 0, "Invalid magic amount to add");
+  SOLARUS_REQUIRE(magic_to_add >= 0, "Invalid magic amount to add");
 
   set_magic(get_magic() + magic_to_add);
 }
@@ -385,7 +385,7 @@ void Equipment::add_magic(int magic_to_add) {
  */
 void Equipment::remove_magic(int magic_to_remove) {
 
-  SOLARUS_ASSERT(magic_to_remove >= 0, "Invalid magic amount to remove");
+  SOLARUS_REQUIRE(magic_to_remove >= 0, "Invalid magic amount to remove");
 
   set_magic(get_magic() - magic_to_remove);
 }
@@ -443,7 +443,7 @@ bool Equipment::item_exists(const std::string& item_name) const {
  */
 EquipmentItem& Equipment::get_item(const std::string& item_name) {
 
-  SOLARUS_ASSERT(item_exists(item_name),
+  SOLARUS_REQUIRE(item_exists(item_name),
       std::string("No such item: '") + item_name + "'");
 
   return *items.find(item_name)->second;
@@ -456,7 +456,7 @@ EquipmentItem& Equipment::get_item(const std::string& item_name) {
  */
 const EquipmentItem& Equipment::get_item(const std::string& item_name) const {
 
-  SOLARUS_ASSERT(item_exists(item_name),
+  SOLARUS_REQUIRE(item_exists(item_name),
       std::string("No such item: '") + item_name + "'");
 
   return *items.find(item_name)->second;
@@ -471,7 +471,7 @@ EquipmentItem* Equipment::get_item_assigned(int slot) {
 
   // TODO don't hardcode item slots
 
-  SOLARUS_ASSERT(slot >= 1 && slot <= 2,
+  SOLARUS_REQUIRE(slot >= 1 && slot <= 2,
       "Invalid item slot");
 
   char savegame_variable[] = "_item_slot_0";
@@ -492,7 +492,7 @@ EquipmentItem* Equipment::get_item_assigned(int slot) {
  */
 const EquipmentItem* Equipment::get_item_assigned(int slot) const {
 
-  SOLARUS_ASSERT(slot >= 1 && slot <= 2,
+  SOLARUS_REQUIRE(slot >= 1 && slot <= 2,
       "Invalid item slot");
 
   std::ostringstream oss;
@@ -517,17 +517,17 @@ const EquipmentItem* Equipment::get_item_assigned(int slot) const {
  */
 void Equipment::set_item_assigned(int slot, EquipmentItem* item) {
 
-  SOLARUS_ASSERT(slot >= 1 && slot <= 2,
+  SOLARUS_REQUIRE(slot >= 1 && slot <= 2,
       "Invalid item slot");
 
   std::ostringstream oss;
   oss << "_item_slot_" << slot;
 
   if (item != nullptr) {
-    SOLARUS_ASSERT(item->get_variant() > 0,
+    SOLARUS_REQUIRE(item->get_variant() > 0,
         std::string("Cannot assign item '") + item->get_name()
         + "' because the player does not have it");
-    SOLARUS_ASSERT(item->is_assignable(),
+    SOLARUS_REQUIRE(item->is_assignable(),
         std::string("The item '") + item->get_name()
         + "' cannot be assigned");
     set_string(oss.str(), item->get_name());

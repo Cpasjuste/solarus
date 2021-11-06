@@ -774,8 +774,8 @@ void CustomEntity::add_collision_test(
     CollisionMode collision_test,
     const ScopedLuaRef& callback_ref
 ) {
-  SOLARUS_ASSERT(collision_test != COLLISION_NONE, "Invalid collision mode");
-  SOLARUS_ASSERT(!callback_ref.is_empty(), "Missing collision callback");
+  SOLARUS_REQUIRE(collision_test != COLLISION_NONE, "Invalid collision mode");
+  SOLARUS_REQUIRE(!callback_ref.is_empty(), "Missing collision callback");
 
   collision_tests.emplace_back(
       collision_test,
@@ -796,7 +796,7 @@ void CustomEntity::add_collision_test(
     const ScopedLuaRef& collision_test_ref,
     const ScopedLuaRef& callback_ref
 ) {
-  SOLARUS_ASSERT(!callback_ref.is_empty(), "Missing collision callback");
+  SOLARUS_REQUIRE(!callback_ref.is_empty(), "Missing collision callback");
 
   add_collision_mode(COLLISION_CUSTOM);
 
@@ -915,7 +915,7 @@ void CustomEntity::notify_collision(Entity& entity_overlapping, CollisionMode co
   // (even a custom Lua collision test function),
   // except COLLISION_SPRITE that is handled separately.
 
-  SOLARUS_ASSERT(collision_mode == COLLISION_CUSTOM,
+  SOLARUS_REQUIRE(collision_mode == COLLISION_CUSTOM,
       "Unexpected collision mode");
 
   // There is a collision: execute the callbacks.
@@ -1293,7 +1293,7 @@ CustomEntity::CollisionInfo::CollisionInfo(
     custom_test_ref(),
     callback_ref(callback_ref) {
 
-  SOLARUS_ASSERT(!callback_ref.is_empty(), "Missing callback ref");
+  SOLARUS_REQUIRE(!callback_ref.is_empty(), "Missing callback ref");
 }
 
 /**
@@ -1310,7 +1310,7 @@ CustomEntity::CollisionInfo::CollisionInfo(
     custom_test_ref(custom_test_ref),
     callback_ref(callback_ref) {
 
-  SOLARUS_ASSERT(!callback_ref.is_empty(), "Missing callback ref");
+  SOLARUS_REQUIRE(!callback_ref.is_empty(), "Missing callback ref");
 }
 
 /**
