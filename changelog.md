@@ -5,6 +5,7 @@
 ### Engine changes
 
 * Fix crash when teletransporting to a map without the same layer (#1419).
+* Fix separator region detection corner cases (#1425).
 
 ### Lua API changes
 
