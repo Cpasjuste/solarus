@@ -134,6 +134,7 @@ MainLoop::MainLoop(const Arguments& args):
   next_game(nullptr),
   exiting(false),
   debug_lag(0),
+  lua_console_enabled(true),
   suspend_unfocused(true),
   suspended(false),
   turbo(false),
@@ -160,6 +161,8 @@ MainLoop::MainLoop(const Arguments& args):
   turbo = (turbo_arg == "yes");
   const std::string& suspend_unfocused_arg = args.get_argument_value("-suspend-unfocused");
   suspend_unfocused = suspend_unfocused_arg.empty() || suspend_unfocused_arg == "yes";
+  const std::string& lua_console_arg = args.get_argument_value("-lua-console");
+  lua_console_enabled = lua_console_arg.empty() || lua_console_arg == "yes";
 
   // Try to open the quest.
   const std::string& quest_path = get_quest_path(args);
@@ -193,10 +196,7 @@ MainLoop::MainLoop(const Arguments& args):
     lua_context->initialize(args);
   }
 
-  // Set up the Lua console.
-  const std::string& lua_console_arg = args.get_argument_value("-lua-console");
-  const bool enable_lua_console = lua_console_arg.empty() || lua_console_arg == "yes";
-  if (enable_lua_console) {
+  if (lua_console_enabled) {
     Logger::info("Lua console: yes");
     initialize_lua_console();
   }
@@ -566,7 +566,7 @@ void MainLoop::check_input() {
   }
 
   // Check Lua requests.
-  /*if (!lua_commands.empty()) {
+  if (lua_console_enabled && !lua_commands.empty()) {
     std::lock_guard<std::mutex> lock(lua_commands_mutex);
     for (const std::string& command : lua_commands) {
       std::cout << "\n";  // To make sure that the command delimiter starts on a new line.
@@ -583,7 +583,7 @@ void MainLoop::check_input() {
       ++num_lua_commands_done;
     }
     lua_commands.clear();
-  }*/
+  }
 }
 
 void MainLoop::setup_game_icon() {
