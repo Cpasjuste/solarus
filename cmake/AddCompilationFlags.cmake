@@ -1,20 +1,13 @@
 # Default compilation flags.
 
-# Compile as C++11.
-if(MINGW)
-    # To avoid a compilation error in vorbisfile.h with fseeko64.
-    set(CMAKE_CXX_FLAGS "-std=gnu++17 ${CMAKE_CXX_FLAGS}")
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-    set(CMAKE_CXX_FLAGS "-std=c++17 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
+# Compile as C++17.
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Set exception handling model and disable warnings in MSVC compilers.
+if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /w")
-else()
-    set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_CXX_FLAGS}")
 endif()
 
 # Compile in release mode by default.
